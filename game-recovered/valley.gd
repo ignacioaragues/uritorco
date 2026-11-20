@@ -7,7 +7,8 @@ var rng: = RandomNumberGenerator.new()
 var route = preload("res://travesia.gd").new()
 var env: = Environment.new()
 var sun: = DirectionalLight3D.new()
-var beacon: MeshInstance3D
+var beacon := Sprite3D.new()
+var second_beacon := Sprite3D.new()
 var sky_mat: = ShaderMaterial.new()
 var lighting: Tween
 var hinge: = Node3D.new()
@@ -157,10 +158,7 @@ func _ready():
 	box(end + Vector3(2, 0.45, 0), Vector3(2.2, 0.15, 0.58), "79614a", true, "Banco")
 	for offset in [1.25, 2.75]:
 		box(end + Vector3(offset, 0.2, 0), Vector3(0.18, 0.45, 0.42), "675747", true)
-	beacon = stone(Vector3(0, 7, -97), Vector3(0.55, 0.55, 0.55), "8eedff")
-	var glow: = beacon.material_override as StandardMaterial3D
-	glow.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
-	beacon.hide()
+	build_sighting_lights()
 	dress_shelter()
 	furnish()
 	dress_creek()
@@ -240,6 +238,23 @@ func dress_refuge_footpath(sample: Callable, samples: int, width: float):
 	var path := MeshInstance3D.new()
 	path.mesh = surface.commit()
 	add_child(path)
+
+func build_sighting_lights():
+	var glow := Gradient.new()
+	glow.offsets = PackedFloat32Array([0.0, 0.19, 0.38, 1.0])
+	glow.colors = PackedColorArray([Color("#efffff"), Color("#9ef3fff6"), Color("#64d6ec82"), Color("#61c4ee00")])
+	var texture := GradientTexture2D.new()
+	texture.gradient = glow
+	texture.width = 64
+	texture.height = 64
+	texture.fill = GradientTexture2D.FILL_RADIAL
+	texture.fill_from = Vector2(0.5, 0.5)
+	texture.fill_to = Vector2(1.0, 0.5)
+	for light in [beacon, second_beacon]:
+		light.texture = texture
+		light.billboard = BaseMaterial3D.BILLBOARD_ENABLED
+		add_child(light)
+		light.hide()
 
 func transition() -> Tween:
 	if lighting and lighting.is_valid():

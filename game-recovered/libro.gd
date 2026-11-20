@@ -7,6 +7,7 @@ const GOLD: = Color("#bc9461")
 var page: = 0
 var inscribed: = false
 var bookmark: = false
+var light_comparison := false
 var cover: Texture2D
 var signature: Texture2D
 var crux_page: Texture2D
@@ -25,15 +26,16 @@ func _ready():
 	resized.connect(queue_redraw)
 	hide()
 
-func open(has_name: bool, has_ribbon: bool):
+func open(has_name: bool, has_ribbon: bool, can_compare_lights: bool = false):
 	page = 0
 	inscribed = has_name
 	bookmark = has_ribbon
+	light_comparison = can_compare_lights
 	show()
 	queue_redraw()
 
 func turn(step: int):
-	page = clampi(page + step, 0, 2)
+	page = clampi(page + step, 0, 3 if light_comparison else 2)
 	queue_redraw()
 
 func title_at(value: String, y: float, font_size: int, tint: Color):
@@ -58,10 +60,12 @@ func _draw():
 				var signature_width: = 126.0
 				var signature_height: = signature_width * signature.get_height() / signature.get_width()
 				draw_texture_rect(signature, Rect2(Vector2.ZERO, Vector2(signature_width, signature_height)), false, Color(1, 1, 1, 0.86))
-		elif page == 2:
+		elif page >= 2:
 			draw_chart()
+			if page == 3: draw_light_comparison(origin, scale_factor)
 	draw_set_transform(origin, 0.0, Vector2.ONE * scale_factor)
-	var turn_hint: = ["→ o clic · abrir", "← · tapa     → o clic · Cruz del Sur", "← · guarda"][page] as String
+	var turn_hint: String = ["→ o clic · abrir", "← · tapa     → o clic · Cruz del Sur", "← · guarda", "← · lámina"][page]
+	if page == 2 and light_comparison: turn_hint += "     E · comparar el rumbo"
 	title_at(turn_hint + "      Esc · guardar", 647, 21, Color("#ebdfc5"))
 
 func draw_cover():
@@ -93,3 +97,17 @@ func draw_chart():
 		draw_texture_rect(crux_page, Rect2(Vector2.ZERO, PAGE_SIZE), false)
 	if bookmark:
 		draw_colored_polygon(PackedVector2Array([Vector2(405, 0), Vector2(425, 0), Vector2(429, 136), Vector2(418, 127), Vector2(409, 138)]), Color("#536952"))
+
+func draw_light_comparison(origin: Vector2, scale_factor: float):
+	draw_set_transform(origin + Vector2(36, 263) * scale_factor, -0.055, Vector2.ONE * scale_factor)
+	draw_rect(Rect2(4, 6, 378, 263), Color("#43352b70"))
+	draw_rect(Rect2(0, 0, 378, 263), Color("#e7d8b0"))
+	for y in range(53, 250, 28):
+		draw_line(Vector2(18, y), Vector2(356, y), Color("#6d8b951f"), 1.0, true)
+	draw_string(serif, Vector2(24, 40), "7 de octubre · Sobre el abra", HORIZONTAL_ALIGNMENT_LEFT, -1, 25, INK)
+	draw_polyline(PackedVector2Array([Vector2(28, 134), Vector2(113, 104), Vector2(152, 118), Vector2(224, 88), Vector2(346, 139)]), INK, 2.0, true)
+	draw_circle(Vector2(194, 86), 2.6, INK, true, -1.0, true)
+	draw_circle(Vector2(237, 67), 2.6, INK, true, -1.0, true)
+	draw_string(serif, Vector2(24, 178), "El segundo quedó un poco más alto.", HORIZONTAL_ALIGNMENT_LEFT, -1, 20, INK)
+	draw_string(serif, Vector2(24, 206), "La lámina no coincide con el dibujo.", HORIZONTAL_ALIGNMENT_LEFT, -1, 20, INK)
+	draw_string(serif, Vector2(24, 234), "Si vuelven, anotar la hora.", HORIZONTAL_ALIGNMENT_LEFT, -1, 20, INK)

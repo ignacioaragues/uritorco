@@ -8,7 +8,9 @@ const LastNight = preload("res://final_night.gd")
 const Saves = preload("res://partidas.gd")
 const Mara = preload("res://charlas_mara.gd")
 const SUMMIT_NIGHT_SECONDS := 40.0
-const STATE = ["page", "stage", "keepsakes", "bedtime", "field_note", "crossing_note", "fox_seen", "hiker_met", "route_reported", "observing", "pending_return", "heard", "read_note", "creek_note", "bed_pose", "bed_pitch", "gate_jumped", "map_read", "awaiting_call", "dream_count", "branch_found", "mapped_distance", "has_piece", "summit_mapped", "camp_read", "arrival_action", "second_sighting", "day7_dusk", "archive_read", "trail_replies", "crossing_response", "summit_echo_response", "night_investigation", "ending_at_door", "sky_memories", "compass_lost", "last_voice_reply", "scored_walks"]
+const SIGHTING_FOCUS_SECONDS := 0.4
+enum Sighting { ABRA, QUARRY, CROSSING, SHELTER, CAVE }
+const STATE = ["page", "stage", "keepsakes", "bedtime", "field_note", "crossing_note", "fox_seen", "hiker_met", "route_reported", "observing", "pending_return", "heard", "read_note", "creek_note", "bed_pose", "bed_pitch", "gate_jumped", "map_read", "awaiting_call", "dream_count", "branch_found", "mapped_distance", "has_piece", "summit_mapped", "camp_read", "arrival_action", "second_sighting", "book_light_notes", "day7_dusk", "archive_read", "trail_replies", "crossing_response", "summit_echo_response", "night_investigation", "ending_at_door", "sky_memories", "compass_lost", "last_voice_reply", "scored_walks"]
 var flashlight_out: = false
 var camp_read: = false
 var summit_mapped: = false
@@ -55,7 +57,10 @@ var rain_view: = ColorRect.new()
 var branch_found: = false
 var mapped_distance: = 0.0
 var radio_hint: = Label.new()
-var sighting_waiting := false
+var sighting: Sighting
+var sighting_time := 0.0
+var sighting_focus := 0.0
+var book_light_notes := false
 var dream_count: = 0
 var compass_out: = false
 var ambience = preload("res://ambiente.gd").new()
@@ -83,7 +88,7 @@ var choosing: = false
 var music = preload("res://intro_music.gd").new()
 var overlay_choices = preload("res://choices.gd").new()
 var recall = preload("res://recall.gd").new()
-var second_sighting: = false
+var second_sighting := false # Guardados anteriores usan esta clave para el avistamiento del abra.
 var day7_dusk: = false
 var debug_run: = false
 var arrival_action: = false
@@ -248,8 +253,8 @@ func set_arrival_bag_visible(shown: bool):
 
 func _unhandled_input(event):
 	if mode == "book" and event is InputEventMouseButton and event.pressed:
-		if event.button_index == MOUSE_BUTTON_LEFT: book_view.turn(1)
-		elif event.button_index == MOUSE_BUTTON_RIGHT: book_view.turn(-1)
+		if event.button_index == MOUSE_BUTTON_LEFT: turn_book(1)
+		elif event.button_index == MOUSE_BUTTON_RIGHT: turn_book(-1)
 		return
 	if mode == "approach" and event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT and event.pressed:
 		use_arrival_item()
@@ -301,11 +306,11 @@ func _process(delta):
 	valley.update_weather(day)
 	valley.update_shelter_wall(day)
 	if mode == "walk": score_daily_walk(day)
-	var rain_visible: bool = stage >= 16 and stage <= 17 and mode in ["walk", "map"] and (player.position.z < -0.5 or absf(player.position.x) > 3.4)
+	var rain_visible: bool = stage >= 16 and stage <= 17 and mode in ["walk", "map", "sighting"] and (player.position.z < -0.5 or absf(player.position.x) > 3.4)
 	if rain_visible != rain_view.visible:
 		rain_view.visible = rain_visible
 		rain_view.material.set_shader_parameter("intensity", 0.62 if rain_visible else 0.0)
-	if mode == "sighting" and sighting_waiting: update_sighting()
+	if mode == "sighting": update_sighting(delta)
 	if mode == "cave":
 		update_cave()
 	elif mode == "mara_door":
@@ -334,7 +339,7 @@ func _process(delta):
 	if mode in ["walk", "map"] and stage >= 10 and not branch_found:
 		if player.position.distance_to(valley.route.at(valley.route.trail(300), 300)) < 22:
 			branch_found = true
-	if mode in ["approach", "walk", "dream", "map"]:
+	if mode in ["approach", "walk", "dream", "map", "sighting"]:
 		var velocity: = Vector2(player.velocity.x, player.velocity.z).length() if player.is_on_floor() else 0.0
 		var outdoors: bool = player.position.z < 0 or absf(player.position.x) > 3.5
 		hands.step(delta, velocity)
@@ -645,7 +650,7 @@ func farewell_mara():
 	conversation(lines, "last_call")
 
 func update_flashlight():
-	var active: bool = flashlight_out and (mode in ["walk", "approach", "map", "cave", "dream"] or hands.requested_pose == "radio") and mode != "menu"
+	var active: bool = flashlight_out and (mode in ["walk", "approach", "map", "cave", "dream", "sighting"] or hands.requested_pose == "radio") and mode != "menu"
 	player.flashlight.visible = active
 
 func _unhandled_key_input(event):
@@ -665,8 +670,9 @@ func _unhandled_key_input(event):
 		if key == KEY_ESCAPE:
 			book_view.hide()
 			walk()
-		elif key == KEY_LEFT: book_view.turn(-1)
-		elif key == KEY_RIGHT or advance: book_view.turn(1)
+		elif key == KEY_LEFT: turn_book(-1)
+		elif key == KEY_RIGHT or advance: turn_book(1)
+		elif key == KEY_E and book_view.page == 2 and book_view.light_comparison: turn_book(1)
 		return
 	if mode == "mate_morning":
 		if key == KEY_E: switch_mate_to_radio()
@@ -695,7 +701,7 @@ func _unhandled_key_input(event):
 		objective_seconds = 4.0
 		intro_controls_seconds = 0.0
 		return
-	if key == KEY_L and mode in ["approach", "walk", "map", "cave", "dream"]:
+	if key == KEY_L and mode in ["approach", "walk", "map", "cave", "dream", "sighting"]:
 		flashlight_out = not flashlight_out
 		if mode == "approach" and page == 6 and flashlight_out: arrival_action = true
 		update_flashlight()
@@ -734,7 +740,10 @@ func _unhandled_key_input(event):
 	if key == KEY_SPACE and mode in ["walk", "approach", "cave"] and player.is_on_floor():
 		player.velocity.y = 5.7
 		return
-	if mode == "last_voice_answer" and advance:
+	if mode == "sighting":
+		if key == KEY_E and sighting_focus >= SIGHTING_FOCUS_SECONDS and looking_at_sighting():
+			observe_lights()
+	elif mode == "last_voice_answer" and advance:
 		finish_dream()
 	elif mode == "night_cut" and advance:
 		enter_cave()
@@ -929,7 +938,7 @@ func _unhandled_key_input(event):
 						overlay("message", "Debajo de la pintura nueva se lee todavía una fecha: 12 de julio.", "Espacio · volver")
 	elif mode == "crossing_warning" and advance:
 		radio.play_interference()
-		overlay("crossing_response", "La estática cede. «¿Ya llegaste? Recién prendo la radio». Ahora la voz de Mara suena más lejos. Una luz sube desde el fondo del cauce. Cuando te quedás quieto, se detiene.", ["Retrocedés con Mara en línea.", "Apagás la linterna y esperás.", "Alumbrás el cauce."], "radio")
+		show_sighting(Sighting.CROSSING)
 	elif key == KEY_ESCAPE and (mode in ["departure_radio", "trail_chat"] or (mode == "talk" and after == "last_call")):
 		walk()
 	elif mode == "talk" and advance:
@@ -943,9 +952,7 @@ func _unhandled_key_input(event):
 			score.silence(0.8)
 			radio_panel.hide()
 			await get_tree().create_timer(2.2).timeout
-			score.cue("melancholy", 30, -17.0, 1.5)
-			radio.play_interference()
-			conversation(["Acaba de prenderse otra vez y la chapa está quieta.", "Entre el ruido oí «todavía». Pensé que habías hablado vos.", "¿Seguís ahí? Me quedo hasta que llegues."], "quarry_home")
+			show_sighting(Sighting.QUARRY)
 		elif after == "crossing_home":
 			stage = 18
 			bedtime = true
@@ -1081,7 +1088,9 @@ func select_option(index: int):
 		if stage == 18:
 			save_game(true, "walk")
 			bedtime = false
-			overlay("last_night_choice", "Vas a apagar la luz cuando un reflejo barre la ventana. Vuelve a aparecer entre los molles. Por la radio, Mara pregunta si seguís despierto.", ["Salís y seguís las luces en el monte.", "Cerrás la cortina y te acostás."])
+			player.position = Vector3(1.24, 0.04, 1.82)
+			player.velocity = Vector3.ZERO
+			show_sighting(Sighting.SHELTER)
 			return
 		if stage == 15:
 			start_day36()
@@ -1115,8 +1124,14 @@ func select_option(index: int):
 				day_card("Día 7 · Alcance", "Llevás una semana en el puesto. Reconocés el doble clic de Mara antes de que empiece a hablar.", "Espacio · levantarse")
 	elif mode == "sighting_response":
 		if index == 0:
+			field_note += " Se lo conté a Mara."
 			conversation(["¿Celeste? Qué fino el cerro, ahora hace juego con el cielo.", "Guardá el rumbo. Cuando llegues a la antena probamos el canal."], "sighting_return")
-		else: walk()
+		else:
+			field_note += " Guardé el rumbo para compararlo después."
+			walk()
+	elif mode == "quarry_sighting_response":
+		var line := "Dejé de mirar la chapa cuando se prendió arriba del corte." if index == 0 else "Guardá también la hora. Mañana podemos poner las dos anotaciones juntas."
+		conversation([line, "Entre el ruido oí «todavía». Pensé que habías hablado vos.", "¿Seguís ahí? Me quedo hasta que llegues."], "quarry_home")
 	elif mode == "fox":
 		valley.route.release_fox(index == 0)
 		field_note += " Lo ves bajar al cauce." if index == 0 else " Le dejás libre el paso."
@@ -1270,7 +1285,14 @@ func open_book():
 	overlay("book", "", "")
 	var book_memory: = str(keepsakes.get("libro", ""))
 	var travel_memory: = str(keepsakes.get("puesto", ""))
-	book_view.open("imprenta grande" in book_memory, "cinta verde" in travel_memory)
+	book_view.open("imprenta grande" in book_memory, "cinta verde" in travel_memory, stage >= 8)
+
+func turn_book(step: int):
+	book_view.turn(step)
+	if book_view.page == 3 and not book_light_notes:
+		book_light_notes = true
+		field_note += " Comparé en Observar el Cielo el rumbo de los destellos del abra. Dejé dos marcas en un papel entre las páginas."
+		save_game(true, "walk")
 
 func enter_cave():
 	score.silence(3.0)
@@ -1353,10 +1375,13 @@ func inspect_cave():
 			night_investigation = 2
 			overlay("cave_text", "14/10/1974 · «03.11. Dos destellos. El segundo bajó al claro».\n\n09/11/1978 · «Dos golpes. Una voz avisó que esperáramos. La frecuencia del puesto estaba libre».\n\nHay columnas de hora, rumbo y respuesta. En la última siempre hay una raya. No encontrás una firma.", "Espacio · dejar los cuadernos")
 		"Salida de la cueva":
+			if cave_exit_open: return
 			if not cave_notebooks_read:
 				overlay("cave_text", "Entra aire frío. Atrás tuyo, la luz del receptor cae sobre unos cuadernos abiertos.", "Espacio · volver")
 			else:
-				overlay("cave_exit_choice", "Fuera de la cueva, la luz pasa entre dos troncos y se pierde. Más abajo se distingue la huella de regreso.", ["Seguís el destello hasta el claro.", "Tomás la huella de regreso."])
+				player.position = LastNight.CAVE + Vector3(0, 0.72, -37.35)
+				player.velocity = Vector3.ZERO
+				show_sighting(Sighting.CAVE)
 
 func cue_clearing():
 	score.cue("tension", 14, -9.0, 0.35, 25.0)
@@ -1539,7 +1564,7 @@ func start_day25():
 	valley.configure_sky(3)
 	valley.morning()
 	save_game(true, "walk")
-	day_card("Día 25 · La quebrada larga", "Hace días que usás el cuaderno para anotar las lecturas. Esta mañana lo abrís por la hoja donde dibujaste las estrellas del sueño. La dejás marcada. Afuera clareó. Hoy Mara te espera en la radio.", "Espacio · levantarse")
+	day_card("Día 25 · La quebrada larga", "Hace días que usás el cuaderno para anotar las lecturas. Esta mañana lo abrís por la hoja donde dibujaste las estrellas del sueño. La dejás marcada. Sobre el escritorio está el libro de tu viejo. Todavía podés comparar el rumbo de los destellos del abra. Hoy Mara te espera en la radio.", "Espacio · levantarse")
 
 func show_mate_morning():
 	walk()
@@ -1566,52 +1591,100 @@ func switch_mate_to_radio():
 	walk()
 	transmit()
 
-func show_sighting():
+func show_sighting(kind: Sighting = Sighting.ABRA):
+	sighting = kind
+	sighting_time = 0.0
+	sighting_focus = 0.0
 	mode = "sighting"
-	sighting_waiting = true
-	player.walking = false
+	player.walking = kind in [Sighting.ABRA, Sighting.QUARRY, Sighting.CROSSING]
 	player.looking_only = true
 	Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
 	hands.show_map(false)
 	hands.hold("")
+	compass_out = false
+	cross.show()
 	overlay_choices.hide()
 	radio_panel.hide()
 	shade.hide()
 	words.text = ""
-	var ridge: Vector3 = valley.route.at(valley.route.trail(448) + 34.0, 448)
-	valley.beacon.position = ridge + Vector3.UP * 60.0
-	valley.beacon.scale = Vector3.ONE * 2.15
-	hint.text = "Mirá el cielo sobre la ladera."
+	var center: Vector3
+	match kind:
+		Sighting.ABRA:
+			center = valley.route.at(valley.route.trail(448) + 34.0, 448) + Vector3.UP * 60.0
+			place_sighting_light(valley.second_beacon, center + Vector3(8, 12, -11))
+			if float(valley.sky_mat.get_shader_parameter("nightfall")) < 0.71: valley.night(5.0)
+		Sighting.QUARRY:
+			center = valley.route.quarry_point(1.0) + Vector3(-12, 29, -54)
+		Sighting.CROSSING:
+			center = valley.route.crossing_point(1.0) + Vector3(-12, 24, -46)
+		Sighting.SHELTER:
+			center = Vector3(42.0, 9.5, -4.0)
+			place_sighting_light(valley.second_beacon, center + Vector3(5, 3.2, 10))
+		Sighting.CAVE:
+			center = LastNight.CAVE + Vector3(0.6, 6.6, -64.0)
+	place_sighting_light(valley.beacon, center)
+	update_sighting(0.0)
 
-func update_sighting():
+func place_sighting_light(light: Sprite3D, center: Vector3):
+	light.position = center
+	var distance: float = player.camera.global_position.distance_to(center)
+	light.pixel_size = clampf(distance * 0.051, 1.2, 16.0) / 64.0
+	light.show()
+
+func looking_at_sighting() -> bool:
 	var camera: Camera3D = player.camera
-	var direction: Vector3 = valley.beacon.position - camera.global_position
-	if not camera.is_position_in_frustum(valley.beacon.position):
-		var flat := Vector3(direction.x, 0.0, direction.z).normalized()
-		var sideways := flat.dot(camera.global_basis.x)
-		var turn := "izquierda" if sideways < 0.0 else "derecha"
-		hint.text = "Mirá más arriba, sobre el abra." if absf(sideways) < 0.22 and direction.dot(-camera.global_basis.z) > 0 else "Mirá hacia la %s, sobre la ladera." % turn
+	var eye: Vector3 = camera.global_position
+	for light in [valley.beacon, valley.second_beacon]:
+		if not light.visible: continue
+		var point: Vector3 = light.global_position
+		if (point - eye).normalized().dot(-camera.global_basis.z) < 0.989: continue
+		if not camera.is_position_in_frustum(point): continue
+		var ray := PhysicsRayQueryParameters3D.create(eye, point, 3, [player.get_rid()])
+		if get_world_3d().direct_space_state.intersect_ray(ray).is_empty(): return true
+	return false
+
+func update_sighting(delta: float):
+	sighting_time += delta
+	valley.beacon.modulate.a = 0.48 + 0.52 * pow(0.5 + 0.5 * sin(sighting_time * 3.3 + 0.8), 2.4)
+	valley.second_beacon.modulate.a = 0.38 + 0.62 * pow(0.5 + 0.5 * sin(sighting_time * 3.3 - 1.15), 2.4)
+	if looking_at_sighting():
+		sighting_focus += delta
+		var label := "?????" if sighting == Sighting.ABRA else "Luces extrañas"
+		hint.text = label + (" · E · observar" if sighting_focus >= SIGHTING_FOCUS_SECONDS else "")
 		return
-	sighting_waiting = false
-	hint.text = ""
-	score.cue("melancholy", 31, -15.0, 1.7)
-	var flash = valley.beacon
-	var next_flash: Vector3 = flash.position + Vector3(6.0, 12.0, -11.0)
-	var sequence_tween := create_tween()
-	sequence_tween.tween_interval(0.35)
-	sequence_tween.tween_callback(flash.show)
-	sequence_tween.tween_interval(0.72)
-	sequence_tween.tween_callback(flash.hide)
-	sequence_tween.tween_interval(0.55)
-	sequence_tween.tween_property(flash, "position", next_flash, 0.0)
-	sequence_tween.tween_callback(flash.show)
-	sequence_tween.tween_interval(0.79)
-	sequence_tween.tween_callback(flash.hide)
-	sequence_tween.tween_callback(func():
-		second_sighting = true
-		radio.play_interference()
-		field_note += " Camino al abra ves dos destellos sobre la ladera."
-		overlay("sighting_response", "El azul dura menos que un parpadeo. La radio se corta a mitad de una palabra: «…cruces…».", ["Le preguntás a Mara si lo vio.", "Guardás el rumbo para más tarde."]))
+	sighting_focus = 0.0
+	var camera: Camera3D = player.camera
+	var direction: Vector3 = (valley.beacon.global_position - camera.global_position).normalized()
+	var sideways: float = direction.dot(camera.global_basis.x)
+	if sighting == Sighting.SHELTER:
+		hint.text = "Un reflejo barre la ventana. Mirá por el vidrio."
+	elif absf(sideways) > 0.23 or direction.dot(-camera.global_basis.z) < 0.0:
+		hint.text = "Mirá el cielo hacia la %s." % ("izquierda" if sideways < 0.0 else "derecha")
+	else:
+		hint.text = "Mirá arriba, donde se abrió el cielo." if sighting == Sighting.CAVE else "Buscá el destello sobre la ladera."
+
+func observe_lights():
+	valley.beacon.hide()
+	valley.second_beacon.hide()
+	match sighting:
+		Sighting.ABRA:
+			second_sighting = true
+			score.cue("melancholy", 31, -15.0, 1.7)
+			radio.play_interference()
+			field_note += " Camino al abra vi dos destellos sobre la ladera. El segundo estaba más alto."
+			overlay("sighting_response", "Un punto azul se apaga. El otro tarda un instante más. La radio se corta a mitad de una palabra: «…cruces…».", ["Le preguntás a Mara si los vio.", "Anotás el rumbo para más tarde."])
+		Sighting.QUARRY:
+			score.cue("cosmic", 28, -16.0, 2.0)
+			radio.play_interference()
+			var caption := "La luz queda suspendida por encima del corte. La chapa sigue contra el bastidor."
+			if book_light_notes: caption += " Te acordás de las dos marcas que dejaste en el libro. Desde acá el rumbo es otro."
+			overlay("quarry_sighting_response", caption, ["Le decís a Mara que la chapa sigue quieta.", "Anotás el rumbo antes de contestar."], "radio")
+		Sighting.CROSSING:
+			overlay("crossing_response", "La estática cede. «¿Ya llegaste? Recién prendo la radio». La luz titila por encima de la quebrada. Entre un destello y otro no se oye el agua.", ["Retrocedés con Mara en línea.", "Apagás la linterna y esperás.", "Alumbrás el cauce."], "radio")
+		Sighting.SHELTER:
+			overlay("last_night_choice", "Un punto queda quieto sobre los molles. El otro se pierde entre las ramas. Por la radio, Mara te pregunta si seguís despierto.", ["Salís y seguís las luces en el monte.", "Cerrás la cortina y te acostás."])
+		Sighting.CAVE:
+			overlay("cave_exit_choice", "La luz titila encima de un claro entre los árboles. Más abajo distinguís la huella de regreso.", ["Seguís el destello hasta el claro.", "Tomás la huella de regreso."])
 
 func day_card(title: String, caption: String, cue: String):
 	overlay("message", title.to_upper() + "\n\n" + caption, cue)

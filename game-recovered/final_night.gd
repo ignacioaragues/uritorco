@@ -38,8 +38,6 @@ static func build_cave(v):
 	var lamp = v.box(CAVE + Vector3(-2.48, 1.88, -28.35), Vector3(0.085, 0.042, 0.035), "b65734")
 	lamp.material_override.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
 	v.box(CAVE + Vector3(1.05, 1.43, -36.1), Vector3(0.15, 1.44, 0.15), "a19272", true, "Salida de la cueva")
-	var glow = v.stone(CAVE + Vector3(0, 2.25, -48.2), Vector3(0.4, 0.43, 0.4), "9ababc")
-	glow.material_override.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
 
 static func build_door(v):
 	for side in [-1, 1]:
