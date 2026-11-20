@@ -1,6 +1,7 @@
 extends Node3D
 
 const Creek = preload("res://cauce.gd")
+const LastNight = preload("res://final_night.gd")
 
 var rng: = RandomNumberGenerator.new()
 var route = preload("res://travesia.gd").new()
@@ -104,6 +105,7 @@ func _ready():
 		var x: = path_x(z) + side * rng.randf_range(17, 35)
 		var size_m := Vector3(rng.randf_range(12, 21), rng.randf_range(4, 9), rng.randf_range(10, 22))
 		if z > -36.0 and Creek.trail_distance(Vector2(x, z)) < size_m.x + 5.0: continue
+		if absf(x - LastNight.DOOR.x) < size_m.x + 5.0 and absf(z - LastNight.DOOR.z + 3.0) < size_m.z + 5.0: continue
 		if z < route.WEST_START_Z + size_m.z and absf(x - route.western_x_at(z)) < size_m.x + 7.0: continue
 		stone(Vector3(x, -1, z), size_m, "837f65", true)
 	for i in range(160):
@@ -111,6 +113,7 @@ func _ready():
 		var x: = rng.randf_range(-45, 45)
 		if abs(x - path_x(z)) < 4.8 or (abs(x) < 12.5 and z > -15.5): continue
 		if Creek.trail_distance(Vector2(x, z)) < 4.0: continue
+		if absf(x - LastNight.DOOR.x) < 6.0 and absf(z - LastNight.DOOR.z + 2.0) < 8.0: continue
 		if z < route.WEST_START_Z + 1.0 and absf(x - route.western_x_at(z)) < 5.0: continue
 		var k: = rng.randf_range(0.5, 2.1)
 		if i % 3 == 0:
@@ -164,6 +167,7 @@ func _ready():
 	Creek.dress(self)
 	dress_west_trail_near_refugio()
 	preload("res://museo.gd").build(self)
+	LastNight.build_door(self)
 
 func build_distant_ridges():
 	const SECTIONS := 96
@@ -746,6 +750,7 @@ func dress_day36(show_crossing: bool = true):
 
 var yard_hinge: Node3D
 var privy_hinge: Node3D
+var museum_hinge: Node3D
 
 func build_yard_fence():
 	var gate_x: = path_x(-13.0)

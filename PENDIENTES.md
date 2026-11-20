@@ -9,6 +9,8 @@
 - **Avistamiento y paisaje.** Los destellos del Día 7 esperan a que el jugador mire hacia un lugar fijo sobre la ladera. La cámara queda bajo control del jugador. Las sierras de fondo al sur se alejaron del terreno jugable y tienen laderas con volumen.
 - **Sueños.** Se reconstruyeron los tres relieves alienígenas. El primero permite saltar con baja gravedad y mirar el cielo para despertar. El cuaderno registra el dibujo de las estrellas antes de pasar al Día 25. El segundo usa la pieza y el tercero el último arco por cercanía. En los tres aparece «????» al mirar hacia el cielo. Se probaron las tres transiciones y se caminó hasta el último arco.
 - **Mate.** Abre el Día 32. E baja la mano y la radio sube después en esa misma mano.
+- **Museo de sitio.** El edificio tiene rampa, puerta, vestíbulo y dos salas recorribles. La sala de los pueblos comechingones tiene vitrinas con réplicas didácticas de un mortero con su mano, un huso con tortero y una vasija. Las fichas explican los usos y el contexto arqueológico, y reconocen a las comunidades actuales. La segunda sala reúne los relatos del cerro. Las seis ilustraciones distinguen las réplicas, las hipótesis y los testimonios. El archivo del 12 de julio es opcional.
+- **Mara y finales.** Volvieron las cuatro charlas durante las caminatas y sus menciones en la despedida. Con al menos dos charlas aparece la opción de golpear su puerta. Se probó la llegada a pie al puesto integrado al valle, el paso entre ambas salas y los dos epílogos sobre negro.
 - La rama `codigo-fuente` guarda el proyecto recuperado, sus recursos y este registro. Cada tanda de recuperación debe quedar en un commit de esa rama junto con su verificación.
 - Al cierre de cada pasada, registrar los cambios incorporados y los pendientes que quedan. Preparar una exportación de Windows cuando se pida.
 
@@ -28,7 +30,7 @@ Esta lista reconstruye el estado informado del proyecto editable. La exportació
 
 ## Todavía pendiente
 
-- **Cambios posteriores a la descarga.** Reincorporar la ampliación del museo y su visita opcional, la casa de Mara integrada al valle, los mojones y el cierre del descenso, las charlas de caminata y la condición de la puerta, los epílogos sobre negro, los recuerdos del padre y la señal de los dos golpes. Esta copia todavía exige dejar una nota en el museo.
+- **Cambios posteriores a la descarga.** Reincorporar los mojones apoyados en el terreno y el cierre del descenso en el banco del acceso, los recuerdos nocturnos del padre y la señal de los dos golpes.
 - **Pasada narrativa.** Recorrer de corrido el prólogo y los días para ajustar pausas, caminatas, charlas, pistas y saltos entre jornadas. Escuchar la mezcla de diálogo, música, interferencia y linterna durante la última noche.
 - **Prólogo y controles.** Volver a comprobar la mochila desde la cámara inicial, los extremos de la ruta, el agua a los costados del puente y el corte a la llegada. Pulir la trepada por la laja del mapa principal, con el cuerpo junto a la pared y apoyos visibles.
 - **Valle y refugio.** Revisar el cambio de color del sendero hacia el corredor principal y el recorte del terreno visto desde arriba. Revisar el despeje de la tranquera y la orientación hacia la casa de Mara desde la parada.

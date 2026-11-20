@@ -1,7 +1,7 @@
 extends RefCounted
 
 const CAVE: = Vector3(0, 80, 1900)
-const DOOR: = Vector3(0, 80, 2100)
+const DOOR := Vector3(18, 0, -52)
 const PLANET := Vector3(0, 88, 2450)
 const GROUND_COLORS = [Color("544663"), Color("354b4c"), Color("615062")]
 const ROCK_COLORS = ["746182", "698283", "7a6479"]
@@ -42,10 +42,21 @@ static func build_cave(v):
 	glow.material_override.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
 
 static func build_door(v):
-	v.box(DOOR + Vector3(0, -0.25, -3), Vector3(11, 0.5, 12), "7e765b", true)
-	v.plaster(v.box(DOOR + Vector3(0, 1.6, -5.1), Vector3(7.4, 3.2, 0.35), "b09d80", true))
-	v.timber(v.box(DOOR + Vector3(0, 1.12, -4.86), Vector3(1.22, 2.24, 0.15), "705342", true, "Puerta de Mara"))
-	v.box(DOOR + Vector3(0.42, 1.12, -4.76), Vector3(0.12, 0.065, 0.06), "a08d68")
+	for side in [-1, 1]:
+		v.plaster(v.box(DOOR + Vector3(side * 1.97, 1.32, -4.8), Vector3(2.65, 2.64, 0.24), "b09d80", true))
+		v.plaster(v.box(DOOR + Vector3(side * 3.22, 1.32, -7.25), Vector3(0.24, 2.64, 5.05), "a9967d", true))
+		var roof: MeshInstance3D = v.box(DOOR + Vector3(side * 1.73, 2.79, -7.25), Vector3(3.71, 0.17, 5.6), "6d5849")
+		roof.rotation.z = -side * 0.13
+	v.plaster(v.box(DOOR + Vector3(0, 1.32, -9.78), Vector3(6.52, 2.64, 0.24), "a9967d", true))
+	v.plaster(v.box(DOOR + Vector3(0, 2.46, -4.8), Vector3(1.29, 0.37, 0.24), "b09d80", true))
+	v.timber(v.box(DOOR + Vector3(0, 1.12, -4.74), Vector3(1.29, 2.24, 0.14), "705342", true, "Puerta de Mara"))
+	v.box(DOOR + Vector3(0.42, 1.12, -4.65), Vector3(0.12, 0.065, 0.06), "a08d68")
+	v.box(DOOR + Vector3(0, 0.073, -4.36), Vector3(1.68, 0.146, 0.91), "8d806d", true)
+	v.box(DOOR + Vector3(-2.0, 1.48, -4.655), Vector3(1.24, 0.91, 0.07), "695744")
+	v.box(DOOR + Vector3(-2.0, 1.48, -4.608), Vector3(1.09, 0.77, 0.025), "596566")
+	v.box(DOOR + Vector3(-2.0, 1.48, -4.587), Vector3(0.045, 0.80, 0.018), "8b795f")
+	v.box(DOOR + Vector3(0.88, 1.06, -4.63), Vector3(0.30, 0.25, 0.18), "75634f")
+
 static func dream_x(variant: int, distance: float) -> float:
 	match variant:
 		1: return 5.5 * sin(distance * 0.09)
