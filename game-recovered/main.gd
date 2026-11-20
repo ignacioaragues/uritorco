@@ -6,8 +6,9 @@ const Creek = preload("res://cauce.gd")
 const SkyGuide = preload("res://constelacion.gd")
 const LastNight = preload("res://final_night.gd")
 const Saves = preload("res://partidas.gd")
+const Mara = preload("res://charlas_mara.gd")
 const SUMMIT_NIGHT_SECONDS := 40.0
-const STATE = ["page", "stage", "keepsakes", "bedtime", "field_note", "crossing_note", "fox_seen", "hiker_met", "route_reported", "observing", "pending_return", "heard", "read_note", "creek_note", "bed_pose", "bed_pitch", "gate_jumped", "map_read", "awaiting_call", "dream_count", "branch_found", "mapped_distance", "has_piece", "summit_mapped", "camp_read", "arrival_action", "second_sighting", "day7_dusk", "trail_check_in", "asked_mara_to_stay", "archive_read", "trail_replies", "crossing_response", "summit_echo_response", "night_investigation", "ending_at_door", "sky_memories", "compass_lost", "last_voice_reply", "scored_walks"]
+const STATE = ["page", "stage", "keepsakes", "bedtime", "field_note", "crossing_note", "fox_seen", "hiker_met", "route_reported", "observing", "pending_return", "heard", "read_note", "creek_note", "bed_pose", "bed_pitch", "gate_jumped", "map_read", "awaiting_call", "dream_count", "branch_found", "mapped_distance", "has_piece", "summit_mapped", "camp_read", "arrival_action", "second_sighting", "day7_dusk", "archive_read", "trail_replies", "crossing_response", "summit_echo_response", "night_investigation", "ending_at_door", "sky_memories", "compass_lost", "last_voice_reply", "scored_walks"]
 var flashlight_out: = false
 var camp_read: = false
 var summit_mapped: = false
@@ -16,35 +17,11 @@ var dream_piece: MeshInstance3D
 var dream_world: Node3D
 var archive_read := false
 var trail_replies: Dictionary = {}
+var trail_topic := ""
+var trail_answer := 0
 var ending_paragraphs: PackedStringArray = []
 var ending_paragraph := 0
 var ending_fade: Tween
-const TRAIL_CHATS = {
-	7: [
-		"Si vas por el museo, probá la puerta. El de la llave se fue al pueblo. Acá decidimos llamarlo horario corrido.",
-		["«¿Venías mucho al museo?»", "«Con razón le falta el cartel de horarios»."],
-		[
-			["Mi vieja me traía cuando llovía. Había un mortero que podías tocar.", "Un día nos dejaron encerradas. Mi vieja siguió leyendo las fichas hasta que volvieron."],
-			["Sí, ése me lo llevé yo para que no se lo llevara el viento.", "Ahora está abajo de una pata de mi mesa. Horario corrido, mesa firme."]
-		]
-	],
-	27: [
-		"Desde acá veo el cable, así que calculo que vas bien. Te iba a preguntar algo. ¿Mirabas el cielo antes de venir acá?",
-		["«Lo miraba con mi viejo. Desde que murió me cuesta un poco».", "«Estudié astronomía. Hace rato que miro más papel que cielo»."],
-		[
-			["Podés contarme de él si te dan ganas. A mí me gustaba escuchar a mi vieja reconocer pájaros.", "Ahora reconozco alguno. A veces me encuentro por decirle cuál es."],
-			["Entonces te voy a pedir un favor. Hay una estrella que veo desde la pileta y nunca sé cómo se llama.", "Algún día te la señalo. Por radio terminaría señalándote media sierra."]
-		]
-	],
-	32: [
-		"Ya debe darte la sombra. Bajá tranquilo. El primer día que salí de ahí me apuré tanto que llegué con dos piedras adentro de la bota.",
-		["«¿Dónde te dejo la llave el último día?»", "«¿Me dejás la radio abierta un rato?»"],
-		[
-			["En el buzón del puesto. La puerta de madera que te dije, antes de la parada.", "Le iba a poner un timbre. Por ahora tengo dos tornillos y un agujero."],
-			["Sí. Estoy lavando los platos. Si escuchás que se cae algo, seguí caminando.", "Vos avisame cuando veas el banco."]
-		]
-	]
-}
 var crossing_response: = -1
 var summit_echo_response := -1
 const CROSSING_NOTES = [
@@ -72,8 +49,6 @@ const SKY_MEMORIES = {
 }
 var scored_walks: Array = []
 var score = preload("res://banda_sonora.gd").new()
-var trail_check_in: = false
-var asked_mara_to_stay: = false
 var book_view = preload("res://libro.gd").new()
 var postcard_view = preload("res://postal.gd").new()
 var rain_view: = ColorRect.new()
@@ -355,7 +330,7 @@ func _process(delta):
 				elif hint.text.is_empty(): hint.text = "Seguí los arcos hacia la luz."
 	radio_hint.visible = mode in ["walk", "map"] and radio_available()
 	if radio_hint.visible:
-		radio_hint.text = "R   ·   Charlá con Mara" if available_trail_chat() != 0 else "R   ·   Mara"
+		radio_hint.text = "R   ·   Charlá con Mara" if stage != 19 and not mission_radio_available() else "R   ·   Mara"
 	if mode in ["walk", "map"] and stage >= 10 and not branch_found:
 		if player.position.distance_to(valley.route.at(valley.route.trail(300), 300)) < 22:
 			branch_found = true
@@ -533,7 +508,7 @@ func walk():
 	Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
 
 func conversation(lines: Array, next: String):
-	var replying: bool = mode in ["choice", "report", "reception", "field_report", "day2_reply", "trail_check_in", "trail_chat"]
+	var replying: bool = mode in ["choice", "report", "reception", "field_report", "day2_reply", "departure_radio", "trail_chat"]
 	sequence = lines.duplicate()
 	after = next
 	speak()
@@ -544,29 +519,23 @@ func speak():
 	overlay("talk", "Mara\n\n" + str(sequence.pop_front()), "Espacio · seguir")
 
 func radio_available() -> bool:
-	return (stage == 0 and not heard) or awaiting_call or stage == 19 or can_check_in() or available_trail_chat() != 0 or stage == 2 or (stage == 5 and not bedtime) or observing or (stage == 9 and not route_reported) or stage in [11, 14, 17]
+	return stage == 19 or mission_radio_available() or not available_trail_chat().is_empty()
 
-func can_check_in() -> bool:
-	return stage == 4 and not trail_check_in and player.position.z > 30.0 and Creek.trail_distance(Vector2(player.position.x, player.position.z)) < 14.0
+func mission_radio_available() -> bool:
+	return (stage == 0 and not heard) or awaiting_call or stage == 2 or (stage == 5 and not bedtime) or observing or (stage == 9 and not route_reported) or stage in [11, 14, 17]
 
-func available_trail_chat() -> int:
-	if awaiting_call or observing or (bedtime and stage != 15): return 0
-	var distance: float = valley.route.ORIGIN_Z - player.position.z
-	match stage:
-		7:
-			var lateral: float = player.position.x - valley.route.trail(Museum.DISTANCE)
-			if not trail_replies.has(7) and absf(distance - Museum.DISTANCE) < 42.0 and absf(lateral) < 32.0:
-				return 7
-		10:
-			if not trail_replies.has(27) and player.position.distance_to(valley.route.quarry_point(0.44)) < 86.0:
-				return 27
-		15:
-			if not trail_replies.has(32) and distance > 32.0:
-				return 32
-	return 0
+func available_trail_chat() -> String:
+	if mission_radio_available() or not player.climb_points.is_empty(): return ""
+	return Mara.available(stage, player.position, bedtime, second_sighting, trail_replies)
 
 func can_visit_mara() -> bool:
-	return trail_replies.size() + int(trail_check_in) >= 2
+	return Mara.can_visit(trail_replies)
+
+func start_trail_chat(topic: String):
+	trail_topic = topic
+	var chat: Array = Mara.TOPICS[topic]
+	radio.play()
+	overlay("trail_chat", "Mara · " + chat[1], chat[2], "radio")
 
 func transmit():
 	if not radio_available(): return
@@ -580,31 +549,17 @@ func radio_exchange():
 	if stage == 0 and not heard:
 		welcome_mara()
 		return
+	var chat := available_trail_chat()
 	if stage == 19:
-		var can_visit := can_visit_mara()
-		var reply := "¿Ya tenés la llave? El colectivo pasa en un rato."
-		if archive_read:
-			reply = "¿Viste el dibujo? Lo encontraron con los papeles del poste. No sé de quién era."
-		var farewell := "Gracias por hacerte cargo del puesto. Pasaron rápido estas semanas."
-		if can_visit:
-			farewell = "Al principio esperaba tu parte por el trabajo. Después empecé a dejar la radio prendida antes de que llamaras."
-		if night_investigation > 0:
-			farewell = "Había tanto ruido anoche que por un rato pensé que no ibas a volver a contestar. Hoy dejé la radio prendida desde temprano."
-		var goodbye := "Ese primer día me pediste que te acompañara un rato. A mí también me hizo bien que hubiera alguien del otro lado." if asked_mara_to_stay else "Al próximo relevo le voy a contar por dónde subiste."
-		if trail_replies.has(27):
-			farewell = "Anoche busqué la estrella de la pileta. Había nubes. Igual me quedé ahí un rato." if trail_replies[27] == 1 else "Anoche salí a ver si abría el cielo. Me acordé de lo que me contaste de tu viejo."
-			if night_investigation > 0: reply += " Anoche casi salgo a buscarte."
-		if trail_replies.has(7):
-			goodbye = "Llovió y pensé en las tardes que mi vieja me llevaba al museo. Hacía años que no se lo contaba a nadie." if trail_replies[7] == 0 else "Ayer enderecé la mesa. El cartel del museo quedó libre por si querés darle un último uso."
-		var departure := "Dejame la llave en el buzón cuando pases. Buen viaje."
-		if can_visit:
-			departure = "Si te queda tiempo antes del colectivo, ya sabés cuál es mi puerta."
-			if trail_replies.has(32):
-				departure = "Mejor traeme la llave en persona, si te da el tiempo. Golpeá. Todavía me sobran dos tornillos." if trail_replies[32] == 0 else "El día que bajaste de la cumbre hice durar dos platos toda la bajada. Hoy, si querés pasar, te guardo una taza."
-		conversation([reply, farewell, goodbye, departure, "Bueno. Gracias por contestar."], "last_call")
+		if chat.is_empty():
+			farewell_mara()
+		else:
+			trail_topic = chat
+			radio.play()
+			overlay("departure_radio", "Mara · Estoy acá. ¿Cómo va esa última mañana?", ["Charlar un rato.", "Despedirte antes del colectivo.", "Guardar la radio."], "radio")
 		return
-	if can_check_in():
-		overlay("trail_check_in", "Mara · ¿Cómo te está tratando el camino?", ["Se agradece el silencio.", "Me vendría bien un poco de charla."], "radio")
+	if not chat.is_empty():
+		start_trail_chat(chat)
 		return
 	if awaiting_call:
 		var brief: Array
@@ -616,12 +571,6 @@ func radio_exchange():
 			10: brief = ["¿Tenés el mapa a mano?", "Después de la tranquera, doblá a la izquierda. Esa huella te lleva al cable viejo.", "Seguilo hasta el malacate. Desde mi patio se ve ese corte."]
 			8: brief = ["Anoche se cortó el paso de la laja.", "Llegá hasta el hito del filo.", "Avisame si se puede volver por abajo."]
 		conversation(brief, "brief")
-		return
-	var chat_day := available_trail_chat()
-	if chat_day != 0:
-		var chat: Array = TRAIL_CHATS[chat_day]
-		radio.play()
-		overlay("trail_chat", "Mara · " + chat[0], chat[1], "radio")
 		return
 	if stage == 17:
 		var reply := "Bien. Mañana llevo pintura para marcarlo."
@@ -658,6 +607,41 @@ func radio_exchange():
 			overlay("report", "Día 2 · Parte del cauce\n\nTenés la lectura anotada. Mara te espera en el canal.", ["Pasar la lectura.", "Contarle lo de la mica."])
 
 		6, 7: overlay("message", "El parte es al anochecer. " + objective(), "Espacio · volver")
+
+func farewell_mara():
+	var reply := "¿Ya tenés la llave? El colectivo pasa en un rato."
+	if archive_read:
+		reply = "¿Viste el dibujo? Lo encontraron con los papeles del poste. No sé de quién era."
+	var close_enough := can_visit_mara()
+	var farewell := "Gracias por hacerte cargo del puesto. Pasaron rápido estas semanas."
+	if close_enough:
+		farewell = "Al principio esperaba tu parte por el trabajo. Después empecé a dejar la radio prendida antes de que llamaras."
+	if night_investigation > 0:
+		farewell = "Había tanto ruido anoche que por un rato pensé que no ibas a volver a contestar. Hoy dejé la radio prendida desde temprano."
+	var memory := ""
+	if trail_replies.has("cielo"):
+		memory = "Anoche busqué la estrella de la pileta. Había nubes. Igual me quedé ahí un rato." if trail_replies["cielo"] == 1 else "Anoche salí a ver si abría el cielo. Me acordé de lo que me contaste de tu viejo."
+	elif trail_replies.get("ventana", -1) == 0:
+		memory = "La pava que puse anoche sigue en la hornalla. Cuando junté las tazas me quedó una limpia."
+	elif trail_replies.get("sueno", -1) == 0:
+		memory = "¿Te acordás de ese cielo que soñaste? Si te vuelve a pasar, guardá el dibujo. Algún día me lo mostrás."
+	elif trail_replies.has("museo"):
+		memory = "Llovió y pensé en las tardes que mi vieja me llevaba al museo. Hacía años que no se lo contaba a nadie." if trail_replies["museo"] == 0 else "Ayer enderecé la mesa. El cartel del museo quedó libre por si querés darle un último uso."
+	elif trail_replies.get("cauce", -1) == 1:
+		memory = "Ese primer día me pediste que te acompañara un rato. A mí también me hizo bien que hubiera alguien del otro lado."
+	elif trail_replies.get("primera_noche", -1) == 0:
+		memory = "Me acostumbré a ver la luz del refugio cuando cierro la cortina. Hoy voy a extrañar verla prendida."
+	elif trail_replies.get("ultima_curva", -1) == 0:
+		memory = "Si conseguís el asiento de la ventanilla, fijate en la última curva. A esta hora le da el sol a la ladera."
+	var departure := "Dejame la llave en el buzón cuando pases. Buen viaje."
+	if close_enough:
+		departure = "Si te queda tiempo antes del colectivo, ya sabés cuál es mi puerta."
+		if trail_replies.has("bajada"):
+			departure = "Mejor traeme la llave en persona, si te da el tiempo. Golpeá. Todavía me sobran dos tornillos." if trail_replies["bajada"] == 0 else "El día que bajaste de la cumbre hice durar dos platos toda la bajada. Hoy, si querés pasar, te guardo una taza."
+	var lines := [reply, farewell]
+	if not memory.is_empty(): lines.append(memory)
+	lines.append_array([departure, "Bueno. Gracias por contestar."])
+	conversation(lines, "last_call")
 
 func update_flashlight():
 	var active: bool = flashlight_out and (mode in ["walk", "approach", "map", "cave", "dream"] or hands.requested_pose == "radio") and mode != "menu"
@@ -945,6 +929,8 @@ func _unhandled_key_input(event):
 	elif mode == "crossing_warning" and advance:
 		radio.play_interference()
 		overlay("crossing_response", "La estática cede. «¿Ya llegaste? Recién prendo la radio». Ahora la voz de Mara suena más lejos. Una luz sube desde el fondo del cauce. Cuando te quedás quieto, se detiene.", ["Retrocedés con Mara en línea.", "Apagás la linterna y esperás.", "Alumbrás el cauce."], "radio")
+	elif mode in ["departure_radio", "trail_chat"] and key == KEY_ESCAPE:
+		walk()
 	elif mode == "talk" and advance:
 		if radio_panel.line.visible_ratio < 1.0:
 			radio_panel.reveal.kill()
@@ -977,6 +963,13 @@ func _unhandled_key_input(event):
 			walk()
 		elif after == "last_call":
 			show_departure_choice()
+		elif after == "trail_chat_done":
+			trail_replies[trail_topic] = trail_answer
+			if trail_topic == "cauce":
+				field_note += " Le dijiste a Mara que agradecías el silencio." if trail_answer == 0 else " Le pediste a Mara un poco de charla."
+			trail_topic = ""
+			walk()
+			save_game(true, "walk")
 		elif after == "sighting_return":
 			walk()
 		elif after == "brief" and stage == 1:
@@ -1071,15 +1064,14 @@ func select_option(index: int):
 	elif mode == "day2_reply":
 		var reply: = "Me alegro. Esa cama tiene sus años." if index == 0 else "A mí la primera noche me despertó hasta el viento."
 		conversation([reply, "Nos hablamos cuando tengas la lectura."], "day2_confirm")
-	elif mode == "trail_check_in":
-		trail_check_in = true
-		asked_mara_to_stay = index == 1
-		field_note += " Le dijiste a Mara que agradecías el silencio." if index == 0 else " Le pediste a Mara un poco de charla."
-		conversation(["Te entiendo. Hay días que bajo por ahí para escuchar los pasos."] if index == 0 else ["Te acompaño un rato. Desde acá se ve la curva antes del cauce."], "sighting_return")
+	elif mode == "departure_radio":
+		match index:
+			0: start_trail_chat(trail_topic)
+			1: farewell_mara()
+			2: walk()
 	elif mode == "trail_chat":
-		var day := calendar_day()
-		trail_replies[day] = index
-		conversation(TRAIL_CHATS[day][2][index], "sighting_return")
+		trail_answer = index
+		conversation(Mara.TOPICS[trail_topic][3][index], "trail_chat_done")
 	elif mode == "choice":
 		conversation(["Para cerrar tenés que levantar un poquito la hoja. Me olvidé de avisarte.", "Que descanses. Mañana hablamos."] if index == 0 else ["Bueno. Si te despertás y no reconocés el ruido, suele ser el viento en el alero.", "Que descanses. Mañana hablamos."], "welcome_done")
 	elif mode == "rest" and index == 1: walk()
@@ -1135,7 +1127,7 @@ func select_option(index: int):
 	elif mode == "report":
 		if index == 0:
 			creek_note += " Parte enviado."
-			conversation(["Anotado.", "Mañana a esta hora me encontrás acá."], "sleep")
+			conversation(["Anotado.", "Cuando tengas el próximo parte, me encontrás acá."], "sleep")
 		else:
 			creek_note += " Le contaste a Mara lo que viste."
 			conversation(["Mi viejo volvía de ahí con los bolsillos llenos de esas piedritas.", "Cuando lavábamos los pantalones, brillaba todo el patio."], "sleep")
@@ -1483,6 +1475,7 @@ func restore(data: Dictionary):
 	slot = data.slot
 	for key in STATE:
 		if data.state.has(key): set(key, data.state[key])
+	trail_replies = Mara.saved_replies(data.state)
 	if stage == 3: stage = 4
 	if not data.state.has("archive_read"): archive_read = int(data.state.get("archive_entry", -1)) >= 0
 	menu.hide()
@@ -1544,7 +1537,7 @@ func start_day25():
 	valley.configure_sky(3)
 	valley.morning()
 	save_game(true, "walk")
-	day_card("Día 25 · La quebrada larga", "Pasaron más de dos semanas. Al abrir el cuaderno, encontrás las estrellas del sueño dibujadas en una esquina. Afuera clareó. Mara todavía tiene que darte el encargo para hoy.", "Espacio · levantarse")
+	day_card("Día 25 · La quebrada larga", "Hace días que usás el cuaderno para anotar las lecturas. Esta mañana lo abrís por la hoja donde dibujaste las estrellas del sueño. La dejás marcada. Afuera clareó. Hoy Mara te espera en la radio.", "Espacio · levantarse")
 
 func show_mate_morning():
 	walk()
