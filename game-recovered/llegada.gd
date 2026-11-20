@@ -2,6 +2,9 @@ extends RefCounted
 
 const Signage = preload("res://carteleria.gd")
 const FieldKit = preload("res://equipo_campo.gd")
+const BRIDGE_WATER_Y := -0.71
+const BRIDGE_WATER_Z := -10.45
+const BRIDGE_WATER_WIDTH := 15.8
 
 const ACTIONS = ["Recoger la mochila", "Saltar el tronco", "Agarrarte del pasamanos", "Probar la brújula", "Consultar el mapa", "Trepar con la cuerda", "Encender la linterna", "Seguir el sendero"]
 const HEADINGS = [0.0, -0.52, 0.72, 1.05, -0.8, 0.26, -1.19, 0.5]
@@ -37,8 +40,12 @@ static func ground_height(index: int, x: float, distance: float) -> float:
 			return bank + flanks * smoothstep(5.0, 9.2, distance) * (1.0 - smoothstep(11.6, 17.0, distance))
 		2:
 			var center := 10.45 + 2.7 * sin(x * 0.09) * smoothstep(3.0, 14.0, absf(x))
-			var creek := 1.0 - smoothstep(1.65, 3.04, absf(distance - center))
-			return bank * (1.0 - creek) - 1.70 * creek
+			var shore := lerpf(3.04, 5.92, smoothstep(1.43, 3.28, absf(x)))
+			var across := absf(distance - center)
+			var creek := 1.0 - smoothstep(1.65, shore, across)
+			var pool := 0.88 * smoothstep(2.0, 3.85, x) * (1.0 - smoothstep(4.84, 7.9, x))
+			pool *= 1.0 - smoothstep(0.53, 2.36, across)
+			return bank * (1.0 - creek) - (1.70 + pool) * creek
 		6:
 			return bank - 4.9 * smoothstep(0.0, 25.0, distance) + 0.3 * sin(distance * 0.26)
 		7:
@@ -217,8 +224,12 @@ static func build_log(v, center: Vector3):
 	branch.rotation.y = 0.47
 
 static func build_bridge(v, center: Vector3):
-	var water: MeshInstance3D = v.box(center + Vector3(0, -0.71, -10.45), Vector3(228, 0.018, 11.0), "466b6e")
-	water.material_override.roughness = 0.23
+	var sheet := PlaneMesh.new()
+	sheet.size = Vector2(228.0, BRIDGE_WATER_WIDTH)
+	var water: MeshInstance3D = v.prop(sheet, center + Vector3(0, BRIDGE_WATER_Y, BRIDGE_WATER_Z), "466b6e")
+	var flow := ShaderMaterial.new()
+	flow.shader = preload("res://arroyo.gdshader")
+	water.material_override = flow
 	water.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	for index in 16:
 		var plank := center + Vector3(0, -0.067, -7.18 - index * 0.47)
@@ -227,7 +238,12 @@ static func build_bridge(v, center: Vector3):
 		var label := ACTIONS[2] if side == 1 else ""
 		v.timber(v.box(center + Vector3(side * 1.38, 0.81, -10.45), Vector3(0.13, 0.11, 5.55), "735944", true, label))
 		for d in [8.17, 10.45, 12.72]:
-			v.timber(v.box(center + Vector3(side * 1.38, 0.41, -d), Vector3(0.13, 0.86, 0.14), "735944"))
+			v.timber(v.box(center + Vector3(side * 1.38, -0.45, -d), Vector3(0.13, 2.58, 0.14), "735944", true, label))
+
+static func bridge_depth(pos: Vector3) -> float:
+	var local := local_position(2, pos)
+	if absf(local.x) >= 114.0 or absf(local.z - BRIDGE_WATER_Z) >= BRIDGE_WATER_WIDTH * 0.5: return 0.0
+	return maxf(0.0, BRIDGE_WATER_Y - local.y)
 
 static func build_laja(v, center: Vector3):
 	var surface := SurfaceTool.new()

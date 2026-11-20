@@ -5,6 +5,7 @@ signal section_requested
 const PAGE_SIZE := Vector2(820, 510)
 const INK := Color("#41352f")
 const PAPER_PATH := "res://diario_papel.webp"
+const ARRIVAL_BRIDGE = preload("res://diario_puente_llegada.webp")
 const DRAWINGS_PATH := "res://diario_dibujos.webp"
 const CREEK := 0
 const LIGHTS := 1
@@ -38,6 +39,9 @@ func _ready():
 	paper.size = PAGE_SIZE
 	paper.texture = load(PAPER_PATH)
 	drawing.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	var ink := ShaderMaterial.new()
+	ink.shader = preload("res://tinta_diario.gdshader")
+	drawing.material = ink
 	drawing.position = Vector2(474, 104)
 	drawing.size = Vector2(302, 318)
 	drawings = load(DRAWINGS_PATH)
@@ -77,13 +81,19 @@ func fit_page():
 	sheet.scale = Vector2.ONE * factor
 	sheet.position = (size - PAGE_SIZE * factor) * 0.5
 
-func display(entry: Dictionary, index: int, total: int, collection: bool):
+func display(entry: Dictionary, index: int, total: int, collection: bool, sections := true):
 	var motif: int = entry.get("drawing", -1)
 	var dream := bool(entry.get("dream", false))
 	var atlas := (dream_finds if dream else finds) if collection else drawings
-	var illustrated := motif >= 0 and is_instance_valid(atlas)
+	var sketch: Texture2D = entry.get("sketch")
+	var illustrated := sketch != null or (motif >= 0 and is_instance_valid(atlas))
 	drawing.visible = illustrated
-	if illustrated:
+	drawing.material.set_shader_parameter("charcoal", dream or sketch != null)
+	drawing.position = Vector2(508, 125) if sketch else Vector2(474, 104)
+	drawing.size = Vector2(232, 247) if sketch else Vector2(302, 318)
+	if sketch:
+		drawing.texture = sketch
+	elif illustrated:
 		var columns := 3 if dream else 4
 		var tile := atlas.get_size() / Vector2(columns, 2)
 		var region := AtlasTexture.new()
@@ -94,6 +104,7 @@ func display(entry: Dictionary, index: int, total: int, collection: bool):
 	body.size = Vector2(382 if illustrated else 686, 0)
 	heading.text = entry.title
 	body.text = entry.text
+	section.visible = sections
 	section.text = "C · Diario" if collection else "C · Coleccionables"
 	footer.text = "Tab · guardar"
 	if total > 1:

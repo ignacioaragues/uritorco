@@ -11,6 +11,7 @@ var paper_rig: = Node2D.new()
 var paper_sprite: = Sprite2D.new()
 var ptt: = ShaderMaterial.new()
 var dream_bearing := ShaderMaterial.new()
+var compass_finish := ShaderMaterial.new()
 var pose: = ""
 var requested_pose := ""
 var map_requested := false
@@ -42,6 +43,7 @@ func _ready():
 	rig.hide()
 	ptt.shader = preload("res://pulsador.gdshader")
 	dream_bearing.shader = preload("res://pieza_sueno.gdshader")
+	compass_finish.shader = preload("res://brujula_acabado.gdshader")
 	hide()
 
 func mount_map(sheet: Control):
@@ -93,7 +95,9 @@ func apply_pose(next: String):
 		"piece":
 			sprite.texture = PIECE
 			sprite.material = dream_bearing
-		_: sprite.texture = COMPASS
+		_:
+			sprite.texture = COMPASS
+			sprite.material = compass_finish
 	show()
 	set_lift(0.0)
 
@@ -159,7 +163,11 @@ func update_pose():
 		var fit := size.x * 0.59 / maxf(size.y, 1.0) * MAP_HAND.get_height() / MAP_HAND.get_width()
 		place_grip(paper_rig, MAP_HAND, minf(0.78, fit), true, sway, tilt, map_lift)
 	if rig.visible and sprite.texture:
-		place_grip(rig, sprite.texture, 0.53 if pose == "radio" else 0.43, false, sway + Vector2(-3, 5) * press, tilt + press * 0.032, lift)
+		var grip_height := 0.43
+		match pose:
+			"radio": grip_height = 0.53
+			"piece": grip_height = 0.51
+		place_grip(rig, sprite.texture, grip_height, false, sway + Vector2(-3, 5) * press, tilt + press * 0.032, lift)
 	if pose == "radio": ptt.set_shader_parameter("squeeze", press)
 	queue_redraw()
 
@@ -180,20 +188,30 @@ func draw_compass_face():
 	draw_set_transform_matrix(rig.transform * Transform2D(0, Vector2(1.0, 0.77), 0, Vector2(188, 145)))
 	var origin: = Vector2.ZERO
 	var r: = 87.0
-	var ink: = Color("#473e31")
+	var ink := Color("#453d31")
+	var red := Color("#9c362c")
+	draw_arc(origin, r * 0.97, 0.0, TAU, 64, Color("#8f7451a8"), 1.5, true)
+	draw_arc(origin, r * 0.57, 0.0, TAU, 56, Color("#8c765347"), 1.0, true)
 	for i in 32:
 		var angle: = TAU * i / 32 - heading
 		var unit: = Vector2(sin(angle), - cos(angle))
-		draw_line(origin + unit * r * (0.88 if i % 4 == 0 else 0.95), origin + unit * r, ink, 1.3, true)
+		var cardinal := i % 8 == 0
+		var tick_start := 0.845 if cardinal else (0.885 if i % 4 == 0 else 0.94)
+		draw_line(origin + unit * r * tick_start, origin + unit * r * 0.967, red if i == 0 else ink, 2.25 if cardinal else 1.15, true)
 	for i in 4:
 		var angle: = PI / 2 * i - heading
 		var center: = origin + Vector2(sin(angle), - cos(angle)) * r * 0.74
 		var label: String = ["N", "E", "S", "O"][i]
 		var font: = ThemeDB.fallback_font
 		var fs: = roundi(r * 0.32)
-		draw_string(font, center + Vector2( - font.get_string_size(label, HORIZONTAL_ALIGNMENT_LEFT, -1, fs).x / 2.0, fs * 0.35), label, HORIZONTAL_ALIGNMENT_LEFT, -1, fs, ink)
+		draw_string(font, center + Vector2( - font.get_string_size(label, HORIZONTAL_ALIGNMENT_LEFT, -1, fs).x / 2.0, fs * 0.35), label, HORIZONTAL_ALIGNMENT_LEFT, -1, fs, red if i == 0 else ink)
 	var north: = Vector2( - sin(heading), - cos(heading))
-	var base: = north.orthogonal() * r * 0.12
-	draw_colored_polygon(PackedVector2Array([origin + base, origin + north * r * 0.58, origin - base]), Color("#873526"))
-	draw_colored_polygon(PackedVector2Array([origin + base, origin - north * r * 0.58, origin - base]), ink)
-	draw_circle(origin, r * 0.06, Color("#b99b68"))
+	var base: = north.orthogonal() * r * 0.13
+	var tip := north * r * 0.63
+	var tail := -north * r * 0.56
+	draw_colored_polygon(PackedVector2Array([base, tip, -base]), red)
+	draw_colored_polygon(PackedVector2Array([base, tail, -base]), ink)
+	draw_colored_polygon(PackedVector2Array([Vector2.ZERO, tip, base]), Color("#c2664b"))
+	draw_colored_polygon(PackedVector2Array([Vector2.ZERO, tail, -base]), Color("#6b6350"))
+	draw_circle(origin, r * 0.076, Color("#765a3b"), true, -1.0, true)
+	draw_circle(origin, r * 0.048, Color("#d8b978"), true, -1.0, true)

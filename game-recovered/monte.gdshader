@@ -4,6 +4,10 @@ uniform vec2 west_start;
 uniform vec2 west_end;
 uniform vec2 east_start;
 uniform vec2 east_end;
+uniform vec4 ascent_curve; // X y distancia de cada punta del sendero este.
+uniform vec4 summit_curve;
+uniform vec2 ascent_bend;
+uniform vec2 summit_shape;
 uniform vec2 mara_start;
 uniform vec2 mara_end;
 uniform vec2 creek_path[12];
@@ -61,6 +65,23 @@ void fragment() {
 		float eastern_x = mix(east_start.x, east_end.x, smoothstep(0.0, 0.65, east_t));
 		east = track(abs(p.x - eastern_x), 1.9, grain);
 	}
+	float rise = (d - ascent_curve.y) / (ascent_curve.w - ascent_curve.y);
+	float ascent = 0.0;
+	float ascent_shoulder = 0.0;
+	if (rise >= 0.0 && rise <= 1.0) {
+		float bend = sin(PI * rise) * (ascent_bend.x + ascent_bend.y * sin(TAU * rise * 4.0));
+		float distance = abs(p.x - mix(ascent_curve.x, ascent_curve.z, rise) - bend);
+		ascent = track(distance, 1.60 + 0.22 * sin(rise * 51.0), grain);
+		ascent_shoulder = 1.0 - smoothstep(1.8, 21.0, distance);
+	}
+	if (d > summit_curve.y - 16.0 && d < summit_curve.w + 18.0) {
+		float t = clamp((p.x - summit_curve.x) / (summit_curve.z - summit_curve.x), summit_shape.x, 1.0);
+		float ridge_d = mix(summit_curve.y, summit_curve.w, t) + summit_shape.y * sin(TAU * t);
+		float ridge_x = mix(summit_curve.x, summit_curve.z, t);
+		float distance = length(vec2(d - ridge_d, p.x - ridge_x));
+		ascent = max(ascent, track(distance, 1.68, grain));
+		ascent_shoulder = max(ascent_shoulder, 1.0 - smoothstep(1.8, 21.0, distance));
+	}
 	float mara = 0.0;
 	if (p.x > mara_start.x - 3.0 && p.x < mara_end.x + 3.0 && p.y > -74.0 && p.y < -51.0) {
 		float t = clamp((p.x - mara_start.x) / (mara_end.x - mara_start.x), 0.0, 1.0);
@@ -105,6 +126,12 @@ void fragment() {
 	vec3 soil = mix(vec3(0.222, 0.191, 0.116), mix(vec3(0.207, 0.181, 0.113), vec3(0.311, 0.272, 0.175), band * 0.5 + 0.5), north);
 	soil *= 1.0 + 0.055 * stipple;
 	vec3 ground = mix(soil, clay, exposed);
+	float stony = smoothstep(0.25, 0.78, sin(d * 0.14 + p.x * 0.64) * 0.24 + band * 0.34 + 0.45);
+	float highland = smoothstep(400.0, 900.0, d);
+	vec3 shale = mix(vec3(0.302, 0.287, 0.217), vec3(0.381, 0.347, 0.287), highland);
+	ground = mix(ground, shale, (0.25 + highland * 0.32) * stony * ascent_shoulder * (1.0 - exposed));
+	vec3 ascent_soil = mix(vec3(0.392, 0.303, 0.199), vec3(0.43, 0.375, 0.295), highland);
+	ground = mix(ground, ascent_soil, ascent * 0.88);
 	float low_channel = 82.0 + 4.6 * sin(p.x * 0.082) + 1.4 * sin(p.x * 0.17) + 24.0 * smoothstep(54.0, 140.0, -p.x);
 	float channel = (1.0 - smoothstep(2.2, 7.5, abs(p.y - low_channel)));
 	float low_water = channel * (1.0 - max(smoothstep(49.0, 71.0, p.x), smoothstep(156.0, 207.0, -p.x)));

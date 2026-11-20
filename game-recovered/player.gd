@@ -13,6 +13,7 @@ var capsule := CapsuleShape3D.new()
 var intro_center: = Vector3.ZERO
 var intro_heading: = 0.0
 var low_gravity: = false
+var water_depth := 0.0
 var dream_bounds := Rect2(-32, -55, 64, 67)
 var walking: = false
 var looking_only := false
@@ -163,9 +164,11 @@ func _physics_process(delta):
 	if walking:
 		direction = Vector3(int(Input.is_physical_key_pressed(KEY_D)) - int(Input.is_physical_key_pressed(KEY_A)), 0, int(Input.is_physical_key_pressed(KEY_S)) - int(Input.is_physical_key_pressed(KEY_W)))
 	direction = transform.basis * direction.normalized()
-	velocity.x = direction.x * 3.4
-	velocity.z = direction.z * 3.4
-	velocity.y -= (3.8 if low_gravity else 16.0) * delta
+	var resistance := smoothstep(0.045, 1.60, water_depth)
+	var speed := lerpf(3.4, 1.42, resistance)
+	velocity.x = direction.x * speed
+	velocity.z = direction.z * speed
+	velocity.y -= (3.8 if low_gravity else lerpf(16.0, 10.0, resistance)) * delta
 	move_and_slide()
 	if intro_center != Vector3.ZERO:
 		var local: = (position - intro_center).rotated(Vector3.UP, - intro_heading)

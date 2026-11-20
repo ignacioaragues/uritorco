@@ -22,7 +22,7 @@ static func tree(parent: Node3D, foot: Vector3, kind: Kind, size: float, angle: 
 	var scrub := kind == Kind.PIQUILLIN
 	var fork := Vector3(0.09, 0.45 if scrub else 1.04, -0.07)
 	if kind == Kind.TALA: fork = Vector3(-0.23, 1.36, 0.12)
-	branch(tree_root, Vector3.DOWN * 0.21, fork, 0.074 if scrub else 0.16, 0.046 if scrub else 0.097)
+	branch(tree_root, Vector3.DOWN * 0.21, fork, 0.074 if scrub else 0.16, 0.046 if scrub else 0.097, true)
 	var boughs := 6 if kind in [Kind.MOLLE, Kind.PIQUILLIN] else 4
 	for index in boughs:
 		var turn := TAU * index / boughs + rng.randf_range(-0.21, 0.21)
@@ -60,7 +60,7 @@ static func tree(parent: Node3D, foot: Vector3, kind: Kind, size: float, angle: 
 					var spread := Vector3(0.064 * petal, 0.055 * sin(petal * 1.6), 0.047 * petal)
 					crown(tree_root, rng, flower + spread, Vector3(0.108, 0.086, 0.111), palette[3], turn)
 
-static func branch(parent: Node3D, start: Vector3, end: Vector3, base: float, tip: float):
+static func branch(parent: Node3D, start: Vector3, end: Vector3, base: float, tip: float, solid := false):
 	var mesh := CylinderMesh.new()
 	mesh.radial_segments = 7
 	mesh.rings = 0
@@ -78,6 +78,7 @@ static func branch(parent: Node3D, start: Vector3, end: Vector3, base: float, ti
 	parent.add_child(instance)
 	instance.position = (start + end) * 0.5
 	instance.quaternion = Quaternion(Vector3.UP, (end - start).normalized())
+	if solid: instance.create_convex_collision()
 
 static func crown(parent: Node3D, rng: RandomNumberGenerator, center: Vector3, size: Vector3, tint: String, angle: float):
 	var mesh := SphereMesh.new()

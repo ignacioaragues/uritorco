@@ -2,6 +2,7 @@ extends RefCounted
 
 const Creek = preload("res://cauce.gd")
 const Flora = preload("res://flora.gd")
+const Stone = preload("res://piedra_serrana.gd")
 const LOG := 0.18
 const LEDGE := 0.64
 
@@ -15,6 +16,9 @@ static func build(valley):
 		valley.route.signpost(ground(pos), "Desvío de la quebrada", junction[1], junction[2], true)
 	var rng := RandomNumberGenerator.new()
 	rng.seed = 8421
+	var cairn_rng := RandomNumberGenerator.new()
+	cairn_rng.seed = 19432
+	var rocks := Stone.surface()
 	var tufts: Array[Vector4] = []
 	for i in range(2, 39):
 		var t := i / 40.0
@@ -22,16 +26,19 @@ static func build(valley):
 		var heading := forward(t)
 		var side := Vector3(heading.z, 0, -heading.x)
 		if i % 3 == 0:
-			var center := ground(foot + side * (2.0 if i % 2 == 0 else -2.0))
-			for level in 3:
-				var width := 0.64 - 0.13 * level
-				valley.stone(center + Vector3.UP * (0.085 + level * 0.18), Vector3(width, 0.25, width * 0.73), "998477")
+			var center := ground(foot + side * (2.28 if i % 2 == 0 else -2.28))
+			Stone.cairn(valley, rocks, center, ground, cairn_rng)
 		for j in 4:
 			var near := ground(foot + side * (rng.randf_range(2.5, 7.6) * (-1.0 if j % 2 == 0 else 1.0)) + heading * rng.randf_range(-2.3, 2.3))
 			tufts.append(Vector4(near.x, near.y - 0.04, near.z, rng.randf_range(0.61, 1.58)))
 		if i % 4 == 0:
 			var shoulder := ground(foot + side * (rng.randf_range(4.5, 9.3) * (-1 if i % 8 == 0 else 1)))
 			Flora.tree(valley, shoulder, Flora.Kind.TALA if i > 21 else Flora.Kind.ESPINILLO, rng.randf_range(0.84, 1.35), rng.randf() * TAU)
+		if i % 5 == 2:
+			var base := ground(foot - side * (5.20 if i % 2 == 0 else -5.20))
+			var block := Stone.fragment(rocks, base, Vector3(2.6, 0.92, 1.8), i * 1.09, cairn_rng, ground)
+			Stone.solid(valley, base, block, "Laja de la quebrada")
+	Stone.finish(valley, rocks, "Piedras de la quebrada")
 	Flora.grass_batch(valley, tufts)
 	dress_log(valley)
 	dress_ledge(valley)
@@ -82,10 +89,16 @@ static func dress_ledge(valley):
 	var heading := forward(LEDGE)
 	var slab: MeshInstance3D = valley.box(foot + heading * 0.4 + Vector3.UP * 0.39, Vector3(3.6, 1.0, 1.8), "82756a", true, "Subir al escalón")
 	slab.rotation.y = atan2(heading.x, heading.z)
+	slab.material_override = Stone.paint("82756a")
+	var rocks := Stone.surface()
+	var rng := RandomNumberGenerator.new()
+	rng.seed = 18128
 	for side in [-1.0, 1.0]:
 		var cross := Vector3(heading.z, 0, -heading.x) * float(side)
 		var at := ground(foot + cross * 2.2 + heading * 0.84)
-		valley.stone(at + Vector3.UP * 0.2, Vector3(1.30, 1.17, 1.80), "887866")
+		var rock := Stone.fragment(rocks, at, Vector3(1.42, 1.04, 1.78), float(side) * 1.18, rng, ground)
+		Stone.solid(valley, at, rock, "Hombro de la laja")
+	Stone.finish(valley, rocks, "Laterales de la laja")
 
 static func mark_position() -> Vector3:
 	return ground(Creek.crossing_point(1.0)) + Vector3(1.02, 0.77, 0.92)
@@ -133,8 +146,8 @@ static func water(valley) -> MeshInstance3D:
 	for i in range(107):
 		var x := -163.0 + i * 2
 		var z := Creek.channel_z(x)
-		var width := 2.4 + 0.95 * sin(x * 0.14) + 0.37 * sin(x * 0.33)
-		var height := Creek.outer_height(x, z) + 0.78
+		var width := water_width(x)
+		var height := water_level(x)
 		var current := PackedVector3Array([Vector3(x, height, z - width), Vector3(x, height, z + width)])
 		if i > 0:
 			for vertex in [previous[0], current[0], previous[1], previous[1], current[0], current[1]]:
@@ -149,3 +162,17 @@ static func water(valley) -> MeshInstance3D:
 	stream.material_override = flow
 	valley.add_child(stream)
 	return stream
+
+static func water_width(x: float) -> float:
+	return 2.4 + 0.95 * sin(x * 0.14) + 0.37 * sin(x * 0.33)
+
+static func water_level(x: float) -> float:
+	return Creek.outer_height(x, Creek.channel_z(x)) + 0.78
+
+static func water_depth(pos: Vector3) -> float:
+	if pos.x < -163.0 or pos.x > 49.0: return 0.0
+	var x := floorf((pos.x + 163.0) * 0.5) * 2.0 - 163.0
+	var t := (pos.x - x) * 0.5
+	var center := lerpf(Creek.channel_z(x), Creek.channel_z(x + 2.0), t)
+	if absf(pos.z - center) > lerpf(water_width(x), water_width(x + 2.0), t): return 0.0
+	return maxf(0.0, lerpf(water_level(x), water_level(x + 2.0), t) - pos.y)

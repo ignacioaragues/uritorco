@@ -17,7 +17,7 @@ const SUMMIT_NIGHT_SECONDS := 40.0
 const SIGHTING_FOCUS_SECONDS := 0.4
 const NIGHT_SCENE_VIEW := 200.0
 enum Sighting { ABRA, QUARRY, CROSSING, SHELTER, CAVE, CLEARING }
-const STATE = ["page", "stage", "keepsakes", "bedtime", "field_note", "crossing_note", "filo_report_reply", "quarry_reply", "fox_seen", "hiker_met", "route_reported", "observing", "pending_return", "heard", "read_note", "creek_note", "bed_pose", "bed_pitch", "gate_jumped", "map_read", "awaiting_call", "dream_count", "branch_found", "mapped_distance", "has_piece", "summit_mapped", "camp_read", "arrival_action", "second_sighting", "book_light_notes", "day7_dusk", "archive_read", "trail_replies", "crossing_response", "summit_echo_response", "night_investigation", "ending_at_door", "sky_memories", "compass_lost", "last_voice_reply", "scored_walks", "found_collectibles"]
+const STATE = ["page", "stage", "keepsakes", "bedtime", "field_note", "crossing_note", "filo_report_reply", "quarry_reply", "fox_seen", "hiker_met", "route_reported", "observing", "pending_return", "heard", "read_note", "creek_note", "bed_pose", "bed_pitch", "gate_jumped", "map_read", "awaiting_call", "dream_count", "branch_found", "mapped_distance", "has_piece", "summit_mapped", "camp_read", "arrival_action", "intro_bridge_drawn", "second_sighting", "book_light_notes", "day7_dusk", "archive_read", "trail_replies", "crossing_response", "summit_echo_response", "night_investigation", "ending_at_door", "sky_memories", "compass_lost", "last_voice_reply", "scored_walks", "found_collectibles"]
 var flashlight_out: = false
 var camp_read: = false
 var summit_mapped: = false
@@ -67,6 +67,8 @@ var postcard_view = preload("res://postal.gd").new()
 var rain_strength := 0.0
 var mist_strength := 0.0
 var rain_view: = ColorRect.new()
+var underwater_view := ColorRect.new()
+var immersion := 0.0
 var branch_found: = false
 var mapped_distance: = 0.0
 var radio_hint: = Label.new()
@@ -107,6 +109,8 @@ var second_sighting := false # Guardados anteriores usan esta clave para el avis
 var day7_dusk: = false
 var debug_run: = false
 var arrival_action: = false
+var intro_bridge_drawn := false
+var bridge_hint_seconds := 0.0
 var bedtime: = false
 var field_note: = ""
 var crossing_note := ""
@@ -117,6 +121,7 @@ var journal_view := Diary.new()
 var journal_page := 0
 var journal_collection := false
 var journal_dream := false
+var journal_intro_from := ""
 var dream_note_seconds := 0.0
 var dream_note := ""
 var found_collectibles: Dictionary = {}
@@ -168,6 +173,13 @@ func _ready():
 	rain.shader = preload("res://lluvia.gdshader")
 	rain_view.material = rain
 	rain_view.hide()
+	ui.add_child(underwater_view)
+	underwater_view.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	underwater_view.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	var water_overlay := ShaderMaterial.new()
+	water_overlay.shader = preload("res://bajo_agua.gdshader")
+	underwater_view.material = water_overlay
+	underwater_view.hide()
 	ui.add_child(shade)
 	shade.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	shade.color = Color.BLACK
@@ -279,6 +291,11 @@ func set_arrival_bag_visible(shown: bool):
 	valley.arrival_bag.visible = shown
 	valley.arrival_bag.collision_layer = 1 if shown else 0
 
+func _input(event: InputEvent):
+	if mode == "intro" and event is InputEventKey and event.keycode == KEY_TAB and event.pressed and not event.echo:
+		_unhandled_key_input(event)
+		get_viewport().set_input_as_handled()
+
 func _unhandled_input(event):
 	if mode == "book" and event is InputEventMouseButton and event.pressed:
 		if event.button_index == MOUSE_BUTTON_LEFT: turn_book(1)
@@ -332,6 +349,7 @@ func _process(delta):
 	var day: = calendar_day()
 	valley.update_calendar(day)
 	update_weather(day, delta)
+	update_water(delta)
 	valley.shade_ridges()
 	var in_refuge: bool = absf(player.position.x) < 3.45 and player.position.z > -0.35 and player.position.z < 5.9
 	valley.update_desk_radio(in_refuge and hands.pose == "radio")
@@ -371,7 +389,7 @@ func _process(delta):
 		elif Alien.FINDS.has(find):
 			hint.text = "E · " + str(Alien.FINDS[find][1])
 		elif hands.map_requested:
-			hint.text = "M · guardar la carta"
+			hint.text = "M · guardar la hoja"
 	radio_hint.visible = mode in ["walk", "map"] and radio_available()
 	if radio_hint.visible:
 		radio_hint.text = "R   ·   Charlá con Mara" if not at_departure_stop() and not mission_radio_available() else "R   ·   Mara"
@@ -393,7 +411,7 @@ func _process(delta):
 					refresh_map_goal()
 			map.track(player.position)
 		var daytime: bool = mode != "dream" and outdoors and rain_strength < 0.44 and float(valley.sky_mat.get_shader_parameter("nightfall")) < 0.5
-		ambience.update(delta, velocity, daytime, mode == "cave" and not cave_outside)
+		ambience.update(delta, velocity, daytime and immersion < 0.05, mode == "cave" and not cave_outside, player.water_depth)
 		if stage == 7 and not second_sighting and mode in ["walk", "map"]:
 			var here := Vector2(player.position.x, player.position.z)
 			var overlook_distance := here.distance_to(Exploration.MOLLAR)
@@ -419,6 +437,8 @@ func _process(delta):
 		var hit = player.ray.get_collider()
 		target = str(hit.get_meta("item", "")) if hit else ""
 		var local: = Arrival.local_position(page, player.position)
+		bridge_hint_seconds = maxf(0.0, bridge_hint_seconds - delta)
+		if page == 2: note_intro_bridge(local)
 		if page == 1 and local.z < -10.43 and local.y > 0.29 and absf(local.x) < 1.70:
 			arrival_action = true
 		if page == 5 and not player.rope_climbing and local.y >= 1.40 and local.z < -10.76:
@@ -428,10 +448,12 @@ func _process(delta):
 			return
 		if objective_seconds > 0.0:
 			hint.text = intro_objective()
+		elif bridge_hint_seconds > 0.0:
+			hint.text = "Tab · ver el croquis del puente"
 		elif page == 0 and intro_controls_seconds > 0.0:
 			hint.text = "WASD · caminar     Mouse · mirar"
 		elif page == 6 and not arrival_action:
-			hint.text = "L · encender la linterna"
+			hint.text = "L · encendé la linterna"
 		elif not arrival_action and page == 1 and local.z < -5.2:
 			hint.text = "Espacio · saltar el tronco"
 		elif not arrival_action and page in [3, 4]:
@@ -494,6 +516,21 @@ func update_weather(day: int, delta: float):
 		rain_view.material.set_shader_parameter("wind", Climate.wind(day, position, rain_strength))
 	ambience.weather(delta, rain_strength if shows_world else 0.0, shows_world and (under_stop or not outside), radio_panel.visible)
 
+func update_water(delta: float):
+	var depth := 0.0
+	var eye_depth := 0.0
+	if stage < 0 and page == 2 and mode in ["approach", "map", "journal", "pause_menu"]:
+		depth = Arrival.bridge_depth(player.position)
+		eye_depth = Arrival.bridge_depth(player.camera.global_position)
+	elif stage in [16, 17, 18] and is_instance_valid(valley.storm_water) and valley.storm_water.visible:
+		depth = South.water_depth(player.position)
+		eye_depth = South.water_depth(player.camera.global_position)
+	player.water_depth = depth
+	var target := smoothstep(0.007, 0.12, eye_depth)
+	immersion = move_toward(immersion, target, delta * 7.5)
+	underwater_view.visible = immersion > 0.002
+	if underwater_view.visible: underwater_view.material.set_shader_parameter("submerged", immersion)
+
 func record_filo_route():
 	var route = valley.route
 	var distance: float = route.ORIGIN_Z - player.position.z
@@ -503,6 +540,11 @@ func record_filo_route():
 		var landing: Vector3 = route.surface_point(route.trail(170) - 0.64, 171.02)
 		if player.position.distance_to(landing) < 4.0:
 			crossing_note = "En la laja, el escalón de piedra se puede salvar con la cuerda."
+
+func note_intro_bridge(local: Vector3):
+	if intro_bridge_drawn or local.z > -15.1 or absf(local.x) > 2.2 or not player.is_on_floor(): return
+	intro_bridge_drawn = true
+	bridge_hint_seconds = 5.0
 
 func intro_objective() -> String:
 	if page == 0:
@@ -590,15 +632,27 @@ func overlay(kind: String, caption: String, footer: Variant, prop: String = ""):
 func open_journal():
 	journal_collection = false
 	journal_page = 0
+	if not journal_intro_from.is_empty():
+		bridge_hint_seconds = 0.0
+		recall.hide()
+		journal_pages = [bridge_diary_entry() if intro_bridge_drawn or page > 2 else {
+			"title": "Camino al puesto", "text": "Dejé una hoja libre para anotar lo que vaya viendo."}]
+		show_journal_page()
+		return
 	var current := "En este lugar el peso, la luz y las distancias cambian. Dejé los dibujos de lo que vi en Coleccionables." if journal_dream else objective()
 	if stage >= 2 and not journal_dream: current += "\n\nPoste del cauce · 12 de julio."
 	elif read_note: current += "\n\nRevisar la fecha del poste."
 	var keepsake := str(keepsakes.get("despedida", ""))
 	if not keepsake.is_empty(): current += "\n\n" + keepsake
 	journal_pages = [{"title": "Cuaderno · Encargo", "text": current}]
+	if intro_bridge_drawn or page > 2: journal_pages.append(bridge_diary_entry())
 	add_diary_entries()
 	add_field_notes()
 	show_journal_page()
+
+func bridge_diary_entry() -> Dictionary:
+	return {"title": "Camino al puesto", "text": "Las tablas cedían un poco al pisarlas. Del otro lado, la huella seguía entre los pastos.",
+		"sketch": Diary.ARRIVAL_BRIDGE}
 
 func diary_entry(title: String, text: String, drawing: int = -1):
 	journal_pages.append({"title": title, "text": text, "drawing": drawing})
@@ -666,6 +720,7 @@ func record_collectible(id: String):
 		overlay("message", entry[1] + "\n\n" + entry[3], "Anotado en Coleccionables   /   Espacio · guardar el cuaderno")
 
 func toggle_journal_section():
+	if not journal_intro_from.is_empty(): return
 	if journal_collection:
 		open_journal()
 		return
@@ -686,7 +741,7 @@ func toggle_journal_section():
 
 func show_journal_page():
 	overlay("journal", "", "")
-	journal_view.display(journal_pages[journal_page], journal_page, journal_pages.size(), journal_collection)
+	journal_view.display(journal_pages[journal_page], journal_page, journal_pages.size(), journal_collection, journal_intro_from.is_empty())
 
 func walk():
 	journal_view.hide()
@@ -891,16 +946,29 @@ func update_flashlight():
 	var active: bool = flashlight_out and (mode in ["walk", "approach", "map", "cave", "dream", "sighting"] or hands.requested_pose == "radio") and mode != "menu"
 	player.flashlight.visible = active
 
+func close_journal():
+	journal_view.hide()
+	var source := journal_intro_from
+	journal_intro_from = ""
+	match source:
+		"approach": approach()
+		"intro":
+			mode = "intro"
+			shade.color = Color.BLACK
+			recall.show()
+		_:
+			if journal_dream:
+				journal_dream = false
+				explore_dream()
+			else: walk()
+
 func _unhandled_key_input(event):
 	if not event.pressed or event.echo: return
 	var key = event.keycode
 	var advance = key in [KEY_SPACE, KEY_ENTER]
 	if mode == "journal":
 		if advance or key in [KEY_ESCAPE, KEY_TAB]:
-			if journal_dream:
-				journal_dream = false
-				explore_dream()
-			else: walk()
+			close_journal()
 		elif key == KEY_C:
 			toggle_journal_section()
 		elif key in [KEY_LEFT, KEY_RIGHT]:
@@ -964,6 +1032,12 @@ func _unhandled_key_input(event):
 		if mode == "approach" and page == 3 and compass_out: arrival_action = true
 		hands.hold("compass" if compass_out else "")
 		return
+	if key == KEY_TAB and (mode in ["approach", "intro"] or (mode == "map" and paused_from == "approach")):
+		journal_intro_from = "approach" if mode == "map" else mode
+		if journal_intro_from == "approach" and page == 2:
+			note_intro_bridge(Arrival.local_position(page, player.position))
+		open_journal()
+		return
 	if mode == "dream" and key == KEY_TAB:
 		journal_dream = true
 		open_journal()
@@ -991,7 +1065,7 @@ func _unhandled_key_input(event):
 		transmit()
 		return
 	if key == KEY_SPACE and mode in ["walk", "approach", "cave"] and player.is_on_floor():
-		player.velocity.y = 5.7
+		player.velocity.y = lerpf(5.7, 3.1, smoothstep(0.03, 1.60, player.water_depth))
 		return
 	if mode == "sighting":
 		if key == KEY_E and not sighting_resolving and sighting_focus >= SIGHTING_FOCUS_SECONDS and looking_at_sighting():

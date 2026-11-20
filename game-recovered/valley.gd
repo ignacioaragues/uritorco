@@ -8,6 +8,7 @@ const Creek = preload("res://cauce.gd")
 const LastNight = preload("res://final_night.gd")
 const Birds = preload("res://aves.gd")
 const South = preload("res://quebrada_sur.gd")
+const Stone = preload("res://piedra_serrana.gd")
 const Exploration = preload("res://exploracion.gd")
 const Flora = preload("res://flora.gd")
 const Trail = preload("res://travesia.gd")
@@ -162,7 +163,7 @@ func _ready():
 	dress_creek()
 	rock_banks()
 	add_child(route)
-	Creek.dress(self)
+	Creek.dress(self, Exploration.clearance)
 	South.build(self)
 	dress_birds()
 	dress_refuge_junction()
@@ -425,6 +426,10 @@ func dress_creek():
 		var z: = -7 - i * 5.9
 		var x: = path_x(z) + (4.0 + i % 4) * (-1 if i % 2 else 1)
 		if LastNight.door_path_distance(x, z) < 2.5: x += 4.6
+		if z < route.WEST_START_Z:
+			var west: float = route.western_x_at(z)
+			if absf(x - west) < 3.8:
+				x = west + (4.15 if x > path_x(z) else -4.15)
 		if Exploration.clearance(Vector2(x, z)) >= 2.85:
 			Flora.tree(self, Creek.point(x, z), i % 3, 0.9 + i % 4 * 0.13, i * 1.93)
 	var marker: Vector3 = route.creek_marker()
@@ -678,19 +683,23 @@ func dress_day32():
 	box(access + Vector3(-2.4, 0.42, 1.1), Vector3(1.8, 0.14, 0.42), "7a634c", true)
 	for offset in [-2.94, -1.86]:
 		box(access + Vector3(offset, 0.17, 1.1), Vector3(0.15, 0.42, 0.37), "665342", true)
-	dress_ascent_trail()
 	for progress in [0.31, 0.64, 0.92]:
 		var foot: Vector3 = route.ascent_point(progress)
 		var uphill: Vector3 = route.ascent_point(progress + 0.02) - foot
 		place_descent_sign(foot, uphill, "Acceso · seguí las pircas")
-	for i in range(1, 12):
-		var foot: Vector3 = route.summit_point(lerpf(route.SUMMIT_JOIN, 1.0, i / 12.0))
-		stack_ascent_stones(foot + Vector3(0, 0, 1.0))
 	var summit: Vector3 = route.summit_point(1)
 	var descent: Vector3 = route.summit_point(0.94)
 	place_descent_sign(descent, summit - descent, "Bajada · acceso")
 	route.signpost(summit, "Hito de la cumbre", "Uritorco · Cumbre")
-	box(summit + Vector3(0, 0.25, - 0.25), Vector3(0.8, 0.46, 0.42), "938273", true)
+	var ground := func(at: Vector3) -> Vector3:
+		return route.surface_point(at.x, route.ORIGIN_Z - at.z)
+	var base: Vector3 = ground.call(summit + Vector3(0.0, 0.0, -0.25))
+	var cairn_rng := RandomNumberGenerator.new()
+	cairn_rng.seed = 3441
+	var faces := Stone.surface()
+	var plinth := Stone.fragment(faces, base, Vector3(0.88, 0.48, 0.62), 0.36, cairn_rng, ground)
+	Stone.solid(self, base, plinth, "Base del hito", "Hito de la cumbre")
+	Stone.finish(self, faces, "Base de piedra de la cumbre")
 	dress_camp()
 
 func place_descent_sign(foot: Vector3, uphill: Vector3, caption: String):
@@ -706,13 +715,13 @@ func dress_camp():
 	var pivot: = tripod + Vector3.UP * 1.08
 	for offset in [Vector2( - 0.44, - 0.24), Vector2(0.44, - 0.24), Vector2(0, 0.55)]:
 		var foot: Vector3 = route.at(tripod.x + offset.x, route.ORIGIN_Z - tripod.z - offset.y)
-		var leg: = box((foot + pivot) * 0.5, Vector3(0.046, 0.046, foot.distance_to(pivot)), "676761")
+		var leg: = box((foot + pivot) * 0.5, Vector3(0.046, 0.046, foot.distance_to(pivot)), "676761", true, "Trípode vacío")
 		leg.look_at(pivot)
 	box(pivot, Vector3(0.29, 0.063, 0.24), "424745", true, "Trípode vacío")
 	var tarp: Vector3 = route.at(camp.x - 2.6, route.ORIGIN_Z - camp.z + 0.35)
 	box(tarp + Vector3.UP * 0.48, Vector3(2.5, 0.035, 1.45), "aba385").rotation = Vector3(0.44, 0.22, 0.15)
 	for x in [-1.04, 1.04]:
-		box(tarp + Vector3(x, 0.47, - 0.5), Vector3(0.05, 0.96, 0.05), "757366").rotation.z = 0.22
+		box(tarp + Vector3(x, 0.47, - 0.5), Vector3(0.05, 0.96, 0.05), "757366", true).rotation.z = 0.22
 	for offset in [Vector2( - 0.44, 0.4), Vector2( - 0.17, 0.65), Vector2(0.1, 0.62), Vector2(0.44, 0.47)]:
 		var foot: Vector3 = route.at(tarp.x + offset.x, route.ORIGIN_Z - tarp.z - offset.y)
 		stone(foot + Vector3.UP * 0.09, Vector3(0.27, 0.22, 0.25), "77716a")
@@ -720,42 +729,6 @@ func dress_camp():
 	camp_log = box(camp + Vector3.UP * 0.51, Vector3(0.4, 0.058, 0.32), "b2a383", true, "Cuaderno del campamento")
 	camp_log.rotation.y = 0.19
 	box(camp + Vector3(0.54, 0.31, - 0.08), Vector3(0.14, 0.24, 0.14), "658078")
-
-func dress_ascent_trail():
-	var surface: = SurfaceTool.new()
-	surface.begin(Mesh.PRIMITIVE_TRIANGLES)
-	var material: = StandardMaterial3D.new()
-	material.albedo_color = Color("9a7955")
-	material.cull_mode = BaseMaterial3D.CULL_DISABLED
-	surface.set_material(material)
-	var left: = Vector3.ZERO
-	var right: = Vector3.ZERO
-	for i in range(425):
-		var point: Vector3
-		if i <= 375:
-			point = route.ascent_point(i / 375.0)
-		else:
-			point = route.summit_point(lerpf(route.SUMMIT_JOIN, 1.0, (i - 375) / 49.0))
-		var d: float = route.ORIGIN_Z - point.z
-		var next_left: Vector3 = route.surface_point(point.x - 1.0, d) + Vector3.UP * 0.044
-		var next_right: Vector3 = route.surface_point(point.x + 1.0, d) + Vector3.UP * 0.044
-		if i > 0:
-			for vertex in [left, next_left, right, right, next_left, next_right]:
-				surface.add_vertex(vertex)
-		left = next_left
-		right = next_right
-		if i > 0 and i <= 375 and i % 19 == 0:
-			stack_ascent_stones(route.surface_point(point.x + 1.4, d))
-	surface.generate_normals()
-	var path: = MeshInstance3D.new()
-	path.mesh = surface.commit()
-	add_child(path)
-
-func stack_ascent_stones(foot: Vector3):
-	var base: Vector3 = route.surface_point(foot.x, route.ORIGIN_Z - foot.z)
-	for level in 3:
-		var width: = 0.63 - 0.14 * level
-		stone(base + Vector3.UP * (0.07 + level * 0.19), Vector3(width, 0.26, width * 0.7), "9a8971")
 
 var storm_water: MeshInstance3D
 var archive_dressed := false
@@ -777,7 +750,7 @@ func build_yard_fence():
 		var from: Vector3 = segment[0]
 		var to: Vector3 = segment[1]
 		for i in range(6):
-			box(from.lerp(to, i / 5.0) + Vector3.UP * 0.64, Vector3(0.11, 1.28, 0.11), "7c6b51")
+			box(from.lerp(to, i / 5.0) + Vector3.UP * 0.64, Vector3(0.11, 1.28, 0.11), "7c6b51", true)
 		for height in [0.4, 0.86]:
 			var rail: = box((from + to) * 0.5 + Vector3.UP * height, Vector3(0.06, 0.09, from.distance_to(to)), "94836a", true)
 			rail.look_at(to + Vector3.UP * height)

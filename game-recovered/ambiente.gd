@@ -1,6 +1,8 @@
 extends Node
 
 var step: = AudioStreamPlayer.new()
+var dry_step: AudioStreamWAV
+var water_step: AudioStreamWAV
 var bird: = AudioStreamPlayer.new()
 var travel: = 0.0
 var silence: = 3.0
@@ -16,8 +18,9 @@ func _ready():
 	rng.seed = 1871
 	add_child(step)
 	add_child(bird)
-	step.stream = sound(false)
+	dry_step = sound(false)
 	bird.stream = sound(true)
+	water_step = sound(false, true)
 	step.volume_db = -24
 	bird.volume_db = -22
 	if not open_rain:
@@ -28,9 +31,9 @@ func _ready():
 	rain_air.stream = open_rain
 	rain_roof.stream = covered_rain
 
-func sound(song: bool) -> AudioStreamWAV:
+func sound(song: bool, splash := false) -> AudioStreamWAV:
 	var rate: = 22050
-	var count: = int(rate * (0.54 if song else 0.18))
+	var count: = int(rate * (0.54 if song else (0.32 if splash else 0.18)))
 	var samples: = PackedByteArray()
 	samples.resize(count * 2)
 	var filter: = 0.0
@@ -42,6 +45,11 @@ func sound(song: bool) -> AudioStreamWAV:
 			var local: = fmod(t, 0.19)
 			phase += TAU * (2100 + 950 * sin(PI * local / 0.19)) / rate
 			value = sin(phase) * pow(sin(PI * local / 0.19), 3) * exp( - t * 1.9)
+		elif splash:
+			var noise := rng.randf_range(-1.0, 1.0)
+			filter = lerpf(filter, noise, 0.31)
+			phase += TAU * lerpf(275.0, 120.0, minf(t * 4.0, 1.0)) / rate
+			value = (filter * 0.86 + sin(phase) * 0.16) * (exp(-t * 17.0) - exp(-t * 115.0))
 		else:
 			filter = lerpf(filter, rng.randf_range(-1, 1), 0.27)
 			value = (filter * 0.85 + sin(t * TAU * 64) * 0.12) * exp( - t * 24) * minf(1, t * 120)
@@ -52,12 +60,13 @@ func sound(song: bool) -> AudioStreamWAV:
 	wave.data = samples
 	return wave
 
-func update(delta: float, speed: float, daytime: bool, cave_interior: bool = false):
+func update(delta: float, speed: float, daytime: bool, cave_interior: bool = false, depth := 0.0):
 	travel += speed * delta
 	if travel >= 1.72:
 		travel = 0
 		step.pitch_scale = rng.randf_range(0.86, 1.12)
-		step.volume_db = -16.0 if cave_interior else -24.0
+		step.stream = water_step if depth > 0.07 else dry_step
+		step.volume_db = -16.0 if cave_interior else (-20.5 if depth > 0.07 else -24.0)
 		step.play()
 	if daytime:
 		silence -= delta

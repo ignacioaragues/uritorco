@@ -39,13 +39,14 @@ static func plate(parent: Node3D, at: Vector3, size: Vector2, coating: String, a
 static func station(parent: Node3D):
 	var post := Node3D.new()
 	parent.add_child(post)
-	post.position = Vector3(-4.18, 0.0, -6.85)
+	post.position = Vector3(0.82, 0.0, -15.35)
 	post.rotation.y = PI + 0.12
 	var iron := Kit.material("626963")
 	for x in [-0.67, 0.67]:
 		solid(post, Vector3(x, 0.77, 0), Vector3(0.071, 1.54, 0.073), iron)
 		Kit.block(post, Vector3(x, 0.068, 0), Vector3(0.18, 0.14, 0.18), Kit.material("827c67"))
 	var sign := plate(post, Vector3(0, 1.33, 0.055), Vector2(1.55, 0.56), "434b43")
+	Kit.item(sign, Vector3.ZERO, "", Vector3.ZERO, Vector3(1.55, 0.56, 0.052))
 	lettering(sign, Vector3(0, 0.090, 0.028), STATION.to_upper(), 0.070, Color("#dfd6bf"))
 	Kit.block(sign, Vector3(0, 0.004, 0.029), Vector3(1.22, 0.009, 0.004), Kit.material("a89a77"))
 	lettering(sign, Vector3(0, -0.111, 0.028), "URITORCO", 0.113, Color("#eee3c8"))
@@ -130,9 +131,9 @@ static func shelter(parent: Node3D, at: Vector3, playable: bool = false):
 	roof(stop, galvanized)
 
 	var bench_tag := "Banco" if playable else ""
-	Kit.item(stop, Vector3(0, 0.465, -0.286), bench_tag, Vector3.ZERO, Vector3(2.68, 0.106, 0.44))
+	Kit.item(stop, Vector3(0, 0.482, -0.295), bench_tag, Vector3.ZERO, Vector3(2.68, 0.095, 0.43))
 	for z in [-0.45, -0.30, -0.15]:
 		Kit.block(stop, Vector3(0, 0.498, z), Vector3(2.68, 0.061, 0.130), seated)
 	for x in [-1.0, 1.0]:
-		Kit.block(stop, Vector3(x, 0.25, -0.30), Vector3(0.071, 0.47, 0.35), steel)
-	Kit.block(stop, Vector3(0, 0.773, -0.51), Vector3(2.68, 0.142, 0.064), seated)
+		solid(stop, Vector3(x, 0.25, -0.30), Vector3(0.071, 0.47, 0.35), steel, bench_tag)
+	solid(stop, Vector3(0, 0.773, -0.51), Vector3(2.68, 0.142, 0.064), seated, bench_tag)

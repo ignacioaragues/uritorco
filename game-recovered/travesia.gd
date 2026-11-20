@@ -1,6 +1,8 @@
 extends Node3D
 
 const Signage = preload("res://carteleria.gd")
+const Ladera = preload("res://ladera.gd")
+const Kit = preload("res://equipo_campo.gd")
 
 const ORIGIN_Z: = -76.0
 const WEST_START_Z := -22.0
@@ -12,6 +14,9 @@ const LAJA_FORK := 124.0
 const LAJA_JOIN := 218.0
 const CREEK_DISTANCE: = 96.0
 const SUMMIT_JOIN: = 0.37
+const SUMMIT_SWAY := 11.0
+const ASCENT_BOW := 128.0
+const ASCENT_WINDING := 16.0
 var rng: = RandomNumberGenerator.new()
 var ground_rows: = PackedFloat32Array()
 var ground_material: ShaderMaterial
@@ -73,10 +78,17 @@ static func make_ground_material(route_to_creek: PackedVector2Array, mara_start:
 	var cable := western_approach(1.0)
 	var east := eastern_access(0.0)
 	var ascent := eastern_access(1.0)
+	var summit_join := summit_point(SUMMIT_JOIN)
+	var ridge_start := summit_point(0.0)
+	var ridge_end := summit_point(1.0)
 	material.set_shader_parameter("west_start", Vector2(west.x, west.z))
 	material.set_shader_parameter("west_end", Vector2(cable.x, cable.z))
 	material.set_shader_parameter("east_start", Vector2(east.x, east.z))
 	material.set_shader_parameter("east_end", Vector2(ascent.x, ascent.z))
+	material.set_shader_parameter("ascent_curve", Vector4(ascent.x, ORIGIN_Z - ascent.z, summit_join.x, ORIGIN_Z - summit_join.z))
+	material.set_shader_parameter("summit_curve", Vector4(ridge_start.x, ORIGIN_Z - ridge_start.z, ridge_end.x, ORIGIN_Z - ridge_end.z))
+	material.set_shader_parameter("ascent_bend", Vector2(ASCENT_BOW, ASCENT_WINDING))
+	material.set_shader_parameter("summit_shape", Vector2(SUMMIT_JOIN, SUMMIT_SWAY))
 	material.set_shader_parameter("mara_start", Vector2(mara_start.x, mara_start.z))
 	material.set_shader_parameter("mara_end", Vector2(mara_end.x, mara_end.z))
 	material.set_shader_parameter("creek_path", route_to_creek)
@@ -108,10 +120,11 @@ func _ready():
 	land.material_override = ground_material
 	add_child(land)
 	land.create_trimesh_collision()
+	Ladera.build(self)
 	signpost(creek_overlook(0.0) + Vector3(-1.6, 0, 0), "Desvío del cauce", "Mirador del cauce ↖")
 	var overlook: = creek_overlook(0.63)
 	signpost(overlook + Vector3(-1.4, 0, 0), "Mirador del cauce", "Mirador del cauce")
-	box(self, Vector3(0.42, 0.43, 1.35), overlook + Vector3(-1.4, 0.2, -1.3), "978a73")
+	box(self, Vector3(0.42, 0.43, 1.35), overlook + Vector3(-1.4, 0.2, -1.3), "978a73").create_trimesh_collision()
 	signpost(at(trail(124) + 2, 124), "Paso de la laja", "Filo por la laja  ↑\nRodeo por la vaguada  →")
 	build_laja_rope()
 	signpost(at(trail(CREST), CREST), "Hito del filo", "Filo del puesto")
@@ -120,7 +133,7 @@ func _ready():
 	fox.hide()
 	var repeater: = at(trail(420) + 1.6, 420)
 	signpost(repeater, "Antena del abra", "Radio · Abra del viento")
-	box(self, Vector3(0.08, 4.0, 0.08), repeater + Vector3(0, 2, 0), "655a50")
+	box(self, Vector3(0.08, 4.0, 0.08), repeater + Vector3(0, 2, 0), "655a50").create_trimesh_collision()
 	for h in [2.85, 3.45, 3.94]:
 		box(self, Vector3(1.15, 0.04, 0.07), repeater + Vector3(0, h, 0), "737a75")
 	signpost(at(trail(292) - 1.7, 292), "Sala de las sierras", "Museo de sitio →")
@@ -199,27 +212,44 @@ func plant():
 	var open_crowns: Array[Transform3D] = []
 	var stems: Array[Transform3D] = []
 	var rocks: Array[Transform3D] = []
+	var join := summit_point(SUMMIT_JOIN)
+	var join_distance := ORIGIN_Z - join.z
+	var peak := summit_point(1.0)
+	var solids := Node3D.new()
+	solids.name = "Troncos y rocas del valle"
+	add_child(solids)
 	for i in range(7600):
 		var d: = rng.randf_range(8, FAR)
 		var x: = trail(d) + rng.randf_range(-120, 120)
 		var west_t := inverse_lerp(WEST_START_Z, quarry_point(WEST_JOIN).z, ORIGIN_Z - d)
 		if west_t < 1.0 and absf(x - western_approach(west_t).x) < 3.8: continue
+		if d > 300.0 and d < 610.0 and absf(x - quarry_point((d - 300.0) / 310.0).x) < 3.5: continue
 		if absf(d - 292) < 8 and absf(x - trail(292) - 10.5) < 11.5: continue
 		if absf(x - trail(d)) < 2.6 or (d > 124 and d < 218 and absf(x - detour(d)) < 2.6): continue
-		var pos: = at(x, d)
 		var scale_m: = rng.randf_range(0.7, 1.8)
 		var turn: = Basis(Vector3.UP, rng.randf() * TAU)
+		var rise := (d - 8.0) / (join_distance - 8.0)
+		if rise < 1.0 and absf(x - ascent_x(rise, join.x)) < 9.0: continue
+		if d > 910.0:
+			var summit := summit_point(clampf(inverse_lerp(trail(CREST), peak.x, x), SUMMIT_JOIN, 1.0))
+			if Vector2(x - summit.x, ORIGIN_Z - d - summit.z).length_squared() < 81.0: continue
+		var pos := surface_point(x, d)
 		if i % 12 == 0 and (d < 540 or i % 36 == 0):
 			var open_tree := i % 24 == 0
 			var trunk_height := 1.6 if open_tree else 2.3
-			stems.append(Transform3D(turn.scaled(Vector3(0.19, trunk_height, 0.23) * scale_m), pos + Vector3.UP * trunk_height * 0.47 * scale_m))
+			var dimensions := Vector3(0.19, trunk_height, 0.23) * scale_m
+			var trunk := pos + Vector3.UP * dimensions.y * 0.47
+			stems.append(Transform3D(turn.scaled(dimensions), trunk))
+			Kit.item(solids, trunk, "", Vector3.ZERO, dimensions * Vector3(0.91, 1.0, 0.91)).basis = turn
 			var crowns := open_crowns if open_tree else shrubs
 			var canopy := Vector3(1.85, 0.80, 1.43) if open_tree else Vector3(2.25, 1.43, 1.82)
 			for j in range(4 if open_tree else 3):
 				var angle: = j * 2.1 + turn.get_euler().y
 				crowns.append(Transform3D(turn.scaled(canopy * scale_m), pos + Vector3(cos(angle) * 0.81, trunk_height - 0.12 + j * 0.23, sin(angle) * 0.74) * scale_m))
 		elif i % 8 == 0:
-			rocks.append(Transform3D(turn.scaled(Vector3(2.1, 1.8, 2.4) * scale_m), pos))
+			var dims := Vector3(2.1, 1.8, 2.4) * scale_m
+			rocks.append(Transform3D(turn.scaled(dims), pos))
+			Kit.item(solids, pos + Vector3.UP * dims.y * 0.17, "", Vector3.ZERO, dims * Vector3(0.65, 0.52, 0.65)).basis = turn
 		else:
 			for j in range(4):
 				var angle: = j * 1.57
@@ -310,7 +340,7 @@ static func western_x_at(z: float) -> float:
 	return western_approach(progress).x
 
 static func summit_point(t: float) -> Vector3:
-	var d: = lerpf(CREST, 948, t) + 11 * sin(TAU * t)
+	var d: = lerpf(CREST, 948, t) + SUMMIT_SWAY * sin(TAU * t)
 	var x: = lerpf(trail(CREST), 146, t)
 	return Vector3(x, elevation(x, d), ORIGIN_Z - d)
 
@@ -323,9 +353,11 @@ static func camp_point() -> Vector3:
 static func ascent_point(progress: float) -> Vector3:
 	var join: = summit_point(SUMMIT_JOIN)
 	var distance_along: = lerpf(8.0, ORIGIN_Z - join.z, progress)
-	var x: = lerpf(33.0, join.x, progress)
-	x += sin(PI * progress) * 128.0 + sin(TAU * progress * 4.0) * sin(PI * progress) * 16.0
+	var x := ascent_x(progress, join.x)
 	return Vector3(x, elevation(x, distance_along), ORIGIN_Z - distance_along)
+
+static func ascent_x(progress: float, join_x: float) -> float:
+	return lerpf(33.0, join_x, progress) + sin(PI * progress) * (ASCENT_BOW + sin(TAU * progress * 4.0) * ASCENT_WINDING)
 
 static func eastern_access(progress: float) -> Vector3:
 	const START_Z := -18.7

@@ -28,7 +28,7 @@ static func creek_extension(x: float) -> float:
 static func height(x: float, z: float) -> float:
 	var descent := -11.0 * smoothstep(22.0, 69.0, z)
 	var downstream := creek_extension(x)
-	var bank_width := lerpf(9.2, 13.8, downstream)
+	var bank_width := lerpf(9.2, 18.6, downstream)
 	var bed := 1.0 - smoothstep(2.0, bank_width, absf(z - channel_z(x)))
 	var far_bank := (8.0 + 3.0 * cos(x * 0.11)) * smoothstep(90.0, 130.0, z)
 	var ridge := 9.0 * smoothstep(31.0, 55.0, absf(x)) * smoothstep(28.0, 52.0, z) * (1.0 - 0.66 * bed)
@@ -125,7 +125,7 @@ static func build_ground(valley, material: ShaderMaterial):
 	valley.add_child(ground)
 	ground.create_trimesh_collision()
 
-static func dress(valley):
+static func dress(valley, field_trail_clearance: Callable):
 	var route = valley.route
 	route.signpost(point(-23.3, 18), "Sendero del cauce", "Cauce · bajada")
 	var date_post := post()
@@ -137,6 +137,7 @@ static func dress(valley):
 		valley.box(stake + Vector3(0, 0.17 + i * 0.18, -0.07), Vector3(0.16, 0.04, 0.012), "e4d3a7")
 	var rng := RandomNumberGenerator.new()
 	rng.seed = 954
+	var south_path := crossing_trace()
 	for i in range(155):
 		var x := rng.randf_range(-52.0, 52.0)
 		var z := channel_z(x) + rng.randf_range(-3.9, 3.9)
@@ -147,15 +148,31 @@ static func dress(valley):
 		var z := rng.randf_range(22.0, 125.0)
 		if trail_distance(Vector2(x, z)) < 4.0 or absf(z - channel_z(x)) < 5.5: continue
 		var size_m := rng.randf_range(0.7, 2.8)
+		var obstruction_radius := 1.73 + size_m * 0.92
+		var at := Vector2(x, z)
+		if near_south_path(at, south_path, obstruction_radius) or field_trail_clearance.call(at) < obstruction_radius:
+			# Keep the valley's random sequence when clearing the new solid boulders.
+			valley.rng.randf()
+			if i % 3 == 0: valley.rng.randf()
+			continue
 		var foot := point(x, z)
-		valley.stone(foot + Vector3.UP * size_m * 0.25, Vector3(1.7, 0.9, 1.5) * size_m, "74725c")
+		valley.stone(foot + Vector3.UP * size_m * 0.25, Vector3(1.7, 0.9, 1.5) * size_m, "74725c", true)
 		if i % 3 == 0:
-			valley.box(foot + Vector3.UP * size_m * 0.58, Vector3(0.11, 1.15, 0.13) * size_m, "635648")
+			valley.box(foot + Vector3.UP * size_m * 0.58, Vector3(0.11, 1.15, 0.13) * size_m, "635648", true)
 			valley.stone(foot + Vector3.UP * size_m * 1.24, Vector3(1.31, 0.91, 1.25) * size_m, "657253")
 	for side in [-1, 1]:
 		for z in range(32, 145, 13):
 			var x: float = side * (50.0 + 2.0 * sin(z))
 			if side < 0 and z < 98:
 				x = -73.0 + 2.0 * sin(z)
+			if near_south_path(Vector2(x, z), south_path, 6.9) or field_trail_clearance.call(Vector2(x, z)) < 6.9:
+				x += side * 10.0
 			var foot := Vector3(x, outer_height(x, z), z)
-			valley.stone(foot, Vector3(10.0, 6.0 + 2.0 * cos(z), 11.0), "777562")
+			valley.stone(foot, Vector3(10.0, 6.0 + 2.0 * cos(z), 11.0), "777562", true)
+
+static func near_south_path(at: Vector2, path: PackedVector2Array, margin: float) -> bool:
+	for index in range(path.size() - 1):
+		if index == TURN_COUNT: continue
+		var nearest := Geometry2D.get_closest_point_to_segment(at, path[index], path[index + 1])
+		if at.distance_squared_to(nearest) < margin * margin: return true
+	return false

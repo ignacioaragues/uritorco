@@ -1,6 +1,5 @@
 extends Control
 
-const Alien = preload("res://hallazgos_sueno.gd")
 const Arrival = preload("res://llegada.gd")
 const ROUTE = preload("res://travesia.gd")
 const Exploration = preload("res://exploracion.gd")
@@ -15,7 +14,6 @@ const PAPER_FIELD := Rect2(0, 0, 560, 330)
 const PAGE_ASPECT := 1.33 / 1.14
 const COFFEE = preload("res://equipo/mancha_cafe.webp")
 const ATLAS_EARTH = preload("res://diario_hallazgos.webp")
-const ATLAS_DREAM = preload("res://diario_suenos.webp")
 const GRID_STEPS := [50, 100, 100, 50, 40, 40, 40, 10]
 const INTERVALS := [2, 10, 10, 2, 2, 2, 2, 2]
 const ARRIVAL_ZONE := 7
@@ -93,11 +91,15 @@ func frame(limits: Rect2) -> Rect2:
 func _draw():
 	var zone := active_zone
 	if zone < 0: return
+	pins.clear()
+	used_labels.clear()
+	draw_texture_rect_region(PAPER, PAPER_FIELD, Rect2(78, 67, 924, 640), Color(0.92, 0.93, 0.89, 0.52))
+	if dream_sheet > 0:
+		draw_dream_symbols()
+		return
 	var limits := survey_extent(zone)
 	var plot := frame(limits)
 	var cache_key := zone + arrival_sheet if zone == ARRIVAL_ZONE else zone
-	pins.clear()
-	draw_texture_rect_region(PAPER, Rect2(0, 0, 560, 330), Rect2(78, 67, 924, 640), Color(0.92, 0.93, 0.89, 0.52))
 	if not relief.has(cache_key): relief[cache_key] = make_relief(zone, limits)
 	draw_texture_rect(relief[cache_key], plot, false, Color(1, 1, 1, 0.82))
 	if zone == 0:
@@ -109,8 +111,6 @@ func _draw():
 	if not lines.major.is_empty(): draw_multiline(lines.major, Color("#81644689"), 1.08, true)
 	if zone == ARRIVAL_ZONE:
 		draw_arrival(limits)
-	elif dream_sheet > 0:
-		draw_dream(limits)
 	else:
 		match zone:
 			0: draw_local(limits)
@@ -124,7 +124,7 @@ func _draw():
 
 func draw_markers():
 	var zone := active_zone
-	if zone < 0: return
+	if zone < 0 or dream_sheet > 0: return
 	var limits := survey_extent(zone)
 	var inside := frame(limits).grow(-9.0)
 	if zone != ARRIVAL_ZONE: draw_finds(limits)
@@ -272,32 +272,46 @@ func draw_arrival(limits: Rect2):
 			2: pin(limits, Arrival.world_position(index, Vector3(0, 0, -10.45)), "Puente")
 			5: pin(limits, Arrival.world_position(index, Vector3(0, 0, -11.0)), "Laja")
 
-func draw_dream(limits: Rect2):
-	var start := LastNight.dream_point(dream_sheet, 0.0)
-	pin(limits, start, "Llegada", Vector2(9, 15))
-	for site in Alien.SITES[dream_sheet - 1]:
-		var at: Vector2 = site[1]
-		pin(limits, LastNight.dream_surface(dream_sheet, at), site[0], Vector2(12, -12))
-	if dream_sheet == 3:
-		for i in 5:
-			var arch := point(limits, LastNight.dream_point(3, 10.0 + 9.0 * i))
-			draw_arc(arch, 4.0 + i * 0.25, PI, TAU, 14, Color("#66536f"), 1.5, true)
-		pin(limits, LastNight.final_arch(), "Arcos", Vector2(12, -9))
+func draw_dream_symbols():
+	var rng := RandomNumberGenerator.new()
+	rng.seed = 6121 + dream_sheet * 1187
+	var glyphs := [
+		[[Vector2(-9, -14), Vector2(-12, 0), Vector2(-3, 12), Vector2(8, 8), Vector2(12, -6), Vector2(4, -13)], [Vector2(-18, 5), Vector2(6, -4), Vector2(17, 0)]],
+		[[Vector2(-11, 12), Vector2(1, -14), Vector2(13, 12), Vector2(1, 7), Vector2(-11, 12)], [Vector2(-7, -6), Vector2(11, -3)], [Vector2(0, 14), Vector2(0, 19)]],
+		[[Vector2(-15, -3), Vector2(-8, -11), Vector2(4, -11), Vector2(12, -4), Vector2(11, 3), Vector2(3, 8), Vector2(-5, 9)], [Vector2(-12, 8), Vector2(-8, 1), Vector2(-1, 1), Vector2(2, 4)]],
+		[[Vector2(-12, -14), Vector2(-6, 12), Vector2(10, -1), Vector2(14, 10)], [Vector2(-1, -11), Vector2(6, -15), Vector2(13, -12)], [Vector2(9, -8), Vector2(13, -5)]],
+		[[Vector2(-12, 6), Vector2(-6, 12), Vector2(3, 12), Vector2(15, -1), Vector2(9, -11), Vector2(-1, -7), Vector2(-8, 4), Vector2(3, 7)], [Vector2(-8, -12), Vector2(-13, -14)]],
+		[[Vector2(-8, -17), Vector2(0, -2), Vector2(-7, 14)], [Vector2(6, -16), Vector2(11, -4), Vector2(3, 7), Vector2(9, 16)], [Vector2(-12, -3), Vector2(14, 2)]],
+		[[Vector2(-16, -9), Vector2(-4, -1), Vector2(-12, 14), Vector2(1, 10), Vector2(13, -7), Vector2(15, 3)], [Vector2(-6, -14), Vector2(1, -10), Vector2(4, -13)]],
+		[[Vector2(-14, -4), Vector2(-7, -14), Vector2(0, -2), Vector2(7, -13), Vector2(14, -3)], [Vector2(-10, 10), Vector2(-5, 4), Vector2(0, 10), Vector2(8, 5)], [Vector2(1, 14), Vector2(8, 13)]],
+	]
+	for row in 5:
+		var count := rng.randi_range(6, 9)
+		var tilt := rng.randf_range(-0.10, 0.10)
+		for i in count:
+			var center := Vector2(62.0 + i * 434.0 / (count - 1), 38.0 + row * 57.0)
+			center += Vector2(rng.randf_range(-6.0, 6.0), rng.randf_range(-7.0, 7.0) + tilt * i * 14.0)
+			var size_m := rng.randf_range(0.63, 1.14)
+			var angle := rng.randf_range(-0.26, 0.22)
+			var opacity := rng.randf_range(0.59, 0.91)
+			var glyph: Array = glyphs[rng.randi_range(0, glyphs.size() - 1)]
+			for stroke in glyph:
+				var brush := PackedVector2Array()
+				for point in stroke:
+					var jitter := Vector2(rng.randf_range(-0.85, 0.85), rng.randf_range(-0.85, 0.85))
+					brush.append(center + (Vector2(point) + jitter).rotated(angle) * size_m)
+				draw_polyline(brush, Color(0.28, 0.25, 0.24, opacity * 0.26), 3.65, true)
+				draw_polyline(brush, Color(0.26, 0.23, 0.21, opacity), 1.65, true)
 
 func draw_finds(limits: Rect2):
-	var dreaming := dream_sheet > 0
-	var entries: Dictionary = Alien.FINDS if dreaming else Exploration.FINDS
-	var atlas := ATLAS_DREAM if dreaming else ATLAS_EARTH
-	var columns := 3 if dreaming else 4
-	var tile := atlas.get_size() / Vector2(columns, 2)
+	const COLUMNS := 4
+	var tile := ATLAS_EARTH.get_size() / Vector2(COLUMNS, 2)
 	var here := Vector2(location.x, location.z)
 	var plot := frame(limits)
 	var occupied := used_labels.duplicate()
-	for id in entries:
-		var entry: Array = entries[id]
-		if dreaming and entry[4] != dream_sheet: continue
+	for id in Exploration.FINDS:
+		var entry: Array = Exploration.FINDS[id]
 		var at: Vector2 = entry[2]
-		if dreaming: at += Vector2(LastNight.PLANET.x, LastNight.PLANET.z)
 		var world := Vector3(at.x, 0, at.y)
 		if not contains(limits, world): continue
 		var seen := found.has(id)
@@ -313,16 +327,16 @@ func draw_finds(limits: Rect2):
 				badge = candidate
 				break
 		var index: int = entry[0]
-		var src := Rect2(Vector2(index % columns, index / columns) * tile, tile)
+		var src := Rect2(Vector2(index % COLUMNS, index / COLUMNS) * tile, tile)
 		var bounds := Rect2(badge - radius, picture)
 		occupied.append(bounds)
 		markers.draw_line(mark, mark.lerp(badge, 0.60), Color("#6e655098"), 0.75, true)
 		markers.draw_circle(badge, 12.0, Color("#f5deb566" if seen else "#f8d78b80"), true, -1, true)
-		markers.draw_texture_rect_region(atlas, bounds, src, Color.WHITE if seen else Color(1, 1, 1, 0.76))
+		markers.draw_texture_rect_region(ATLAS_EARTH, bounds, src, Color.WHITE if seen else Color(1, 1, 1, 0.76))
 
 func projection_z() -> float:
 	if arrival_sheet >= 0: return Arrival.origin(arrival_sheet).z
-	return LastNight.PLANET.z if dream_sheet > 0 else ROUTE.ORIGIN_Z
+	return ROUTE.ORIGIN_Z
 
 func contains(limits: Rect2, pos: Vector3) -> bool:
 	return limits.has_point(Vector2(pos.x, projection_z() - pos.z))
@@ -415,7 +429,6 @@ func ground_height(x: float, d: float) -> float:
 	if arrival_sheet >= 0:
 		var local := Arrival.local_position(arrival_sheet, Vector3(x, 0, projection_z() - d))
 		return Arrival.ground_height(arrival_sheet, local.x, -local.z)
-	if dream_sheet > 0: return LastNight.planet_height(dream_sheet, x, d)
 	var z := ROUTE.ORIGIN_Z - d
 	return Creek.outer_height(x, z) if z >= -72.0 else ROUTE.elevation(x, maxf(d, 0.0))
 
@@ -439,9 +452,6 @@ func make_relief(zone: int, limits: Rect2) -> ImageTexture:
 			var weathered := clampf((dx - dz) * 0.20, -0.19, 0.14)
 			var band := smoothstep(-10.0, 15.0, heights[i]) if lowland else smoothstep(0.0, 168.0, heights[i])
 			var soil := Color("#c2c4a6").lerp(Color("#d7cca8"), band)
-			if dream_sheet > 0:
-				var hue: Color = [Color("#abb8be"), Color("#bdaba3"), Color("#b6aabe")][dream_sheet - 1]
-				soil = hue.lerp(Color("#d9ccb5"), band * 0.72)
 			var detail := 0.008 * sin(col * 0.73 + row * 1.91) + 0.006 * sin(row * 4.11 - col * 3.17)
 			tex.set_pixel(col, row, soil.lightened(maxf(0, weathered + detail)).darkened(maxf(0, -weathered - detail)))
 	return ImageTexture.create_from_image(tex)
