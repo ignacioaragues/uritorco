@@ -15,10 +15,10 @@ const LAJAS := Vector2(-39, -17)
 
 # Los índices corresponden a las láminas del cuaderno.
 const FINDS = {
-	"tiesto": [0, "Tiesto con guarda", Vector2(-35.5, -23.2), "En una laja del oeste. Es una réplica didáctica del museo. La guarda sigue el borde. Si giro el fragmento, los surcos se ven casi al ras."],
-	"tortero": [1, "Tortero de piedra", Vector2(31, 13.6), "A la sombra del mollar. El disco tiene una perforación limpia. En la ficha de la réplica dice que daba peso al huso al hilar."],
-	"mano": [2, "Mano de moler", Vector2(-30.0, 59.5), "En el recodo del cauce. Una cara se siente lisa y la otra áspera. Es una pieza de la muestra de molienda. Dibujé el lado que apoya."],
-	"vasija": [3, "Vasija de barro", Vector2(-8.4, -64.5), "En un hueco por arriba de la parada. La vasija de la muestra tiene el borde grueso y una hendidura en el hombro. Se ve dónde se juntó el barro."],
+	"tiesto": [0, "Tiesto con guarda", Vector2(-35.5, -23.2), "Asomaba de la tierra junto a una laja del oeste. La guarda sigue el borde. Uno de los surcos todavía tiene tierra. Dibujé cómo estaba apoyado."],
+	"tortero": [1, "Tortero de piedra", Vector2(31, 13.6), "A la sombra del mollar. La perforación se ensancha de un lado. Se parece a los torteros que vi en el museo. Dibujé el lado más gastado."],
+	"mano": [2, "Mano de moler", Vector2(-30.0, 59.5), "En el recodo del cauce. La cara que queda arriba brilla como si la hubieran pulido. Al lado hay una piedra chata con una marca ancha. Dibujé la pieza de canto."],
+	"vasija": [3, "Vasija de barro", Vector2(-8.4, -64.5), "Asomaba entre las raíces, por arriba de la parada. Tiene el borde grueso y una rajadura con tierra adentro. La dibujé en el hueco, con la boca hacia la ladera."],
 	"negativo": [4, "Negativo velado", Vector2(42.6, -0.6), "En el borde del mollar, contra la luz. Uno de los cuadros tiene dos manchas. La mayor podría ser una raya de la película. Dibujé también las perforaciones."],
 	"cinta": [5, "Casete rajado", Vector2(-201.8, -574.4), "Entre el cable y la cantera, detrás de unas lajas. La caja se abre por una esquina. Hay cinta entre los dos carretes. Al margen de la etiqueta, alguien escribió «canal libre»."],
 	"placa": [6, "Chapa perforada", Vector2(14, 46), "En la vuelta por el sur. Los agujeros tienen rebaba de un solo lado. Si la levanto hacia el cielo, parecen un grupo de estrellas. Cambia por completo al girarla."],
@@ -103,10 +103,16 @@ static func dress_verges(valley):
 static func dress_find(valley, id: String):
 	var entry: Array = FINDS[id]
 	var footprint := ground(entry[2], valley.route)
-	var stand: MeshInstance3D = valley.stone(footprint + Vector3.UP * 0.35, Vector3(1.55, 0.78, 1.18), "807565", true)
+	var old_piece := int(entry[0]) < 4
 	var root := Node3D.new()
 	valley.add_child(root)
-	root.position = stand.position + Vector3.UP * 0.38
+	if old_piece:
+		var exposed := 0.27 if id == "tiesto" else 0.16
+		valley.stone(footprint + Vector3.DOWN * 0.11, Vector3(1.35, exposed * 2.0 + 0.24, 0.97), "877b6a", true)
+		root.position = footprint + Vector3.UP * exposed
+	else:
+		var stand: MeshInstance3D = valley.stone(footprint + Vector3.UP * 0.35, Vector3(1.55, 0.78, 1.18), "807565", true)
+		root.position = stand.position + Vector3.UP * 0.38
 	root.rotation.y = sin(footprint.x * 0.82) * 0.58
 	match int(entry[0]):
 		0:
@@ -123,6 +129,11 @@ static func dress_find(valley, id: String):
 			stone.scale = Vector3(0.56, 0.24, 0.29)
 			stone.rotation.y = 0.48
 		3:
+			for side in [-1.0, 1.0]:
+				var start := Vector3(side * 0.58, -0.27, -0.20)
+				var knot := Vector3(side * 0.38, 0.034, -0.17 + side * 0.16)
+				Flora.branch(root, start, knot, 0.08, 0.032)
+				Flora.branch(root, knot, Vector3(side * 0.28, -0.04, 0.24), 0.032, 0.009)
 			piece(root, lathe([Vector2(0, 0), Vector2(0.15, 0), Vector2(0.22, 0.13),
 				Vector2(0.20, 0.24), Vector2(0.14, 0.31), Vector2(0.15, 0.41),
 				Vector2(0.115, 0.41), Vector2(0.106, 0.31), Vector2(0.14, 0.21), Vector2(0, 0.06)]),

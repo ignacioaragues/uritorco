@@ -168,7 +168,7 @@ static func available(stage: int, position: Vector3, bedtime: bool, sighting: bo
 		15:
 			if near(position, Trail.ascent_point(0.67), 155.0): topic = "bajada"
 		16:
-			if near(position, Trail.crossing_point(0.17), 97.0): topic = "lluvia"
+			if near(position, Creek.crossing_point(0.42), 42.0): topic = "lluvia"
 		18:
 			if near(position, Vector3.ZERO, 36.0): topic = "ventana"
 		19:

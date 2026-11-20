@@ -14,8 +14,6 @@ const SUMMIT_JOIN: = 0.37
 var rng: = RandomNumberGenerator.new()
 var ground_rows: = PackedFloat32Array()
 var ground_material: ShaderMaterial
-var birds: Array[Node3D] = []
-var wings: Array[Node3D] = []
 var fox: = Node3D.new()
 var legs: Array[Node3D] = []
 var fox_waits: = false
@@ -382,22 +380,6 @@ func make_wildlife():
 	for dx in [-0.071, 0.071]:
 		for dz in [-0.19, 0.2]:
 			legs.append(animal_form(fox, Vector3(dx, 0.16, dz), Vector3(0.065, 0.28, 0.075), "796555"))
-	for i in range(3):
-		var bird := Node3D.new()
-		add_child(bird)
-		birds.append(bird)
-		animal_form(bird, Vector3.ZERO, Vector3(0.26, 0.20, 0.70), "433c38")
-		animal_form(bird, Vector3(0, 0.017, -0.34), Vector3(0.12, 0.12, 0.19), "625957")
-		animal_form(bird, Vector3(0, -0.018, 0.30), Vector3(0.27, 0.065, 0.28), "413a36")
-		for side in [-1.0, 1.0]:
-			var wing := Node3D.new()
-			bird.add_child(wing)
-			wings.append(wing)
-			animal_form(wing, Vector3(side * 0.55, 0, 0.02), Vector3(1.39, 0.092, 0.42), "453e3a").rotation.y = 0.08 * side
-			animal_form(wing, Vector3(side * 1.21, -0.020, 0.061), Vector3(0.77, 0.066, 0.33), "6f665d")
-			for feather in 5:
-				var tip := Vector3(side * (1.56 + 0.07 * sin(feather * 0.9)), -0.028, -0.055 + feather * 0.078)
-				animal_form(wing, tip, Vector3(0.43, 0.047, 0.071), "443d38").rotation.y = -(feather - 1) * 0.11 * side
 
 func release_fox(linger: bool):
 	fox_waits = false
@@ -419,13 +401,6 @@ func _process(delta):
 		fox.rotation.y = atan2(7 * sin(phase), 5 * cos(phase))
 	for i in legs.size():
 		legs[i].rotation.x = 0 if fox_waits or (fox_departure >= 0 and time - fox_departure >= 15) else sin(time * 5 + (PI if i in [1, 2] else 0.0)) * 0.42
-	for i in birds.size():
-		var a: = time * 0.12 + i * 2.1
-		var station: = [85.0, 395.0, 890.0][i] as float
-		birds[i].position = at(trail(station) + 28 * cos(a), station + 19 * sin(a)) + Vector3.UP * (18 + sin(a) * 2)
-		birds[i].rotation = Vector3(0, atan2(28 * sin(a), 19 * cos(a)), 0.13)
-		wings[2 * i].rotation.z = 0.1 * sin(a * 2)
-		wings[2 * i + 1].rotation.z = - wings[2 * i].rotation.z
 
 static func quarry_point(t: float) -> Vector3:
 	var d: = 300 + 310 * t
@@ -486,7 +461,7 @@ static func summit_return_marker(location: Vector3) -> Vector3:
 			index = step
 	return points[maxi(0, index - (4 if index > 104 else 8))]
 
-static func crossing_point(progress: float) -> Vector3:
+static func legacy_crossing_point(progress: float) -> Vector3:
 	var start: = quarry_point(0.53)
 	var d: = ORIGIN_Z - start.z + progress * 221.0
 	var x: = start.x - progress * 146.0 + 17.0 * sin(TAU * progress)

@@ -1,6 +1,17 @@
 extends RefCounted
 
 const LIMIT_Z := 122.0
+const CROSSING_X := -139.0
+const TURN_COUNT := 48
+const RETURN_COUNT := 12
+const SOUTH_KNOTS := [
+	Vector2(-39, -17), Vector2(-44, 0), Vector2(-46, 17), Vector2(-52, 30),
+	Vector2(-63, 44), Vector2(-81, 52), Vector2(-98, 63), Vector2(-111, 73),
+	Vector2(-126, 77), Vector2(-140, 88)
+]
+const RETURN_KNOTS := [
+	Vector2(-63, 44), Vector2(-48, 49), Vector2(-36, 49), Vector2(-31, 47.7), Vector2(-31, 46)
+]
 const PATH := [
 	Vector2(3.8, -14.0), Vector2(3.8, -18.4), Vector2(-5, -19), Vector2(-15, -17),
 	Vector2(-21, -11), Vector2(-23, 4), Vector2(-20, 18),
@@ -9,17 +20,24 @@ const PATH := [
 ]
 
 static func channel_z(x: float) -> float:
-	return 82.0 + 4.6 * sin(x * 0.082) + 1.4 * sin(x * 0.17)
+	return 82.0 + 4.6 * sin(x * 0.082) + 1.4 * sin(x * 0.17) + creek_extension(x) * 24.0
+
+static func creek_extension(x: float) -> float:
+	return smoothstep(54.0, 140.0, -x)
 
 static func height(x: float, z: float) -> float:
 	var descent := -11.0 * smoothstep(22.0, 69.0, z)
-	var bed := 1.0 - smoothstep(2.0, 9.2, absf(z - channel_z(x)))
+	var downstream := creek_extension(x)
+	var bank_width := lerpf(9.2, 13.8, downstream)
+	var bed := 1.0 - smoothstep(2.0, bank_width, absf(z - channel_z(x)))
 	var far_bank := (8.0 + 3.0 * cos(x * 0.11)) * smoothstep(90.0, 130.0, z)
 	var ridge := 9.0 * smoothstep(31.0, 55.0, absf(x)) * smoothstep(28.0, 52.0, z) * (1.0 - 0.66 * bed)
 	var relief := sin(x * 0.13 + z * 0.11) * smoothstep(23.0, 40.0, z) * 0.48
 	var mollar := 2.9 * (1.0 - smoothstep(0.12, 1.0, Vector2((x - 43) / 18.0, (z - 12) / 22.0).length()))
 	var lajas := 2.4 * (1.0 - smoothstep(0.08, 1.0, Vector2((x + 41) / 16.0, (z + 15) / 19.0).length()))
-	return descent - 3.1 * bed + far_bank + ridge + relief + mollar + lajas
+	var side_ridges := (6.5 * exp(-Vector2((x + 91.0) / 38.0, (z - 23.0) / 24.0).length_squared())
+		+ 9.0 * exp(-Vector2((x + 159.0) / 29.0, (z - 75.0) / 26.0).length_squared())) * smoothstep(38.0, 61.0, -x)
+	return descent - (3.1 + downstream * 2.0) * bed + far_bank + ridge * (1.0 - downstream * 0.66) + relief + mollar + lajas + side_ridges
 
 static func point(x: float, z: float) -> Vector3:
 	return Vector3(x, height(x, z), z)
@@ -45,15 +63,46 @@ static func trail_distance(position: Vector2) -> float:
 	return sqrt(nearest)
 
 static func outer_height(x: float, z: float) -> float:
-	var outskirts := maxf(smoothstep(56.0, 150.0, absf(x)), smoothstep(166.0, 280.0, z))
+	var west_extension := 112.0 * smoothstep(10.0, 70.0, z)
+	var width := absf(x) if x > 0 else maxf(0.0, -x - west_extension)
+	var outskirts := maxf(smoothstep(56.0, 150.0, width), smoothstep(166.0, 280.0, z))
 	var hills := (5.4 + 4.0 * sin(x * 0.018 + z * 0.019) + 3.7 * sin(z * 0.031 - x * 0.021))
 	hills *= smoothstep(-72.0, 8.0, z)
 	return lerpf(height(x, z), hills, outskirts)
 
+static func west_limit(z: float) -> float:
+	return 46.0 + 119.0 * smoothstep(-2.0, 57.0, z)
+
+static func curve(knots: Array, progress: float) -> Vector2:
+	var step := clampf(progress, 0.0, 1.0) * (knots.size() - 1)
+	var i := mini(int(step), knots.size() - 2)
+	var start: Vector2 = knots[i]
+	return start.cubic_interpolate(knots[i + 1], knots[maxi(i - 1, 0)], knots[mini(i + 2, knots.size() - 1)], step - i)
+
+static func south_knots() -> Array:
+	var knots := SOUTH_KNOTS.duplicate()
+	knots.append(Vector2(CROSSING_X, channel_z(CROSSING_X) - 7.70))
+	return knots
+
+static func crossing_point(progress: float) -> Vector3:
+	var at := curve(south_knots(), progress)
+	return Vector3(at.x, outer_height(at.x, at.y), at.y)
+
+static func return_point(progress: float) -> Vector3:
+	var at := curve(RETURN_KNOTS, progress)
+	return Vector3(at.x, outer_height(at.x, at.y), at.y)
+
+static func crossing_trace() -> PackedVector2Array:
+	var points := PackedVector2Array()
+	var knots := south_knots()
+	for i in TURN_COUNT + 1: points.append(curve(knots, float(i) / TURN_COUNT))
+	for i in RETURN_COUNT + 1: points.append(curve(RETURN_KNOTS, float(i) / RETURN_COUNT))
+	return points
+
 static func build_ground(valley, material: ShaderMaterial):
 	var columns := PackedFloat32Array()
-	for x in range(-360, -56, 8): columns.append(x)
-	for x in range(-56, 57, 2): columns.append(x)
+	for x in range(-360, -184, 8): columns.append(x)
+	for x in range(-184, 57, 2): columns.append(x)
 	for x in range(64, 361, 8): columns.append(x)
 	var rows := PackedFloat32Array()
 	for z in range(-72, 167, 2): rows.append(z)
@@ -106,4 +155,7 @@ static func dress(valley):
 	for side in [-1, 1]:
 		for z in range(32, 145, 13):
 			var x: float = side * (50.0 + 2.0 * sin(z))
-			valley.stone(point(x, z), Vector3(10.0, 6.0 + 2.0 * cos(z), 11.0), "777562")
+			if side < 0 and z < 98:
+				x = -73.0 + 2.0 * sin(z)
+			var foot := Vector3(x, outer_height(x, z), z)
+			valley.stone(foot, Vector3(10.0, 6.0 + 2.0 * cos(z), 11.0), "777562")

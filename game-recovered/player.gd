@@ -173,5 +173,5 @@ func _physics_process(delta):
 		position = intro_center + local.rotated(Vector3.UP, intro_heading)
 		return
 	var lateral: = lerpf(46, 354, smoothstep(0, 55, -76 - position.z))
-	position.x = clampf(position.x, - lateral, lateral)
+	position.x = clampf(position.x, -maxf(lateral, Creek.west_limit(position.z)), lateral)
 	position.z = clampf(position.z, -1049, Creek.LIMIT_Z)

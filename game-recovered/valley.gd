@@ -2,12 +2,15 @@ extends Node3D
 
 const Creek = preload("res://cauce.gd")
 const LastNight = preload("res://final_night.gd")
+const Birds = preload("res://aves.gd")
+const South = preload("res://quebrada_sur.gd")
 const Exploration = preload("res://exploracion.gd")
 const Flora = preload("res://flora.gd")
 const Trail = preload("res://travesia.gd")
 
 var rng: = RandomNumberGenerator.new()
 var route = Trail.new()
+var birds = Birds.new()
 var env: = Environment.new()
 var sun: = DirectionalLight3D.new()
 var beacon := Sprite3D.new()
@@ -66,6 +69,7 @@ func _ready():
 	env.background_mode = Environment.BG_SKY
 	env.sky = Sky.new()
 	sky_mat.shader = preload("res://sierra.gdshader")
+	sky_mat.set_shader_parameter("dusk", 0.0)
 	sky_mat.set_shader_parameter("faint_stars", preload("res://estrellas.png"))
 	configure_sky(0)
 	env.sky.sky_material = sky_mat
@@ -81,6 +85,7 @@ func _ready():
 	sun.light_color = Color("#ffd3a1")
 	sun.shadow_enabled = true
 	route.ground_material = Trail.make_ground_material(PackedVector2Array(Creek.PATH), LastNight.STOP, LastNight.DOOR_PATH_END, Exploration.segments())
+	route.ground_material.set_shader_parameter("south_paths", Creek.crossing_trace())
 	Creek.build_ground(self, route.ground_material)
 	# Se conserva la distribución de piedras de las partidas anteriores.
 	for sample in 79 * 2: rng.randf()
@@ -154,6 +159,8 @@ func _ready():
 	rock_banks()
 	add_child(route)
 	Creek.dress(self)
+	South.build(self)
+	dress_birds()
 	dress_refuge_junction()
 	preload("res://museo.gd").build(self)
 	LastNight.build_door(self)
@@ -163,28 +170,46 @@ func _ready():
 
 	Exploration.build(self)
 
+func dress_birds():
+	add_child(birds)
+	for d in [85.0, 395.0, 890.0]:
+		birds.add_flight(Birds.Species.JOTE, route.at(route.trail(d), d) + Vector3.UP * 19.0, Vector2(30, 23), d * 0.022)
+	birds.add_flight(Birds.Species.JOTE, Creek.crossing_point(0.64) + Vector3.UP * 18.0, Vector2(37, 24), 2.4)
+	birds.add_flight(Birds.Species.CARANCHO, Vector3(-54, 11, 23), Vector2(23, 19), 1.2)
+	birds.add_flight(Birds.Species.CARANCHO, route.at(102, 686) + Vector3.UP * 11.0, Vector2(34, 28), 3.3)
+	for i in 3:
+		birds.add_flight(Birds.Species.GOLONDRINA, Creek.point(-26.0 - i * 16, 73.0 + i * 4) + Vector3.UP * (4.5 + i * 0.53),
+			Vector2(11, 6), i * 2.13)
+
+var ridge_materials: Array[ShaderMaterial] = []
+var ridge_light := Vector2(-1.0, -1.0)
+
 func build_distant_ridges():
-	const SECTIONS := 96
-	const ROWS := [Vector2(0.67, 0.0), Vector2(0.82, 0.36), Vector2(1.0, 1.0), Vector2(1.18, 0.16)]
-	for layer in 2:
+	const SECTIONS := 144
+	const ROWS := [Vector2(0.78, 0.0), Vector2(0.86, 0.33), Vector2(0.92, 0.70), Vector2(1.0, 1.0), Vector2(1.09, 0.0)]
+	const PALETTE := ["737869", "7c8986", "879aa1", "9babba"]
+	# Se conserva la secuencia original de piedras junto al refugio.
+	for sample in 2 * 96: rng.randf()
+	for layer in PALETTE.size():
 		var surface := SurfaceTool.new()
 		surface.begin(Mesh.PRIMITIVE_TRIANGLES)
-		var material := StandardMaterial3D.new()
-		material.cull_mode = BaseMaterial3D.CULL_DISABLED
-		material.albedo_color = Color("#7d8b8a") if layer == 0 else Color("#6c7772")
-		surface.set_material(material)
 		for index in SECTIONS:
-			var angle := TAU * index / SECTIONS
-			var south := smoothstep(0.0, 0.68, sin(angle))
-			var north := smoothstep(0.0, 0.8, -sin(angle))
-			var hills := 24 + 9 * sin(angle * 3 + layer) + 8 * sin(angle * 7 + layer) + 3 * cos(angle * 13) + rng.randf_range(-2, 2) - layer * 7
-			var radius := 166.0 - layer * 39.0 + north * (1200 - layer * 100) + south * (250 - layer * 25)
-			var bottom := lerpf(-2.0, -26.0, south)
-			var crest := hills + north * (218 - layer * 40) + south * (17 - layer * 9)
-			for row in ROWS:
-				var distance: float = radius * row.x
-				var y := lerpf(bottom, crest, row.y)
-				surface.add_vertex(Vector3(distance * cos(angle), y, -28.0 + distance * sin(angle)))
+			var azimuth := TAU * index / SECTIONS
+			var north := smoothstep(0.0, 0.86, -sin(azimuth))
+			var south := smoothstep(0.0, 0.84, sin(azimuth))
+			var rolls := 0.43 * sin(azimuth * 5.0 + 1.8 * layer) + 0.29 * sin(azimuth * 9.0 - layer) + 0.19 * cos(azimuth * 16.0 + 0.6 * layer)
+			var peaks := 0.48 * pow(absf(sin(azimuth * 3.0 + 0.77 * layer)), 3.5) + rolls
+			var base := 228.0 + north * 1040.0 + south * 142.0
+			var distance := base * (1.0 + layer * 0.40) * (1.0 + rolls * 0.055)
+			var angle := 0.100 + 0.011 * layer + peaks * 0.063 + north * 0.076
+			var crest := distance * angle
+			var foot := -17.0 - layer * 3.0
+			for index_row in ROWS.size():
+				var row: Vector2 = ROWS[index_row]
+				var radius: float = distance * row.x
+				var side := 0.74 + 0.17 * sin(azimuth * 19.0 + index_row * 1.23 + layer) + 0.09 * sin(azimuth * 37.0 - index_row * 2.0)
+				surface.set_uv(Vector2(side, row.y))
+				surface.add_vertex(Vector3(radius * cos(azimuth), lerpf(foot, crest, row.y), -30.0 + radius * sin(azimuth)))
 		for index in SECTIONS:
 			var next := ((index + 1) % SECTIONS) * ROWS.size()
 			for row in range(ROWS.size() - 1):
@@ -192,11 +217,26 @@ func build_distant_ridges():
 				var b := next + row
 				for vertex in [a + 1, a, b + 1, b + 1, a, b]:
 					surface.add_index(vertex)
-		surface.generate_normals()
 		var ridge := MeshInstance3D.new()
 		ridge.mesh = surface.commit()
+		var paint := ShaderMaterial.new()
+		paint.shader = preload("res://perfil_sierra.gdshader")
+		paint.set_shader_parameter("stone", Color(PALETTE[layer]))
+		paint.set_shader_parameter("distance_layer", layer / 3.0)
+		ridge_materials.append(paint)
+		ridge.material_override = paint
 		ridge.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 		add_child(ridge)
+
+func shade_ridges():
+	var nightfall: float = sky_mat.get_shader_parameter("nightfall")
+	var dusk: float = sky_mat.get_shader_parameter("dusk")
+	if ridge_light == Vector2(nightfall, dusk): return
+	ridge_light = Vector2(nightfall, dusk)
+	birds.visible = nightfall < 0.68
+	for mat in ridge_materials:
+		mat.set_shader_parameter("nightfall", nightfall)
+		mat.set_shader_parameter("dusk", dusk)
 
 func dress_refuge_junction():
 	route.signpost(Vector3(1.25, 0.0, -17.8), "Sendero del cauce", "← Cauce", 0.0, true)
@@ -239,7 +279,10 @@ func update_weather(day: int):
 	weather_day = day
 	var cloud: float = {1: 0.19, 2: 0.12, 7: 0.56, 25: 0.29, 27: 0.38, 32: 0.08, 36: 0.86, 41: 0.46}.get(day, 0.0)
 	sky_mat.set_shader_parameter("cloud_cover", cloud)
-	env.fog_density = lerpf(0.0027, 0.009, cloud * cloud)
+	sky_mat.set_shader_parameter("cloud_pattern", day * 0.873)
+	env.fog_density = lerpf(0.0027, 0.0073, cloud * cloud)
+	route.ground_material.set_shader_parameter("wet_ground", 0.88 if day == 36 else 0.0)
+	if is_instance_valid(storm_water): storm_water.visible = day == 36
 
 func cave_darkness():
 	if lighting and lighting.is_valid(): lighting.kill()
@@ -743,30 +786,15 @@ func stack_ascent_stones(foot: Vector3):
 		var width: = 0.63 - 0.14 * level
 		stone(base + Vector3.UP * (0.07 + level * 0.19), Vector3(width, 0.26, width * 0.7), "9a8971")
 
-var crossing_dressed: = false
+var storm_water: MeshInstance3D
+var archive_dressed := false
 
-func dress_day36(show_crossing: bool = true):
-	if not crossing_dressed:
-		crossing_dressed = true
+func dress_day36():
+	if not archive_dressed:
+		archive_dressed = true
 		preload("res://museo.gd").dress_archive(self)
-	if not show_crossing: return
-	var fork: Vector3 = route.crossing_point(0)
-	route.signpost(route.surface_point(fork.x - 1.9, route.ORIGIN_Z - fork.z), "Desvío de la quebrada", "Pasarela · quebrada oeste")
-	for i in range(1, 25):
-		stack_ascent_stones(route.crossing_point(i / 25.0) + Vector3.RIGHT)
-	var timber_fall: Vector3 = route.crossing_point(0.26)
-	box(timber_fall + Vector3.UP * 0.31, Vector3(4.7, 0.62, 0.52), "6c523c", true, "Tronco caído").rotation.y = 0.35
-	var shelf: Vector3 = route.crossing_point(0.72)
-	var foot: Vector3 = route.surface_point(shelf.x, route.ORIGIN_Z - shelf.z - 0.47)
-	box(Vector3(shelf.x, foot.y + 0.61, shelf.z - 0.78), Vector3(5.0, 1.52, 2.5), "948371", true, "Subir al escalón")
-	var crossing: Vector3 = route.crossing_point(1)
-	for i in range(-5, 6):
-		var board: Vector3 = route.at(crossing.x + i * 0.41, route.ORIGIN_Z - crossing.z - 1.1)
-		box(board + Vector3.UP * 0.16, Vector3(0.405, 0.29, 1.45), "887456", true)
-	route.signpost(crossing, "Pasarela de la quebrada", "Pasarela · marca del agua")
-	for i in range(-10, 11):
-		var silt: Vector3 = route.at(crossing.x + i * 0.65, route.ORIGIN_Z - crossing.z - 2.0)
-		stone(silt + Vector3.UP * 0.05, Vector3(0.72, 0.17, 0.47), "706d5d")
+	if not storm_water: storm_water = South.water(self)
+	storm_water.visible = weather_day == 36
 
 var yard_hinge: Node3D
 var privy_hinge: Node3D

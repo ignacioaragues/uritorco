@@ -2,6 +2,8 @@ extends Node3D
 
 const Arrival = preload("res://llegada.gd")
 const Museum = preload("res://museo.gd")
+const Trail = preload("res://travesia.gd")
+const South = preload("res://quebrada_sur.gd")
 const Creek = preload("res://cauce.gd")
 const SkyGuide = preload("res://constelacion.gd")
 const LastNight = preload("res://final_night.gd")
@@ -322,6 +324,7 @@ func _process(delta):
 	var day: = calendar_day()
 	valley.update_calendar(day)
 	valley.update_weather(day)
+	valley.shade_ridges()
 	valley.update_shelter_wall(day)
 	if mode == "walk": score_daily_walk(day)
 	var rain_visible: bool = stage >= 16 and stage <= 17 and mode in ["walk", "map", "sighting"] and (player.position.z < -0.5 or absf(player.position.x) > 3.4)
@@ -493,7 +496,8 @@ func objective() -> String:
 		if distance >= valley.route.LAJA_FORK: return "Bajá por la cuerda o rodeá la laja por la vaguada."
 		return "Seguí la huella principal hasta el refugio."
 	if stage == 12 and player.position.z < -20.0: return "Volvé junto al cable y seguí el sendero oeste hasta la tranquera."
-	if stage == 18 and player.position.z < -14.0: return "Volvé por las pircas al cable. De ahí, tomá el sendero oeste hacia el refugio."
+	if stage == 18 and (player.position.z < -14.0 or player.position.z > 9.0 or absf(player.position.x) > 10.0):
+		return "Volvé por las pircas. En el cruce podés volver por la loma o bajar al poste para tomar la huella del refugio."
 	if stage == 15 and not (bedtime and player.position.z > -12.0):
 		return "Seguí las pircas de bajada hasta el banco del acceso para cerrar la travesía."
 	if bedtime: return "Cuando quieras terminar el día, acercate a la cama y tocá E."
@@ -503,7 +507,10 @@ func objective() -> String:
 	if stage == 13:
 		if not summit_mapped: return "Salí por la tranquera y seguí el sendero del este hasta el inicio del ascenso."
 		return "Seguí la senda del acceso y revisá el campamento antes de la cumbre." if not camp_read else "Seguí las pircas hasta la cumbre."
-	if stage == 16: return "Seguí los mojones de la quebrada oeste hasta la pasarela."
+	if stage == 16:
+		if player.position.x > -36.0 and player.position.z < 19.0:
+			return "Salí por la tranquera. Pasá por la loma de las lajas y seguí la huella de la quebrada sur."
+		return "Seguí las pircas aguas abajo hasta la pasarela."
 	if stage == 17: return "R · Pasale la marca del agua a Mara."
 	if stage == 18: return "Volvé a dormir al refugio."
 	if stage == 19:
@@ -712,7 +719,7 @@ func radio_exchange():
 		match stage:
 			1: brief = ["Buen día. ¿Descansaste algo?", "Hoy me hacen falta dos datos.", "Salí por la tranquera y seguí el cartel del cauce. La huella da la vuelta por atrás.", "Fijate qué fecha tiene la chapa del poste en la bajada."]
 			6: brief = ["Buen día. Ayer perdimos una llamada del puesto de arriba.", "¿Te llegás hasta la antena del abra?", "Antes pasá por el mirador del mollar, al este. Desde ahí se ve bien el abra. Después seguí por el museo hasta la antena.", "Mi puesto queda antes de la parada. Es el de la puerta de madera. Si un día se corta del todo, buscame ahí."]
-			16: brief = ["¿Viste cómo creció el arroyo?", "Tomá el sendero oeste desde el refugio. En el cable buscá las pircas de la quebrada.", "Probá la pasarela alta. Decime hasta dónde llegó el agua."]
+			16: brief = ["¿Viste cómo creció el arroyo?", "Salí por la loma de las lajas y seguí las pircas al sur. Es el mismo cauce del poste, pero bastante más abajo.", "Fijate hasta dónde llegó el agua en la pasarela. La marca se ve desde esta orilla."]
 			13: brief = [
 				"¿Te animás a subir hasta la cumbre?",
 				"Desde mi patio, el cable y el corte parecen tocarse. Quiero ver dónde queda esa luz en el mapa.",
@@ -743,7 +750,7 @@ func radio_exchange():
 			reply = "Avisame cuando prendas la linterna. Desde acá solo veo la lluvia."
 		elif crossing_response == 2:
 			reply = "Dejá libre la pasarela. Si había algo en el agua, desde la orilla tampoco lo vas a ver bien."
-		conversation([reply, "Ya tengo la marca. Volvé por las pircas al cable.", "¿Sabés qué hice mientras subía el agua? Puse dos tazas en la mesa.", "Siempre me sobra una."], "crossing_home")
+		conversation([reply, "Ya tengo la marca. Si la loma se embarró, en el cruce podés cortar por el poste.", "¿Sabés qué hice mientras subía el agua? Puse dos tazas en la mesa.", "Siempre me sobra una."], "crossing_home")
 		return
 	if stage == 14:
 		var bearing := "Entonces el camino de la camioneta y la muesca quedan a distinta altura."
@@ -997,13 +1004,13 @@ func _unhandled_key_input(event):
 					"Mirador del mollar":
 						overlay("message", "La huella del este sube al mollar. Desde ahí podés bajar por la vuelta del sur hasta el cauce.", "Espacio · seguir")
 					"Loma de las lajas":
-						overlay("message", "La huella corta termina en las lajas del oeste. Desde las piedras altas se ve el techo del refugio.", "Espacio · seguir")
+						overlay("message", "Desde las lajas ves el techo del refugio. Del otro lado, una huella baja al sur, hacia la pasarela.", "Espacio · seguir")
 					"Desvío del cauce":
 						overlay("message", "La senda de la izquierda sube al mirador y vuelve a bajar al cauce. La de enfrente va directo a la regla.", "Espacio · seguir")
 					"Mirador del cauce":
 						overlay("message", "Desde arriba distinguís el fondo de piedra y la marca de la última crecida. La huella baja por la otra orilla.", "Espacio · seguir")
 					"Desvío de la quebrada":
-						overlay("message", "Las pircas siguen la ladera oeste. Alcanzás a ver lo que queda de una pasarela más arriba.", "Espacio · seguir")
+						overlay("message", "La huella alta sigue el cauce aguas abajo hasta la pasarela. El ramal bajo vuelve por el poste a la tranquera.", "Espacio · seguir")
 					"Tronco caído":
 						overlay("message", "El arroyo dejó un tronco atravesado. Podés saltarlo con Espacio.", "Espacio · seguir")
 					"Pasarela de la quebrada":
@@ -1767,7 +1774,7 @@ func save_game(automatic: bool, resume_mode: String) -> bool:
 	elif stage >= 16: title = "Día 36"
 	elif stage >= 13: title = "Día 32"
 	elif stage >= 10: title = "Día 27"
-	var data = {"version": 1, "slot": slot, "title": title, "state": state, "mode": resume_mode, "pose": player.transform, "pitch": player.camera.rotation.x, "paragraph": recall.paragraph, "chapter": valley.sky_chapter, "museum_offset": Museum.SITE_OFFSET, "door": valley.door_open, "book": valley.book_unpacked, "night": valley.sky_mat.get_shader_parameter("nightfall"), "dusk": valley.sky_mat.get_shader_parameter("dusk"), "music": music.get_playback_position() if music.playing else 0.0}
+	var data = {"version": 1, "slot": slot, "title": title, "state": state, "mode": resume_mode, "pose": player.transform, "pitch": player.camera.rotation.x, "paragraph": recall.paragraph, "chapter": valley.sky_chapter, "museum_offset": Museum.SITE_OFFSET, "south_crossing": true, "door": valley.door_open, "book": valley.book_unpacked, "night": valley.sky_mat.get_shader_parameter("nightfall"), "dusk": valley.sky_mat.get_shader_parameter("dusk"), "music": music.get_playback_position() if music.playing else 0.0}
 	return Saves.write(slot, automatic, data)
 
 func restore(data: Dictionary):
@@ -1787,6 +1794,8 @@ func restore(data: Dictionary):
 	player.transform = data.pose
 	if not data.has("museum_offset"):
 		player.position = Museum.restore_legacy_position(valley, player.position)
+	if stage in [16, 17, 18] and not data.get("south_crossing", false):
+		player.position = restore_crossing_position(player.position)
 	player.camera.rotation.x = data.pitch
 	valley.configure_sky(data.chapter)
 	valley.morning()
@@ -1836,6 +1845,28 @@ func restore(data: Dictionary):
 			valley.strange_sky(true)
 			explore_dream()
 		_: walk()
+
+func restore_crossing_position(position: Vector3) -> Vector3:
+	var here := Vector2(position.x, position.z)
+	var last := Vector2.ZERO
+	var nearest := 34.0 * 34.0
+	var progress := -1.0
+	for i in 65:
+		var old := Trail.legacy_crossing_point(i / 64.0)
+		var point := Vector2(old.x, old.z)
+		if i > 0:
+			var projection := Geometry2D.get_closest_point_to_segment(here, last, point)
+			var distance := projection.distance_squared_to(here)
+			if distance < nearest:
+				nearest = distance
+				progress = (i - 1 + last.distance_to(projection) / last.distance_to(point)) / 64.0
+		last = point
+	if progress < 0.0: return position
+	if stage == 16 and progress < 0.97:
+		var path := Creek.crossing_point(progress)
+		var side := South.forward(progress).cross(Vector3.UP) * 3.4
+		return South.ground(path + side) + Vector3.UP * 0.12
+	return South.ground(Creek.crossing_point(1.0) + Vector3(0, 0, -2.0)) + Vector3.UP * 0.12
 
 func start_day25():
 	stage = 8
@@ -1896,7 +1927,7 @@ func show_sighting(kind: Sighting = Sighting.ABRA):
 		Sighting.QUARRY:
 			center = valley.route.quarry_point(1.0) + Vector3(-12, 29, -54)
 		Sighting.CROSSING:
-			center = valley.route.crossing_point(1.0) + Vector3(-12, 24, -46)
+			center = Creek.crossing_point(1.0) + Vector3(-33, 26, 24)
 		Sighting.SHELTER:
 			center = Vector3(42.0, 9.5, -4.0)
 			place_sighting_light(valley.second_beacon, center + Vector3(5, 3.2, 10))
@@ -2051,6 +2082,6 @@ func map_destination() -> Variant:
 		13:
 			if not summit_mapped: return route.ascent_point(0)
 			return route.summit_point(1) if camp_read else route.camp_point()
-		16: return route.crossing_point(1)
+		16: return South.mark_position()
 		19: return LastNight.STOP
 	return null

@@ -8,6 +8,8 @@ uniform vec2 mara_start;
 uniform vec2 mara_end;
 uniform vec2 creek_path[12];
 uniform vec2 exploration_segments[36];
+uniform vec2 south_paths[62];
+uniform float wet_ground = 0.0;
 uniform sampler2D soil_detail : filter_linear_mipmap, repeat_enable;
 varying vec2 ground_position;
 
@@ -81,7 +83,21 @@ void fragment() {
 		}
 		local_trails = track(trail_distance, 1.8, grain);
 	}
-	float exposed = max(max(central, west), max(max(east, mara), max(low_trail, local_trails)));
+	float south = 0.0;
+	if (p.x < -20.0 && p.x > -147.0 && p.y > -21.0 && p.y < 108.0) {
+		float route = 200.0;
+		for (int i = 0; i < 48; i++) {
+			route = min(route, edge_distance(p, south_paths[i], south_paths[i + 1]));
+		}
+		float link = 200.0;
+		if (p.x > -68.0 && p.y > 29.0 && p.y < 55.0) {
+			for (int i = 49; i < 61; i++) {
+				link = min(link, edge_distance(p, south_paths[i], south_paths[i + 1]));
+			}
+		}
+		south = max(track(route, 1.95, grain), track(link, 1.42, grain));
+	}
+	float exposed = max(max(central, west), max(max(east, mara), max(south, max(low_trail, local_trails))));
 	float band = sin(p.y * 0.031 + cos(p.x * 0.12));
 	float stipple = sin(p.x * 1.04 + p.y * 0.52) * sin(p.y * 0.79 - p.x * 0.42);
 	float north = smoothstep(-2.0, 36.0, d);
@@ -89,8 +105,9 @@ void fragment() {
 	vec3 soil = mix(vec3(0.222, 0.191, 0.116), mix(vec3(0.207, 0.181, 0.113), vec3(0.311, 0.272, 0.175), band * 0.5 + 0.5), north);
 	soil *= 1.0 + 0.055 * stipple;
 	vec3 ground = mix(soil, clay, exposed);
-	float low_channel = 82.0 + 4.6 * sin(p.x * 0.082) + 1.4 * sin(p.x * 0.17);
-	float low_water = (1.0 - smoothstep(2.2, 7.5, abs(p.y - low_channel))) * (1.0 - smoothstep(49.0, 71.0, abs(p.x)));
+	float low_channel = 82.0 + 4.6 * sin(p.x * 0.082) + 1.4 * sin(p.x * 0.17) + 24.0 * smoothstep(54.0, 140.0, -p.x);
+	float channel = (1.0 - smoothstep(2.2, 7.5, abs(p.y - low_channel)));
+	float low_water = channel * (1.0 - max(smoothstep(49.0, 71.0, p.x), smoothstep(156.0, 207.0, -p.x)));
 	float creek_x = -1.9 + 54.0 * sin(96.0 / 83.0) + 18.0 * sin(96.0 / 27.0);
 	float creek_d = 96.0 + 2.0 * sin((p.x - creek_x) / 14.0);
 	float creek = (1.0 - smoothstep(1.3, 4.8, abs(d - creek_d))) * (1.0 - smoothstep(46.0, 68.0, abs(p.x - creek_x)));
@@ -99,6 +116,7 @@ void fragment() {
 	vec3 brushwork = texture(soil_detail, p * 0.22).rgb;
 	float brush_value = dot(brushwork, vec3(0.30, 0.59, 0.11));
 	float paint = clamp((brush_value - 0.516) * 2.4, -0.19, 0.19);
-	ALBEDO = ground * (0.98 + paint + 0.042 * grain);
-	ROUGHNESS = 1.0;
+	float damp = wet_ground * (0.19 + 0.29 * low_water + 0.15 * south);
+	ALBEDO = ground * (0.98 + paint + 0.042 * grain - damp);
+	ROUGHNESS = 1.0 - damp * 0.47;
 }
