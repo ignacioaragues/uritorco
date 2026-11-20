@@ -38,6 +38,7 @@
 - **Teseracto.** La pieza del segundo sueño tiene una estructura abierta con aristas de luz azulada y una ilustración propia de la mano que la sostiene. Vuelve en el último sueño si Hernán la recogió. El pulso se intensifica al mirar hacia el arco y acompaña la caminata hasta tocarlo.
 - **Exploración de los sueños.** Se amplió el terreno transitable de los tres sueños. Cada uno tiene texturas minerales distintas y dos parajes explorables con piezas propias. M abre el croquis de la zona y Tab permite consultar el diario dentro del sueño. Las seis piezas tienen modelo y dibujo. E registra el hallazgo y guarda el lugar desde el que Hernán lo encontró.
 - **Hallazgos en el plano.** Las piezas del cerro y de los sueños tienen un destello discreto al acercarse. En el plano, su silueta aparece cerca del jugador y queda anotada en su ubicación después de registrarla. El diario indica el día o el sueño al que corresponde.
+- **Clima por jornada.** La bruma del Día 25 se concentra en el cauce y cede al subir. La llovizna del Día 27 aparece en la subida a la cantera y afloja durante el regreso. La cumbre queda despejada el Día 32 y una neblina suave acompaña la despedida hasta cerca de la parada. En el Día 7 el ocaso empieza a medida que Hernán se acerca al mollar. Las nubes se abren de noche para dejar ver las estrellas. El frente del Día 36 conserva su lluvia más intensa y se abre al volver. El sonido cambia al ponerse bajo techo y baja durante las llamadas. El guardado conserva la lluvia y el punto de la transición de luz. Se probaron la restauración de partidas, el avistamiento del Día 7, la tormenta y ambos finales.
 - La rama `codigo-fuente` guarda el proyecto recuperado, sus recursos y este registro. Cada tanda de recuperación debe quedar en un commit de esa rama junto con su verificación.
 - Al cierre de cada pasada, registrar los cambios incorporados y los pendientes que quedan. Preparar una exportación de Windows cuando se pida.
 
@@ -57,7 +58,6 @@ Esta lista reconstruye el estado informado del proyecto editable. La exportació
 
 ## Todavía pendiente
 
-- **Clima.** Ampliar los matices de nubosidad, llovizna y luz a las otras jornadas y probar las transiciones al anochecer.
 - **Pasada narrativa.** Probar el ritmo de las charlas y los avistamientos en una partida a mano. Afinar de oído la mezcla de la última noche.
 - **Prólogo y controles.** Revisar el ritmo de las ocho microescenas a velocidad normal y desde los costados del camino. Afinar la lectura de los objetos cercanos, el entorno sonoro y la transición al refugio.
 - **Arte y legibilidad.** Extender el acabado a los muebles y objetos que se miran de cerca en el refugio. Trabajar los árboles, las rocas y la vegetación de las quebradas lejanas y del ascenso. Revisar el libro cerrado, los carteles tapados, el aspecto de la luna y las estrellas, y textos largos de radio a distintas resoluciones. Probar que los sonidos de pasos se lean como tierra.

@@ -23,6 +23,8 @@ uniform float other_world = 0.0;
 uniform float cloud_cover = 0.0;
 uniform float cloud_pattern = 0.0;
 uniform float storm_amount = 0.0;
+uniform float cirrus_amount = 0.32;
+uniform float valley_mist = 0.0;
 
 float cloud_hash(vec2 p) {
 	vec3 q = fract(vec3(p.xyx) * 0.1031);
@@ -75,7 +77,7 @@ void sky(){
 	alien=disc(EYEDIR,normalize(vec3(0.08,0.66,-1.0)),normalize(vec3(-1.0,0.6,0.4)),0.016,vec3(0.65,0.83,0.91),alien);
 	vec2 shift = vec2(cloud_pattern * 0.31, cloud_pattern * 0.59);
 	vec2 alto = EYEDIR.xz * vec2(3.5, 7.0) / (height + 0.47) + shift;
-	float silk = smoothstep(0.52, 0.78, cloud_texture(alto)) * (0.40 - cloud_cover * 0.17);
+	float silk = smoothstep(0.53, 0.75, cloud_texture(alto)) * cirrus_amount;
 	vec2 p = EYEDIR.xz * vec2(5.2, 4.4) / (height + 0.38) + shift;
 	float edge = mix(0.672, 0.322, cloud_cover);
 	float density = cloud_texture(p);
@@ -83,6 +85,9 @@ void sky(){
 	float body = smoothstep(edge + 0.025, edge + 0.34, density);
 	float glow = clamp(dot(normalize(vec3(sun_dir.x, 0.18, sun_dir.z)), EYEDIR) * 0.53 + 0.45, 0.0, 1.0);
 	float low_haze = smoothstep(0.018, 0.16, height);
+	float horizon_veil = (1.0 - smoothstep(0.017, 0.17, height)) * valley_mist;
+	daytime = mix(daytime, vec3(0.66, 0.71, 0.71), horizon_veil * (0.71 - dusk * 0.20));
+	earth = mix(earth, dark, horizon_veil * 0.56);
 	vec3 cloud_rim = mix(vec3(0.81, 0.85, 0.85), vec3(0.97, 0.93, 0.84), glow);
 	cloud_rim = mix(cloud_rim, vec3(0.84, 0.60, 0.48), dusk * (0.45 + glow * 0.40));
 	vec3 cloud_core = mix(vec3(0.79, 0.81, 0.80), vec3(0.43, 0.48, 0.51), cloud_cover);

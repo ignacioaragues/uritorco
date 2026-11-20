@@ -1,6 +1,7 @@
 shader_type canvas_item;
 
 uniform float intensity : hint_range(0.0, 1.0) = 0.0;
+uniform float wind : hint_range(0.0, 1.0) = 0.28;
 
 float rain_hash(vec2 id) {
 	return fract(sin(dot(id, vec2(42.3, 97.1))) * 4265.4);
@@ -19,8 +20,9 @@ float droplets(vec2 uv, vec2 grid, float lean, float drift, float coverage, floa
 }
 
 void fragment() {
-	float near_rain = droplets(UV, vec2(112.0, 21.0), 0.22, 13.4, intensity * 0.145, 0.076);
-	float far_rain = droplets(UV + vec2(0.15, 0.0), vec2(197.0, 32.0), 0.17, 17.0, intensity * 0.20, 0.098);
-	float alpha = (near_rain * 0.32 + far_rain * 0.19) * intensity;
+	float lean = 0.07 + wind * 0.27;
+	float near_rain = droplets(UV, vec2(112.0, 21.0), lean, 13.4, intensity * 0.145, 0.076);
+	float far_rain = droplets(UV + vec2(0.15, 0.0), vec2(197.0, 32.0), lean * 0.79, 17.0, intensity * 0.20, 0.098);
+	float alpha = (near_rain * 0.32 + far_rain * 0.19) * sqrt(intensity);
 	COLOR = vec4(0.73, 0.78, 0.82, alpha);
 }

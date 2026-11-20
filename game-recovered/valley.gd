@@ -1,5 +1,6 @@
 extends Node3D
 
+const Climate = preload("res://clima.gd")
 const Signage = preload("res://carteleria.gd")
 const FieldKit = preload("res://equipo_campo.gd")
 const Creek = preload("res://cauce.gd")
@@ -74,6 +75,7 @@ func _ready():
 	env.sky = Sky.new()
 	sky_mat.shader = preload("res://sierra.gdshader")
 	sky_mat.set_shader_parameter("dusk", 0.0)
+	sky_mat.set_shader_parameter("other_world", 0.0)
 	sky_mat.set_shader_parameter("faint_stars", preload("res://estrellas.png"))
 	configure_sky(0)
 	env.sky.sky_material = sky_mat
@@ -238,9 +240,9 @@ func build_distant_ridges():
 func shade_ridges():
 	var nightfall: float = sky_mat.get_shader_parameter("nightfall")
 	var dusk: float = sky_mat.get_shader_parameter("dusk")
+	birds.visible = nightfall < 0.68 and weather_rain < 0.57
 	if ridge_light == Vector2(nightfall, dusk): return
 	ridge_light = Vector2(nightfall, dusk)
-	birds.visible = nightfall < 0.68
 	for mat in ridge_materials:
 		mat.set_shader_parameter("nightfall", nightfall)
 		mat.set_shader_parameter("dusk", dusk)
@@ -272,39 +274,90 @@ func transition() -> Tween:
 	lighting = create_tween().set_parallel(true).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
 	return lighting
 
-func sunset():
-	var tween: = transition()
-	tween.tween_method( func(v): sky_mat.set_shader_parameter("dusk", v), 0.0, 1.0, 5.0)
-	tween.tween_property(sun, "rotation:x", deg_to_rad(-10), 5.0)
-	tween.tween_property(sun, "light_color", Color("#ffb07d"), 5.0)
-	tween.tween_property(env, "ambient_light_energy", 0.7, 5.0)
-
 var weather_day := 0
 var weather_rain := -1.0
+var atmosphere_sample := Vector4(-1, -1, -1, -1)
+var exterior_light := true
+var light_target := ""
+var light_duration := 0.0
 
-func update_weather(day: int, rain: float = 0.0):
-	if day == weather_day and absf(weather_rain - rain) < 0.004: return
+func set_sun_phase(dusk: float, dark: float):
+	sky_mat.set_shader_parameter("dusk", dusk)
+	sky_mat.set_shader_parameter("nightfall", dark)
+
+func sunset(duration: float = 5.0):
+	var tween := transition()
+	light_target = "dusk"
+	light_duration = duration
+	tween.tween_method(func(v): sky_mat.set_shader_parameter("dusk", v), float(sky_mat.get_shader_parameter("dusk")), 1.0, duration)
+
+func night(duration: float = 6.0):
+	exterior_light = true
+	var tween := transition()
+	light_target = "night"
+	light_duration = duration
+	tween.tween_method(func(v): sky_mat.set_shader_parameter("nightfall", v), float(sky_mat.get_shader_parameter("nightfall")), 1.0, duration)
+	tween.tween_method(func(v): sky_mat.set_shader_parameter("dusk", v), float(sky_mat.get_shader_parameter("dusk")), 1.0, minf(duration, 14.0))
+
+func remaining_light_transition() -> float:
+	return maxf(0.0, light_duration - lighting.get_total_elapsed_time()) if lighting and lighting.is_running() else 0.0
+
+func restore_light(dusk: float, dark: float):
+	if lighting and lighting.is_valid(): lighting.kill()
+	light_target = ""
+	set_sun_phase(dusk, dark)
+	atmosphere_sample = Vector4(-1, -1, -1, -1)
+
+func update_weather(day: int, rain: float = 0.0, local_mist: float = 0.0):
+	var dusk: float = sky_mat.get_shader_parameter("dusk")
+	var dark: float = sky_mat.get_shader_parameter("nightfall")
+	var sample := Vector4(rain, local_mist, dusk, dark)
+	if day == weather_day and (sample - atmosphere_sample).length_squared() < 0.00000005: return
 	var changed_day := day != weather_day
 	weather_day = day
 	weather_rain = rain
-	var cloud: float = {1: 0.19, 2: 0.12, 7: 0.56, 25: 0.29, 27: 0.38, 32: 0.08, 36: 0.34, 41: 0.46}.get(day, 0.0)
-	cloud = lerpf(cloud, 0.97, rain)
+	atmosphere_sample = sample
+	var profile := Climate.profile(day)
+	var coverage: Vector2 = profile.cloud
+	var cloud := lerpf(lerpf(coverage.x, coverage.y, maxf(dark, dusk * 0.26)), 0.97, rain)
+	if changed_day:
+		sky_mat.set_shader_parameter("cloud_pattern", day * 0.873)
+		sky_mat.set_shader_parameter("high_day", profile.sky)
+		sky_mat.set_shader_parameter("rim_day", profile.rim)
+		sky_mat.set_shader_parameter("cirrus_amount", profile.cirrus)
 	sky_mat.set_shader_parameter("cloud_cover", cloud)
-	sky_mat.set_shader_parameter("cloud_pattern", day * 0.873)
 	sky_mat.set_shader_parameter("storm_amount", rain)
-	env.fog_density = lerpf(lerpf(0.0027, 0.0053, cloud * cloud), 0.0105, rain)
-	sun.shadow_opacity = 1.0 - rain * 0.86
-	for mat in ridge_materials: mat.set_shader_parameter("storm_amount", rain)
-	route.ground_material.set_shader_parameter("wet_ground", 0.49 + rain * 0.42 if day == 36 else 0.0)
+	sky_mat.set_shader_parameter("valley_mist", clampf(local_mist * 160.0, 0.0, 0.94))
+	route.ground_material.set_shader_parameter("wet_ground", 0.49 + rain * 0.42 if day == 36 else rain * 0.46)
 	if is_instance_valid(storm_water): storm_water.visible = day == 36
-	if changed_day and rain > 0.45 and float(sky_mat.get_shader_parameter("nightfall")) < 0.5:
-		sun.light_energy = 0.32
-		sun.light_color = Color("#c9ced2")
-		env.ambient_light_color = Color("#bcc7cb")
-		env.fog_light_color = Color("#82969f")
+	for mat in ridge_materials:
+		mat.set_shader_parameter("storm_amount", rain)
+		mat.set_shader_parameter("valley_mist", clampf(local_mist * 160.0, 0.0, 0.94))
+	if not exterior_light: return
+	shape_daylight(profile, rain, local_mist, dusk, dark)
+
+func shape_daylight(profile: Dictionary, rain: float, local_mist: float, dusk: float, dark: float):
+	var sun_tone: Color = profile.light
+	var drizzle := smoothstep(0.01, 0.76, rain)
+	var diffuse := maxf(drizzle, clampf(local_mist * 70.0, 0.0, 0.55))
+	var setting := sun_tone.lerp(Color("#ffb78f"), dusk).lerp(Color("#bccbd3"), diffuse)
+	sun.light_color = setting.lerp(Color("#abc4ed"), dark)
+	sun.light_energy = lerpf(float(profile.sun) * (1.0 - 0.67 * diffuse) * (1.0 - dusk * 0.24), 0.045, dark)
+	sun.shadow_enabled = dark < 0.76
+	sun.shadow_opacity = (1.0 - 0.86 * diffuse) * (1.0 - smoothstep(0.32, 0.76, dark))
+	sun.rotation_degrees = Vector3(lerpf(-24.0, -10.0, dusk), lerpf(68.0, 114.0, dusk), 0.0)
+
+	var ambient := Color("#dce6de").lerp(Color("#d5b9ac"), dusk).lerp(Color("#bac6ce"), diffuse)
+	env.ambient_light_color = ambient.lerp(Color("#9ba5bf"), dark)
+	env.ambient_light_energy = lerpf(lerpf(0.86, 0.69, dusk), 0.18, dark)
+	var air := Color("#a9b7b7").lerp(Color("#b4a5a0"), dusk).lerp(Color("#899fa9"), diffuse)
+	env.fog_light_color = air.lerp(Color("#424960"), dark)
+	env.fog_density = lerpf(float(profile.mist) + local_mist, 0.0105, drizzle * 0.87)
 
 func cave_darkness():
+	exterior_light = false
 	if lighting and lighting.is_valid(): lighting.kill()
+	light_target = ""
 	sky_mat.set_shader_parameter("nightfall", 1.0)
 	sun.light_energy = 0.0
 	env.fog_enabled = false
@@ -312,19 +365,10 @@ func cave_darkness():
 
 func cave_moonlight():
 	env.fog_enabled = true
+	env.fog_density = 0.0027
 	var tween := transition()
 	tween.tween_property(env, "ambient_light_color", Color("#aab6d1"), 1.3)
 	tween.tween_property(env, "ambient_light_energy", 0.14, 1.3)
-
-func night(duration: float = 6.0):
-	sun.shadow_enabled = false
-	var tween: = transition()
-	tween.tween_method( func(v): sky_mat.set_shader_parameter("nightfall", v), float(sky_mat.get_shader_parameter("nightfall")), 1.0, duration)
-	tween.tween_property(sun, "light_energy", 0.045, duration)
-	tween.tween_property(sun, "light_color", Color("#abc4ed"), duration)
-	tween.tween_property(env, "ambient_light_color", Color("#9ba5bf"), duration)
-	tween.tween_property(env, "ambient_light_energy", 0.19, duration)
-	tween.tween_property(env, "fog_light_color", Color("#424960"), duration)
 
 func dress_shelter():
 	for i in range(15):
@@ -417,18 +461,9 @@ func unpack_calendar():
 	ticket.rotation.y = 0.18
 
 func morning():
-	sun.shadow_enabled = true
+	exterior_light = true
 	env.fog_enabled = true
-	if lighting and lighting.is_valid():
-		lighting.kill()
-	sky_mat.set_shader_parameter("dusk", 0.0)
-	sky_mat.set_shader_parameter("nightfall", 0.0)
-	sun.rotation_degrees = Vector3(-24, 68, 0)
-	sun.light_energy = 0.9
-	sun.light_color = Color("#ffe0b8")
-	env.ambient_light_color = Color("#dce6de")
-	env.ambient_light_energy = 0.86
-	env.fog_light_color = Color("#98b3b7")
+	restore_light(0.0, 0.0)
 
 
 func rock_banks():
@@ -636,15 +671,11 @@ func toggle_door():
 	door_motion.tween_property(hinge, "rotation:y", deg_to_rad(90) if door_open else 0.0, 0.42)
 
 func arrival_light(amount: float):
-	sun.shadow_enabled = amount < 0.55
-	var tween: = transition()
-	var old = sky_mat.get_shader_parameter("nightfall")
-	tween.tween_method( func(v): sky_mat.set_shader_parameter("nightfall", v), float(old) if old != null else 0.0, amount, 2.5)
-	tween.tween_property(sun, "light_energy", lerpf(1.0, 0.045, amount), 2.5)
-	tween.tween_property(sun, "light_color", Color("#ffd3a1").lerp(Color("#abc4ed"), amount), 2.5)
-	tween.tween_property(env, "ambient_light_color", Color("#eee1ce").lerp(Color("#9ba5bf"), amount), 2.5)
-	tween.tween_property(env, "ambient_light_energy", lerpf(0.85, 0.19, amount), 2.5)
-	tween.tween_property(env, "fog_light_color", Color("#c6ac9d").lerp(Color("#424960"), amount), 2.5)
+	exterior_light = true
+	var tween := transition()
+	light_target = ""
+	var old: float = sky_mat.get_shader_parameter("nightfall")
+	tween.tween_method(func(v): set_sun_phase(v, v), old, amount, 2.5)
 
 var sky_chapter: = 0
 
@@ -662,6 +693,9 @@ func configure_sky(chapter: int):
 	if chapter == 0: sky_mat.set_shader_parameter("nightfall", 0.0)
 
 func strange_sky(active: bool):
+	exterior_light = false
+	light_target = ""
+	env.fog_density = 0.0027
 	var tween: = transition()
 	var amount: = 1.0 if active else 0.0
 	var previous = sky_mat.get_shader_parameter("other_world")

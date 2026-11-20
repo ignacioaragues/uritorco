@@ -2,6 +2,7 @@ extends Node3D
 
 const Arrival = preload("res://llegada.gd")
 const Museum = preload("res://museo.gd")
+const Climate = preload("res://clima.gd")
 const Alien = preload("res://hallazgos_sueno.gd")
 const Trail = preload("res://travesia.gd")
 const South = preload("res://quebrada_sur.gd")
@@ -64,6 +65,7 @@ var score = preload("res://banda_sonora.gd").new()
 var book_view = preload("res://libro.gd").new()
 var postcard_view = preload("res://postal.gd").new()
 var rain_strength := 0.0
+var mist_strength := 0.0
 var rain_view: = ColorRect.new()
 var branch_found: = false
 var mapped_distance: = 0.0
@@ -328,7 +330,7 @@ func _process(delta):
 	intro_controls_seconds = maxf(0.0, intro_controls_seconds - delta)
 	var day: = calendar_day()
 	valley.update_calendar(day)
-	update_rain(day, delta)
+	update_weather(day, delta)
 	valley.shade_ridges()
 	var in_refuge: bool = absf(player.position.x) < 3.45 and player.position.z > -0.35 and player.position.z < 5.9
 	valley.update_desk_radio(in_refuge and hands.pose == "radio")
@@ -387,11 +389,14 @@ func _process(delta):
 		if mode == "map" or (mode == "dream" and hands.map_requested):
 			map.location = player.position
 			map.queue_redraw()
-		var daytime: bool = mode != "dream" and outdoors and float(valley.sky_mat.get_shader_parameter("nightfall")) < 0.5
+		var daytime: bool = mode != "dream" and outdoors and rain_strength < 0.44 and float(valley.sky_mat.get_shader_parameter("nightfall")) < 0.5
 		ambience.update(delta, velocity, daytime, mode == "cave" and not cave_outside)
 		if stage == 7 and not second_sighting and mode in ["walk", "map"]:
 			var here := Vector2(player.position.x, player.position.z)
-			if here.distance_to(Exploration.MOLLAR) < 5.4:
+			var overlook_distance := here.distance_to(Exploration.MOLLAR)
+			if overlook_distance < 24.0 and valley.light_target.is_empty() and float(valley.sky_mat.get_shader_parameter("dusk")) < 0.01:
+				valley.sunset(12.0)
+			if overlook_distance < 5.4:
 				day7_dusk = true
 				show_sighting()
 				return
@@ -468,19 +473,23 @@ func _process(delta):
 		else:
 			hint.text = "Acercate al escalón" if target == "Subir al escalón" else ("E · " + target if target != "" else "")
 
-func update_rain(day: int, delta: float):
-	var front_active := stage in [16, 17]
-	if front_active and valley.weather_day != 36:
-		rain_strength = 0.77
-	var basin := smoothstep(10.0, 95.0, player.position.z)
-	var target_strength := lerpf(0.73, 0.91, basin) if front_active else 0.0
-	rain_strength = move_toward(rain_strength, target_strength, delta * (0.16 if front_active else 0.075))
-	valley.update_weather(day, rain_strength)
-	var outside: bool = player.position.z < -0.5 or absf(player.position.x) > 3.45 or player.position.z > 5.97
-	var under_stop: bool = absf(player.position.x - 0.32) < 1.82 and absf(player.position.z + 72.0) < 0.84
-	var shows_world: bool = mode in ["walk", "map", "sighting"] or radio_panel.visible
+func update_weather(day: int, delta: float):
+	var position: Vector3 = player.position
+	var target_rain := Climate.rain(stage, position)
+	var target_mist := Climate.local_mist(day, position)
+	if stage in [16, 17] and valley.weather_day != 36:
+		rain_strength = maxf(rain_strength, 0.77)
+	rain_strength = move_toward(rain_strength, target_rain, delta * (0.095 if target_rain > rain_strength else 0.075))
+	mist_strength = move_toward(mist_strength, target_mist, delta * 0.0013)
+	valley.update_weather(day, rain_strength, mist_strength)
+	var outside := position.z < -0.5 or absf(position.x) > 3.45 or position.z > 5.97
+	var under_stop := absf(position.x - 0.32) < 1.82 and absf(position.z + 72.0) < 0.84
+	var shows_world: bool = mode in ["walk", "map", "sighting", "mara_door"] or radio_panel.visible
 	rain_view.visible = outside and not under_stop and shows_world and rain_strength > 0.025
-	if rain_view.visible: rain_view.material.set_shader_parameter("intensity", rain_strength)
+	if rain_view.visible:
+		rain_view.material.set_shader_parameter("intensity", rain_strength)
+		rain_view.material.set_shader_parameter("wind", Climate.wind(day, position, rain_strength))
+	ambience.weather(delta, rain_strength if shows_world else 0.0, shows_world and (under_stop or not outside), radio_panel.visible)
 
 func record_filo_route():
 	var route = valley.route
@@ -1844,7 +1853,7 @@ func save_game(automatic: bool, resume_mode: String) -> bool:
 	elif stage >= 16: title = "Día 36"
 	elif stage >= 13: title = "Día 32"
 	elif stage >= 10: title = "Día 27"
-	var data = {"version": 1, "slot": slot, "title": title, "state": state, "mode": resume_mode, "pose": player.transform, "pitch": player.camera.rotation.x, "paragraph": recall.paragraph, "chapter": valley.sky_chapter, "museum_offset": Museum.SITE_OFFSET, "south_crossing": true, "door": valley.door_open, "book": valley.book_unpacked, "night": valley.sky_mat.get_shader_parameter("nightfall"), "dusk": valley.sky_mat.get_shader_parameter("dusk"), "music": music.get_playback_position() if music.playing else 0.0}
+	var data = {"version": 1, "slot": slot, "title": title, "state": state, "mode": resume_mode, "pose": player.transform, "pitch": player.camera.rotation.x, "paragraph": recall.paragraph, "chapter": valley.sky_chapter, "museum_offset": Museum.SITE_OFFSET, "south_crossing": true, "rain": rain_strength, "light_target": valley.light_target, "light_left": valley.remaining_light_transition(), "door": valley.door_open, "book": valley.book_unpacked, "night": valley.sky_mat.get_shader_parameter("nightfall"), "dusk": valley.sky_mat.get_shader_parameter("dusk"), "music": music.get_playback_position() if music.playing else 0.0}
 	return Saves.write(slot, automatic, data)
 
 func restore(data: Dictionary):
@@ -1885,16 +1894,23 @@ func restore(data: Dictionary):
 		music.begin()
 		music.seek(data.music)
 	if data.door: valley.toggle_door()
-	if float(data.get("dusk", 0.0) if data.dusk != null else 0.0) > 0.3: valley.sunset()
-	var saved_night: = clampf(float(data.night) if data.get("night") != null else 0.0, 0.0, 1.0)
-	if stage == 7 and day7_dusk and not second_sighting:
-		valley.sky_mat.set_shader_parameter("nightfall", saved_night)
-		valley.night(12)
-	elif stage == 15:
-		valley.sky_mat.set_shader_parameter("nightfall", saved_night)
+	var dusk_value: Variant = data.get("dusk")
+	var night_value: Variant = data.get("night")
+	var saved_dusk := clampf(float(dusk_value) if dusk_value != null else 0.0, 0.0, 1.0)
+	var saved_night := clampf(float(night_value) if night_value != null else 0.0, 0.0, 1.0)
+	rain_strength = clampf(float(data.get("rain", Climate.rain(stage, player.position))), 0.0, 1.0)
+	mist_strength = Climate.local_mist(calendar_day(), player.position)
+	valley.restore_light(maxf(saved_dusk, saved_night), saved_night)
+	var seconds := float(data.get("light_left", 0.0))
+	if seconds > 0.01 and data.get("light_target") == "night":
+		valley.night(seconds)
+	elif seconds > 0.01 and data.get("light_target") == "dusk":
+		valley.sunset(seconds)
+	elif stage == 7 and day7_dusk and not second_sighting and saved_night < 1.0:
+		valley.night(12.0)
+	elif stage == 15 and saved_night < 1.0:
 		valley.night(maxf(1.0, SUMMIT_NIGHT_SECONDS * (1.0 - saved_night)))
-	elif saved_night > 0.0:
-		valley.arrival_light(saved_night)
+
 	match str(data.mode):
 		"mate_morning":
 			if stage == 13: show_mate_morning()
