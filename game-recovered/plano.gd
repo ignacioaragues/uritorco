@@ -1,12 +1,15 @@
 extends Control
 
 const ROUTE = preload("res://travesia.gd")
+const Exploration = preload("res://exploracion.gd")
+const LOCAL_LIMITS := Rect2(-67, -205, 134, 223)
 const Creek = preload("res://cauce.gd")
 const LastNight = preload("res://final_night.gd")
 const INK = Color("#424a3c")
 const ROUTE_COLOR = Color("#936c49")
 var objective_mark: Variant = null
 var location: = Vector3.ZERO
+var contours := PackedVector2Array()
 
 func _ready():
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -15,7 +18,7 @@ func _ready():
 func _draw():
 	var distance_along: float = ROUTE.ORIGIN_Z - location.z
 	var zone: = 0 if distance_along < 15 else (1 if distance_along < 500 else 2)
-	var limits: Rect2 = [Rect2(-49, -205, 98, 223), Rect2(-345, 12, 695, 510), Rect2(-354, 480, 708, 510)][zone]
+	var limits: Rect2 = [LOCAL_LIMITS, Rect2(-345, 12, 695, 510), Rect2(-354, 480, 708, 510)][zone]
 	var title: String = ["Acceso y refugio", "Laderas y quebradas", "Filo y cumbre"][zone]
 	var font: = ThemeDB.fallback_font
 	draw_string(font, Vector2(24, 29), title, HORIZONTAL_ALIGNMENT_LEFT, -1, 22, INK)
@@ -24,16 +27,24 @@ func _draw():
 	draw_line(Vector2(522, 33), Vector2(522, 57), INK, 1.2, true)
 	draw_line(Vector2(509, 45), Vector2(534, 45), INK, 1.2, true)
 	if zone == 0:
+		if contours.is_empty(): contours = local_contours()
+		if not contours.is_empty(): draw_multiline(contours, Color("#a78e65"), 0.8, true)
 		draw_route(limits, 81, func(t):
 			var z: = lerpf(6.0, -74.0, t)
 			return Vector3(4.5 * sin( - z / 13.0), 0, z), INK)
 		draw_route(limits, 33, ROUTE.eastern_access, ROUTE_COLOR)
 		draw_route(limits, 141, ROUTE.western_approach, ROUTE_COLOR)
 		draw_route(limits, 101, Creek.trail_point, ROUTE_COLOR)
+		for path in [Exploration.EAST, Exploration.WEST, Exploration.SOUTH]:
+			draw_route(limits, 54, func(t):
+				var at := Exploration.path_point(path, t)
+				return Vector3(at.x, 0, at.y), ROUTE_COLOR)
 		draw_route(limits, 41, func(t):
 			var x := lerpf(-46.0, 46.0, t)
 			return Creek.point(x, Creek.channel_z(x)), Color("#59757a"))
 		pin(limits, Vector3(0, 0, 0), "Refugio")
+		pin(limits, Vector3(Exploration.MOLLAR.x, 0, Exploration.MOLLAR.y), "Mollar", Vector2(-54, 13))
+		pin(limits, Vector3(Exploration.LAJAS.x, 0, Exploration.LAJAS.y), "Loma de las lajas", Vector2(-95, -10))
 		pin(limits, LastNight.STOP, "Parada")
 		pin(limits, ROUTE.ascent_point(0), "Acceso")
 		pin(limits, Creek.post(), "Poste")
@@ -79,8 +90,26 @@ func draw_route(limits: Rect2, count: int, sample: Callable, color: Color):
 			line.clear()
 	if line.size() > 1: draw_polyline(line, color, 1.8, true)
 
-func pin(limits: Rect2, pos: Vector3, label: String):
+func pin(limits: Rect2, pos: Vector3, label: String, offset := Vector2(7, -5)):
 	if not limits.has_point(Vector2(pos.x, ROUTE.ORIGIN_Z - pos.z)): return
 	var mark: = point(limits, pos)
 	draw_circle(mark, 2.8, INK)
-	draw_string(ThemeDB.fallback_font, mark + Vector2(7, -5), label, HORIZONTAL_ALIGNMENT_LEFT, -1, 15, INK)
+	draw_string(ThemeDB.fallback_font, mark + offset, label, HORIZONTAL_ALIGNMENT_LEFT, -1, 15, INK)
+
+func local_contours() -> PackedVector2Array:
+	var lines := PackedVector2Array()
+	for z in range(-69, 121, 5):
+		for x in range(-65, 65, 5):
+			var corners := [
+				Creek.point(x, z), Creek.point(x + 5, z),
+				Creek.point(x + 5, z + 5), Creek.point(x, z + 5),
+			]
+			for level in [-12.0, -9.0, -6.0, -3.0, 2.0, 5.0]:
+				var crossings := PackedVector2Array()
+				for edge in 4:
+					var a: Vector3 = corners[edge]
+					var b: Vector3 = corners[(edge + 1) % 4]
+					if (a.y < level) != (b.y < level):
+						crossings.append(point(LOCAL_LIMITS, a.lerp(b, inverse_lerp(a.y, b.y, level))))
+				lines.append_array(crossings)
+	return lines

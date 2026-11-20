@@ -17,7 +17,9 @@ static func height(x: float, z: float) -> float:
 	var far_bank := (8.0 + 3.0 * cos(x * 0.11)) * smoothstep(90.0, 130.0, z)
 	var ridge := 9.0 * smoothstep(31.0, 55.0, absf(x)) * smoothstep(28.0, 52.0, z) * (1.0 - 0.66 * bed)
 	var relief := sin(x * 0.13 + z * 0.11) * smoothstep(23.0, 40.0, z) * 0.48
-	return descent - 3.1 * bed + far_bank + ridge + relief
+	var mollar := 2.9 * (1.0 - smoothstep(0.12, 1.0, Vector2((x - 43) / 18.0, (z - 12) / 22.0).length()))
+	var lajas := 2.4 * (1.0 - smoothstep(0.08, 1.0, Vector2((x + 41) / 16.0, (z + 15) / 19.0).length()))
+	return descent - 3.1 * bed + far_bank + ridge + relief + mollar + lajas
 
 static func point(x: float, z: float) -> Vector3:
 	return Vector3(x, height(x, z), z)

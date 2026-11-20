@@ -2,6 +2,8 @@ extends Node3D
 
 const Creek = preload("res://cauce.gd")
 const LastNight = preload("res://final_night.gd")
+const Exploration = preload("res://exploracion.gd")
+const Flora = preload("res://flora.gd")
 const Trail = preload("res://travesia.gd")
 
 var rng: = RandomNumberGenerator.new()
@@ -78,7 +80,7 @@ func _ready():
 	sun.rotation_degrees = Vector3(-22, -52, 0)
 	sun.light_color = Color("#ffd3a1")
 	sun.shadow_enabled = true
-	route.ground_material = Trail.make_ground_material(PackedVector2Array(Creek.PATH), LastNight.STOP, LastNight.DOOR_PATH_END)
+	route.ground_material = Trail.make_ground_material(PackedVector2Array(Creek.PATH), LastNight.STOP, LastNight.DOOR_PATH_END, Exploration.segments())
 	Creek.build_ground(self, route.ground_material)
 	# Se conserva la distribución de piedras de las partidas anteriores.
 	for sample in 79 * 2: rng.randf()
@@ -92,11 +94,13 @@ func _ready():
 		if z < -13.0 and absf(x - route.eastern_x_at(z)) < size_m.x + 5.0: continue
 		if absf(x - LastNight.DOOR.x) < size_m.x + 5.0 and absf(z - LastNight.DOOR.z + 3.0) < size_m.z + 5.0: continue
 		if z < route.WEST_START_Z + size_m.z and absf(x - route.western_x_at(z)) < size_m.x + 7.0: continue
-		if LastNight.door_path_distance(x, z) < maxf(size_m.x, size_m.z) * 0.6 + 4.0:
+		if (LastNight.door_path_distance(x, z) < maxf(size_m.x, size_m.z) * 0.6 + 4.0
+			or Exploration.clearance(Vector2(x, z)) < maxf(size_m.x, size_m.z) * 0.6 + 2.5):
 			# Se conserva el sorteo de orientación para las piedras siguientes.
 			rng.randf()
 			continue
 		stone(Vector3(x, -1, z), size_m, "837f65", true)
+	var tufts: Array[Vector4] = []
 	for i in range(160):
 		var z: = rng.randf_range(-84, 10)
 		var x: = rng.randf_range(-45, 45)
@@ -107,18 +111,13 @@ func _ready():
 		if z < route.WEST_START_Z + 1.0 and absf(x - route.western_x_at(z)) < 5.0: continue
 		var k: = rng.randf_range(0.5, 2.1)
 		if i % 3 == 0:
-			if LastNight.door_path_distance(x, z) < 5.5:
+			if LastNight.door_path_distance(x, z) < 5.5 or Exploration.clearance(Vector2(x, z)) < 1.8 * k + 1.6:
 				rng.randf()
 			else:
-				stone(Vector3(x, 0, z), Vector3(2.2, 1.4, 1.8) * k, "928678", true)
-		else:
-			for j in range(3):
-				var grass: = CylinderMesh.new()
-				grass.radial_segments = 4
-				grass.top_radius = 0
-				grass.bottom_radius = 0.18 * k
-				grass.height = k * 0.62
-				prop(grass, Vector3(x + j * 0.14, k * 0.23, z), "a99c63").rotation.z = (j - 1) * 0.35
+				stone(Creek.point(x, z), Vector3(2.2, 1.4, 1.8) * k, "928678", true)
+		elif Exploration.clearance(Vector2(x, z)) >= 1.0:
+			tufts.append(Vector4(x, Creek.height(x, z) - 0.05, z, k))
+	Flora.grass_batch(self, tufts)
 	for i in range(24):
 		var x: = i * 1.2 - 14
 		stone(Vector3(x, 0, -33 + sin(x) * 0.6), Vector3(1, 0.17, 0.7), "a29b92")
@@ -161,6 +160,8 @@ func _ready():
 	route.signpost(LastNight.STOP + Vector3(2.1, 0, -0.6), "Parada", "Parada · Colectivo", 0.0, true)
 	var fork := LastNight.door_approach(0.22)
 	route.signpost(fork + Vector3(0.0, 0, -2.4), "Puesto de abajo", "Puesto de abajo →", -1.72, true)
+
+	Exploration.build(self)
 
 func build_distant_ridges():
 	const SECTIONS := 96
@@ -331,11 +332,8 @@ func dress_creek():
 		var z: = -7 - i * 5.9
 		var x: = path_x(z) + (4.0 + i % 4) * (-1 if i % 2 else 1)
 		if LastNight.door_path_distance(x, z) < 2.5: x += 4.6
-		var foot: = Vector3(x, 0, z)
-		box(foot + Vector3(0, 0.87, 0), Vector3(0.14, 1.8, 0.18), "635648").rotation.z = 0.1
-		for j in [-1, 1]:
-			box(foot + Vector3(j * 0.36, 1.45, 0), Vector3(0.11, 1.22, 0.12), "665b4c").rotation.z = - j * 0.6
-			stone(foot + Vector3(j * 0.68, 2.05, 0.05 * j), Vector3(2.1, 0.96, 1.65), "6c795b")
+		if Exploration.clearance(Vector2(x, z)) >= 2.85:
+			Flora.tree(self, Creek.point(x, z), i % 3, 0.9 + i % 4 * 0.13, i * 1.93)
 	var marker: Vector3 = route.creek_marker()
 	for i in range(-60, 61):
 		var x: float = marker.x + i * 0.72
@@ -401,7 +399,7 @@ func rock_banks():
 					surface.set_smooth_group(-1)
 					surface.add_vertex(v)
 			surface.generate_normals()
-			if LastNight.door_path_distance(x, z) >= width + 3.6:
+			if LastNight.door_path_distance(x, z) >= width + 3.6 and Exploration.clearance(Vector2(x, z)) >= width + 2.1:
 				prop(surface.commit(), Vector3(x, 0, z), shades[i % shades.size()], true)
 
 func plaster(wall: MeshInstance3D):

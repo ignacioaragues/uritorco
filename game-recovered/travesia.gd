@@ -67,7 +67,7 @@ func surface_point(x: float, d: float) -> Vector3:
 func creek_marker() -> Vector3:
 	return at(trail(CREEK_DISTANCE) + 1.5, CREEK_DISTANCE)
 
-static func make_ground_material(route_to_creek: PackedVector2Array, mara_start: Vector3, mara_end: Vector3) -> ShaderMaterial:
+static func make_ground_material(route_to_creek: PackedVector2Array, mara_start: Vector3, mara_end: Vector3, exploration: PackedVector2Array) -> ShaderMaterial:
 	var material := ShaderMaterial.new()
 	material.shader = preload("res://monte.gdshader")
 	var west := western_approach(0.0)
@@ -81,6 +81,8 @@ static func make_ground_material(route_to_creek: PackedVector2Array, mara_start:
 	material.set_shader_parameter("mara_start", Vector2(mara_start.x, mara_start.z))
 	material.set_shader_parameter("mara_end", Vector2(mara_end.x, mara_end.z))
 	material.set_shader_parameter("creek_path", route_to_creek)
+	material.set_shader_parameter("exploration_segments", exploration)
+	material.set_shader_parameter("soil_detail", load("res://tierra_serrana.webp"))
 	return material
 
 func _ready():
@@ -304,6 +306,7 @@ func scattered(mesh: PrimitiveMesh, transforms: Array[Transform3D], color: Strin
 func plant():
 	var grass: Array[Transform3D] = []
 	var shrubs: Array[Transform3D] = []
+	var open_crowns: Array[Transform3D] = []
 	var stems: Array[Transform3D] = []
 	var rocks: Array[Transform3D] = []
 	for i in range(7600):
@@ -317,10 +320,14 @@ func plant():
 		var scale_m: = rng.randf_range(0.7, 1.8)
 		var turn: = Basis(Vector3.UP, rng.randf() * TAU)
 		if i % 12 == 0 and (d < 540 or i % 36 == 0):
-			stems.append(Transform3D(turn.scaled(Vector3(0.19, 1.6, 0.23) * scale_m), pos + Vector3.UP * 0.76 * scale_m))
-			for j in range(3):
+			var open_tree := i % 24 == 0
+			var trunk_height := 1.6 if open_tree else 2.3
+			stems.append(Transform3D(turn.scaled(Vector3(0.19, trunk_height, 0.23) * scale_m), pos + Vector3.UP * trunk_height * 0.47 * scale_m))
+			var crowns := open_crowns if open_tree else shrubs
+			var canopy := Vector3(1.85, 0.80, 1.43) if open_tree else Vector3(2.25, 1.43, 1.82)
+			for j in range(4 if open_tree else 3):
 				var angle: = j * 2.1 + turn.get_euler().y
-				shrubs.append(Transform3D(turn.scaled(Vector3(2.4, 1.65, 2.0) * scale_m), pos + Vector3(cos(angle) * 0.78, 1.48 + j * 0.2, sin(angle) * 0.78) * scale_m))
+				crowns.append(Transform3D(turn.scaled(canopy * scale_m), pos + Vector3(cos(angle) * 0.81, trunk_height - 0.12 + j * 0.23, sin(angle) * 0.74) * scale_m))
 		elif i % 8 == 0:
 			rocks.append(Transform3D(turn.scaled(Vector3(2.1, 1.8, 2.4) * scale_m), pos))
 		else:
@@ -335,30 +342,62 @@ func plant():
 	blade.radial_segments = 3
 	blade.height = 1
 	scattered(blade, grass, "ae9865")
-	scattered(ball, shrubs, "657253")
-	scattered(BoxMesh.new(), stems, "705c49")
+	scattered(ball, shrubs, "546447")
+	scattered(ball, open_crowns, "7e8755")
+	var bark := CylinderMesh.new()
+	bark.top_radius = 0.25
+	bark.radial_segments = 5
+	bark.rings = 0
+	bark.height = 1.0
+	scattered(bark, stems, "705c49")
 	scattered(ball, rocks, "8c7e72")
+
+func animal_form(parent: Node3D, position: Vector3, proportions: Vector3, tint: String) -> MeshInstance3D:
+	var form := SphereMesh.new()
+	form.radial_segments = 9
+	form.rings = 5
+	var part := MeshInstance3D.new()
+	part.mesh = form
+	var finish := StandardMaterial3D.new()
+	finish.albedo_color = Color(tint)
+	part.material_override = finish
+	parent.add_child(part)
+	part.position = position
+	part.scale = proportions
+	return part
 
 func make_wildlife():
 	add_child(fox)
-	box(fox, Vector3(0.2, 0.25, 0.62), Vector3(0, 0.35, 0), "a18c76")
-	box(fox, Vector3(0.17, 0.18, 0.23), Vector3(0, 0.47, -0.32), "a49580")
-	box(fox, Vector3(0.1, 0.09, 0.17), Vector3(0, 0.43, -0.46), "695e54")
-	for x in [-0.065, 0.065]: box(fox, Vector3(0.05, 0.12, 0.075), Vector3(x, 0.59, -0.29), "6e6051")
-	box(fox, Vector3(0.15, 0.15, 0.43), Vector3(0, 0.26, 0.43), "7c7063").rotation.x = 0.32
+	animal_form(fox, Vector3(0, 0.36, 0.021), Vector3(0.24, 0.27, 0.67), "89837c")
+	animal_form(fox, Vector3(0, 0.36, -0.22), Vector3(0.19, 0.27, 0.31), "b7a38e")
+	animal_form(fox, Vector3(0, 0.49, -0.32), Vector3(0.18, 0.16, 0.2), "9d8b7c")
+	animal_form(fox, Vector3(0, 0.45, -0.431), Vector3(0.101, 0.093, 0.19), "b7a590")
+	animal_form(fox, Vector3(0, 0.457, -0.52), Vector3(0.060, 0.045, 0.049), "4c443e")
+	for side in [-1.0, 1.0]:
+		var ear := animal_form(fox, Vector3(0.059 * side, 0.597, -0.30), Vector3(0.052, 0.146, 0.05), "766b61")
+		ear.rotation.z = -side * 0.24
+		animal_form(fox, Vector3(side * 0.079, 0.51, -0.386), Vector3(0.014, 0.017, 0.027), "4c4237")
+	animal_form(fox, Vector3(0, 0.286, 0.457), Vector3(0.145, 0.16, 0.42), "7e776e").rotation.x = 0.31
+	animal_form(fox, Vector3(0, 0.237, 0.642), Vector3(0.09, 0.11, 0.19), "514c46").rotation.x = 0.31
 	for dx in [-0.071, 0.071]:
-		for dz in [-0.19, 0.2]: legs.append(box(fox, Vector3(0.052, 0.25, 0.059), Vector3(dx, 0.16, dz), "6c5745"))
+		for dz in [-0.19, 0.2]:
+			legs.append(animal_form(fox, Vector3(dx, 0.16, dz), Vector3(0.065, 0.28, 0.075), "796555"))
 	for i in range(3):
-		var bird: = Node3D.new()
+		var bird := Node3D.new()
 		add_child(bird)
 		birds.append(bird)
-		box(bird, Vector3(0.27, 0.22, 0.92), Vector3.ZERO, "403c38")
-		for side in [-1, 1]:
-			var wing: = Node3D.new()
+		animal_form(bird, Vector3.ZERO, Vector3(0.26, 0.20, 0.70), "433c38")
+		animal_form(bird, Vector3(0, 0.017, -0.34), Vector3(0.12, 0.12, 0.19), "625957")
+		animal_form(bird, Vector3(0, -0.018, 0.30), Vector3(0.27, 0.065, 0.28), "413a36")
+		for side in [-1.0, 1.0]:
+			var wing := Node3D.new()
 			bird.add_child(wing)
 			wings.append(wing)
-			box(wing, Vector3(1.38, 0.07, 0.46), Vector3(side * 0.68, 0, 0), "3e3c39")
-			box(wing, Vector3(0.68, 0.06, 0.29), Vector3(side * 1.56, -0.02, 0.12), "514d46")
+			animal_form(wing, Vector3(side * 0.55, 0, 0.02), Vector3(1.39, 0.092, 0.42), "453e3a").rotation.y = 0.08 * side
+			animal_form(wing, Vector3(side * 1.21, -0.020, 0.061), Vector3(0.77, 0.066, 0.33), "6f665d")
+			for feather in 5:
+				var tip := Vector3(side * (1.56 + 0.07 * sin(feather * 0.9)), -0.028, -0.055 + feather * 0.078)
+				animal_form(wing, tip, Vector3(0.43, 0.047, 0.071), "443d38").rotation.y = -(feather - 1) * 0.11 * side
 
 func release_fox(linger: bool):
 	fox_waits = false

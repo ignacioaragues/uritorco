@@ -7,12 +7,13 @@ const SkyGuide = preload("res://constelacion.gd")
 const LastNight = preload("res://final_night.gd")
 const Saves = preload("res://partidas.gd")
 const Mara = preload("res://charlas_mara.gd")
+const Exploration = preload("res://exploracion.gd")
 const Diary = preload("res://diario.gd")
 const SUMMIT_NIGHT_SECONDS := 40.0
 const SIGHTING_FOCUS_SECONDS := 0.4
 const NIGHT_SCENE_VIEW := 200.0
 enum Sighting { ABRA, QUARRY, CROSSING, SHELTER, CAVE, CLEARING }
-const STATE = ["page", "stage", "keepsakes", "bedtime", "field_note", "crossing_note", "filo_report_reply", "quarry_reply", "fox_seen", "hiker_met", "route_reported", "observing", "pending_return", "heard", "read_note", "creek_note", "bed_pose", "bed_pitch", "gate_jumped", "map_read", "awaiting_call", "dream_count", "branch_found", "mapped_distance", "has_piece", "summit_mapped", "camp_read", "arrival_action", "second_sighting", "book_light_notes", "day7_dusk", "archive_read", "trail_replies", "crossing_response", "summit_echo_response", "night_investigation", "ending_at_door", "sky_memories", "compass_lost", "last_voice_reply", "scored_walks"]
+const STATE = ["page", "stage", "keepsakes", "bedtime", "field_note", "crossing_note", "filo_report_reply", "quarry_reply", "fox_seen", "hiker_met", "route_reported", "observing", "pending_return", "heard", "read_note", "creek_note", "bed_pose", "bed_pitch", "gate_jumped", "map_read", "awaiting_call", "dream_count", "branch_found", "mapped_distance", "has_piece", "summit_mapped", "camp_read", "arrival_action", "second_sighting", "book_light_notes", "day7_dusk", "archive_read", "trail_replies", "crossing_response", "summit_echo_response", "night_investigation", "ending_at_door", "sky_memories", "compass_lost", "last_voice_reply", "scored_walks", "found_collectibles"]
 var flashlight_out: = false
 var camp_read: = false
 var summit_mapped: = false
@@ -107,6 +108,8 @@ var quarry_reply := -1
 var journal_pages: Array[Dictionary] = []
 var journal_view := Diary.new()
 var journal_page := 0
+var journal_collection := false
+var found_collectibles: Dictionary = {}
 var fox_seen: = false
 var hiker_met: = false
 var route_reported: = false
@@ -198,6 +201,7 @@ func _ready():
 	ui.add_child(book_view)
 	ui.add_child(postcard_view)
 	ui.add_child(journal_view)
+	journal_view.section_requested.connect(toggle_journal_section)
 	ui.add_child(menu)
 	menu.settings_changed.connect( func(volume, sensitivity):
 		AudioServer.set_bus_volume_db(0, linear_to_db(volume / 100.0))
@@ -368,6 +372,12 @@ func _process(delta):
 			var look: Vector3 = - player.camera.global_basis.z
 			hands.heading = atan2(look.x, look.z)
 			hands.queue_redraw()
+		if stage == 7 and not second_sighting and mode in ["walk", "map"]:
+			var here := Vector2(player.position.x, player.position.z)
+			if here.distance_to(Exploration.MOLLAR) < 5.4:
+				day7_dusk = true
+				show_sighting()
+				return
 		if stage == 7 and not second_sighting and mode in ["walk", "map"] and player.position.z < valley.route.ORIGIN_Z - 200:
 			if not day7_dusk:
 				day7_dusk = true
@@ -434,6 +444,8 @@ func _process(delta):
 					hint.text = "E · ubicar el sur" if watching_crux_tonight() else "E · quedarte a mirar el cielo"
 				return
 			hint.text = star
+		elif stage >= 0 and hit and hit.has_meta("find_id"):
+			hint.text = "E · anotar " + target.to_lower() if not found_collectibles.has(str(hit.get_meta("find_id"))) else "E · " + target
 		elif stage >= 0 and target in ["", "Subir al escalón"] and not player.ledge_route().is_empty():
 			hint.text = "E · trepar el saliente"
 		else:
@@ -501,6 +513,7 @@ func objective() -> String:
 	if stage == 8: return "Día 25 · Pasá el museo y el abra para llegar al hito del filo."
 	if stage == 9: return "R · Pasá el parte del filo." if not route_reported else "Volvé al refugio."
 	if stage == -1: return "Abrí la puerta con E y entrá al refugio."
+	if stage == 7 and not second_sighting and not day7_dusk: return "Salí por la tranquera y seguí la huella del este hasta el mirador del mollar."
 	return ["Noche 1 · R · Contestar la radio", "Salí por la tranquera y tomá la bajada del cauce hasta el poste.", "R · Pasale a Mara la fecha", "Seguí la bajada del cauce.", "Seguí bajando hasta el lecho de piedras y buscá la regla.", "Volvé al refugio por la misma huella.", "Día 7 · Escuchá el parte de Mara.", "Pasá el museo de sitio y probá la recepción en el abra."][stage]
 
 func overlay(kind: String, caption: String, footer: Variant, prop: String = ""):
@@ -528,6 +541,7 @@ func overlay(kind: String, caption: String, footer: Variant, prop: String = ""):
 	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
 
 func open_journal():
+	journal_collection = false
 	journal_page = 0
 	var current := objective()
 	if stage >= 2: current += "\n\nPoste del cauce · 12 de julio."
@@ -588,9 +602,32 @@ func add_field_notes():
 		leaf += ("" if leaf.is_empty() else "\n\n") + note
 	if not leaf.is_empty(): diary_entry("Cuaderno · Apuntes sueltos", leaf)
 
+func record_collectible(id: String):
+	var entry: Array = Exploration.FINDS[id]
+	if not found_collectibles.has(id):
+		found_collectibles[id] = calendar_day()
+		save_game(true, "walk")
+	overlay("message", entry[1] + "\n\n" + entry[3], "Anotado en Coleccionables   /   Espacio · guardar el cuaderno")
+
+func toggle_journal_section():
+	if journal_collection:
+		open_journal()
+		return
+	journal_collection = true
+	journal_page = 0
+	var introduction := "%d de %d anotados.\n\nCosas que encontré al apartarme de la huella." % [found_collectibles.size(), Exploration.FINDS.size()]
+	if not found_collectibles.is_empty():
+		introduction += " Pasá la hoja para ver los dibujos y las notas."
+	journal_pages = [{"title": "Coleccionables", "text": introduction}]
+	for id in Exploration.FINDS:
+		if not found_collectibles.has(id): continue
+		var entry: Array = Exploration.FINDS[id]
+		diary_entry(entry[1], "Día %d · %s" % [found_collectibles[id], entry[3]], entry[0])
+	show_journal_page()
+
 func show_journal_page():
 	overlay("journal", "", "")
-	journal_view.display(journal_pages[journal_page], journal_page, journal_pages.size())
+	journal_view.display(journal_pages[journal_page], journal_page, journal_pages.size(), journal_collection)
 
 func walk():
 	journal_view.hide()
@@ -674,7 +711,7 @@ func radio_exchange():
 		var brief: Array
 		match stage:
 			1: brief = ["Buen día. ¿Descansaste algo?", "Hoy me hacen falta dos datos.", "Salí por la tranquera y seguí el cartel del cauce. La huella da la vuelta por atrás.", "Fijate qué fecha tiene la chapa del poste en la bajada."]
-			6: brief = ["Buen día. Ayer perdimos una llamada del puesto de arriba.", "¿Te llegás hasta la antena del abra?", "Pasá el museo y llamame desde la antena.", "Mi puesto queda antes de la parada. Es el de la puerta de madera. Si un día se corta del todo, buscame ahí."]
+			6: brief = ["Buen día. Ayer perdimos una llamada del puesto de arriba.", "¿Te llegás hasta la antena del abra?", "Antes pasá por el mirador del mollar, al este. Desde ahí se ve bien el abra. Después seguí por el museo hasta la antena.", "Mi puesto queda antes de la parada. Es el de la puerta de madera. Si un día se corta del todo, buscame ahí."]
 			16: brief = ["¿Viste cómo creció el arroyo?", "Tomá el sendero oeste desde el refugio. En el cable buscá las pircas de la quebrada.", "Probá la pasarela alta. Decime hasta dónde llegó el agua."]
 			13: brief = [
 				"¿Te animás a subir hasta la cumbre?",
@@ -786,6 +823,8 @@ func _unhandled_key_input(event):
 	if mode == "journal":
 		if advance or key in [KEY_ESCAPE, KEY_TAB]:
 			walk()
+		elif key == KEY_C:
+			toggle_journal_section()
 		elif key in [KEY_LEFT, KEY_RIGHT]:
 			journal_page = clampi(journal_page + (1 if key == KEY_RIGHT else -1), 0, journal_pages.size() - 1)
 			show_journal_page()
@@ -929,6 +968,10 @@ func _unhandled_key_input(event):
 			KEY_TAB: open_journal()
 			KEY_R: transmit()
 			KEY_E:
+				var hit = player.ray.get_collider()
+				if stage >= 0 and hit and hit.has_meta("find_id"):
+					record_collectible(str(hit.get_meta("find_id")))
+					return
 				if at_summit_finish():
 					start_day36()
 					return
@@ -951,6 +994,10 @@ func _unhandled_key_input(event):
 						overlay("message", "La huella rodea la cerca y baja al cauce. El poste está a mitad de la bajada.", "Espacio · seguir")
 					"Sendero oeste":
 						overlay("message", "La huella del oeste une la tranquera del refugio con el cable de la cantera.", "Espacio · seguir")
+					"Mirador del mollar":
+						overlay("message", "La huella del este sube al mollar. Desde ahí podés bajar por la vuelta del sur hasta el cauce.", "Espacio · seguir")
+					"Loma de las lajas":
+						overlay("message", "La huella corta termina en las lajas del oeste. Desde las piedras altas se ve el techo del refugio.", "Espacio · seguir")
 					"Desvío del cauce":
 						overlay("message", "La senda de la izquierda sube al mirador y vuelve a bajar al cauce. La de enfrente va directo a la regla.", "Espacio · seguir")
 					"Mirador del cauce":
@@ -1728,6 +1775,7 @@ func restore(data: Dictionary):
 	slot = data.slot
 	for key in STATE:
 		if data.state.has(key): set(key, data.state[key])
+	found_collectibles = data.state.get("found_collectibles", {}).duplicate()
 	trail_replies = Mara.saved_replies(data.state)
 	if not data.state.has("filo_report_reply"):
 		if "Recomendás la vaguada." in field_note: filo_report_reply = 0
@@ -1997,7 +2045,7 @@ func map_destination() -> Variant:
 		1, 2: return Creek.post()
 		4: return Creek.marker()
 		5: return Vector3.ZERO
-		7: return route.at(route.trail(420), 420)
+		7: return Exploration.ground(Exploration.MOLLAR, route) if not second_sighting and not day7_dusk else route.at(route.trail(420), 420)
 		8: return route.at(route.trail(922), 922)
 		10: return route.quarry_point(1.0)
 		13:

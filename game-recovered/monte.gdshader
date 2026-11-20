@@ -7,6 +7,8 @@ uniform vec2 east_end;
 uniform vec2 mara_start;
 uniform vec2 mara_end;
 uniform vec2 creek_path[12];
+uniform vec2 exploration_segments[36];
+uniform sampler2D soil_detail : filter_linear_mipmap, repeat_enable;
 varying vec2 ground_position;
 
 void vertex() {
@@ -71,7 +73,15 @@ void fragment() {
 		}
 		low_trail = track(creek_trail, 2.55, grain);
 	}
-	float exposed = max(max(central, west), max(max(east, mara), low_trail));
+	float local_trails = 0.0;
+	if (abs(p.x) < 46.0 && p.y > -31.0 && p.y < 63.0) {
+		float trail_distance = 50.0;
+		for (int i = 0; i < 36; i += 2) {
+			trail_distance = min(trail_distance, edge_distance(p, exploration_segments[i], exploration_segments[i + 1]));
+		}
+		local_trails = track(trail_distance, 1.8, grain);
+	}
+	float exposed = max(max(central, west), max(max(east, mara), max(low_trail, local_trails)));
 	float band = sin(p.y * 0.031 + cos(p.x * 0.12));
 	float stipple = sin(p.x * 1.04 + p.y * 0.52) * sin(p.y * 0.79 - p.x * 0.42);
 	float north = smoothstep(-2.0, 36.0, d);
@@ -86,6 +96,9 @@ void fragment() {
 	float creek = (1.0 - smoothstep(1.3, 4.8, abs(d - creek_d))) * (1.0 - smoothstep(46.0, 68.0, abs(p.x - creek_x)));
 	ground = mix(ground, vec3(0.251, 0.221, 0.182), low_water);
 	ground = mix(ground, vec3(0.33, 0.29, 0.24), creek);
-	ALBEDO = ground * (0.98 + 0.042 * grain);
+	vec3 brushwork = texture(soil_detail, p * 0.22).rgb;
+	float brush_value = dot(brushwork, vec3(0.30, 0.59, 0.11));
+	float paint = clamp((brush_value - 0.516) * 2.4, -0.19, 0.19);
+	ALBEDO = ground * (0.98 + paint + 0.042 * grain);
 	ROUGHNESS = 1.0;
 }
