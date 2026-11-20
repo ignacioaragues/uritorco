@@ -156,7 +156,8 @@ func update_pose():
 	var sway: = Vector2(sin(phase) * 2.6, cos(phase * 2) * 1.7) * stride
 	var tilt: = sin(phase) * 0.007 * stride
 	if paper_rig.visible:
-		place_grip(paper_rig, MAP_HAND, 0.71, true, sway, tilt, map_lift)
+		var fit := size.x * 0.59 / maxf(size.y, 1.0) * MAP_HAND.get_height() / MAP_HAND.get_width()
+		place_grip(paper_rig, MAP_HAND, minf(0.78, fit), true, sway, tilt, map_lift)
 	if rig.visible and sprite.texture:
 		place_grip(rig, sprite.texture, 0.53 if pose == "radio" else 0.43, false, sway + Vector2(-3, 5) * press, tilt + press * 0.032, lift)
 	if pose == "radio": ptt.set_shader_parameter("squeeze", press)

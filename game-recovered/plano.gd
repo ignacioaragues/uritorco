@@ -1,51 +1,88 @@
 extends Control
 
 const Alien = preload("res://hallazgos_sueno.gd")
+const Arrival = preload("res://llegada.gd")
 const ROUTE = preload("res://travesia.gd")
 const Exploration = preload("res://exploracion.gd")
 const Creek = preload("res://cauce.gd")
 const LastNight = preload("res://final_night.gd")
-const INK = Color("#424a3c")
+const Museum = preload("res://museo.gd")
+const INK = Color("#384235")
 const ROUTE_COLOR = Color("#875d41")
 const WATER = Color("#496d72")
 const PAPER = preload("res://diario_papel.webp")
-const PAPER_FIELD := Rect2(5, 57, 550, 237)
+const PAPER_FIELD := Rect2(0, 0, 560, 330)
 const PAGE_ASPECT := 1.33 / 1.14
 const COFFEE = preload("res://equipo/mancha_cafe.webp")
 const ATLAS_EARTH = preload("res://diario_hallazgos.webp")
 const ATLAS_DREAM = preload("res://diario_suenos.webp")
-const GRID_STEPS := [50, 100, 100, 50, 40, 40, 40]
-const INTERVALS := [2, 10, 10, 2, 2, 2, 2]
-const SCALES := [50, 100, 100, 50, 40, 40, 40]
+const GRID_STEPS := [50, 100, 100, 50, 40, 40, 40, 10]
+const INTERVALS := [2, 10, 10, 2, 2, 2, 2, 2]
+const ARRIVAL_ZONE := 7
+const LABEL_INK := Color("#30382d")
+const LABEL_HALO := Color("#eadcb9")
+const LABEL_SIZE := 19
+const CARDINAL_CENTER := Vector2(515, 44)
+const CARDINAL_AREA := Rect2(471, 5, 84, 76)
+const THUMB_AREA := Rect2(0, 88, 55, 147)
 const LIMITS = [
-	Rect2(-67, -205, 134, 223),
-	Rect2(-345, 12, 695, 510),
-	Rect2(-354, 480, 708, 510),
+	Rect2(-67, -205, 134, 237),
+	Rect2(-347, -8, 695, 542),
+	Rect2(-354, 464, 708, 526),
 	Rect2(-177, -203, 173, 151),
 ]
-const TITLES = ["Acceso y refugio", "Laderas y quebradas", "Filo y cumbre", "Quebrada sur", "Las estrías", "Las terrazas", "Los arcos"]
 var dream_sheet := 0
+var arrival_sheet := -1
+var active_zone := -1
 var found: Dictionary = {}
 var objective_mark: Variant = null
 var location := Vector3.ZERO
 var relief: Dictionary = {}
 var contours: Dictionary = {}
+var pins: Array[Dictionary] = []
 var used_labels: Array[Rect2] = []
-var title_face := SystemFont.new()
+var markers := Node2D.new()
 
 func _ready():
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
-	title_face.font_names = PackedStringArray(["Georgia", "Liberation Serif", "DejaVu Serif"])
+	add_child(markers)
+	markers.draw.connect(draw_markers)
 	hide()
 
-static func zone_at(pos: Vector3) -> int:
-	if pos.x < -49.0 and pos.z > 15.0: return 3
+static func zone_at(pos: Vector3, previous := -1) -> int:
+	# Keep the current sheet until the player walks through the shared stretch.
+	var south_margin := -6.0 if previous == 3 else (0.0 if previous == -1 else 6.0)
+	if pos.x < -49.0 - south_margin and pos.z > 15.0 + south_margin: return 3
 	var distance := ROUTE.ORIGIN_Z - pos.z
-	if distance < 15.0: return 0
-	return 1 if distance < 500.0 else 2
+	if distance < (23.0 if previous == 0 else (7.0 if previous == 1 else 15.0)): return 0
+	return 1 if distance < (516.0 if previous == 1 else (484.0 if previous == 2 else 500.0)) else 2
+
+func open_at(pos: Vector3, dream: int, arrival: int, goal: Variant):
+	if dream_sheet != dream or arrival_sheet != arrival:
+		active_zone = -1
+	dream_sheet = dream
+	arrival_sheet = arrival
+	objective_mark = goal
+	track(pos)
+	show()
+
+func track(pos: Vector3):
+	var zone := zone_at(pos, active_zone)
+	if arrival_sheet >= 0: zone = ARRIVAL_ZONE
+	elif dream_sheet > 0: zone = 3 + dream_sheet
+	if active_zone != zone:
+		active_zone = zone
+		queue_redraw()
+	location = pos
+	markers.queue_redraw()
 
 func survey_extent(zone: int) -> Rect2:
-	var coverage: Rect2 = LIMITS[zone] if zone < 4 else Rect2(-73.0, -33.0, 146.0, 177.0)
+	var coverage: Rect2
+	if zone < 4: coverage = LIMITS[zone]
+	elif zone == ARRIVAL_ZONE:
+		var origin := Arrival.origin(arrival_sheet)
+		coverage = Rect2(origin.x - 40.0, -22.0, 80.0, 66.0)
+	else: coverage = Rect2(-73.0, -33.0, 146.0, 177.0)
 	var width := coverage.size.y * PAPER_FIELD.size.x / PAPER_FIELD.size.y / PAGE_ASPECT
 	return Rect2(coverage.get_center().x - width * 0.5, coverage.position.y, width, coverage.size.y)
 
@@ -54,79 +91,80 @@ func frame(limits: Rect2) -> Rect2:
 	return Rect2(PAPER_FIELD.get_center().x - width * 0.5, PAPER_FIELD.position.y, width, PAPER_FIELD.size.y)
 
 func _draw():
-	var zone := zone_at(location) if dream_sheet == 0 else 3 + dream_sheet
+	var zone := active_zone
+	if zone < 0: return
 	var limits := survey_extent(zone)
 	var plot := frame(limits)
-	used_labels.clear()
+	var cache_key := zone + arrival_sheet if zone == ARRIVAL_ZONE else zone
+	pins.clear()
 	draw_texture_rect_region(PAPER, Rect2(0, 0, 560, 330), Rect2(78, 67, 924, 640), Color(0.92, 0.93, 0.89, 0.52))
-	if not relief.has(zone): relief[zone] = make_relief(zone, limits)
-	draw_texture_rect(relief[zone], plot, false, Color(1, 1, 1, 0.82))
+	if not relief.has(cache_key): relief[cache_key] = make_relief(zone, limits)
+	draw_texture_rect(relief[cache_key], plot, false, Color(1, 1, 1, 0.82))
 	if zone == 0:
 		draw_texture_rect(COFFEE, Rect2(469, 243, 87, 80), false, Color(0.69, 0.48, 0.32, 0.33))
 	draw_grid(limits, plot, GRID_STEPS[zone])
-	if not contours.has(zone): contours[zone] = make_contours(zone, limits)
-	var lines: Dictionary = contours[zone]
-	if not lines.minor.is_empty(): draw_multiline(lines.minor, Color("#9d826477"), 0.76, true)
-	if not lines.major.is_empty(): draw_multiline(lines.major, Color("#816446ae"), 1.08, true)
-	if dream_sheet > 0:
+	if not contours.has(cache_key): contours[cache_key] = make_contours(zone, limits)
+	var lines: Dictionary = contours[cache_key]
+	if not lines.minor.is_empty(): draw_multiline(lines.minor, Color("#9d826458"), 0.76, true)
+	if not lines.major.is_empty(): draw_multiline(lines.major, Color("#81644689"), 1.08, true)
+	if zone == ARRIVAL_ZONE:
+		draw_arrival(limits)
+	elif dream_sheet > 0:
 		draw_dream(limits)
 	else:
 		match zone:
 			0: draw_local(limits)
 			3: draw_south(limits)
 			_: draw_ridge(limits)
-	draw_finds(limits)
-	draw_rect(plot, Color("#7d7869"), false, 1.0)
 	for crease in [173.0, 384.0]:
 		draw_line(Vector2(crease, 0), Vector2(crease, 330), Color("#6d514821"), 2.0, true)
 		draw_line(Vector2(crease + 1.3, 0), Vector2(crease + 1.3, 330), Color("#fff6db54"), 0.8, true)
-	draw_margins(zone, limits)
+	draw_pins()
+	draw_cardinals()
 
+func draw_markers():
+	var zone := active_zone
+	if zone < 0: return
+	var limits := survey_extent(zone)
+	var inside := frame(limits).grow(-9.0)
+	if zone != ARRIVAL_ZONE: draw_finds(limits)
+	var at := point(limits, location).clamp(inside.position, inside.end)
 	if objective_mark is Vector3:
 		var destination: Vector3 = objective_mark
 		if zone == 0 and zone_at(destination) == 3:
 			destination = Creek.crossing_point(0.0)
 		elif zone == 3 and Vector2(destination.x, destination.z).length() < 1.0:
 			destination = Creek.return_point(1.0)
-		if contains(limits, destination):
-			var goal := point(limits, destination)
-			draw_circle(goal, 5.4, Color("#f2d5a4"), true, -1, true)
-			draw_circle(goal, 5.4, Color("#805035"), false, 1.35, true)
-			draw_circle(goal, 1.8, Color("#805035"), true, -1, true)
-	var at := point(limits, location).clamp(plot.position + Vector2(3, 3), plot.end - Vector2(3, 3))
+		var goal := point(limits, destination)
+		if inside.has_point(goal):
+			markers.draw_circle(goal, 7.0, Color("#f1d9a7"), true, -1, true)
+			markers.draw_circle(goal, 7.0, Color("#805035"), false, 1.8, true)
+			markers.draw_circle(goal, 2.3, Color("#805035"), true, -1, true)
+		else:
+			var direction := (goal - inside.get_center()).normalized()
+			var edge := Vector2(inside.size.x * 0.5 / maxf(absf(direction.x), 0.001), inside.size.y * 0.5 / maxf(absf(direction.y), 0.001))
+			var tip := inside.get_center() + direction * minf(edge.x, edge.y)
+			var back := tip - direction * 13.0
+			var side := direction.orthogonal() * 5.0
+			var arrow := PackedVector2Array([back - side, tip, back + side])
+			markers.draw_polyline(arrow, LABEL_HALO, 5.0, true)
+			markers.draw_polyline(arrow, Color("#805035"), 2.4, true)
 	for axis in [Vector2(5.7, 0), Vector2(0, 5.7)]:
-		draw_line(at - axis, at + axis, Color("#f3e0b9"), 4.4, true)
-		draw_line(at - axis, at + axis, Color("#983e2d"), 2.1, true)
+		markers.draw_line(at - axis, at + axis, Color("#f3e0b9"), 4.4, true)
+		markers.draw_line(at - axis, at + axis, Color("#983e2d"), 2.1, true)
 
-func draw_margins(zone: int, limits: Rect2):
+func draw_cardinals():
 	var font := ThemeDB.fallback_font
-	var series := "PUESTO DE OBSERVACIÓN SERRANA   /   URITORCO" if dream_sheet == 0 else "CROQUIS DE HERNÁN   /   SUEÑO %d" % dream_sheet
-	draw_string(font, Vector2(17, 16), series, HORIZONTAL_ALIGNMENT_LEFT, -1, 12, INK)
-	draw_string(title_face, Vector2(16, 45), TITLES[zone], HORIZONTAL_ALIGNMENT_LEFT, -1, 28, Color("#413f33"))
-	draw_line(Vector2(16, 51), Vector2(540, 51), Color("#928a73"), 1.1, true)
-	var center := Vector2(512, 32)
-	draw_colored_polygon(PackedVector2Array([center + Vector2(0,-13), center + Vector2(-4,3), center, center + Vector2(4,3)]), INK)
-	draw_line(center + Vector2(0, -2), center + Vector2(0, 7), INK, 1.0, true)
-	draw_line(center + Vector2(-13, 0), center + Vector2(13, 0), INK, 0.8, true)
-	for mark in [["N", Vector2(508, 16)], ["S", Vector2(508, 48)], ["O", Vector2(485, 36)], ["E", Vector2(529, 36)]]:
-		draw_string(font, mark[1], mark[0], HORIZONTAL_ALIGNMENT_LEFT, -1, 11, INK)
-	if dream_sheet == 0:
-		for i in [0, 1]:
-			var x: int = 18 + i * 69
-			var tone := ROUTE_COLOR if i == 0 else WATER
-			draw_line(Vector2(x, 306), Vector2(x + 14, 306), tone, 1.4, true)
-			draw_string(font, Vector2(x + 18, 310), "Senda" if i == 0 else "Cauce", HORIZONTAL_ALIGNMENT_LEFT, -1, 12, INK)
-	draw_string(font, Vector2(18, 324), "Equidistancia %d m" % INTERVALS[zone], HORIZONTAL_ALIGNMENT_LEFT, -1, 11, INK)
-
-	var meters: int = SCALES[zone]
-	var length_px := frame(limits).size.x * meters / limits.size.x
-	var start := Vector2(382, 310)
-	for i in 4:
-		var bar := Rect2(start + Vector2(i * length_px / 4.0, 0), Vector2(length_px / 4.0, 4))
-		draw_rect(bar, Color("#45483b") if i % 2 == 0 else Color("#dccdab"))
-	draw_rect(Rect2(start, Vector2(length_px, 4)), INK, false, 0.8)
-	draw_string(font, start + Vector2(0, 15), "0", HORIZONTAL_ALIGNMENT_LEFT, -1, 10, INK)
-	draw_string(font, start + Vector2(length_px - 5, 15), "%d m" % meters, HORIZONTAL_ALIGNMENT_LEFT, -1, 11, INK)
+	var center := CARDINAL_CENTER
+	draw_line(center + Vector2(0, -14), center + Vector2(0, 12), LABEL_HALO, 3.5, true)
+	draw_line(center + Vector2(-15, 0), center + Vector2(15, 0), LABEL_HALO, 3.5, true)
+	draw_line(center + Vector2(0, -14), center + Vector2(0, 12), INK, 1.5, true)
+	draw_line(center + Vector2(-15, 0), center + Vector2(15, 0), INK, 1.5, true)
+	draw_colored_polygon(PackedVector2Array([center + Vector2(0, -15), center + Vector2(-4, -2), center + Vector2(4, -2)]), INK)
+	for mark in [["N", Vector2(-6, -19)], ["S", Vector2(-5, 28)], ["O", Vector2(-32, 5)], ["E", Vector2(19, 5)]]:
+		var baseline: Vector2 = center + mark[1]
+		draw_string_outline(font, baseline, mark[0], HORIZONTAL_ALIGNMENT_LEFT, -1, 16, 3, LABEL_HALO)
+		draw_string(font, baseline, mark[0], HORIZONTAL_ALIGNMENT_LEFT, -1, 16, LABEL_INK)
 
 func draw_grid(limits: Rect2, plot: Rect2, span: float):
 	var ink := Color("#6d76643d")
@@ -142,9 +180,10 @@ func draw_grid(limits: Rect2, plot: Rect2, span: float):
 		d += span
 
 func draw_local(limits: Rect2):
-	draw_route(limits, 81, func(t):
-		var z := lerpf(6.0, -74.0, t)
-		return Vector3(4.5 * sin(-z / 13.0), 0, z), INK)
+	draw_route(limits, 81, access_road, INK)
+	draw_route(limits, 36, func(t):
+		var d: float = t * 40.0
+		return Vector3(ROUTE.trail(d), 0, ROUTE.ORIGIN_Z - d), INK)
 	draw_route(limits, 33, ROUTE.eastern_access, ROUTE_COLOR)
 	draw_route(limits, 141, ROUTE.western_approach, ROUTE_COLOR)
 	draw_route(limits, 101, Creek.trail_point, ROUTE_COLOR)
@@ -182,6 +221,9 @@ func draw_channel(limits: Rect2, west: float):
 		return Creek.point(x, Creek.channel_z(x)), WATER)
 
 func draw_ridge(limits: Rect2):
+	if active_zone == 1:
+		draw_route(limits, 81, access_road, INK)
+		draw_route(limits, 54, ROUTE.eastern_access, ROUTE_COLOR)
 	draw_route(limits, 301, func(t): return Vector3(ROUTE.trail(t * ROUTE.CREST), 0, ROUTE.ORIGIN_Z - t * ROUTE.CREST), INK)
 	draw_route(limits, 49, func(t):
 		var d := lerpf(ROUTE.LAJA_FORK, ROUTE.LAJA_JOIN, t)
@@ -196,12 +238,39 @@ func draw_ridge(limits: Rect2):
 		var d := ROUTE.CREEK_DISTANCE + 2.0 * sin((x - ROUTE.trail(ROUTE.CREEK_DISTANCE)) / 14.0)
 		return Vector3(x, 0, ROUTE.ORIGIN_Z - d), WATER)
 	pin(limits, ROUTE.creek_overlook(0.63), "Mirador", Vector2(-52, 16))
-	pin(limits, Vector3(ROUTE.trail(292), 0, ROUTE.ORIGIN_Z - 292), "Museo")
+	pin(limits, Vector3(ROUTE.trail(Museum.DISTANCE) + Museum.SITE_OFFSET, 0, ROUTE.ORIGIN_Z - Museum.DISTANCE), "Museo")
 	pin(limits, Vector3(ROUTE.trail(420), 0, ROUTE.ORIGIN_Z - 420), "Abra")
 	pin(limits, ROUTE.quarry_point(1), "Cantera", Vector2(-15, 15))
-	pin(limits, Vector3(ROUTE.trail(ROUTE.CREST), 0, ROUTE.ORIGIN_Z - ROUTE.CREST), "Filo", Vector2(-24, -8))
-	pin(limits, ROUTE.camp_point(), "Campamento", Vector2(-77, 17))
 	pin(limits, ROUTE.summit_point(1), "Cumbre", Vector2(8, -4))
+	pin(limits, ROUTE.camp_point(), "Campamento", Vector2(9, 24))
+	pin(limits, Vector3(ROUTE.trail(ROUTE.CREST), 0, ROUTE.ORIGIN_Z - ROUTE.CREST), "Filo", Vector2(-24, -13))
+
+func access_road(t: float) -> Vector3:
+	var z := lerpf(6.0, ROUTE.ORIGIN_Z, t)
+	return Vector3(4.5 * sin(-z / 13.0), 0, z)
+
+func draw_arrival(limits: Rect2):
+	var index := arrival_sheet
+	if index == 0:
+		draw_route(limits, 97, func(t):
+			var x := lerpf(-58.0, 58.0, t)
+			var z := -3.0 + 3.1 * sin(x * 0.055) * smoothstep(13.0, 55.0, absf(x))
+			return Arrival.world_position(index, Vector3(x, 0, z)), INK)
+		draw_route(limits, 50, func(t):
+			var x := lerpf(2.8, 47.0, t)
+			return Arrival.world_position(index, Vector3(x, 0, Arrival.branch_z(x))), ROUTE_COLOR)
+		pin(limits, Arrival.world_position(index, Vector3(-0.57, 0, -7.95)), "Parada")
+	else:
+		if index == 2:
+			draw_route(limits, 89, func(t):
+				var x := lerpf(-58.0, 58.0, t)
+				return Arrival.world_position(index, Vector3(x, 0, -10.45)), WATER)
+		draw_route(limits, 121, func(t):
+			return Arrival.world_position(index, Arrival.path_point(index, lerpf(-60.0, 60.0, t))), ROUTE_COLOR)
+		match index:
+			1: pin(limits, Arrival.world_position(index, Vector3(0, 0, -10.0)), "Tronco")
+			2: pin(limits, Arrival.world_position(index, Vector3(0, 0, -10.45)), "Puente")
+			5: pin(limits, Arrival.world_position(index, Vector3(0, 0, -11.0)), "Laja")
 
 func draw_dream(limits: Rect2):
 	var start := LastNight.dream_point(dream_sheet, 0.0)
@@ -222,6 +291,8 @@ func draw_finds(limits: Rect2):
 	var columns := 3 if dreaming else 4
 	var tile := atlas.get_size() / Vector2(columns, 2)
 	var here := Vector2(location.x, location.z)
+	var plot := frame(limits)
+	var occupied := used_labels.duplicate()
 	for id in entries:
 		var entry: Array = entries[id]
 		if dreaming and entry[4] != dream_sheet: continue
@@ -233,16 +304,24 @@ func draw_finds(limits: Rect2):
 		if not seen and here.distance_to(at) > 13.5: continue
 		var mark := point(limits, world)
 		var picture := Vector2(34, 34) if seen else Vector2(29, 29)
-		var plot := frame(limits)
-		var offset := Vector2(-13, 18) if entry[0] % 2 == 0 else Vector2(15, 18)
-		var badge := (mark + offset).clamp(plot.position + picture * 0.5, plot.end - picture * 0.5)
+		var radius := picture * 0.5
+		var badge := mark.clamp(plot.position + radius, plot.end - radius)
+		var side := -1.0 if entry[0] % 2 == 0 else 1.0
+		for offset in [Vector2(19 * side, 21), Vector2(-19 * side, 21), Vector2(19 * side, -21), Vector2(-19 * side, -21)]:
+			var candidate := (mark + Vector2(offset)).clamp(plot.position + radius, plot.end - radius)
+			if clear_of(Rect2(candidate - radius, picture), occupied):
+				badge = candidate
+				break
 		var index: int = entry[0]
 		var src := Rect2(Vector2(index % columns, index / columns) * tile, tile)
-		draw_line(mark, mark.lerp(badge, 0.60), Color("#6e655098"), 0.75, true)
-		draw_circle(badge, 12.0, Color("#f5deb566" if seen else "#f8d78b80"), true, -1, true)
-		draw_texture_rect_region(atlas, Rect2(badge - picture * 0.5, picture), src, Color.WHITE if seen else Color(1, 1, 1, 0.76))
+		var bounds := Rect2(badge - radius, picture)
+		occupied.append(bounds)
+		markers.draw_line(mark, mark.lerp(badge, 0.60), Color("#6e655098"), 0.75, true)
+		markers.draw_circle(badge, 12.0, Color("#f5deb566" if seen else "#f8d78b80"), true, -1, true)
+		markers.draw_texture_rect_region(atlas, bounds, src, Color.WHITE if seen else Color(1, 1, 1, 0.76))
 
 func projection_z() -> float:
+	if arrival_sheet >= 0: return Arrival.origin(arrival_sheet).z
 	return LastNight.PLANET.z if dream_sheet > 0 else ROUTE.ORIGIN_Z
 
 func contains(limits: Rect2, pos: Vector3) -> bool:
@@ -291,32 +370,51 @@ func stroke_route(line: PackedVector2Array, color: Color):
 			start = end
 
 func pin(limits: Rect2, pos: Vector3, text: String, offset := Vector2(7, -5)):
-	if not contains(limits, pos): return
-	var mark := point(limits, pos)
+	if contains(limits, pos):
+		pins.append({"mark": point(limits, pos), "text": text, "offset": offset})
+
+func clear_of(bounds: Rect2, occupied: Array[Rect2]) -> bool:
+	for item in occupied:
+		if item.intersects(bounds): return false
+	return true
+
+func draw_pins():
+	used_labels.assign([CARDINAL_AREA, THUMB_AREA])
+	for item in pins:
+		var mark: Vector2 = item.mark
+		used_labels.append(Rect2(mark - Vector2(5, 5), Vector2(10, 10)))
+	for item in pins:
+		var mark: Vector2 = item.mark
+		var symbol := Rect2(mark - Vector2(2.3, 2.3), Vector2(4.6, 4.6))
+		draw_rect(symbol.grow(1.2), LABEL_HALO)
+		draw_rect(symbol, LABEL_INK)
+		draw_pin_label(mark, item.text, item.offset)
+
+func draw_pin_label(mark: Vector2, text: String, preferred: Vector2):
 	var font := ThemeDB.fallback_font
-	const SIZE := 13
-	var width := font.get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1, SIZE).x
-	var label := mark + offset
-	for choice in [offset, Vector2(9, -7), Vector2(-width - 10, -7), Vector2(9, 16), Vector2(-width - 10, 16), Vector2(9, -26), Vector2(-width-10, 29)]:
-		var candidate: Vector2 = mark + choice
-		var block := Rect2(candidate - Vector2(2, 12), Vector2(width + 4, 16))
-		if block.position.x < 13 or block.end.x > 547 or block.position.y < 58 or block.end.y > 291: continue
-		var free := true
-		for previous in used_labels:
-			if previous.intersects(block):
-				free = false
-				break
-		if free:
-			label = candidate
-			used_labels.append(block)
-			break
-	var end := Vector2(clampf(mark.x, label.x, label.x+width), label.y - 4.0)
-	if end.distance_to(mark) > 7: draw_line(mark, end, Color("#5c584b9e"), 0.72, true)
-	draw_rect(Rect2(mark - Vector2(1.8, 1.8), Vector2(3.6, 3.6)), INK)
-	draw_string_outline(font, label, text, HORIZONTAL_ALIGNMENT_LEFT, -1, SIZE, 3, Color("#e1d2ad"))
-	draw_string(font, label, text, HORIZONTAL_ALIGNMENT_LEFT, -1, SIZE, INK)
+	var width := font.get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1, LABEL_SIZE).x
+	var ascent := font.get_ascent(LABEL_SIZE)
+	var label_size := Vector2(width, font.get_height(LABEL_SIZE))
+	var near_side := 11.0 if preferred.x > 0.0 else -width - 11.0
+	var sides := [near_side, -width - near_side, -width * 0.5]
+	for y in [preferred.y, 24.0, -14.0, 42.0, -30.0, 60.0, -48.0, 78.0, -66.0]:
+		for x in sides:
+			var baseline := mark + Vector2(x, y)
+			var bounds := Rect2(baseline - Vector2(0, ascent), label_size)
+			var padding := bounds.grow(3.0)
+			if not PAPER_FIELD.grow(-7.0).encloses(padding) or not clear_of(padding, used_labels): continue
+			used_labels.append(padding)
+			var end := mark.clamp(bounds.position, bounds.end)
+			if end.distance_to(mark) > 6.0:
+				draw_line(mark, end, Color("#514a3ba8"), 0.9, true)
+			draw_string_outline(font, baseline, text, HORIZONTAL_ALIGNMENT_LEFT, -1, LABEL_SIZE, 4, LABEL_HALO)
+			draw_string(font, baseline, text, HORIZONTAL_ALIGNMENT_LEFT, -1, LABEL_SIZE, LABEL_INK)
+			return
 
 func ground_height(x: float, d: float) -> float:
+	if arrival_sheet >= 0:
+		var local := Arrival.local_position(arrival_sheet, Vector3(x, 0, projection_z() - d))
+		return Arrival.ground_height(arrival_sheet, local.x, -local.z)
 	if dream_sheet > 0: return LastNight.planet_height(dream_sheet, x, d)
 	var z := ROUTE.ORIGIN_Z - d
 	return Creek.outer_height(x, z) if z >= -72.0 else ROUTE.elevation(x, maxf(d, 0.0))
@@ -332,7 +430,7 @@ func make_relief(zone: int, limits: Rect2) -> ImageTexture:
 			heights.append(ground_height(x,d))
 	var stride := COLUMNS + 2
 	var tex := Image.create_empty(COLUMNS, ROWS, false, Image.FORMAT_RGB8)
-	var lowland := zone in [0, 3, 4, 5, 6]
+	var lowland := zone != 1 and zone != 2
 	for row in ROWS:
 		for col in COLUMNS:
 			var i := (row + 1) * stride + col + 1
@@ -351,10 +449,11 @@ func make_relief(zone: int, limits: Rect2) -> ImageTexture:
 func make_contours(zone: int, limits: Rect2) -> Dictionary:
 	var minor := PackedVector2Array()
 	var major := PackedVector2Array()
-	var lowland := zone in [0, 3, 4, 5, 6]
+	var lowland := zone != 1 and zone != 2
 	var steps := 54 if lowland else 49
 	var interval: int = INTERVALS[zone]
-	var levels := range(-14, 18, interval) if lowland else range(10, 190, interval)
+	var first_level := -14 if lowland else 10
+	var last_level := 16 if lowland else 180
 	var previous: Array[Vector3] = []
 	for row in steps + 1:
 		var current: Array[Vector3] = []
@@ -366,7 +465,10 @@ func make_contours(zone: int, limits: Rect2) -> Dictionary:
 		if row > 0:
 			for col in steps:
 				for corners in [[previous[col], previous[col + 1], current[col]], [previous[col + 1], current[col + 1], current[col]]]:
-					for level in levels:
+					var low := minf(corners[0].y, minf(corners[1].y, corners[2].y))
+					var high := maxf(corners[0].y, maxf(corners[1].y, corners[2].y))
+					var next_level := first_level + (floori((low - first_level) / interval) + 1) * interval
+					for level in range(maxi(first_level, next_level), mini(last_level, floori(high)) + 1, interval):
 						for edge in 3:
 							var a: Vector3 = corners[edge]
 							var b: Vector3 = corners[(edge + 1) % 3]

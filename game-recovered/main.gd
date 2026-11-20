@@ -86,6 +86,7 @@ var map_read: = false
 var objective_seconds := 0.0
 var intro_controls_seconds := 0.0
 var map = preload("res://plano.gd").new()
+var map_goal_origin := Vector3.INF
 var menu = preload("res://menu.gd").new()
 var valley = preload("res://valley.gd").new()
 var player = preload("res://player.gd").new()
@@ -387,8 +388,10 @@ func _process(delta):
 			hands.set_bearing(atan2(look.x, -look.z))
 		hands.step(delta, velocity)
 		if mode == "map" or (mode == "dream" and hands.map_requested):
-			map.location = player.position
-			map.queue_redraw()
+			if mode == "map" and paused_from == "walk" and stage == 15:
+				if player.position.distance_squared_to(map_goal_origin) > 6.25:
+					refresh_map_goal()
+			map.track(player.position)
 		var daytime: bool = mode != "dream" and outdoors and rain_strength < 0.44 and float(valley.sky_mat.get_shader_parameter("nightfall")) < 0.5
 		ambience.update(delta, velocity, daytime, mode == "cave" and not cave_outside)
 		if stage == 7 and not second_sighting and mode in ["walk", "map"]:
@@ -699,7 +702,8 @@ func walk():
 	cross.visible = mode == "walk"
 	if mode == "map":
 		hint.text = "M · guardar el mapa"
-		map.objective_mark = map_destination()
+		refresh_map_goal()
+		map.track(player.position)
 	player.walking = true
 	Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
 
@@ -869,14 +873,19 @@ func farewell_mara():
 	conversation(lines, "last_call")
 
 func show_map(variant: int = 0):
-	map.dream_sheet = variant
 	map.found = found_collectibles
-	map.location = player.position
-	map.objective_mark = map_destination() if variant == 0 and paused_from == "walk" else null
+	var arrival := page if variant == 0 and paused_from == "approach" else -1
+	var goal: Variant = null
+	if variant == 0 and paused_from == "walk":
+		goal = map_destination()
+		map_goal_origin = player.position
+	map.open_at(player.position, variant, arrival, goal)
 	hands.show_map(true)
-	map.queue_redraw()
-	map.show()
 	update_flashlight()
+
+func refresh_map_goal():
+	map.objective_mark = map_destination()
+	map_goal_origin = player.position
 
 func update_flashlight():
 	var active: bool = flashlight_out and (mode in ["walk", "approach", "map", "cave", "dream", "sighting"] or hands.requested_pose == "radio") and mode != "menu"
