@@ -5,6 +5,7 @@ uniform vec4 stone : source_color;
 uniform float distance_layer = 0.0;
 uniform float dusk = 0.0;
 uniform float nightfall = 0.0;
+uniform float storm_amount = 0.0;
 varying vec3 rock_position;
 
 void vertex() {
@@ -16,6 +17,8 @@ void fragment() {
 	float relief = (UV.x - 0.65) * (0.36 - 0.23 * distance_layer) + hatch * (0.018 - 0.012 * distance_layer);
 	vec3 morning = stone.rgb * (0.92 + relief);
 	morning = mix(morning, vec3(0.69, 0.72, 0.71), (1.0 - UV.y) * 0.16 + distance_layer * 0.11);
+	vec3 rain_haze = mix(vec3(0.45, 0.52, 0.54), vec3(0.61, 0.66, 0.67), distance_layer);
+	morning = mix(morning, rain_haze, storm_amount * (0.31 + 0.49 * distance_layer));
 	vec3 evening = mix(morning, vec3(0.57, 0.50, 0.59), 0.30 * dusk);
 	vec3 night = mix(vec3(0.085, 0.105, 0.156), vec3(0.18, 0.201, 0.264), distance_layer + (1.0 - distance_layer) * (1.0 - UV.y) * 0.16);
 	ALBEDO = mix(evening, night * (0.94 + relief), nightfall);

@@ -1,5 +1,6 @@
 extends RefCounted
 
+const Signage = preload("res://carteleria.gd")
 const FieldKit = preload("res://equipo_campo.gd")
 
 const ACTIONS = ["Recoger la mochila", "Saltar el tronco", "Agarrarte del pasamanos", "Probar la brújula", "Consultar el mapa", "Trepar con la cuerda", "Encender la linterna", "Seguir el sendero"]
@@ -196,14 +197,8 @@ static func dress_verges(v, center: Vector3, index: int, rng: RandomNumberGenera
 	verge.position = center
 
 static func build_stop(v, center: Vector3):
-	var shelter := center + Vector3(-0.57, 0.0, -7.95)
-	v.timber(v.box(shelter + Vector3.UP * 2.23, Vector3(3.95, 0.18, 1.68), "8c7c66"))
-	for x in [-1.73, 1.73]:
-		for z in [-0.62, 0.62]:
-			v.timber(v.box(shelter + Vector3(x, 1.05, z), Vector3(0.14, 2.1, 0.13), "695644", true))
-	v.timber(v.box(shelter + Vector3(0.0, 0.55, -0.37), Vector3(2.7, 0.12, 0.49), "a38966", true))
-	for x in [-1.0, 1.0]:
-		v.box(shelter + Vector3(x, 0.25, -0.37), Vector3(0.16, 0.50, 0.38), "77634f")
+	Signage.shelter(v, center + Vector3(-0.57, 0.0, -7.95))
+	Signage.flag(v, center + Vector3(-3.24, 0, -7.23))
 	v.arrival_bag = FieldKit.backpack(v, center + Vector3(0.68, 0.318, -6.31), ACTIONS[0])
 	v.arrival_bag.rotation.y = -0.14
 

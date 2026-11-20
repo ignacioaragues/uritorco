@@ -1,5 +1,6 @@
 extends RefCounted
 
+const Visual = preload("res://hallazgo_visual.gd")
 const Flora = preload("res://flora.gd")
 const Creek = preload("res://cauce.gd")
 const Trail = preload("res://travesia.gd")
@@ -122,12 +123,17 @@ static func dress_find(valley, id: String):
 			piece(root, lathe([Vector2(0.07, 0.0), Vector2(0.23, 0.0), Vector2(0.25, 0.045),
 				Vector2(0.17, 0.14), Vector2(0.07, 0.14), Vector2(0.07, 0.0)]), Vector3.ZERO, "8c8070")
 		2:
-			var handstone := SphereMesh.new()
-			handstone.radial_segments = 8
-			handstone.rings = 4
-			var stone := piece(root, handstone, Vector3(0, 0.115, 0), "988c76")
-			stone.scale = Vector3(0.56, 0.24, 0.29)
+			var grinding := lathe([Vector2(0, 0.009), Vector2(0.205, 0.009), Vector2(0.259, 0.037),
+				Vector2(0.273, 0.082), Vector2(0.236, 0.151), Vector2(0.163, 0.186), Vector2(0.0, 0.193)], 13)
+			var stone := piece(root, grinding, Vector3.ZERO, "897d69")
+			stone.scale.z = 0.61
 			stone.rotation.y = 0.48
+			var face := lathe([Vector2(0.0, 0.010), Vector2(0.174, 0.010), Vector2(0.188, 0.019), Vector2(0.177, 0.025)], 14)
+			piece(stone, face, Vector3(0, 0, 0), "ad9b80")
+			var base := lathe([Vector2(0.0, 0.009), Vector2(0.26, 0.013), Vector2(0.32, 0.045),
+				Vector2(0.27, 0.11), Vector2(0.19, 0.105), Vector2(0.15, 0.07), Vector2(0, 0.053)], 13)
+			var mortar := piece(root, base, Vector3(0.35, -0.13, -0.27), "7f7563")
+			mortar.scale.z = 0.76
 		3:
 			for side in [-1.0, 1.0]:
 				var start := Vector3(side * 0.58, -0.27, -0.20)
@@ -171,6 +177,8 @@ static func dress_find(valley, id: String):
 			var paper := slab(root, Vector3(0.17, 0.015, 0.18), Vector3(0.11, 0.16, -0.025), "c5b589")
 			paper.rotation.x = -0.36
 
+	var glint_height := 0.48 if id == "vasija" else (0.31 if id == "lata" else 0.19)
+	Visual.glint(root, Vector3(0.09, glint_height, 0.08), Color("#e2c29a"))
 	var target := StaticBody3D.new()
 	target.collision_layer = 2
 	target.collision_mask = 0

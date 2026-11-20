@@ -1,5 +1,6 @@
 extends Node3D
 
+const Signage = preload("res://carteleria.gd")
 const FieldKit = preload("res://equipo_campo.gd")
 const Creek = preload("res://cauce.gd")
 const LastNight = preload("res://final_night.gd")
@@ -151,10 +152,8 @@ func _ready():
 	lamp.light_color = Color("#ffbe77")
 	lamp.omni_range = 8
 	lamp.light_energy = 1.5
-	var end: = Vector3(path_x(-72), 0, -72)
-	box(end + Vector3(2, 0.45, 0), Vector3(2.2, 0.15, 0.58), "79614a", true, "Banco")
-	for offset in [1.25, 2.75]:
-		box(end + Vector3(offset, 0.2, 0), Vector3(0.18, 0.45, 0.42), "675747", true)
+	Signage.shelter(self, Vector3(0.32, 0.0, -72.0), true)
+	Signage.station(self)
 	build_sighting_lights()
 	dress_shelter()
 	furnish()
@@ -167,7 +166,7 @@ func _ready():
 	dress_refuge_junction()
 	preload("res://museo.gd").build(self)
 	LastNight.build_door(self)
-	route.signpost(LastNight.STOP + Vector3(2.1, 0, -0.6), "Parada", "Parada · Colectivo", 0.0, true)
+	Signage.flag(self, Vector3(2.86, 0.0, -71.33))
 	var fork := LastNight.door_approach(0.22)
 	route.signpost(fork + Vector3(0.0, 0, -2.4), "Puesto de abajo", "Puesto de abajo →", -1.72, true)
 
@@ -280,17 +279,29 @@ func sunset():
 	tween.tween_property(sun, "light_color", Color("#ffb07d"), 5.0)
 	tween.tween_property(env, "ambient_light_energy", 0.7, 5.0)
 
-var weather_day: = 0
+var weather_day := 0
+var weather_rain := -1.0
 
-func update_weather(day: int):
-	if day == weather_day: return
+func update_weather(day: int, rain: float = 0.0):
+	if day == weather_day and absf(weather_rain - rain) < 0.004: return
+	var changed_day := day != weather_day
 	weather_day = day
-	var cloud: float = {1: 0.19, 2: 0.12, 7: 0.56, 25: 0.29, 27: 0.38, 32: 0.08, 36: 0.86, 41: 0.46}.get(day, 0.0)
+	weather_rain = rain
+	var cloud: float = {1: 0.19, 2: 0.12, 7: 0.56, 25: 0.29, 27: 0.38, 32: 0.08, 36: 0.34, 41: 0.46}.get(day, 0.0)
+	cloud = lerpf(cloud, 0.97, rain)
 	sky_mat.set_shader_parameter("cloud_cover", cloud)
 	sky_mat.set_shader_parameter("cloud_pattern", day * 0.873)
-	env.fog_density = lerpf(0.0027, 0.0073, cloud * cloud)
-	route.ground_material.set_shader_parameter("wet_ground", 0.88 if day == 36 else 0.0)
+	sky_mat.set_shader_parameter("storm_amount", rain)
+	env.fog_density = lerpf(lerpf(0.0027, 0.0053, cloud * cloud), 0.0105, rain)
+	sun.shadow_opacity = 1.0 - rain * 0.86
+	for mat in ridge_materials: mat.set_shader_parameter("storm_amount", rain)
+	route.ground_material.set_shader_parameter("wet_ground", 0.49 + rain * 0.42 if day == 36 else 0.0)
 	if is_instance_valid(storm_water): storm_water.visible = day == 36
+	if changed_day and rain > 0.45 and float(sky_mat.get_shader_parameter("nightfall")) < 0.5:
+		sun.light_energy = 0.32
+		sun.light_color = Color("#c9ced2")
+		env.ambient_light_color = Color("#bcc7cb")
+		env.fog_light_color = Color("#82969f")
 
 func cave_darkness():
 	if lighting and lighting.is_valid(): lighting.kill()
@@ -832,5 +843,6 @@ func swing_side_door(node: Node3D):
 	var open: = not bool(node.get_meta("open", false))
 	node.set_meta("open", open)
 	var swing: = create_tween()
-	swing.tween_property(node, "rotation:y", 1.62 if open else 0.0, 0.38)
+	var opening := 2.06 if node == yard_hinge else 1.62
+	swing.tween_property(node, "rotation:y", opening if open else 0.0, 0.38)
 	swing.tween_callback( func(): node.remove_meta("swinging"))

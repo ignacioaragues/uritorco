@@ -1,5 +1,9 @@
 extends RefCounted
 
+const Alien = preload("res://hallazgos_sueno.gd")
+const Kit = preload("res://equipo_campo.gd")
+const DREAM_BOUNDS := Rect2(-73.0, -144.0, 146.0, 177.0)
+
 const CAVE: = Vector3(0, 80, 1900)
 const DOOR := Vector3(18, 0, -52)
 const STOP := Vector3(-3.2, 0, -70)
@@ -145,10 +149,30 @@ static func planet_height(variant: int, x: float, distance: float) -> float:
 	var edge := absf(x - dream_x(variant, distance))
 	var banks := smoothstep(6.0, 36.0, edge)
 	var relief := (6.0 + 4.0 * sin(distance * 0.12 + x * 0.09 + variant)) * banks
+	var outskirts := smoothstep(15.0, 30.0, edge) * (1.4 + cos(x * 0.083 - distance * 0.11))
 	match variant:
-		1: return relief + 0.7 * sin(distance * 0.13)
-		2: return relief * 0.55 + 1.8 * sin(distance * 0.069)
-		_: return relief * 1.30 + 0.9 * sin(distance * 0.16)
+		1:
+			var blue_gully := -3.8 * exp(-pow((x + 47.0) / 19.0, 2.0) - pow((distance - 52.0) / 19.0, 2.0))
+			return relief + 0.7 * sin(distance * 0.13) + outskirts * 1.7 + blue_gully
+		2:
+			var terrace := smoothstep(16.0, 32.0, edge) * 2.1 * sin(x * 0.14 + 0.038 * distance)
+			var bowl := -5.1 * exp(-pow((x - 43.0) / 19.0, 2.0) - pow((distance - 115.0) / 20.0, 2.0))
+			return relief * 0.55 + 1.8 * sin(distance * 0.069) + terrace + bowl
+		_:
+			var fold := 5.3 * smoothstep(16.0, 30.0, edge) * sin(distance * 0.048 + 0.07 * x) * exp(-pow((distance - 110.0) / 52.0, 2.0))
+			return relief * 1.30 + 0.9 * sin(distance * 0.16) + fold
+
+static func dream_surface(variant: int, local: Vector2) -> Vector3:
+	var x := floorf(local.x / 4.0) * 4.0
+	var d := floorf(-local.y / 4.0) * 4.0
+	var u := (local.x - x) * 0.25
+	var v := (-local.y - d) * 0.25
+	var a := planet_height(variant, x, d)
+	var b := planet_height(variant, x + 4.0, d)
+	var c := planet_height(variant, x, d + 4.0)
+	var e := planet_height(variant, x + 4.0, d + 4.0)
+	var height := a * (1.0 - u - v) + b * u + c * v if u + v <= 1.0 else e * (u + v - 1.0) + b * (1.0 - v) + c * (1.0 - u)
+	return PLANET + Vector3(local.x, height, local.y)
 
 static func dream_point(variant: int, distance: float) -> Vector3:
 	var x := dream_x(variant, distance)
@@ -163,13 +187,11 @@ static func build_planet(valley, variant: int) -> Node3D:
 	var surface := SurfaceTool.new()
 	surface.begin(Mesh.PRIMITIVE_TRIANGLES)
 	const COLUMNS := 73
-	const ROWS := 53
+	const ROWS := 64
 	for row in ROWS:
 		var distance := 4.0 * row - 64.0
 		for column in COLUMNS:
 			var x := 4.0 * column - 144.0
-			var tone := 0.11 * sin(row * 0.57 + column * 0.84) + 0.06 * cos(column * 0.29 - row * 0.92)
-			surface.set_color(GROUND_COLORS[variant - 1].lightened(tone))
 			surface.add_vertex(Vector3(x, planet_height(variant, x, distance), -distance))
 	for row in range(ROWS - 1):
 		for column in range(COLUMNS - 1):
@@ -179,28 +201,31 @@ static func build_planet(valley, variant: int) -> Node3D:
 	surface.generate_normals()
 	var ground := MeshInstance3D.new()
 	ground.mesh = surface.commit()
-	var material := StandardMaterial3D.new()
-	material.vertex_color_use_as_albedo = true
+	var material := dream_rock(variant, GROUND_COLORS[variant - 1], false)
 	ground.material_override = material
 	valley.add_child(ground)
 	ground.position = PLANET
 	ground.create_trimesh_collision()
 	var rng := RandomNumberGenerator.new()
 	rng.seed = 571 + variant
+	var crag := dream_rock(variant, Color(ROCK_COLORS[variant - 1]), true)
 	for side in [-1, 1]:
-		for distance in range(-22, 62, 5):
+		for distance in range(-22, 140, 5):
 			var x: float = dream_x(variant, distance) + side * rng.randf_range(5.5, 14.0)
 			var foot := PLANET + Vector3(x, planet_height(variant, x, distance), -distance)
 			var size := Vector3(rng.randf_range(1.6, 3.2), rng.randf_range(3.8, 7.5), rng.randf_range(1.4, 2.8))
 			if variant == 2: size = Vector3(size.x * 1.8, size.y * 0.36, size.z)
 			var rock: MeshInstance3D = valley.stone(foot + Vector3.UP * size.y * 0.23, size, ROCK_COLORS[variant - 1])
 			rock.rotation.z = rng.randf_range(-0.45, 0.45)
-		for distance in range(-44, 90, 12):
-			var x: float = side * rng.randf_range(22.0, 36.0)
+			rock.material_override = crag
+		for distance in range(-44, 160, 12):
+			var x: float = side * rng.randf_range(76.0, 91.0)
 			var foot := PLANET + Vector3(x, planet_height(variant, x, distance), -distance)
-			valley.stone(foot, Vector3(16.0, rng.randf_range(12.0, 24.0), 15.0), ROCK_COLORS[variant - 1])
-	for distance in [-31.0, 67.0, 82.0]:
-		valley.stone(dream_point(variant, distance), Vector3(28, 17, 10), ROCK_COLORS[variant - 1])
+			var rim: MeshInstance3D = valley.stone(foot, Vector3(24.0, rng.randf_range(13.0, 26.0), 20.0), ROCK_COLORS[variant - 1])
+			rim.material_override = crag
+	for distance in [-54.0, 154.0, 172.0]:
+		var ridge: MeshInstance3D = valley.stone(dream_point(variant, distance), Vector3(39, 19, 17), ROCK_COLORS[variant - 1])
+		ridge.material_override = crag
 	if variant == 3:
 		for i in 5:
 			var arch := dream_point(3, 10.0 + 9.0 * i)
@@ -212,4 +237,50 @@ static func build_planet(valley, variant: int) -> Node3D:
 		props.append(valley.get_child(i))
 	valley.add_child(root)
 	for prop in props: prop.reparent(root)
+	dress_dream_landmarks(root, variant, crag)
 	return root
+
+static func dream_rock(variant: int, tint: Color, stone: bool) -> ShaderMaterial:
+	var paint := ShaderMaterial.new()
+	paint.shader = preload("res://suelo_sueno.gdshader")
+	paint.set_shader_parameter("ground_tint", tint)
+	paint.set_shader_parameter("terrain_style", variant)
+	paint.set_shader_parameter("bedrock", stone)
+	return paint
+
+static func dress_dream_landmarks(parent: Node3D, variant: int, crag: ShaderMaterial):
+	var sites: Array = Alien.SITES[variant - 1]
+	var veins := Alien.luminous(["83bdd4", "c98d68", "9786bc"][variant - 1], 0.17)
+	for i in sites.size():
+		var local: Vector2 = sites[i][1]
+		var landmark := Node3D.new()
+		parent.add_child(landmark)
+		landmark.position = dream_surface(variant, local)
+		var form: int = (variant - 1) * 2 + i
+		var count: int = [9, 8, 6, 12, 9, 7][form]
+		var tallest: float = [0.74, 5.9, 1.24, 1.11, 3.80, 2.74][form]
+		for j in count:
+			var angle := TAU * j / count + 0.49 * i
+			var radius := 3.8 + 1.3 * sin(j * 1.78 + variant)
+			var at := Vector2(cos(angle), sin(angle)) * radius
+			if form == 0: at = Vector2(-7.0 + j * 1.62, 2.0 + sin(j * 0.62) * 1.8)
+			if form == 2: at = Vector2(-7.0 + j * 2.18, 2.65 + j * 0.63)
+			if form == 5: at = Vector2(-6.5 + j * 2.3, 2.0 + j * 0.48)
+			var foot := dream_surface(variant, local + at) - landmark.position
+			var profile := CylinderMesh.new()
+			profile.radial_segments = 5 if form in [1, 4] else 6
+			profile.bottom_radius = (0.55 + 0.17 * sin(j)) if form in [1, 4] else (0.84 + 0.24 * sin(j))
+			profile.top_radius = 0.15 if form in [1, 4, 5] else profile.bottom_radius * 0.88
+			profile.height = tallest * (0.6 + 0.47 * absf(sin(j * 0.81 + variant)))
+			var mound := Kit.mesh_part(landmark, profile, foot + Vector3.UP * profile.height * 0.40, crag)
+			mound.rotation = Vector3(0.24 * sin(angle), angle, -0.21 * cos(angle))
+			if form in [0, 2, 5]:
+				mound.scale.x = 2.5 if form == 0 else 1.8
+				mound.scale.z = 0.66 if form == 5 else 1.24
+			if j % 2 == 0:
+				Alien.strut(landmark, foot + Vector3(0.49, 0.13, 0.07), foot + Vector3(0.55, profile.height * 0.58, 0.11), 0.029, veins)
+
+	for id in Alien.FINDS:
+		var artifact: Array = Alien.FINDS[id]
+		if artifact[4] == variant:
+			Alien.build_find(parent, id, dream_surface(variant, artifact[2]) + Vector3.UP * 0.052)

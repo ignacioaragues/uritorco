@@ -2,6 +2,7 @@ extends Node3D
 
 const Arrival = preload("res://llegada.gd")
 const Museum = preload("res://museo.gd")
+const Alien = preload("res://hallazgos_sueno.gd")
 const Trail = preload("res://travesia.gd")
 const South = preload("res://quebrada_sur.gd")
 const Creek = preload("res://cauce.gd")
@@ -20,7 +21,7 @@ var flashlight_out: = false
 var camp_read: = false
 var summit_mapped: = false
 var has_piece: = false
-var dream_piece: MeshInstance3D
+var dream_piece: Node3D
 var dream_world: Node3D
 var archive_read := false
 var trail_replies: Dictionary = {}
@@ -62,6 +63,7 @@ var scored_walks: Array = []
 var score = preload("res://banda_sonora.gd").new()
 var book_view = preload("res://libro.gd").new()
 var postcard_view = preload("res://postal.gd").new()
+var rain_strength := 0.0
 var rain_view: = ColorRect.new()
 var branch_found: = false
 var mapped_distance: = 0.0
@@ -111,6 +113,9 @@ var journal_pages: Array[Dictionary] = []
 var journal_view := Diary.new()
 var journal_page := 0
 var journal_collection := false
+var journal_dream := false
+var dream_note_seconds := 0.0
+var dream_note := ""
 var found_collectibles: Dictionary = {}
 var fox_seen: = false
 var hiker_met: = false
@@ -323,16 +328,12 @@ func _process(delta):
 	intro_controls_seconds = maxf(0.0, intro_controls_seconds - delta)
 	var day: = calendar_day()
 	valley.update_calendar(day)
-	valley.update_weather(day)
+	update_rain(day, delta)
 	valley.shade_ridges()
 	var in_refuge: bool = absf(player.position.x) < 3.45 and player.position.z > -0.35 and player.position.z < 5.9
 	valley.update_desk_radio(in_refuge and hands.pose == "radio")
 	valley.update_shelter_wall(day)
 	if mode == "walk": score_daily_walk(day)
-	var rain_visible: bool = stage >= 16 and stage <= 17 and mode in ["walk", "map", "sighting"] and (player.position.z < -0.5 or absf(player.position.x) > 3.4)
-	if rain_visible != rain_view.visible:
-		rain_view.visible = rain_visible
-		rain_view.material.set_shader_parameter("intensity", 0.62 if rain_visible else 0.0)
 	if mode == "sighting": update_sighting(delta)
 	if mode == "cave":
 		update_cave()
@@ -341,21 +342,33 @@ func _process(delta):
 		hint.text = "E · golpear la puerta" if target == "Puerta de Mara" else ("Seguí la huella que sale al este de la parada." if objective_seconds > 0.0 else "")
 	update_flashlight()
 	if mode == "dream":
+		dream_note_seconds = maxf(0.0, dream_note_seconds - delta)
 		hint.text = "????" if looking_at_dream_sky() else ""
 		match dream_variant():
 			1:
 				if looking_at_dream_sky(): hint.text = "???? · E"
 			2:
 				if has_piece:
-					hands.queue_redraw()
+					hands.set_piece_signal(0.22)
 					hint.text = "E · volver a tocar la pieza"
 				elif is_instance_valid(dream_piece):
 					dream_piece.rotate_y(delta * 0.42)
 					if near_dream_piece(): hint.text = "E · recoger la pieza"
 					elif hint.text.is_empty(): hint.text = "Una pieza brilla unos pasos más arriba."
 			3:
+				var bearing := arch_bearing() if has_piece else 0.0
+				hands.set_piece_signal(bearing)
 				if near_last_arch(): hint.text = "E · tocar el último arco"
-				elif hint.text.is_empty(): hint.text = "Seguí los arcos hacia la luz."
+				elif hint.text.is_empty():
+					if not has_piece: hint.text = "Seguí los arcos hacia la luz."
+					else: hint.text = "La pieza late más fuerte en esta dirección." if bearing > 0.6 else "Girás hasta que la pieza vuelva a latir."
+		var find := aimed_collectible()
+		if dream_note_seconds > 0.0:
+			hint.text = dream_note
+		elif Alien.FINDS.has(find):
+			hint.text = "E · " + str(Alien.FINDS[find][1])
+		elif hands.map_requested:
+			hint.text = "M · guardar la carta"
 	radio_hint.visible = mode in ["walk", "map"] and radio_available()
 	if radio_hint.visible:
 		radio_hint.text = "R   ·   Charlá con Mara" if not at_departure_stop() and not mission_radio_available() else "R   ·   Mara"
@@ -371,7 +384,7 @@ func _process(delta):
 			var look: Vector3 = -player.camera.global_basis.z
 			hands.set_bearing(atan2(look.x, -look.z))
 		hands.step(delta, velocity)
-		if mode == "map":
+		if mode == "map" or (mode == "dream" and hands.map_requested):
 			map.location = player.position
 			map.queue_redraw()
 		var daytime: bool = mode != "dream" and outdoors and float(valley.sky_mat.get_shader_parameter("nightfall")) < 0.5
@@ -454,6 +467,20 @@ func _process(delta):
 			hint.text = "E · trepar el saliente"
 		else:
 			hint.text = "Acercate al escalón" if target == "Subir al escalón" else ("E · " + target if target != "" else "")
+
+func update_rain(day: int, delta: float):
+	var front_active := stage in [16, 17]
+	if front_active and valley.weather_day != 36:
+		rain_strength = 0.77
+	var basin := smoothstep(10.0, 95.0, player.position.z)
+	var target_strength := lerpf(0.73, 0.91, basin) if front_active else 0.0
+	rain_strength = move_toward(rain_strength, target_strength, delta * (0.16 if front_active else 0.075))
+	valley.update_weather(day, rain_strength)
+	var outside: bool = player.position.z < -0.5 or absf(player.position.x) > 3.45 or player.position.z > 5.97
+	var under_stop: bool = absf(player.position.x - 0.32) < 1.82 and absf(player.position.z + 72.0) < 0.84
+	var shows_world: bool = mode in ["walk", "map", "sighting"] or radio_panel.visible
+	rain_view.visible = outside and not under_stop and shows_world and rain_strength > 0.025
+	if rain_view.visible: rain_view.material.set_shader_parameter("intensity", rain_strength)
 
 func record_filo_route():
 	var route = valley.route
@@ -551,8 +578,8 @@ func overlay(kind: String, caption: String, footer: Variant, prop: String = ""):
 func open_journal():
 	journal_collection = false
 	journal_page = 0
-	var current := objective()
-	if stage >= 2: current += "\n\nPoste del cauce · 12 de julio."
+	var current := "En este lugar el peso, la luz y las distancias cambian. Dejé los dibujos de lo que vi en Coleccionables." if journal_dream else objective()
+	if stage >= 2 and not journal_dream: current += "\n\nPoste del cauce · 12 de julio."
 	elif read_note: current += "\n\nRevisar la fecha del poste."
 	var keepsake := str(keepsakes.get("despedida", ""))
 	if not keepsake.is_empty(): current += "\n\n" + keepsake
@@ -610,12 +637,21 @@ func add_field_notes():
 		leaf += ("" if leaf.is_empty() else "\n\n") + note
 	if not leaf.is_empty(): diary_entry("Cuaderno · Apuntes sueltos", leaf)
 
+func aimed_collectible() -> String:
+	var hit = player.ray.get_collider()
+	return str(hit.get_meta("find_id", "")) if hit else ""
+
 func record_collectible(id: String):
-	var entry: Array = Exploration.FINDS[id]
+	var in_dream := Alien.FINDS.has(id)
+	var entry: Array = Alien.FINDS[id] if in_dream else Exploration.FINDS[id]
 	if not found_collectibles.has(id):
 		found_collectibles[id] = calendar_day()
-		save_game(true, "walk")
-	overlay("message", entry[1] + "\n\n" + entry[3], "Anotado en Coleccionables   /   Espacio · guardar el cuaderno")
+		save_game(true, "dream" if in_dream else "walk")
+	if in_dream:
+		dream_note_seconds = 4.0
+		dream_note = str(entry[1]) + " · Anotado en Coleccionables"
+	else:
+		overlay("message", entry[1] + "\n\n" + entry[3], "Anotado en Coleccionables   /   Espacio · guardar el cuaderno")
 
 func toggle_journal_section():
 	if journal_collection:
@@ -623,14 +659,17 @@ func toggle_journal_section():
 		return
 	journal_collection = true
 	journal_page = 0
-	var introduction := "%d de %d anotados.\n\nCosas que encontré al apartarme de la huella." % [found_collectibles.size(), Exploration.FINDS.size()]
+	var introduction := "%d de %d anotados.\n\nPiezas que vi en el cerro y en los sueños." % [found_collectibles.size(), Exploration.FINDS.size() + Alien.FINDS.size()]
 	if not found_collectibles.is_empty():
 		introduction += " Pasá la hoja para ver los dibujos y las notas."
 	journal_pages = [{"title": "Coleccionables", "text": introduction}]
-	for id in Exploration.FINDS:
-		if not found_collectibles.has(id): continue
-		var entry: Array = Exploration.FINDS[id]
-		diary_entry(entry[1], "Día %d · %s" % [found_collectibles[id], entry[3]], entry[0])
+	for listings in [Exploration.FINDS, Alien.FINDS]:
+		var dream: bool = listings == Alien.FINDS
+		for id in listings:
+			if not found_collectibles.has(id): continue
+			var entry: Array = listings[id]
+			var place := "Sueño %d" % entry[4] if dream else "Día %d" % found_collectibles[id]
+			journal_pages.append({"title": entry[1], "text": place + " · " + entry[3], "drawing": entry[0], "dream": dream})
 	show_journal_page()
 
 func show_journal_page():
@@ -710,7 +749,7 @@ func radio_exchange():
 		else:
 			trail_topic = chat
 			radio.play()
-			overlay("departure_radio", "Mara · Estoy acá. ¿Cómo va esa última mañana?", ["Charlar un rato.", "Despedirte antes del colectivo.", "Guardar la radio."], "radio")
+			overlay("departure_radio", "Mara · Estoy acá. ¿Cómo va esa última mañana?", ["Charlar un rato.", "Despedirte antes del ómnibus.", "Guardar la radio."], "radio")
 		return
 	if not chat.is_empty():
 		start_trail_chat(chat)
@@ -786,7 +825,7 @@ func radio_exchange():
 		6, 7: overlay("message", "El parte es al anochecer. " + objective(), "Espacio · volver")
 
 func farewell_mara():
-	var reply := "¿Ya tenés la llave? El colectivo pasa en un rato."
+	var reply := "¿Ya tenés la llave? El ómnibus pasa en un rato."
 	if archive_read:
 		reply = "¿Viste el dibujo? Lo encontraron con los papeles del poste. No sé de quién era."
 	var close_enough := can_visit_mara()
@@ -812,13 +851,23 @@ func farewell_mara():
 		memory = "Si conseguís el asiento de la ventanilla, fijate en la última curva. A esta hora le da el sol a la ladera."
 	var departure := "Dejame la llave en el buzón cuando pases. Buen viaje."
 	if close_enough:
-		departure = "Si te queda tiempo antes del colectivo, ya sabés cuál es mi puerta."
+		departure = "Si te queda tiempo antes del ómnibus, ya sabés cuál es mi puerta."
 		if trail_replies.has("bajada"):
 			departure = "Mejor traeme la llave en persona, si te da el tiempo. Golpeá. Todavía me sobran dos tornillos." if trail_replies["bajada"] == 0 else "El día que bajaste de la cumbre hice durar dos platos toda la bajada. Hoy, si querés pasar, te guardo una taza."
 	var lines := [reply, farewell]
 	if not memory.is_empty(): lines.append(memory)
 	lines.append_array([departure, "Bueno. Gracias por contestar."])
 	conversation(lines, "last_call")
+
+func show_map(variant: int = 0):
+	map.dream_sheet = variant
+	map.found = found_collectibles
+	map.location = player.position
+	map.objective_mark = map_destination() if variant == 0 and paused_from == "walk" else null
+	hands.show_map(true)
+	map.queue_redraw()
+	map.show()
+	update_flashlight()
 
 func update_flashlight():
 	var active: bool = flashlight_out and (mode in ["walk", "approach", "map", "cave", "dream", "sighting"] or hands.requested_pose == "radio") and mode != "menu"
@@ -830,7 +879,10 @@ func _unhandled_key_input(event):
 	var advance = key in [KEY_SPACE, KEY_ENTER]
 	if mode == "journal":
 		if advance or key in [KEY_ESCAPE, KEY_TAB]:
-			walk()
+			if journal_dream:
+				journal_dream = false
+				explore_dream()
+			else: walk()
 		elif key == KEY_C:
 			toggle_journal_section()
 		elif key in [KEY_LEFT, KEY_RIGHT]:
@@ -894,18 +946,21 @@ func _unhandled_key_input(event):
 		if mode == "approach" and page == 3 and compass_out: arrival_action = true
 		hands.hold("compass" if compass_out else "")
 		return
+	if mode == "dream" and key == KEY_TAB:
+		journal_dream = true
+		open_journal()
+		return
+	if mode == "dream" and key == KEY_M:
+		if hands.map_requested: hands.show_map(false)
+		else: show_map(dream_variant())
+		return
 	if key == KEY_M and mode in ["approach", "walk"]:
 		if mode == "approach" and page == 4: arrival_action = true
 		paused_from = mode
 		mode = "map"
 		cross.hide()
 		hint.text = "M · guardar el mapa"
-		hands.show_map(true)
-		map.location = player.position
-		map.objective_mark = map_destination() if paused_from == "walk" else null
-		map.queue_redraw()
-		map.show()
-		update_flashlight()
+		show_map()
 		return
 	if mode == "map" and key in [KEY_M, KEY_ESCAPE]:
 		hands.show_map(false)
@@ -945,6 +1000,10 @@ func _unhandled_key_input(event):
 	elif mode == "dream" and key == KEY_SPACE and player.is_on_floor():
 		player.velocity.y = 4.6
 	elif mode == "dream" and key == KEY_E:
+		var find := aimed_collectible()
+		if Alien.FINDS.has(find):
+			record_collectible(find)
+			return
 		match dream_variant():
 			1:
 				if looking_at_dream_sky(): finish_dream()
@@ -976,9 +1035,9 @@ func _unhandled_key_input(event):
 			KEY_TAB: open_journal()
 			KEY_R: transmit()
 			KEY_E:
-				var hit = player.ray.get_collider()
-				if stage >= 0 and hit and hit.has_meta("find_id"):
-					record_collectible(str(hit.get_meta("find_id")))
+				var find := aimed_collectible()
+				if stage >= 0 and Exploration.FINDS.has(find):
+					record_collectible(find)
 					return
 				if at_summit_finish():
 					start_day36()
@@ -1119,7 +1178,7 @@ func _unhandled_key_input(event):
 					"Banco": overlay("message", "La madera está lisa donde se sienta la gente.", "Espacio · volver")
 					"Parada":
 						if at_departure_stop(): transmit()
-						else: overlay("message", "El poste marca la curva donde para el colectivo.", "Espacio · volver")
+						else: overlay("message", "El cartel dice «Ómnibus · Capilla del Monte». Desde el banco se ve la curva.", "Espacio · volver")
 					"Puesto de abajo":
 						overlay("message", "La huella llega hasta el puesto del otro lado de la curva.", "Espacio · volver")
 					"Antena del abra":
@@ -1404,32 +1463,42 @@ func ensure_dream_world():
 func position_on_planet():
 	ensure_dream_world()
 	player.intro_center = LastNight.PLANET
+	player.dream_bounds = LastNight.DREAM_BOUNDS
 	player.intro_heading = 0.0
 	player.position = LastNight.dream_point(dream_variant(), 0.0) + Vector3.UP * 0.16
 	player.rotation.y = 0.0
 
 func explore_dream():
 	ensure_dream_world()
-	if player.position.distance_to(LastNight.PLANET) > 100.0:
+	var local: Vector3 = player.position - LastNight.PLANET
+	if absf(local.y) > 70.0 or not LastNight.DREAM_BOUNDS.grow(2.0).has_point(Vector2(local.x, local.z)):
 		position_on_planet()
 	player.intro_center = LastNight.PLANET
+	player.dream_bounds = LastNight.DREAM_BOUNDS
 	player.intro_heading = 0.0
 	player.camera.far = NIGHT_SCENE_VIEW
+	hands.show_map(false)
 	walk()
 	if dream_variant() == 2 and not has_piece and not is_instance_valid(dream_piece):
 		var foot := LastNight.dream_point(2, 21.0)
-		dream_piece = valley.box(foot + Vector3.UP * 0.8, Vector3(0.27, 0.27, 0.27), "9eaaad")
-		dream_piece.rotation = Vector3(0.45, 0.7, 0.3)
-		(dream_piece.material_override as StandardMaterial3D).shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
-		dream_piece.reparent(dream_world)
+		dream_piece = Alien.tesseract(dream_world)
+		dream_piece.position = foot + Vector3.UP * 0.69
+		dream_piece.rotation = Vector3(0.29, 0.70, 0.21)
 	mode = "dream"
-	if has_piece and dream_variant() == 2: hands.hold("piece")
+	if has_piece and dream_variant() in [2, 3]: hands.hold("piece")
+
+func arch_bearing() -> float:
+	var offset: Vector3 = LastNight.final_arch() - player.position
+	var look: Vector3 = -player.camera.global_basis.z
+	var direction := Vector2(offset.x, offset.z).normalized()
+	var forward := Vector2(look.x, look.z).normalized()
+	return smoothstep(0.22, 0.99, forward.dot(direction))
 
 func looking_at_dream_sky() -> bool:
 	return -player.camera.global_basis.z.y > 0.36
 
 func near_dream_piece() -> bool:
-	return is_instance_valid(dream_piece) and player.position.distance_to(dream_piece.position) < 3.0
+	return is_instance_valid(dream_piece) and player.position.distance_to(dream_piece.global_position) < 3.0
 
 func near_last_arch() -> bool:
 	return player.position.distance_to(LastNight.final_arch()) < 3.2
@@ -1685,11 +1754,11 @@ func start_final_dream(blinded: bool):
 	begin_dream(true, blinded)
 
 func show_departure_choice():
-	var caption := "La radio queda en silencio. Desde la parada ves el colectivo doblar en la curva."
+	var caption := "La radio queda en silencio. Desde la parada ves el ómnibus doblar en la curva."
 	if can_visit_mara():
-		overlay("departure_choice", caption + " Un poco antes sale el sendero al puesto de abajo.", ["Subís al colectivo.", "Tomás el sendero y vas a golpear la puerta de Mara."])
+		overlay("departure_choice", caption + " Un poco antes sale el sendero al puesto de abajo.", ["Subís al ómnibus.", "Tomás el sendero y vas a golpear la puerta de Mara."])
 	else:
-		overlay("departure_choice", caption, "Espacio · subir al colectivo   /   Esc · volver")
+		overlay("departure_choice", caption, "Espacio · subir al ómnibus   /   Esc · volver")
 
 func approach_mara_door():
 	valley.morning()
@@ -1734,7 +1803,7 @@ func hear_last_voice():
 func show_ending():
 	var memory_of_book := str(keepsakes.get("libro", "En la guarda sigue el dibujo que hiciste con tu papá."))
 	ending_paragraphs = [
-		"Subís al colectivo. Desde el asiento ves la curva que baja al puesto. Antes de que desaparezca, abrís Observar el Cielo. " + memory_of_book,
+		"Subís al ómnibus. Desde el asiento ves la curva que baja al puesto. Antes de que desaparezca, abrís Observar el Cielo. " + memory_of_book,
 		"La radio va apagada en tu mochila. Justo al doblar oís dos golpes secos."
 	]
 	if ending_at_door:
@@ -2057,6 +2126,7 @@ func debug_scene(code: String):
 	walk()
 	if code.begins_with("dream"):
 		dream_count = int({"dream7": 0, "dream25": 1, "dream36": 2}[code])
+		has_piece = code == "dream36"
 		begin_dream()
 	elif code == "sighting":
 		player.position = valley.route.at(valley.route.trail(228), 228) + Vector3.UP * 0.12

@@ -2,13 +2,25 @@ shader_type canvas_item;
 
 uniform float intensity : hint_range(0.0, 1.0) = 0.0;
 
+float rain_hash(vec2 id) {
+	return fract(sin(dot(id, vec2(42.3, 97.1))) * 4265.4);
+}
+
+float droplets(vec2 uv, vec2 grid, float lean, float drift, float coverage, float width) {
+	vec2 cell = vec2(uv.x + uv.y * lean, uv.y) * grid;
+	float column = floor(cell.x);
+	float seed = rain_hash(vec2(column, drift));
+	cell.y += TIME * drift * (0.74 + 0.66 * seed) + seed * 53.0;
+	float chance = rain_hash(floor(cell));
+	vec2 sub = fract(cell);
+	float streak = 1.0 - smoothstep(width * 0.42, width, abs(sub.x - (0.43 + seed * 0.14)));
+	float tail = smoothstep(0.12, 0.58, sub.y) * (1.0 - smoothstep(0.63, 0.88, sub.y));
+	return streak * tail * step(1.0 - coverage, chance);
+}
+
 void fragment() {
-	vec2 position = UV + vec2(UV.y * 0.35, 0.0);
-	vec2 cells = position * vec2(170.0, 18.0);
-	float id = floor(cells.x);
-	cells.y += TIME * (7.0 + fract(sin(id * 13.14) * 643.7) * 6.0);
-	float random = fract(sin(dot(floor(cells), vec2(42.3, 97.1))) * 4265.4);
-	float drop = (1.0 - smoothstep(0.035, 0.15, abs(fract(cells.x) - 0.5)))
-		* smoothstep(0.25, 0.46, fract(cells.y)) * (1.0 - smoothstep(0.5, 0.84, fract(cells.y)));
-	COLOR = vec4(0.71, 0.78, 0.81, drop * step(0.87 - intensity * 0.28, random) * intensity * 0.55);
+	float near_rain = droplets(UV, vec2(112.0, 21.0), 0.22, 13.4, intensity * 0.145, 0.076);
+	float far_rain = droplets(UV + vec2(0.15, 0.0), vec2(197.0, 32.0), 0.17, 17.0, intensity * 0.20, 0.098);
+	float alpha = (near_rain * 0.32 + far_rain * 0.19) * intensity;
+	COLOR = vec4(0.73, 0.78, 0.82, alpha);
 }

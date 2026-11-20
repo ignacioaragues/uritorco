@@ -23,6 +23,7 @@ var footer := Label.new()
 var sheet := Control.new()
 var drawings: Texture2D
 var finds: Texture2D
+var dream_finds: Texture2D
 var section := Button.new()
 
 func _ready():
@@ -41,6 +42,7 @@ func _ready():
 	drawing.size = Vector2(302, 318)
 	drawings = load(DRAWINGS_PATH)
 	finds = load("res://diario_hallazgos.webp")
+	dream_finds = load("res://diario_suenos.webp")
 	var pen := SystemFont.new()
 	pen.font_names = PackedStringArray(["Liberation Serif", "DejaVu Serif"])
 	pen.font_italic = true
@@ -77,14 +79,16 @@ func fit_page():
 
 func display(entry: Dictionary, index: int, total: int, collection: bool):
 	var motif: int = entry.get("drawing", -1)
-	var atlas := finds if collection else drawings
+	var dream := bool(entry.get("dream", false))
+	var atlas := (dream_finds if dream else finds) if collection else drawings
 	var illustrated := motif >= 0 and is_instance_valid(atlas)
 	drawing.visible = illustrated
 	if illustrated:
-		var tile := atlas.get_size() / Vector2(4, 2)
+		var columns := 3 if dream else 4
+		var tile := atlas.get_size() / Vector2(columns, 2)
 		var region := AtlasTexture.new()
 		region.atlas = atlas
-		region.region = Rect2(Vector2(motif % 4, floorf(motif / 4.0)) * tile, tile)
+		region.region = Rect2(Vector2(motif % columns, motif / columns) * tile, tile)
 		region.filter_clip = true
 		drawing.texture = region
 	body.size = Vector2(382 if illustrated else 686, 0)

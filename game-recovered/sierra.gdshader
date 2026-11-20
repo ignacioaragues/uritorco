@@ -22,6 +22,7 @@ uniform vec3 sun_dir;
 uniform float other_world = 0.0;
 uniform float cloud_cover = 0.0;
 uniform float cloud_pattern = 0.0;
+uniform float storm_amount = 0.0;
 
 float cloud_hash(vec2 p) {
 	vec3 q = fract(vec3(p.xyx) * 0.1031);
@@ -88,5 +89,16 @@ void sky(){
 	daytime = mix(daytime, cloud_rim, silk * low_haze);
 	daytime = mix(daytime, mix(cloud_rim, cloud_core, body), mask * low_haze * 0.96);
 	earth = mix(earth, dark * 0.94 + cloud_core * 0.014, mask * low_haze * (0.20 + 0.57 * cloud_cover));
+	if (storm_amount > 0.0) {
+		vec2 front_uv = EYEDIR.xz * vec2(2.5, 3.65) / (0.53 + height) + shift;
+		float front = cloud_texture(front_uv);
+		float fine = cloud_texture(front_uv * 1.84 + 11.3);
+		float underside = smoothstep(0.21, 0.85, front * 0.81 + fine * 0.19);
+		vec3 low_cloud = mix(vec3(0.32, 0.39, 0.44), vec3(0.63, 0.68, 0.69), underside);
+		low_cloud = mix(vec3(0.52, 0.58, 0.61), low_cloud, smoothstep(0.01, 0.37, height));
+		float overcast = smoothstep(0.10, 0.70, storm_amount);
+		daytime = mix(daytime, low_cloud, overcast);
+		earth = mix(earth, dark * (0.79 + 0.31 * underside), overcast * 0.97);
+	}
 	COLOR=mix(daytime,mix(dark,mix(earth,alien,other_world),smoothstep(0.0,0.065,height)),nightfall);
 }

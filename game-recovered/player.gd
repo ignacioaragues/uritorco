@@ -13,6 +13,7 @@ var capsule := CapsuleShape3D.new()
 var intro_center: = Vector3.ZERO
 var intro_heading: = 0.0
 var low_gravity: = false
+var dream_bounds := Rect2(-32, -55, 64, 67)
 var walking: = false
 var looking_only := false
 var climb_points: Array[Vector3] = []
@@ -168,8 +169,9 @@ func _physics_process(delta):
 	move_and_slide()
 	if intro_center != Vector3.ZERO:
 		var local: = (position - intro_center).rotated(Vector3.UP, - intro_heading)
-		local.x = clampf(local.x, -32.0, 32.0)
-		local.z = clampf(local.z, -55.0, 12.0)
+		var bounds := dream_bounds if low_gravity else Rect2(-32, -55, 64, 67)
+		local.x = clampf(local.x, bounds.position.x, bounds.end.x)
+		local.z = clampf(local.z, bounds.position.y, bounds.end.y)
 		position = intro_center + local.rotated(Vector3.UP, intro_heading)
 		return
 	var lateral: = lerpf(46, 354, smoothstep(0, 55, -76 - position.z))

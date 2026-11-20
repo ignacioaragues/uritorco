@@ -1,5 +1,6 @@
 extends Node3D
 
+const Signage = preload("res://carteleria.gd")
 
 const ORIGIN_Z: = -76.0
 const WEST_START_Z := -22.0
@@ -165,116 +166,7 @@ func build_laja_rope():
 	box(self, Vector3(0.16, 0.14, 0.17), line[-1], "827665")
 
 func signpost(pos: Vector3, tag: String, caption: String, facing: float = 0.0, painted: bool = false):
-	if painted:
-		painted_signpost(pos, tag, caption, facing)
-		return
-	var pole: = box(self, Vector3(0.17, 1.5, 0.14), pos + Vector3.UP * 0.75, "6c5443")
-	pole.create_trimesh_collision()
-	pole.get_child(0).set_meta("item", tag)
-	var board: = box(self, Vector3(1.35, 0.43, 0.1), pos + Vector3.UP * 1.25, "665847")
-	board.rotation.y = facing
-	board.create_trimesh_collision()
-	board.get_child(0).set_meta("item", tag)
-	var text: = Label3D.new()
-	board.add_child(text)
-	text.position.z = 0.114
-	text.text = caption
-	text.font_size = 32
-	text.pixel_size = 0.002
-	text.modulate = Color("#e6d8b5")
-	text.double_sided = true
-
-func painted_signpost(pos: Vector3, tag: String, caption: String, facing: float):
-	var stake := MeshInstance3D.new()
-	var shaft := CylinderMesh.new()
-	shaft.height = 1.58
-	shaft.top_radius = 0.075
-	shaft.bottom_radius = 0.096
-	shaft.radial_segments = 6
-	stake.mesh = shaft
-	stake.material_override = sign_wood(Color("#776452"), false)
-	add_child(stake)
-	stake.position = pos + Vector3.UP * 0.77
-	stake.rotation.z = 0.035 * sin(pos.x)
-	stake.create_trimesh_collision()
-	stake.get_child(0).set_meta("item", tag)
-
-	var board := MeshInstance3D.new()
-	board.mesh = sign_board()
-	board.material_override = sign_wood(Color("#75604b"), true)
-	add_child(board)
-	var normal := Vector3(sin(facing), 0.0, cos(facing))
-	board.position = pos + Vector3.UP * 1.27 + normal * 0.10
-	board.rotation = Vector3(0.0, facing, 0.016 * sin(pos.z))
-	board.create_trimesh_collision()
-	board.get_child(0).set_meta("item", tag)
-
-	var rivet := CylinderMesh.new()
-	rivet.height = 0.018
-	rivet.top_radius = 0.019
-	rivet.bottom_radius = 0.023
-	rivet.radial_segments = 6
-	var iron := StandardMaterial3D.new()
-	iron.albedo_color = Color("#4c4240")
-	iron.roughness = 0.82
-	for x in [-0.72, 0.72]:
-		var peg := MeshInstance3D.new()
-		peg.mesh = rivet
-		peg.material_override = iron
-		board.add_child(peg)
-		peg.position = Vector3(x, 0.0, 0.064)
-		peg.rotation.x = PI * 0.5
-
-	var text := Label3D.new()
-	board.add_child(text)
-	text.position.z = 0.075
-	text.text = caption
-	var lettering := FontVariation.new()
-	lettering.base_font = ThemeDB.fallback_font
-	lettering.variation_embolden = 0.48
-	text.font = lettering
-	text.font_size = 44
-	text.pixel_size = 0.0029
-	text.outline_size = 3
-	text.outline_modulate = Color("#493e31")
-	text.modulate = Color("#f0dbb0")
-
-func sign_wood(tint: Color, horizontal: bool) -> ShaderMaterial:
-	var material := ShaderMaterial.new()
-	material.shader = preload("res://grain.gdshader")
-	material.set_shader_parameter("tint", tint)
-	material.set_shader_parameter("across", horizontal)
-	material.set_shader_parameter("grain_strength", 0.17)
-	material.set_shader_parameter("fiber_scale", 94.0)
-	return material
-
-func sign_board() -> ArrayMesh:
-	var outline := PackedVector2Array([
-		Vector2(-0.76, -0.21), Vector2(-0.84, -0.16), Vector2(-0.82, 0.14), Vector2(-0.76, 0.21),
-		Vector2(0.75, 0.22), Vector2(0.84, 0.14), Vector2(0.82, -0.14), Vector2(0.74, -0.20)
-	])
-	var profile := [Vector2(0.94, -0.06), Vector2(1.0, -0.035), Vector2(1.0, 0.035), Vector2(0.95, 0.06)]
-	var corners := PackedVector3Array()
-	for ring in profile:
-		for point in outline:
-			corners.append(Vector3(point.x * ring.x, point.y * ring.x, ring.y))
-	var surface := SurfaceTool.new()
-	surface.begin(Mesh.PRIMITIVE_TRIANGLES)
-	var count := outline.size()
-	var front := count * (profile.size() - 1)
-	for i in count:
-		var next := (i + 1) % count
-		for vertex in [Vector3(0, 0, 0.06), corners[front + i], corners[front + next],
-				Vector3(0, 0, -0.06), corners[next], corners[i]]:
-			surface.add_vertex(vertex)
-		for ring in range(profile.size() - 1):
-			var a := ring * count
-			var b := a + count
-			for index in [a + i, a + next, b + i, b + i, a + next, b + next]:
-				surface.set_smooth_group(-1)
-				surface.add_vertex(corners[index])
-	surface.generate_normals()
-	return surface.commit()
+	Signage.trail_post(self, pos, tag, caption, facing, painted)
 
 func box(parent: Node3D, size_m: Vector3, pos: Vector3, color: String) -> MeshInstance3D:
 	var mesh: = BoxMesh.new()
