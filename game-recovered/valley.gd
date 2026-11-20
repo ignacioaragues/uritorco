@@ -282,7 +282,14 @@ func cave_darkness():
 	if lighting and lighting.is_valid(): lighting.kill()
 	sky_mat.set_shader_parameter("nightfall", 1.0)
 	sun.light_energy = 0.0
+	env.fog_enabled = false
 	env.ambient_light_energy = 0.018
+
+func cave_moonlight():
+	env.fog_enabled = true
+	var tween := transition()
+	tween.tween_property(env, "ambient_light_color", Color("#aab6d1"), 1.3)
+	tween.tween_property(env, "ambient_light_energy", 0.14, 1.3)
 
 func night(duration: float = 6.0):
 	sun.shadow_enabled = false
@@ -388,6 +395,7 @@ func unpack_calendar():
 
 func morning():
 	sun.shadow_enabled = true
+	env.fog_enabled = true
 	if lighting and lighting.is_valid():
 		lighting.kill()
 	sky_mat.set_shader_parameter("dusk", 0.0)

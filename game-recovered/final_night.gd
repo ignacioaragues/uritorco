@@ -6,11 +6,16 @@ const PLANET := Vector3(0, 88, 2450)
 const GROUND_COLORS = [Color("544663"), Color("354b4c"), Color("615062")]
 const ROCK_COLORS = ["746182", "698283", "7a6479"]
 const ENTRY: = Vector3(0, 0.08, -5)
+const LIP := Vector3(0, 0.08, -9.1)
 const CHECKPOINT: = Vector3(0, 0.78, -23)
+const RETURN_START := Vector3(0, 0, -48)
+const FORK_Z := -60.0
+const CLEARING := Vector2(14.0, -79.0)
+const RETURN := Vector2(-8.5, -88.0)
 
 static func build_cave(v):
 	v.box(CAVE + Vector3(0, -0.45, -5), Vector3(8, 0.9, 12), "474239", true)
-	v.box(CAVE + Vector3(0, -2.9, -16), Vector3(9, 0.5, 15), "292725", true)
+	v.box(CAVE + Vector3(0, -3.25, -18.8), Vector3(9.1, 1.3, 38.5), "292725", true)
 	for ledge in [[-0.65, 0.13, -13.1], [0.65, 0.38, -16.6], [-0.45, 0.62, -20.1]]:
 		v.box(CAVE + Vector3(ledge[0], ledge[1] - 0.45, ledge[2]), Vector3(2.5, 0.9, 2.35), "5c5349", true)
 	v.box(CAVE + Vector3(0, 0.25, -29), Vector3(8, 0.9, 15.5), "47443d", true)
@@ -38,6 +43,65 @@ static func build_cave(v):
 	var lamp = v.box(CAVE + Vector3(-2.48, 1.88, -28.35), Vector3(0.085, 0.042, 0.035), "b65734")
 	lamp.material_override.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
 	v.box(CAVE + Vector3(1.05, 1.43, -36.1), Vector3(0.15, 1.44, 0.15), "a19272", true, "Salida de la cueva")
+	build_return(v)
+
+static func trail_x(z: float, clearing: bool) -> float:
+	if clearing:
+		return CLEARING.x * smoothstep(FORK_Z, CLEARING.y, z)
+	return RETURN.x * smoothstep(FORK_Z, RETURN.y, z) + 1.8 * sin(PI * smoothstep(FORK_Z, RETURN.y, z))
+
+static func return_height(x: float, z: float) -> float:
+	var relief := 0.5 * sin(z * 0.19 + x * 0.15) + 0.46 * cos(x * 0.27 - z * 0.11)
+	var bank := 3.2 * smoothstep(13.0, 33.0, absf(x))
+	return 0.7 + smoothstep(-50.48, -57.0, z) * (relief + bank - 0.065 * (-z - 57.0))
+
+static func build_return(v):
+	const COLUMNS := 43
+	const ROWS := 34
+	var surface := SurfaceTool.new()
+	surface.begin(Mesh.PRIMITIVE_TRIANGLES)
+	for row in ROWS:
+		var z := -50.48 - row * 2.0
+		for column in COLUMNS:
+			var x := -42.0 + column * 2.0
+			var distance := absf(x - trail_x(z, false))
+			if z < FORK_Z:
+				var clearing_distance := absf(x - trail_x(z, true))
+				distance = minf(distance, clearing_distance + 4.0 * smoothstep(-81.0, -86.0, z))
+			var trail := 1.0 - smoothstep(1.45, 3.6, distance)
+			var grass := Color("#3f4a38").lightened(0.09 * sin(x * 0.61 + z * 0.48))
+			surface.set_color(grass.lerp(Color("#827757"), trail))
+			surface.add_vertex(Vector3(x, return_height(x, z), z))
+	for row in ROWS - 1:
+		for column in COLUMNS - 1:
+			var a := row * COLUMNS + column
+			for index in [a, a + COLUMNS, a + 1, a + 1, a + COLUMNS, a + COLUMNS + 1]:
+				surface.add_index(index)
+	surface.generate_normals()
+	var ground := MeshInstance3D.new()
+	ground.mesh = surface.commit()
+	var material := StandardMaterial3D.new()
+	material.vertex_color_use_as_albedo = true
+	ground.material_override = material
+	v.add_child(ground)
+	ground.position = CAVE
+	ground.create_trimesh_collision()
+	var rng := RandomNumberGenerator.new()
+	rng.seed = 441
+	for i in 120:
+		var x := rng.randf_range(-40.0, 40.0)
+		var z := rng.randf_range(-116.0, -51.0)
+		if absf(x - trail_x(z, false)) < 3.7 or absf(x - trail_x(z, true)) < 3.8: continue
+		if Vector2(x, z).distance_to(CLEARING) < 7.4: continue
+		var foot := CAVE + Vector3(x, return_height(x, z), z)
+		if i % 3 == 0:
+			v.box(foot + Vector3.UP * 1.3, Vector3(0.23, 2.75, 0.23), "4d4335")
+			v.stone(foot + Vector3.UP * 2.95, Vector3(3.2, 2.4, 3.8), "424b39")
+		else:
+			v.stone(foot + Vector3.DOWN * 0.05, Vector3(2.4, rng.randf_range(0.55, 1.7), 1.8), "585849", true)
+	var marker := CAVE + Vector3(RETURN.x + 1.0, return_height(RETURN.x + 1.0, RETURN.y), RETURN.y)
+	for level in 4:
+		v.stone(marker + Vector3.UP * (0.16 + level * 0.2), Vector3(0.9 - level * 0.15, 0.28, 0.66 - level * 0.11), "98907c", true)
 
 static func build_door(v):
 	for side in [-1, 1]:
