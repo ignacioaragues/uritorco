@@ -7,11 +7,12 @@ const SkyGuide = preload("res://constelacion.gd")
 const LastNight = preload("res://final_night.gd")
 const Saves = preload("res://partidas.gd")
 const Mara = preload("res://charlas_mara.gd")
+const Diary = preload("res://diario.gd")
 const SUMMIT_NIGHT_SECONDS := 40.0
 const SIGHTING_FOCUS_SECONDS := 0.4
 const NIGHT_SCENE_VIEW := 200.0
 enum Sighting { ABRA, QUARRY, CROSSING, SHELTER, CAVE }
-const STATE = ["page", "stage", "keepsakes", "bedtime", "field_note", "crossing_note", "fox_seen", "hiker_met", "route_reported", "observing", "pending_return", "heard", "read_note", "creek_note", "bed_pose", "bed_pitch", "gate_jumped", "map_read", "awaiting_call", "dream_count", "branch_found", "mapped_distance", "has_piece", "summit_mapped", "camp_read", "arrival_action", "second_sighting", "book_light_notes", "day7_dusk", "archive_read", "trail_replies", "crossing_response", "summit_echo_response", "night_investigation", "ending_at_door", "sky_memories", "compass_lost", "last_voice_reply", "scored_walks"]
+const STATE = ["page", "stage", "keepsakes", "bedtime", "field_note", "crossing_note", "filo_report_reply", "quarry_reply", "fox_seen", "hiker_met", "route_reported", "observing", "pending_return", "heard", "read_note", "creek_note", "bed_pose", "bed_pitch", "gate_jumped", "map_read", "awaiting_call", "dream_count", "branch_found", "mapped_distance", "has_piece", "summit_mapped", "camp_read", "arrival_action", "second_sighting", "book_light_notes", "day7_dusk", "archive_read", "trail_replies", "crossing_response", "summit_echo_response", "night_investigation", "ending_at_door", "sky_memories", "compass_lost", "last_voice_reply", "scored_walks"]
 var flashlight_out: = false
 var camp_read: = false
 var summit_mapped: = false
@@ -99,7 +100,12 @@ var debug_run: = false
 var arrival_action: = false
 var bedtime: = false
 var field_note: = ""
-var crossing_note: = ""
+var crossing_note := ""
+var filo_report_reply := -1
+var quarry_reply := -1
+var journal_pages: Array[Dictionary] = []
+var journal_view := Diary.new()
+var journal_page := 0
 var fox_seen: = false
 var hiker_met: = false
 var route_reported: = false
@@ -190,6 +196,7 @@ func _ready():
 	Arrival.build_fragments(valley)
 	ui.add_child(book_view)
 	ui.add_child(postcard_view)
+	ui.add_child(journal_view)
 	ui.add_child(menu)
 	menu.settings_changed.connect( func(volume, sensitivity):
 		AudioServer.set_bus_volume_db(0, linear_to_db(volume / 100.0))
@@ -342,6 +349,8 @@ func _process(delta):
 	radio_hint.visible = mode in ["walk", "map"] and radio_available()
 	if radio_hint.visible:
 		radio_hint.text = "R   ·   Charlá con Mara" if stage != 19 and not mission_radio_available() else "R   ·   Mara"
+	if mode in ["walk", "map"] and stage == 8 and not awaiting_call and crossing_note.is_empty():
+		record_filo_route()
 	if mode in ["walk", "map"] and stage >= 10 and not branch_found:
 		if player.position.distance_to(valley.route.at(valley.route.trail(300), 300)) < 22:
 			branch_found = true
@@ -401,8 +410,6 @@ func _process(delta):
 			hint.text = "E · interactuar al mirar la puerta"
 			return
 
-		if not awaiting_call and stage == 8 and crossing_note.is_empty() and player.position.z < -247 and player.position.z > -268:
-			crossing_note = "Subiste por la vaguada." if player.position.x > valley.route.trail(170) + 16 else "Subiste por la laja."
 		if stage == -1 and player.position.z > 0 and abs(player.position.x) < 3.4 and player.position.z < 5.9:
 			stage = 0
 			music.close()
@@ -430,6 +437,16 @@ func _process(delta):
 		else:
 			hint.text = "Acercate al escalón" if target == "Subir al escalón" else ("E · " + target if target != "" else "")
 
+func record_filo_route():
+	var route = valley.route
+	var distance: float = route.ORIGIN_Z - player.position.z
+	if distance >= 159.0 and distance <= 186.0 and absf(player.position.x - route.detour(distance)) < 6.0:
+		crossing_note = "La vaguada rodea la laja y vuelve a la huella del filo."
+	elif distance > 170.75 and distance < 174.5:
+		var landing: Vector3 = route.surface_point(route.trail(170) - 0.64, 171.02)
+		if player.position.distance_to(landing) < 4.0:
+			crossing_note = "En la laja, el escalón de piedra se puede salvar con la cuerda."
+
 func intro_objective() -> String:
 	if page == 0:
 		return "Seguí el camino de tierra al costado de la parada." if arrival_action else "Acercate a la parada y recogé la mochila."
@@ -456,7 +473,13 @@ func objective() -> String:
 	if not player.climb_points.is_empty(): return "Buscás apoyo en la piedra."
 	if stage == 0: return "Primera noche · Acercate a la cama." if heard else "R · Contestale a Mara."
 	if stage == 5 and not bedtime: return "R · Pasale a Mara la lectura del cauce."
+	if stage == 9 and route_reported and player.position.z < -14.0:
+		var distance: float = valley.route.ORIGIN_Z - player.position.z
+		if distance > Museum.DISTANCE: return "Desandá la huella del filo hasta pasar el museo."
+		if distance >= valley.route.LAJA_FORK: return "Bajá por la cuerda o rodeá la laja por la vaguada."
+		return "Seguí la huella principal hasta el refugio."
 	if stage == 12 and player.position.z < -20.0: return "Volvé junto al cable y seguí el sendero oeste hasta la tranquera."
+	if stage == 18 and player.position.z < -14.0: return "Volvé por las pircas al cable. De ahí, tomá el sendero oeste hacia el refugio."
 	if stage == 15 and not (bedtime and player.position.z > -12.0):
 		return "Seguí las pircas de bajada hasta el banco del acceso para cerrar la travesía."
 	if bedtime: return "Cuando quieras terminar el día, acercate a la cama y tocá E."
@@ -472,7 +495,7 @@ func objective() -> String:
 	if stage == 19:
 		return "R · Hablá con Mara antes de salir. Podés pasar por el museo."
 	if stage == 14: return "R · Pasale a Mara lo que ves desde la cumbre."
-	if stage == 8: return "Día 25 · Seguí la senda que continúa detrás del mirador hasta el hito del filo."
+	if stage == 8: return "Día 25 · Pasá el museo y el abra para llegar al hito del filo."
 	if stage == 9: return "R · Pasá el parte del filo." if not route_reported else "Volvé al refugio."
 	if stage == -1: return "Abrí la puerta con E y entrá al refugio."
 	return ["Noche 1 · R · Contestar la radio", "Salí por la tranquera y tomá la bajada del cauce hasta el poste.", "R · Pasale a Mara la fecha", "Seguí la bajada del cauce.", "Seguí bajando hasta el lecho de piedras y buscá la regla.", "Volvé al refugio por la misma huella.", "Día 7 · Escuchá el parte de Mara.", "Pasá el museo de sitio y probá la recepción en el abra."][stage]
@@ -501,7 +524,73 @@ func overlay(kind: String, caption: String, footer: Variant, prop: String = ""):
 		if footer is Array: overlay_choices.present(footer)
 	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
 
+func open_journal():
+	journal_page = 0
+	var current := objective()
+	if stage >= 2: current += "\n\nPoste del cauce · 12 de julio."
+	elif read_note: current += "\n\nRevisar la fecha del poste."
+	var keepsake := str(keepsakes.get("despedida", ""))
+	if not keepsake.is_empty(): current += "\n\n" + keepsake
+	journal_pages = [{"title": "Cuaderno · Encargo", "text": current}]
+	add_diary_entries()
+	add_field_notes()
+	show_journal_page()
+
+func diary_entry(title: String, text: String, drawing: int = -1):
+	journal_pages.append({"title": title, "text": text, "drawing": drawing})
+
+func add_diary_entries():
+	if not creek_note.is_empty():
+		diary_entry("2 de octubre · El cauce", creek_note, Diary.CREEK)
+	if second_sighting or stage >= 8:
+		var entry := "Sobre el abra vi dos puntos. El segundo quedó un poco más alto. Por la radio alcancé a oír «…cruces…»."
+		if book_light_notes: entry += "\n\nBusqué el rumbo en el libro de mi viejo. Dejé el croquis entre las páginas."
+		diary_entry("7 de octubre · Dos luces", entry, Diary.LIGHTS)
+	if stage >= 8 and (not crossing_note.is_empty() or stage >= 9):
+		var via := "El rodeo de la vaguada empalma con la huella del filo." if "vaguada" in crossing_note else "El escalón de laja se puede pasar con la cuerda."
+		var drawing := Diary.DETOUR if "vaguada" in crossing_note else Diary.ROPE
+		if crossing_note.is_empty():
+			via = "Desde el filo vi juntarse las dos huellas. La piedra del cartel queda más abajo."
+			drawing = -1
+		if filo_report_reply == 0: via += "\n\nLe pedí a Mara que les marque el rodeo a los que van con herramientas."
+		elif filo_report_reply == 1: via += "\n\nLe dije a Mara que pasen de a uno por el escalón."
+		diary_entry("25 de octubre · El filo", via, drawing)
+	if quarry_reply >= 0 or stage >= 12:
+		var entry := "Giré la chapa del malacate. La segunda luz apareció arriba del corte, con la chapa quieta."
+		if quarry_reply == 1: entry += "\n\nAnoté la hora y el rumbo para compararlos desde otro punto."
+		elif quarry_reply == 0: entry += "\n\nLe avisé a Mara. Entre el ruido se oyó «todavía»."
+		diary_entry("27 de octubre · El malacate", entry, Diary.WINCH)
+	if camp_read:
+		var entry := "En el cuaderno del campamento quedaron dos apuntes. El de la camioneta a las 22.41. Dos minutos después, otra luz arriba de la muesca."
+		if summit_echo_response >= 0: entry += "\n\nAl bajar oí «hasta el banco». La voz se parecía a la mía."
+		diary_entry("1 de noviembre · La cumbre", entry, Diary.RIDGE)
+	if crossing_response >= 0:
+		diary_entry("5 de noviembre · La pasarela", "El agua dejó pasto en el travesaño de abajo. Marqué la altura con carbón.\n\n" + CROSSING_NOTES[crossing_response], Diary.BRIDGE)
+	if stage >= 19 and last_voice_reply >= 0:
+		var entry := "Cerré la cortina. Cuando abrí los ojos había dos lunas del otro lado del arco."
+		if night_investigation == 3: entry = "En el claro hubo un destello. Después, el arco. Hay un pedazo que no puedo dibujar."
+		elif night_investigation >= 2: entry = "Tomé la bajada al sur. El tramo hasta mi cama no me sale en el dibujo."
+		entry += "\n\nPregunté si era mi viejo." if last_voice_reply == 1 else "\n\nPregunté quién era."
+		entry += " La voz dijo: «Mirá una más»."
+		diary_entry("10 de noviembre · El arco", entry, Diary.ARCH)
+
+func add_field_notes():
+	var notes := field_note.strip_edges().split(". ", false)
+	var leaf := ""
+	for index in notes.size():
+		var note := notes[index] + ("." if index < notes.size() - 1 else "")
+		if not leaf.is_empty() and leaf.length() + note.length() > 320:
+			diary_entry("Cuaderno · Apuntes sueltos", leaf)
+			leaf = ""
+		leaf += ("" if leaf.is_empty() else "\n\n") + note
+	if not leaf.is_empty(): diary_entry("Cuaderno · Apuntes sueltos", leaf)
+
+func show_journal_page():
+	overlay("journal", "", "")
+	journal_view.display(journal_pages[journal_page], journal_page, journal_pages.size())
+
 func walk():
+	journal_view.hide()
 	player.looking_only = false
 	compass_out = false
 	overlay_choices.hide()
@@ -579,26 +668,49 @@ func radio_exchange():
 			1: brief = ["Buen día. ¿Descansaste algo?", "Hoy me hacen falta dos datos.", "Salí por la tranquera y seguí el cartel del cauce. La huella da la vuelta por atrás.", "Fijate qué fecha tiene la chapa del poste en la bajada."]
 			6: brief = ["Buen día. Ayer perdimos una llamada del puesto de arriba.", "¿Te llegás hasta la antena del abra?", "Pasá el museo y llamame desde la antena.", "Mi puesto queda antes de la parada. Es el de la puerta de madera. Si un día se corta del todo, buscame ahí."]
 			16: brief = ["¿Viste cómo creció el arroyo?", "Tomá el sendero oeste desde el refugio. En el cable buscá las pircas de la quebrada.", "Probá la pasarela alta. Decime hasta dónde llegó el agua."]
-			13: brief = ["¿Te animás a subir hasta la cumbre?", "Desde mi patio, el cable y el corte parecen tocarse.", "Salí por la tranquera y tomá el sendero del este. En el banco empieza la subida."]
-			10: brief = ["¿Tenés el mapa a mano?", "Después de la tranquera, doblá a la izquierda. Esa huella te lleva al cable viejo.", "Seguilo hasta el malacate. Desde mi patio se ve ese corte."]
-			8: brief = ["Anoche se cortó el paso de la laja.", "Llegá hasta el hito del filo.", "Avisame si se puede volver por abajo."]
+			13: brief = [
+				"¿Te animás a subir hasta la cumbre?",
+				"Desde mi patio, el cable y el corte parecen tocarse. Quiero ver dónde queda esa luz en el mapa.",
+				"Tomá el sendero del este. La subida empieza en el banco.",
+				"En la lona del campamento hay un cuaderno. Fijate desde dónde miraban antes de seguir al hito."
+			]
+			10:
+				brief = ["Hay una chapa suelta en el malacate. A cierta hora devuelve el sol hacia el puesto."]
+				if filo_report_reply == 0:
+					brief.push_front("Le pasé a los de mantenimiento tu vuelta por la vaguada. Ya llegaron al cable.")
+				elif filo_report_reply == 1:
+					brief.push_front("Les avisé lo del escalón. Dejaron la carga abajo y subieron por turnos.")
+				brief.append_array(["Salí por la tranquera y doblá a la izquierda. Seguí el cable viejo hasta la chapa.", "Cuando la gires, llamame. Desde acá puedo ver si cambia el reflejo."])
+			8: brief = [
+				"Se desmoronó un pedazo de la laja. Dejaron la cuerda, pero hay gente que mañana tiene que pasar con herramientas.",
+				"Podés probar la cuerda o rodear por la vaguada, a la derecha del cartel. Las dos huellas se juntan.",
+				"Pasá el museo y el abra hasta el hito del filo. Desde ahí se ve dónde se junta todo. Avisame qué camino les marco."
+			]
 		conversation(brief, "brief")
 		return
 	if stage == 17:
 		var reply := "Bien. Mañana llevo pintura para marcarlo."
 		if summit_echo_response == 0:
 			reply = "Lo de arriba podía ser un rebote. Esto lo escuchaste antes de que yo prendiera la radio."
-		conversation([reply, "Ya tengo la marca. Volvé por donde viniste.", "¿Sabés qué hice mientras subía el agua? Puse dos tazas en la mesa.", "Siempre me sobra una."], "crossing_home")
+		elif crossing_response == 0:
+			reply = "Oí tu indicativo dos veces. Entre una y otra soltaste el botón."
+		elif crossing_response == 1:
+			reply = "Avisame cuando prendas la linterna. Desde acá solo veo la lluvia."
+		elif crossing_response == 2:
+			reply = "Dejá libre la pasarela. Si había algo en el agua, desde la orilla tampoco lo vas a ver bien."
+		conversation([reply, "Ya tengo la marca. Volvé por las pircas al cable.", "¿Sabés qué hice mientras subía el agua? Puse dos tazas en la mesa.", "Siempre me sobra una."], "crossing_home")
 		return
 	if stage == 14:
-		conversation(["Entonces la cantera queda del otro lado.", "Anotá desde dónde la estás mirando.", "Desde acá solo veo una raya. Me gusta que me cuentes qué hay del otro lado.", "Avisame otro día cómo quedó el dibujo. Por hoy, con que llegues al banco del acceso alcanza."], "summit_home")
+		var bearing := "Entonces el camino de la camioneta y la muesca quedan a distinta altura."
+		if quarry_reply == 1: bearing = "El rumbo que anotaste en el malacate cae por detrás de la ladera. Marcá también desde dónde lo viste."
+		conversation([bearing, "Desde acá solo veo una raya. Me gusta que me cuentes qué hay del otro lado.", "Por hoy, con que llegues al banco del acceso alcanza."], "summit_home")
 		return
 	if stage == 11:
-		conversation(["Ahí la vi.", "Pará. Dejá la chapa como está."], "wait_flash")
+		conversation(["Ahí bajó el reflejo. La chapa devolvía el sol contra el puesto.", "Pará. Dejá la chapa como está."], "wait_flash")
 		return
 	if stage == 9 and not route_reported:
 		var report: = crossing_note if crossing_note else "Desde arriba se distingue la vaguada."
-		overlay("field_report", report + " Hay gente que va a salir temprano mañana. Elegís qué dejar en el parte.", ["Señalar el rodeo.", "Describir el escalón de roca."], "radio")
+		overlay("field_report", report + " Mañana suben con herramientas. ¿Qué les dejás marcado?", ["«Con carga, vayan por la vaguada».", "«En la laja hay que subir con la cuerda»."], "radio")
 		return
 	if (bedtime and (stage != 0 or heard)) or stage == -1 or stage >= 8:
 		overlay("message", objective(), "Espacio · volver")
@@ -663,6 +775,13 @@ func _unhandled_key_input(event):
 	if not event.pressed or event.echo: return
 	var key = event.keycode
 	var advance = key in [KEY_SPACE, KEY_ENTER]
+	if mode == "journal":
+		if advance or key in [KEY_ESCAPE, KEY_TAB]:
+			walk()
+		elif key in [KEY_LEFT, KEY_RIGHT]:
+			journal_page = clampi(journal_page + (1 if key == KEY_RIGHT else -1), 0, journal_pages.size() - 1)
+			show_journal_page()
+		return
 	if mode in ["approach", "walk"] and not player.climb_points.is_empty() and key not in [KEY_ESCAPE, KEY_F1]:
 		return
 	if mode == "postcard":
@@ -789,13 +908,13 @@ func _unhandled_key_input(event):
 		walk()
 		mode = "approach"
 		hint.text = "WASD · Seguí la huella hacia la casa. Mouse · mirar"
-	elif mode in ["arrival", "message", "journal", "pause"] and (advance or key in [KEY_ESCAPE, KEY_TAB]):
+	elif mode in ["arrival", "message", "pause"] and (advance or key in [KEY_ESCAPE, KEY_TAB]):
 		walk()
 	elif mode == "walk":
 		if not player.climb_points.is_empty() and key != KEY_ESCAPE: return
 		match key:
 			KEY_ESCAPE: overlay("pause", "Pausa", "Espacio · volver   /   F2 · menú principal")
-			KEY_TAB: overlay("journal", "Cuaderno\n\nBajada del refugio → poste → regla del cauce\nLaderas → laja o vaguada → museo → abra → filo\n\n" + objective() + ("\nNota: revisar la fecha del poste." if read_note else "") + ("\nPoste: 12 de julio." if stage >= 2 else "") + ("\n" + creek_note if creek_note else "") + "\n" + str(keepsakes.get("despedida", "")) + ("\n" + field_note if field_note else ""), "Tab · guardar")
+			KEY_TAB: open_journal()
 			KEY_R: transmit()
 			KEY_E:
 				if at_summit_finish():
@@ -865,8 +984,8 @@ func _unhandled_key_input(event):
 							return
 						if not camp_read:
 							camp_read = true
-							field_note += " En el campamento de observadores anotaron dos destellos junto a una muesca. El primero coincide con el paso de una camioneta. El segundo queda sin identificar."
-						overlay("message", "Observación OVNI · Uritorco. La tinta se corrió en los bordes. Debajo de un dibujo del cerro leés: «22.41. Luz abajo de la muesca. Camioneta en el camino». En el renglón siguiente: «22.43. Otra luz arriba de la muesca». La columna de identificación está vacía.", "Espacio · guardar el rumbo")
+							field_note += " Día 32 · El cuaderno del campamento registra una camioneta y, dos minutos después, otra luz arriba de la muesca."
+						overlay("message", "Observación OVNI · Uritorco. En el croquis, una flecha indica desde dónde miraban.\n\n«22.41. Luz abajo de la muesca. Camioneta en el camino».\n«22.43. Otra luz arriba de la muesca».\n\nAl lado del segundo renglón hay tres columnas: hora, rumbo y respuesta. En la última, una raya.", "Espacio · guardar el rumbo")
 					"Hito de la cumbre":
 						if stage == 13 and not summit_mapped:
 							overlay("message", "La senda de ascenso empieza en el acceso del cerro, abajo, del lado este.", "Espacio · volver")
@@ -877,9 +996,11 @@ func _unhandled_key_input(event):
 						if stage == 13 and not awaiting_call:
 							stage = 14
 							summit_mapped = true
-							field_note += " Cumbre: la cantera y la ladera del segundo destello quedan separadas por un pliegue del cerro."
+							field_note += " Desde la cumbre vi que el cable y la muesca de la segunda luz quedan separados por un pliegue del cerro."
 							valley.sunset()
-						overlay("message", "Desde arriba ves el cable terminar antes del corte. Entre los dos hay un pliegue entero de sierra. Ubicás la muesca del cuaderno: queda más arriba que el camino. Abrís el mapa sobre la piedra y marcás los rumbos. El viento te levanta una esquina. La sujetás con el pulgar.", "Espacio · doblar el mapa")
+						var sketch := "Desde arriba ves terminar el cable antes del corte. Un pliegue entero de sierra lo separa de la muesca que dibujaron en el campamento."
+						if quarry_reply == 1: sketch += " El rumbo que anotaste en el malacate cae detrás de ese pliegue."
+						overlay("message", sketch + "\n\nAbrís el mapa sobre la piedra y marcás desde dónde miraste. El viento te levanta una esquina. La sujetás con el pulgar.", "Espacio · doblar el mapa")
 					"Desvío de la cantera":
 						branch_found = true
 						overlay("message", "Una flecha gastada señala el cable. Copiás el ramal en el mapa.", "Espacio · guardar")
@@ -972,7 +1093,8 @@ func _unhandled_key_input(event):
 		elif after == "quarry_home":
 			stage = 12
 			bedtime = true
-			field_note += " Cantera: la segunda luz apareció con la chapa quieta."
+			field_note += " Día 27 · En el malacate vi una luz por encima del corte con la chapa quieta."
+			if quarry_reply == 1: field_note += " Dejé anotados el rumbo y la hora junto al croquis."
 			valley.night()
 			walk()
 		elif after == "last_call":
@@ -1136,15 +1258,18 @@ func select_option(index: int):
 			field_note += " Guardé el rumbo para compararlo después."
 			walk()
 	elif mode == "quarry_sighting_response":
-		var line := "Dejé de mirar la chapa cuando se prendió arriba del corte." if index == 0 else "Guardá también la hora. Mañana podemos poner las dos anotaciones juntas."
+		quarry_reply = index
+		var line := "Entonces lo que vi en la chapa era una cosa sola. Esa otra quedó arriba del corte." if index == 0 else "Guardá también la hora. Desde la cumbre vamos a poder comparar mejor el rumbo."
 		conversation([line, "Entre el ruido oí «todavía». Pensé que habías hablado vos.", "¿Seguís ahí? Me quedo hasta que llegues."], "quarry_home")
 	elif mode == "fox":
 		valley.route.release_fox(index == 0)
 		field_note += " Lo ves bajar al cauce." if index == 0 else " Le dejás libre el paso."
 		walk()
 	elif mode == "field_report":
-		field_note += " Recomendás la vaguada." if index == 0 else " Avisás del escalón."
-		conversation(["Les marco la vuelta por abajo."] if index == 0 else ["Les aviso que la piedra está cortada."], "filo")
+		filo_report_reply = index
+		field_note += " Marqué la vuelta por la vaguada para los de mantenimiento." if index == 0 else " Avisé que en la laja hay que usar la cuerda."
+		var line := "Les marco la vuelta por abajo." if index == 0 else "Les aviso que en el escalón suban de a uno."
+		conversation([line, "Van a mirar el malacate. Dicen que vieron algo brillar por ahí al cerrar el otro turno."], "filo")
 	elif mode == "reception":
 		conversation(["Ahora sí. Te oigo clarito."] if index == 0 else ["Dale. Dejo la radio prendida."], "reception_done")
 	elif mode == "report":
@@ -1282,7 +1407,7 @@ func start_day36():
 	valley.morning()
 	valley.dress_day36()
 	save_game(true, "walk")
-	day_card("Día 36 · Después de la lluvia", "En el banco del acceso guardás el mapa. Para cuando entrás al refugio, ya se escucha el agua en el techo.\n\nA la mañana hay barro en el escalón de la puerta. Todavía cae una llovizna fina.", "Espacio · levantarse")
+	day_card("Día 36 · Después de la lluvia", "En el banco del acceso guardás el mapa. Para cuando entrás al refugio, ya se escucha el agua en el techo.\n\nLa lluvia sigue varios días. Esta mañana hay barro en el escalón y el arroyo se oye desde la puerta.", "Espacio · levantarse")
 
 func show_archive():
 	archive_read = true
@@ -1423,9 +1548,7 @@ func inspect_cave():
 				reading = "Hacés lo mismo que en la ladera. Primero las dos del eje largo. Después seguís la línea con la vista hasta el sur. Esta vez ni se te ocurre buscar la brújula."
 			var trail := "Al pie de la ladera se juntan dos huellas. La que baja al refugio sigue al sur."
 			if follow_last_light: trail += " Del otro lado de la bifurcación queda el claro."
-			overlay("cave_text", reading + "
-
-" + trail, "Espacio · seguir el rumbo")
+			overlay("cave_text", reading + "\n\n" + trail, "Espacio · seguir el rumbo")
 		elif crux_found:
 			var local: Vector3 = player.position - LastNight.CAVE
 			if Vector2(local.x, local.z).distance_to(LastNight.RETURN) < 3.4:
@@ -1439,7 +1562,10 @@ func inspect_cave():
 			if not cave_notebooks_read: score.cue("misterio", 18, -22.0, 3.0)
 			cave_notebooks_read = true
 			night_investigation = 2
-			overlay("cave_text", "14/10/1974 · «03.11. Dos destellos. El segundo bajó al claro».\n\n09/11/1978 · «Dos golpes. Una voz avisó que esperáramos. La frecuencia del puesto estaba libre».\n\nHay columnas de hora, rumbo y respuesta. En la última siempre hay una raya. No encontrás una firma.", "Espacio · dejar los cuadernos")
+			var notebook := "14/10/1974 · «03.11. Dos destellos. El segundo bajó al claro».\n\n09/11/1978 · «Dos golpes. Una voz pidió que no cruzáramos todavía. La frecuencia del puesto estaba libre»."
+			var entries := "Hay columnas de hora, rumbo y respuesta. En la última siempre hay una raya."
+			if camp_read: entries = "Reconocés las columnas del cuaderno de la cumbre. Hora, rumbo y respuesta. La última también tiene una raya."
+			overlay("cave_text", notebook + "\n\n" + entries, "Espacio · dejar los cuadernos")
 		"Salida de la cueva":
 			if cave_exit_open: return
 			if not cave_notebooks_read:
@@ -1562,7 +1688,7 @@ func save_game(automatic: bool, resume_mode: String) -> bool:
 	elif stage >= 16: title = "Día 36"
 	elif stage >= 13: title = "Día 32"
 	elif stage >= 10: title = "Día 27"
-	var data = {"version": 1, "slot": slot, "title": title, "state": state, "mode": resume_mode, "pose": player.transform, "pitch": player.camera.rotation.x, "paragraph": recall.paragraph, "chapter": valley.sky_chapter, "door": valley.door_open, "book": valley.book_unpacked, "night": valley.sky_mat.get_shader_parameter("nightfall"), "dusk": valley.sky_mat.get_shader_parameter("dusk"), "music": music.get_playback_position() if music.playing else 0.0}
+	var data = {"version": 1, "slot": slot, "title": title, "state": state, "mode": resume_mode, "pose": player.transform, "pitch": player.camera.rotation.x, "paragraph": recall.paragraph, "chapter": valley.sky_chapter, "museum_offset": Museum.SITE_OFFSET, "door": valley.door_open, "book": valley.book_unpacked, "night": valley.sky_mat.get_shader_parameter("nightfall"), "dusk": valley.sky_mat.get_shader_parameter("dusk"), "music": music.get_playback_position() if music.playing else 0.0}
 	return Saves.write(slot, automatic, data)
 
 func restore(data: Dictionary):
@@ -1571,11 +1697,16 @@ func restore(data: Dictionary):
 	for key in STATE:
 		if data.state.has(key): set(key, data.state[key])
 	trail_replies = Mara.saved_replies(data.state)
+	if not data.state.has("filo_report_reply"):
+		if "Recomendás la vaguada." in field_note: filo_report_reply = 0
+		elif "Avisás del escalón." in field_note: filo_report_reply = 1
 	if stage == 3: stage = 4
 	if not data.state.has("archive_read"): archive_read = int(data.state.get("archive_entry", -1)) >= 0
 	menu.hide()
 	player.camera.current = true
 	player.transform = data.pose
+	if not data.has("museum_offset"):
+		player.position = Museum.restore_legacy_position(valley, player.position)
 	player.camera.rotation.x = data.pitch
 	valley.configure_sky(data.chapter)
 	valley.morning()

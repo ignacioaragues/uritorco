@@ -7,6 +7,8 @@ const WEST_JOIN := 0.44
 const HALF_WIDTH: = 360.0
 const FAR: = 980.0
 const CREST: = 922.0
+const LAJA_FORK := 124.0
+const LAJA_JOIN := 218.0
 const CREEK_DISTANCE: = 96.0
 const SUMMIT_JOIN: = 0.37
 var rng: = RandomNumberGenerator.new()
@@ -26,7 +28,7 @@ static func trail(d: float) -> float:
 	return -1.9 + 54.0 * sin(d / 83.0) + 18.0 * sin(d / 27.0)
 
 static func detour(d: float) -> float:
-	return trail(d) + 36.0 * sin(PI * clampf((d - 124.0) / 94.0, 0, 1))
+	return trail(d) + 36.0 * sin(PI * clampf(inverse_lerp(LAJA_FORK, LAJA_JOIN, d), 0, 1))
 
 static func creek_overlook(t: float) -> Vector3:
 	var d: = lerpf(43.0, 104.0, t)
@@ -203,7 +205,7 @@ func plant():
 		var x: = trail(d) + rng.randf_range(-120, 120)
 		var west_t := inverse_lerp(WEST_START_Z, quarry_point(WEST_JOIN).z, ORIGIN_Z - d)
 		if west_t < 1.0 and absf(x - western_approach(west_t).x) < 3.8: continue
-		if absf(d - 292) < 8 and absf(x - trail(292) - 6) < 7: continue
+		if absf(d - 292) < 8 and absf(x - trail(292) - 10.5) < 11.5: continue
 		if absf(x - trail(d)) < 2.6 or (d > 124 and d < 218 and absf(x - detour(d)) < 2.6): continue
 		var pos: = at(x, d)
 		var scale_m: = rng.randf_range(0.7, 1.8)

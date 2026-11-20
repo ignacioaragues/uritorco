@@ -39,6 +39,9 @@ func _draw():
 		pin(limits, Creek.marker(), "Regla del cauce")
 	else:
 		draw_route(limits, 161, func(t): return Vector3(ROUTE.trail(t * ROUTE.CREST), 0, ROUTE.ORIGIN_Z - t * ROUTE.CREST), INK)
+		draw_route(limits, 33, func(t):
+			var d := lerpf(ROUTE.LAJA_FORK, ROUTE.LAJA_JOIN, t)
+			return Vector3(ROUTE.detour(d), 0, ROUTE.ORIGIN_Z - d), ROUTE_COLOR)
 		draw_route(limits, 45, ROUTE.creek_overlook, ROUTE_COLOR)
 		pin(limits, ROUTE.creek_overlook(0.63), "Mirador del cauce")
 		draw_route(limits, 91, ROUTE.quarry_point, ROUTE_COLOR)
@@ -50,6 +53,7 @@ func _draw():
 		pin(limits, Vector3(ROUTE.trail(292), 0, ROUTE.ORIGIN_Z - 292), "Museo")
 		pin(limits, ROUTE.quarry_point(1), "Cantera")
 		pin(limits, ROUTE.crossing_point(1), "Pasarela")
+		pin(limits, Vector3(ROUTE.trail(ROUTE.CREST), 0, ROUTE.ORIGIN_Z - ROUTE.CREST), "Filo")
 		pin(limits, ROUTE.camp_point(), "Campamento")
 		pin(limits, ROUTE.summit_point(1), "Cumbre")
 	if objective_mark is Vector3 and limits.has_point(Vector2(objective_mark.x, ROUTE.ORIGIN_Z - objective_mark.z)):

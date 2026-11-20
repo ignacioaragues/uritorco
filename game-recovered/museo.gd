@@ -1,6 +1,8 @@
 extends RefCounted
 
 const DISTANCE := 292.0
+const SITE_OFFSET := 14.0
+const LEGACY_SITE_OFFSET := 9.5
 const HALF_WIDTH := 5.4
 const HALF_DEPTH := 7.0
 const HEIGHT := 2.85
@@ -19,14 +21,21 @@ const LABELS = {
 	"Maqueta del arco": "Maqueta del arco · Reconstrucción de un dibujo anónimo\n\nLa ficha lleva fecha del 12 de julio. El dibujo muestra dos pilares, un dintel torcido y un cuerpo suspendido en el hueco. El margen de la hoja está arrancado."
 }
 
-static func center(valley) -> Vector3:
+static func center(valley, offset: float = SITE_OFFSET) -> Vector3:
 	var route = valley.route
-	var x: float = route.trail(DISTANCE) + 9.5
+	var x: float = route.trail(DISTANCE) + offset
 	var floor_height: float = route.at(x, DISTANCE).y
 	for dx in [-HALF_WIDTH, 0.0, HALF_WIDTH]:
 		for dz in [-HALF_DEPTH, 0.0, HALF_DEPTH]:
 			floor_height = maxf(floor_height, route.at(x + dx, DISTANCE + dz).y)
 	return Vector3(x, floor_height + 0.23, route.ORIGIN_Z - DISTANCE)
+
+static func restore_legacy_position(valley, position: Vector3) -> Vector3:
+	var previous := center(valley, LEGACY_SITE_OFFSET)
+	var local := position - previous
+	if absf(local.x) <= HALF_WIDTH and absf(local.z) <= HALF_DEPTH and local.y >= -0.3 and local.y <= HEIGHT:
+		return position + center(valley) - previous
+	return position
 
 static func build(valley):
 	var c := center(valley)
@@ -79,7 +88,7 @@ static func wall(valley, at: Vector3, size_m: Vector3):
 static func build_entrance(valley, c: Vector3):
 	var front := c + Vector3(-HALF_WIDTH, 0, 0)
 	var route = valley.route
-	var start: Vector3 = route.at(front.x - 5.25, DISTANCE)
+	var start: Vector3 = route.at(route.trail(DISTANCE) + 1.8, DISTANCE)
 	var end := front + Vector3(0.12, 0.0, 0)
 	start.y -= 0.12
 	var span := end - start
