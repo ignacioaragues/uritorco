@@ -652,6 +652,7 @@ func dress_day27():
 	box(Vector3(3.25, 0.95, 2.22), Vector3(0.19, 0.1, 0.12), "887a69")
 
 var arrival_bag: MeshInstance3D
+var arrival_fragments: Array[Node3D] = []
 var summit_dressed: = false
 
 func dress_day32():

@@ -89,7 +89,8 @@ var slot: = 1
 var paused_from: = ""
 var gate_jumped: = false
 var map_read: = false
-var show_objective: = false
+var objective_seconds := 0.0
+var intro_controls_seconds := 0.0
 var map = preload("res://plano.gd").new()
 var menu = preload("res://menu.gd").new()
 var valley = preload("res://valley.gd").new()
@@ -241,6 +242,7 @@ func start_game(n: int):
 func approach(reset_position: bool = false):
 	walk()
 	mode = "approach"
+	Arrival.show_fragment(valley, page)
 	var center: = Arrival.origin(page)
 	if reset_position or player.position.distance_to(center) > 80:
 		player.position = center + Vector3.UP * 0.12
@@ -248,15 +250,18 @@ func approach(reset_position: bool = false):
 		player.camera.rotation = Vector3.ZERO
 		player.velocity = Vector3.ZERO
 		arrival_action = false
+		objective_seconds = 0.0
+		intro_controls_seconds = 3.0
+		if page == 6: flashlight_out = false
 	if page == 0: set_arrival_bag_visible( not arrival_action)
 	player.intro_center = center
 	player.intro_heading = Arrival.HEADINGS[page]
 	hint.text = "WASD · caminar     Mouse · mirar" if page == 0 else ""
 
 func use_arrival_item():
-	if arrival_action or target != Arrival.ACTIONS[page] or page in [1, 3, 4]: return
+	if arrival_action or target != Arrival.ACTIONS[page] or page in [1, 3, 4, 6, 7]: return
 	if page == 5:
-		player.climb_to(Arrival.world_position(page, Vector3(0, 1.39, -11.5)))
+		player.climb_rope(Arrival.rope_route(), Arrival.HEADINGS[page])
 		return
 	arrival_action = true
 	if page == 0: set_arrival_bag_visible(false)
@@ -275,6 +280,7 @@ func _unhandled_input(event):
 		use_arrival_item()
 
 func memory(paragraph: int = 0):
+	Arrival.show_fragment(valley, -1)
 	hands.hold("")
 	compass_out = false
 	mode = "intro"
@@ -313,6 +319,8 @@ func calendar_day() -> int:
 	return 41
 
 func _process(delta):
+	objective_seconds = maxf(0.0, objective_seconds - delta)
+	intro_controls_seconds = maxf(0.0, intro_controls_seconds - delta)
 	var day: = calendar_day()
 	valley.update_calendar(day)
 	valley.update_weather(day)
@@ -376,20 +384,27 @@ func _process(delta):
 		var hit = player.ray.get_collider()
 		target = str(hit.get_meta("item", "")) if hit else ""
 		var local: = Arrival.local_position(page, player.position)
-		if page == 1 and local.z < -10.3 and local.y > 0.35 and absf(local.x) < 1.65:
+		if page == 1 and local.z < -10.43 and local.y > 0.29 and absf(local.x) < 1.70:
 			arrival_action = true
-		if page == 5 and local.y >= 1.36 and local.z < -10.5:
+		if page == 5 and not player.rope_climbing and local.y >= 1.40 and local.z < -10.76:
 			arrival_action = true
-		if arrival_action and local.z < -17:
+		if (arrival_action or page == 7) and Arrival.reached_exit(page, local):
 			memory()
-		elif not arrival_action and page == 1:
+			return
+		if objective_seconds > 0.0:
+			hint.text = intro_objective()
+		elif page == 0 and intro_controls_seconds > 0.0:
+			hint.text = "WASD · caminar     Mouse · mirar"
+		elif page == 6 and not arrival_action:
+			hint.text = "L · encender la linterna"
+		elif not arrival_action and page == 1 and local.z < -5.2:
 			hint.text = "Espacio · saltar el tronco"
 		elif not arrival_action and page in [3, 4]:
 			hint.text = "B · probar la brújula" if page == 3 else "M · consultar el mapa"
-		elif not arrival_action and target == Arrival.ACTIONS[page]:
+		elif not arrival_action and page != 7 and target == Arrival.ACTIONS[page]:
 			hint.text = "E o clic · " + target
 		else:
-			hint.text = "WASD · caminar     Mouse · mirar" if page == 0 and not arrival_action else ""
+			hint.text = ""
 	elif mode == "walk":
 		var hit = player.ray.get_collider()
 		target = str(hit.get_meta("item", "")) if hit else ""
@@ -409,6 +424,9 @@ func _process(delta):
 		if at_summit_finish():
 			hint.text = "E · cerrar la travesía"
 			return
+		if objective_seconds > 0.0:
+			hint.text = objective()
+			return
 		if not hit and ( - player.camera.global_basis.z).y > 0.12 and float(valley.sky_mat.get_shader_parameter("nightfall")) > 0.6:
 			var star: = SkyGuide.identify( - player.camera.global_basis.z, valley.sky_chapter)
 			if can_pause_under_sky():
@@ -417,9 +435,16 @@ func _process(delta):
 				else:
 					hint.text = "E · ubicar el sur" if watching_crux_tonight() else "E · quedarte a mirar el cielo"
 				return
-			hint.text = star + ("   /   R · Parte" if observing and show_objective else "")
+			hint.text = star
 		else:
-			hint.text = "E · " + target if target != "" else (objective() if show_objective else "")
+			hint.text = "E · " + target if target != "" else ""
+
+func intro_objective() -> String:
+	if page == 0:
+		return "Seguí el camino de tierra al costado de la parada." if arrival_action else "Acercate a la parada y recogé la mochila."
+	if page == 7 or arrival_action:
+		return "Seguí la curva del sendero." if page >= 6 else "Caminá un poco más por la senda."
+	return ["", "Espacio · saltá el tronco.", "E · agarrate del pasamanos.", "B · probá la brújula.", "M · consultá el mapa.", "E · trepá con la cuerda.", "L · encendé la linterna."][page]
 
 func score_daily_walk(day: int):
 	if awaiting_call or day in scored_walks: return
@@ -674,11 +699,13 @@ func _unhandled_key_input(event):
 	if key == KEY_E and mode == "approach":
 		use_arrival_item()
 		return
-	if key == KEY_F1 and mode == "walk":
-		show_objective = not show_objective
+	if key == KEY_F1 and mode in ["walk", "approach"]:
+		objective_seconds = 4.0
+		intro_controls_seconds = 0.0
 		return
 	if key == KEY_L and mode in ["approach", "walk", "map", "cave", "dream"]:
 		flashlight_out = not flashlight_out
+		if mode == "approach" and page == 6 and flashlight_out: arrival_action = true
 		update_flashlight()
 		return
 	if key == KEY_B and mode in ["approach", "walk", "map", "cave"]:
@@ -858,9 +885,10 @@ func _unhandled_key_input(event):
 						overlay("message", "La chapa gira sobre un solo bulón. La orientás hacia el último sol y la sujetás contra el bastidor.", "Espacio · soltar la manija")
 					"Paso de la laja":
 						overlay("message", "La huella se corta en un escalón de granito. Del lado derecho baja otra huella hacia la vaguada. Las dos vuelven a juntarse arriba.", "Espacio · seguir")
-					"Trepar la laja", "Bajar la laja":
-						var d: = 172.5 if target == "Trepar la laja" else 167.5
-						player.climb_to(valley.route.at(valley.route.trail(170) - 0.6, d) + Vector3.UP * 0.08)
+					"Cuerda de la laja":
+						var points: Array[Vector3] = valley.route.laja_rope_route()
+						if player.position.z < valley.route.ORIGIN_Z - 170.2: points.reverse()
+						player.climb_rope(points, 0.0)
 					"Hito del filo":
 						if stage == 8 and not awaiting_call:
 							stage = 9
@@ -868,8 +896,11 @@ func _unhandled_key_input(event):
 							valley.sunset()
 						overlay("message", "Desde el hito ves el pliegue entero de la quebrada. Recién acá se entiende la vuelta que da el sendero. Marcás el rodeo en el cuaderno.", "Espacio · guardar")
 					"Bolso":
-						valley.unpack_book()
-						open_book()
+						if stage == 0:
+							overlay("message", "Dejaste la mochila en el suelo. Mañana acomodás las cosas.", "Espacio · seguir")
+						else:
+							valley.unpack_book()
+							open_book()
 					"Puerta": valley.toggle_door()
 					"Puerta del baño": valley.swing_side_door(valley.privy_hinge)
 					"Puerta del museo": valley.swing_side_door(valley.museum_hinge)
@@ -1489,7 +1520,10 @@ func restore(data: Dictionary):
 			player.intro_center = Arrival.origin(page)
 			if player.position.distance_to(player.intro_center) > 80: player.position = player.intro_center
 			memory(data.paragraph)
-		"approach": approach()
+		"approach":
+			if player.position.distance_to(Arrival.origin(page)) <= 80.0:
+				player.position = Arrival.safe_saved_position(page, player.position, arrival_action)
+			approach()
 		"dream":
 			score.cue("otromundo", 63, -14.0, 2.5)
 			player.low_gravity = true

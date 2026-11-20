@@ -94,14 +94,12 @@ func _ready():
 	land.material_override = mat
 	add_child(land)
 	land.create_trimesh_collision()
-	var crossing: = trail(170.0)
 	signpost(creek_overlook(0.0) + Vector3(-1.6, 0, 0), "Desvío del cauce", "Mirador del cauce ↖")
 	var overlook: = creek_overlook(0.63)
 	signpost(overlook + Vector3(-1.4, 0, 0), "Mirador del cauce", "Mirador del cauce")
 	box(self, Vector3(0.42, 0.43, 1.35), overlook + Vector3(-1.4, 0.2, -1.3), "978a73")
 	signpost(at(trail(124) + 2, 124), "Paso de la laja", "Filo por la laja  ↑\nRodeo por la vaguada  →")
-	signpost(at(crossing + 1.3, 169.0), "Trepar la laja", "Laja")
-	signpost(at(crossing + 1.3, 171.0), "Bajar la laja", "Descenso")
+	build_laja_rope()
 	signpost(at(trail(CREST), CREST), "Hito del filo", "Filo del puesto")
 	plant()
 	make_wildlife()
@@ -114,6 +112,44 @@ func _ready():
 	signpost(at(trail(292) - 1.7, 292), "Sala de las sierras", "Museo de sitio →")
 	signpost(Vector3(western_x_at(-27.0) - 1.8, 0.0, -27.0), "Sendero oeste", "Sendero oeste ↖")
 	signpost(west_end + Vector3(2.0, 0.0, 0.0), "Sendero oeste", "Refugio · senda del oeste")
+
+func laja_rope_route() -> Array[Vector3]:
+	var x := trail(170.0) - 0.64
+	var foot := surface_point(x, 169.30) + Vector3.UP * 0.04
+	var landing := surface_point(x, 171.02)
+	var points: Array[Vector3] = [foot]
+	for i in range(1, 8):
+		var progress := i / 7.0
+		points.append(Vector3(x, lerpf(foot.y, landing.y + 0.22, progress), foot.z - 0.15 * progress))
+	points.append(landing + Vector3.UP * 0.22)
+	points.append(landing + Vector3.UP * 0.055)
+	return points
+
+func build_laja_rope():
+	var x := trail(170.0) - 0.42
+	var lower := surface_point(x, 169.68)
+	var upper := surface_point(x, 170.94)
+	var line := [
+		lower + Vector3(0.04, 0.29, 0.03),
+		Vector3(x - 0.07, lerpf(lower.y, upper.y, 0.52), lower.z - 0.05),
+		Vector3(x + 0.05, upper.y + 0.13, ORIGIN_Z - 170.08),
+		upper + Vector3(0.18, 0.12, 0.0)
+	]
+	for i in range(line.size() - 1):
+		var from: Vector3 = line[i]
+		var to: Vector3 = line[i + 1]
+		var loop := box(self, Vector3(0.057, 0.057, from.distance_to(to) + 0.035), from.lerp(to, 0.5), "c3a178")
+		loop.look_at(to)
+		var shape := CollisionShape3D.new()
+		var hitbox := BoxShape3D.new()
+		hitbox.size = Vector3(0.20, 0.20, from.distance_to(to) + 0.06)
+		shape.shape = hitbox
+		var grip := StaticBody3D.new()
+		grip.collision_layer = 2
+		grip.set_meta("item", "Cuerda de la laja")
+		loop.add_child(grip)
+		grip.add_child(shape)
+	box(self, Vector3(0.16, 0.14, 0.17), line[-1], "827665")
 
 func signpost(pos: Vector3, tag: String, caption: String, facing: float = 0.0):
 	var pole: = box(self, Vector3(0.17, 1.5, 0.14), pos + Vector3.UP * 0.75, "6c5443")
