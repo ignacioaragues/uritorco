@@ -1,5 +1,6 @@
 extends Node3D
 
+const FieldKit = preload("res://equipo_campo.gd")
 const Creek = preload("res://cauce.gd")
 const LastNight = preload("res://final_night.gd")
 const Birds = preload("res://aves.gd")
@@ -11,6 +12,8 @@ const Trail = preload("res://travesia.gd")
 var rng: = RandomNumberGenerator.new()
 var route = Trail.new()
 var birds = Birds.new()
+var desk_radio: StaticBody3D
+var desk_portable: Node3D
 var env: = Environment.new()
 var sun: = DirectionalLight3D.new()
 var beacon := Sprite3D.new()
@@ -137,9 +140,9 @@ func _ready():
 		plaster(box(Vector3(x, 1.4, -0.4), Vector3(2.35, 2.8, 0.22), "a89b87", true))
 	box(Vector3(0, 2.95, 2.65), Vector3(8, 0.23, 8), "5c5148", true).rotation.z = 0.035
 	box(Vector3(2.55, 0.45, 2.35), Vector3(1.8, 0.9, 0.7), "705744", true)
-	box(Vector3(2.59, 1.08, 2.35), Vector3(0.55, 0.35, 0.24), "3f514c", true, "Radio")
-	box(Vector3(2.42, 1.32, 2.35), Vector3(0.025, 0.38, 0.025), "9e9b92")
-	box(Vector3(2.64, 1.12, 2.48), Vector3(0.15, 0.045, 0.01), "dfbd74")
+	desk_radio = FieldKit.desk_radio(self, Vector3(2.64, 0.90, 2.42))
+	desk_radio.rotation.y = PI + 0.24
+	desk_portable = desk_radio.get_node("Transceptor")
 	box(Vector3(1.95, 0.93, 2.35), Vector3(0.38, 0.05, 0.32), "dbc8a2", true, "Nota")
 	box(Vector3(2.55, 0.4, 4.5), Vector3(1.2, 0.8, 2.3), "787c61", true, "Cama")
 	var lamp: = OmniLight3D.new()
@@ -169,6 +172,11 @@ func _ready():
 	route.signpost(fork + Vector3(0.0, 0, -2.4), "Puesto de abajo", "Puesto de abajo →", -1.72, true)
 
 	Exploration.build(self)
+
+func update_desk_radio(held: bool):
+	if desk_portable.visible != held: return
+	desk_portable.visible = not held
+	desk_radio.collision_layer = 0 if held else 1
 
 func dress_birds():
 	add_child(birds)
@@ -568,20 +576,20 @@ func furnish():
 	timber(box(Vector3(-1.7, 1.52, 5.7), Vector3(2.1, 0.09, 0.43), "745942", true), true)
 	kitchen_and_privy()
 
-var bag: MeshInstance3D
+var bag: StaticBody3D
 var book_unpacked: = false
 
 func leave_bag():
 	if bag or book_unpacked: return
-	bag = box(Vector3(1.8, 0.21, 5.1), Vector3(0.64, 0.39, 0.37), "655143", true, "Bolso")
-	var strap: = box(Vector3.ZERO, Vector3(0.08, 0.015, 0.38), "3f433c")
-	strap.reparent(bag, false)
-	strap.position.y = 0.2
+	bag = FieldKit.backpack(self, Vector3(1.58, 0.244, 5.03), "Bolso")
+	bag.rotation = Vector3(-1.44, 0.25, 0.0)
 
 func unpack_book():
 	if book_unpacked: return
 	book_unpacked = true
-	if bag: bag.queue_free()
+	if bag:
+		bag.queue_free()
+		bag = null
 	for i in range(1):
 		var titles: = ["Observar el Cielo", "Flora serrana", "Cuaderno de campo"]
 		var cover: = box(Vector3(-1.75, 1.61, 5.66), Vector3(0.49, 0.58, 0.074), ["394c64", "506651", "955f43"][i], true, titles[i])
@@ -694,7 +702,7 @@ func dress_day27():
 	box(Vector3(3.17, 0.923, 2.49), Vector3(0.33, 0.025, 0.24), "c9b994", true, "Recorte de astronomía").rotation.y = 0.18
 	box(Vector3(3.25, 0.95, 2.22), Vector3(0.19, 0.1, 0.12), "887a69")
 
-var arrival_bag: MeshInstance3D
+var arrival_bag: StaticBody3D
 var arrival_fragments: Array[Node3D] = []
 var summit_dressed: = false
 

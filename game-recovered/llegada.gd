@@ -1,5 +1,7 @@
 extends RefCounted
 
+const FieldKit = preload("res://equipo_campo.gd")
+
 const ACTIONS = ["Recoger la mochila", "Saltar el tronco", "Agarrarte del pasamanos", "Probar la brújula", "Consultar el mapa", "Trepar con la cuerda", "Encender la linterna", "Seguir el sendero"]
 const HEADINGS = [0.0, -0.52, 0.72, 1.05, -0.8, 0.26, -1.19, 0.5]
 const SOIL = ["77765d", "786e50", "697353", "7d7958", "83724f", "777260", "666754", "6f7259"]
@@ -202,14 +204,7 @@ static func build_stop(v, center: Vector3):
 	v.timber(v.box(shelter + Vector3(0.0, 0.55, -0.37), Vector3(2.7, 0.12, 0.49), "a38966", true))
 	for x in [-1.0, 1.0]:
 		v.box(shelter + Vector3(x, 0.25, -0.37), Vector3(0.16, 0.50, 0.38), "77634f")
-	var bag := center + Vector3(0.68, 0.31, -6.31)
-	v.arrival_bag = v.box(bag, Vector3(0.58, 0.60, 0.32), "596650", true, ACTIONS[0])
-	v.box(bag + Vector3(0, 0.05, 0.17), Vector3(0.18, 0.39, 0.029), "9b8a65").reparent(v.arrival_bag)
-	v.box(bag + Vector3(0, -0.12, 0.191), Vector3(0.44, 0.20, 0.10), "77815f").reparent(v.arrival_bag)
-	for side in [-1, 1]:
-		v.box(bag + Vector3(side * 0.18, 0, -0.18), Vector3(0.075, 0.53, 0.12), "4c4939").reparent(v.arrival_bag)
-		v.box(bag + Vector3(side * 0.09, 0.345, 0), Vector3(0.035, 0.09, 0.035), "403c30").reparent(v.arrival_bag)
-	v.box(bag + Vector3(0, 0.39, 0), Vector3(0.18, 0.026, 0.04), "403c30").reparent(v.arrival_bag)
+	v.arrival_bag = FieldKit.backpack(v, center + Vector3(0.68, 0.318, -6.31), ACTIONS[0])
 	v.arrival_bag.rotation.y = -0.14
 
 static func build_log(v, center: Vector3):

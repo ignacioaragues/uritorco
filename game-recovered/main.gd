@@ -269,7 +269,7 @@ func use_arrival_item():
 
 func set_arrival_bag_visible(shown: bool):
 	valley.arrival_bag.visible = shown
-	valley.arrival_bag.get_child(0).collision_layer = 1 if shown else 0
+	valley.arrival_bag.collision_layer = 1 if shown else 0
 
 func _unhandled_input(event):
 	if mode == "book" and event is InputEventMouseButton and event.pressed:
@@ -325,6 +325,8 @@ func _process(delta):
 	valley.update_calendar(day)
 	valley.update_weather(day)
 	valley.shade_ridges()
+	var in_refuge: bool = absf(player.position.x) < 3.45 and player.position.z > -0.35 and player.position.z < 5.9
+	valley.update_desk_radio(in_refuge and hands.pose == "radio")
 	valley.update_shelter_wall(day)
 	if mode == "walk": score_daily_walk(day)
 	var rain_visible: bool = stage >= 16 and stage <= 17 and mode in ["walk", "map", "sighting"] and (player.position.z < -0.5 or absf(player.position.x) > 3.4)
@@ -365,16 +367,15 @@ func _process(delta):
 	if mode in ["approach", "walk", "dream", "map", "sighting", "cave", "mara_door"]:
 		var velocity: = Vector2(player.velocity.x, player.velocity.z).length() if player.is_on_floor() else 0.0
 		var outdoors: bool = player.position.z < 0 or absf(player.position.x) > 3.5
+		if hands.requested_pose == "compass":
+			var look: Vector3 = -player.camera.global_basis.z
+			hands.set_bearing(atan2(look.x, -look.z))
 		hands.step(delta, velocity)
 		if mode == "map":
 			map.location = player.position
 			map.queue_redraw()
 		var daytime: bool = mode != "dream" and outdoors and float(valley.sky_mat.get_shader_parameter("nightfall")) < 0.5
 		ambience.update(delta, velocity, daytime, mode == "cave" and not cave_outside)
-		if hands.pose == "compass":
-			var look: Vector3 = - player.camera.global_basis.z
-			hands.heading = atan2(look.x, look.z)
-			hands.queue_redraw()
 		if stage == 7 and not second_sighting and mode in ["walk", "map"]:
 			var here := Vector2(player.position.x, player.position.z)
 			if here.distance_to(Exploration.MOLLAR) < 5.4:

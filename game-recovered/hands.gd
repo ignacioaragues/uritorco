@@ -14,7 +14,8 @@ var requested_pose := ""
 var map_requested := false
 var map_lift := 0.0
 var map_movement: Tween
-var heading: = 0.0
+var heading := 0.0
+var target_heading := 0.0
 var phase: = 0.0
 var stride: = 0.0
 var lift: = 0.0
@@ -118,7 +119,13 @@ func set_press(value: float):
 	press = value
 	update_pose()
 
+func set_bearing(value: float):
+	target_heading = value
+	if pose != "compass" or lift < 0.18: heading = value
+
 func step(delta: float, speed: float):
+	if pose == "compass":
+		heading = lerp_angle(heading, target_heading, 1.0 - exp(-delta * 13.0))
 	var target: = clampf(speed / 3.4, 0.0, 1.0)
 	stride = move_toward(stride, target, delta * 4.0)
 	phase = fmod(phase + speed * delta * 1.85, TAU)
@@ -162,24 +169,70 @@ func _draw():
 			for bit in [1, 2, 4, 8]:
 				if not (i & bit): draw_line(corners[i], corners[i | bit], Color("#d2c99c"), 2.5, true)
 		return
-	if pose != "compass": return
+	if pose == "radio":
+		draw_radio_face()
+	elif pose == "compass":
+		draw_compass_face()
+
+func draw_radio_face():
+	draw_set_transform_matrix(rig.transform * Transform2D(-0.028, Vector2(110, 369)))
+	draw_rect(Rect2(0, 0, 103, 43), Color("#2b2b28"))
+	draw_rect(Rect2(4, 4, 94, 34), Color("#444a3d"))
+	draw_rect(Rect2(4, 4, 94, 4), Color("#505649"))
+	draw_rect(Rect2(4, 37, 94, 2), Color("#656152"))
+	var lamp := Color("#c9723d") if press > 0.22 else Color("#655447")
+	draw_circle(Vector2(20, 21), 5.1, Color("#2e2d27"), true, -1, true)
+	draw_circle(Vector2(20, 20.5), 3.45, lamp, true, -1, true)
+	if press > 0.22:
+		draw_circle(Vector2(19, 19.5), 1.55, Color("#ffc281"), true, -1, true)
+	draw_string(ThemeDB.fallback_font, Vector2(34, 29), "03", HORIZONTAL_ALIGNMENT_CENTER, 48.0, 25, Color("#d1c9a8"))
+	draw_line(Vector2(11, 50), Vector2(50, 50), Color("#777061"), 1.7, true)
+	draw_line(Vector2(13, 54), Vector2(36, 54), Color("#655f50"), 1.4, true)
+	for x in [8.0, 83.0]:
+		var screw := Vector2(x, 93)
+		draw_circle(screw, 4.5, Color("#6b675c"), true, -1, true)
+		draw_line(screw + Vector2(-2.0, 1.2), screw + Vector2(2.0, -1.2), Color("#38372f"), 1.5, true)
+
+func compass_axis(angle: float) -> Vector2:
+	return Vector2(sin(angle), -cos(angle))
+
+func draw_compass_face():
 	draw_set_transform_matrix(rig.transform * Transform2D(0, Vector2(1.0, 0.77), 0, Vector2(188, 145)))
-	var origin: = Vector2.ZERO
-	var r: = 87.0
-	var ink: = Color("#473e31")
-	for i in 32:
-		var angle: = TAU * i / 32 - heading
-		var unit: = Vector2(sin(angle), - cos(angle))
-		draw_line(origin + unit * r * (0.88 if i % 4 == 0 else 0.95), origin + unit * r, ink, 1.3, true)
+	var ink := Color("#534632")
+	var subdued := Color("#ae9671")
+	var brass := Color("#ab8550")
+	var red := Color("#a03c30")
+	draw_circle(Vector2.ZERO, 87.5, Color("#b7a280"), true, -1, true)
+	draw_circle(Vector2.ZERO, 84.5, Color("#e0d0a7"), true, -1, true)
+	draw_circle(Vector2.ZERO, 70.0, Color("#efe0b5"), true, -1, true)
+	draw_circle(Vector2.ZERO, 65, subdued, false, 1.6, true)
+	draw_circle(Vector2.ZERO, 51, Color("#c5b18a"), false, 1.2, true)
+	for i in 48:
+		var unit := compass_axis(TAU * i / 48.0)
+		var length_px := 79.0 if i % 4 else 73.0
+		draw_line(unit * length_px, unit * 83.0, ink, 1.35 if i % 4 else 2.0, true)
+	draw_line(Vector2(0, -86), Vector2(0, -75), red, 3.3, true)
+
 	for i in 4:
-		var angle: = PI / 2 * i - heading
-		var center: = origin + Vector2(sin(angle), - cos(angle)) * r * 0.74
+		var angle := PI / 2.0 * i - heading
+		var center := compass_axis(angle) * 56.0
 		var label: String = ["N", "E", "S", "O"][i]
-		var font: = ThemeDB.fallback_font
-		var fs: = roundi(r * 0.32)
-		draw_string(font, center + Vector2( - font.get_string_size(label, HORIZONTAL_ALIGNMENT_LEFT, -1, fs).x / 2.0, fs * 0.35), label, HORIZONTAL_ALIGNMENT_LEFT, -1, fs, ink)
-	var north: = Vector2( - sin(heading), - cos(heading))
-	var base: = north.orthogonal() * r * 0.12
-	draw_colored_polygon(PackedVector2Array([origin + base, origin + north * r * 0.58, origin - base]), Color("#873526"))
-	draw_colored_polygon(PackedVector2Array([origin + base, origin - north * r * 0.58, origin - base]), ink)
-	draw_circle(origin, r * 0.06, Color("#b99b68"))
+		var font := ThemeDB.fallback_font
+		var fs := 24 if i == 0 else 21
+		var x := font.get_string_size(label, HORIZONTAL_ALIGNMENT_LEFT, -1, fs).x
+		draw_string(font, center + Vector2(-x * 0.5, fs * 0.34), label, HORIZONTAL_ALIGNMENT_LEFT, -1, fs, red if i == 0 else ink)
+		var minor := compass_axis(angle + PI / 4.0)
+		draw_circle(minor * 56, 1.8, subdued, true, -1, true)
+	var north := compass_axis(-heading)
+	var side := north.orthogonal() * 7.3
+	var point := north * 44.0
+	var tail := -north * 33.0
+	draw_colored_polygon(PackedVector2Array([side + Vector2(1.5, 2.5), point + Vector2(1.5, 2.5), -side + Vector2(1.5, 2.5), tail + Vector2(1.5, 2.5)]), Color("#58452c54"))
+	draw_colored_polygon(PackedVector2Array([side, point, Vector2.ZERO]), Color("#773128"))
+	draw_colored_polygon(PackedVector2Array([-side, point, Vector2.ZERO]), Color("#b8533f"))
+	draw_colored_polygon(PackedVector2Array([side, tail, Vector2.ZERO]), Color("#6d6a51"))
+	draw_colored_polygon(PackedVector2Array([-side, tail, Vector2.ZERO]), Color("#959479"))
+	draw_circle(Vector2.ZERO, 6.6, ink, true, -1, true)
+	draw_circle(Vector2.ZERO, 4.8, brass, true, -1, true)
+	draw_circle(Vector2(-1.2, -1.0), 1.6, Color("#e8c997"), true, -1, true)
+	draw_arc(Vector2.ZERO, 80.5, -2.66, -2.02, 18, Color("#fff3cf7a"), 2.2, true)
