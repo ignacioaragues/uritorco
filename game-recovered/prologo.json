@@ -1,0 +1,144 @@
+[
+ {
+  "key": "libro",
+  "lines": [
+   "Tenés 6 años. Tu papá llega con un paquete escondido abajo del pulóver.",
+   "Adentro hay un libro para chicos. Se llama Observar el Cielo. Lo apoyás en sus rodillas y pasás las hojas con las dos manos.",
+   "En un dibujo, cuatro puntitos forman una cruz. Tu papá te presta el lápiz."
+  ],
+  "options": [
+   {
+    "label": "Calcás la cruz en la guarda.",
+    "keepsake": "En la guarda hay cuatro estrellas de lápiz. Una tiene un agujerito de tanto apretar."
+   },
+   {
+    "label": "Le pedís que escriba tu nombre.",
+    "keepsake": "Tu papá escribe tu nombre en imprenta grande. La última letra se le sube por el margen."
+   }
+  ]
+ },
+ {
+  "key": "apagon",
+  "lines": [
+   "Tenés 11 años. Se corta la luz en toda la cuadra. Los vecinos sacan las reposeras a la vereda. Por primera vez ves una mancha blanca que cruza el cielo de tapia a tapia.",
+   "Buscás la página en el libro. Cuando volvés ya todos están hablando de la comida que se les va a echar a perder. En la medianera todavía queda lugar para uno."
+  ],
+  "options": [
+   {
+    "label": "Trepás para verla un rato más.",
+    "keepsake": "Desde la tapia ves cómo la franja se pierde detrás del tanque de agua."
+   },
+   {
+    "label": "Le alcanzás el libro a la vecina.",
+    "keepsake": "La vecina se pone los anteojos de leer para mirar la Vía Láctea."
+   }
+  ]
+ },
+ {
+  "key": "patio",
+  "lines": [
+   "Tenés 16 años. Hace un mes que marcás en papel de calcar dónde ves la Luna desde el patio. Esta noche la encontrás justo en el hueco que dejaste en el dibujo.",
+   "Mañana hay una feria en la escuela. En el formulario, al lado de tu nombre, queda un renglón para el título."
+  ],
+  "options": [
+   {
+    "label": "Le ponés «Desde mi patio».",
+    "keepsake": "En la feria pegás también una foto del patio, con el tender lleno."
+   },
+   {
+    "label": "Le ponés «Un cielo de papel».",
+    "keepsake": "Una chica levanta el calco hacia la ventana. Por fin alguien entiende tu dibujo."
+   }
+  ]
+ },
+ {
+  "key": "terraza",
+  "lines": [
+   "Tenés 19 años. Estudiás astronomía. La chica que se sienta al lado tuyo en la facultad se llama Paula.",
+   "En la primera práctica nocturna hace tanto frío que comparten un par de guantes. A vos te toca el izquierdo.",
+   "Cuando termina la clase, Paula estira la mano que le queda libre."
+  ],
+  "options": [
+   {
+    "label": "Le das la mano hasta la parada.",
+    "keepsake": "En la parada siguen de la mano, cada uno con un guante."
+   },
+   {
+    "label": "La invitás a tomar algo caliente.",
+    "keepsake": "El bar está por cerrar. Toman un café entre los dos en el cordón de la vereda."
+   }
+  ]
+ },
+ {
+  "key": "beca",
+  "lines": [
+   "Tenés 24 años. Paula lee los resultados de la beca en tu cocina. Primero encuentra tu apellido. Te agarra la mano y sigue bajando por la lista. Ahí está el suyo.",
+   "Los dos tienen una plaza para investigar en Alemania. Esa noche abren fotos de departamentos y se quedan un buen rato mirando uno que tiene balcón.",
+   "«¿Qué pondrías ahí?», te pregunta."
+  ],
+  "options": [
+   {
+    "label": "«Dos sillas, aunque entren justas».",
+    "keepsake": "En el dibujo del balcón entran dos sillas, medio torcidas."
+   },
+   {
+    "label": "«El telescopio. Y nos sentamos en el piso».",
+    "keepsake": "Dibujan un telescopio entre dos almohadones."
+   }
+  ]
+ },
+ {
+  "key": "despedida",
+  "lines": [
+   "Tenés 25 años. A tu papá le fallan los riñones. Lo llevás a diálisis y te quedás con él hasta que le vuelve el color a la cara.",
+   "La beca empieza en marzo. No hay quién lo acompañe esos días. Escribís para ceder tu plaza. Paula acepta la suya.",
+   "La acompañás a la terminal. Tienen diez minutos antes de que suba."
+  ],
+  "options": [
+   {
+    "label": "Le das un abrazo",
+    "keepsake": "En la terminal se abrazan hasta que llaman a los pasajeros."
+   },
+   {
+    "label": "Le das un beso",
+    "keepsake": "En la terminal se besan hasta que el chofer vuelve a abrir el baúl."
+   }
+  ]
+ },
+ {
+  "key": "alemania",
+  "lines": [
+   "Tenés 28 años. Paula te muestra por videollamada la puerta de su despacho. Le da vergüenza acercar el teléfono, pero querés leer su nombre en la placa.",
+   "Antes, hablaban a cualquier hora. Después, empezó a costarles encontrar un rato.",
+   "Hoy es su cumpleaños. Allá ya es de noche."
+  ],
+  "options": [
+   {
+    "label": "Le grabás el brindis de la cocina.",
+    "keepsake": "Paula tiene un audio tuyo haciendo chinchín con un vaso contra el azucarero."
+   },
+   {
+    "label": "Le mandás la foto de los dos guantes.",
+    "keepsake": "En el teléfono guardás una foto de dos guantes distintos sobre una mesa de bar."
+   }
+  ]
+ },
+ {
+  "key": "puesto",
+  "lines": [
+   "Tenés 31 años. Tu papá muere en septiembre. El jueves siguiente te despertás a las seis, como si todavía tuvieras que llevarlo al hospital.",
+   "A principios de octubre te llama una compañera de las salidas de campo. Buscan a alguien para cuidar un puesto en las sierras: revisar senderos, medir el cauce, pasar el parte por radio.",
+   "Te vendría bien vivir lejos de esa cocina una temporada. Aceptás el relevo y les avisás a tus alumnos cuándo vas a volver. Al armar el bolso, levantás Observar el Cielo de la mesa de luz."
+  ],
+  "options": [
+   {
+    "label": "Marcás la Cruz del Sur con una cinta.",
+    "keepsake": "Una cinta verde marca la página de la Cruz del Sur."
+   },
+   {
+    "label": "Lo envolvés en el pulóver de tu papá.",
+    "keepsake": "De entre las hojas sale una hebra del pulóver de tu papá."
+   }
+  ]
+ }
+]

@@ -1,0 +1,19 @@
+[remap]
+
+importer="oggvorbisstr"
+type="AudioStreamOggVorbis"
+uid="uid://6t7ohn4msu6i"
+path="res://.godot/imported/Montañas Vacías.ogg-2181848257716fd558d4ee33f46ac23d.oggvorbisstr"
+
+[deps]
+
+source_file="res://audio/Montañas Vacías.ogg"
+dest_files=["res://.godot/imported/Montañas Vacías.ogg-2181848257716fd558d4ee33f46ac23d.oggvorbisstr"]
+
+[params]
+
+loop=false
+loop_offset=0.0
+bpm=0.0
+beat_count=0
+bar_beats=4

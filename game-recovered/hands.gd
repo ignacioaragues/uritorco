@@ -1,0 +1,161 @@
+extends Control
+
+const RADIO = preload("res://equipo/radio.webp")
+const COMPASS = preload("res://equipo/brujula.webp")
+const MAP_HAND = preload("res://equipo/mapa_mano.webp")
+var mate_texture: Texture2D
+var rig: = Node2D.new()
+var sprite: = Sprite2D.new()
+var paper_rig: = Node2D.new()
+var paper_sprite: = Sprite2D.new()
+var ptt: = ShaderMaterial.new()
+var pose: = ""
+var requested_pose := ""
+var heading: = 0.0
+var phase: = 0.0
+var stride: = 0.0
+var lift: = 0.0
+var press: = 0.0
+var movement: Tween
+var press_motion: Tween
+
+func _ready():
+	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	mouse_filter = Control.MOUSE_FILTER_IGNORE
+	if ResourceLoader.exists("res://equipo/mate.webp"):
+		mate_texture = load("res://equipo/mate.webp")
+	add_child(paper_rig)
+	paper_rig.add_child(paper_sprite)
+	paper_sprite.texture = MAP_HAND
+	paper_sprite.centered = false
+	paper_rig.hide()
+	add_child(rig)
+	rig.show_behind_parent = true
+	rig.add_child(sprite)
+	sprite.centered = false
+	ptt.shader = preload("res://pulsador.gdshader")
+	hide()
+
+func mount_map(sheet: Control):
+	paper_rig.add_child(sheet)
+	sheet.set_anchors_and_offsets_preset(Control.PRESET_TOP_LEFT)
+	sheet.size = Vector2(560, 330)
+
+	sheet.position = Vector2(207, 33)
+	sheet.scale = Vector2(0.99, 1.19)
+
+func hold(next: String):
+	if next == requested_pose: return
+	requested_pose = next
+	if movement: movement.kill()
+	if press_motion: press_motion.kill()
+	press = 0.0
+	if next.is_empty() and pose.is_empty(): return
+	movement = create_tween().set_trans(Tween.TRANS_SINE)
+	if next == pose:
+		movement.tween_method(set_lift, lift, 1.0, 0.28 * (1.0 - lift))
+		return
+	if not pose.is_empty() and lift > 0.0:
+		movement.tween_method(set_lift, lift, 0.0, 0.22 * lift)
+	movement.tween_callback(apply_pose.bind(next))
+	if not next.is_empty():
+		movement.tween_method(set_lift, 0.0, 1.0, 0.28)
+
+func apply_pose(next: String):
+	pose = next
+	paper_rig.visible = pose == "map"
+	rig.visible = pose in ["radio", "compass", "piece", "mate"]
+	if not paper_rig.visible and not rig.visible:
+		lift = 0.0
+		hide()
+		return
+	sprite.texture = mate_texture if pose == "mate" else (RADIO if pose == "radio" else COMPASS)
+	sprite.material = ptt if pose == "radio" else null
+	show()
+	set_lift(0.0)
+
+func set_lift(value: float):
+	lift = value
+	update_pose()
+
+func press_button():
+	if requested_pose != "radio": return
+	if press_motion: press_motion.kill()
+	press_motion = create_tween().set_trans(Tween.TRANS_SINE)
+	if pose != "radio":
+		press_motion.tween_interval(0.22 * lift + 0.2)
+	elif lift < 0.5:
+		press_motion.tween_interval(0.2)
+	press_motion.tween_method(set_press, press, 1.0, 0.12)
+	press_motion.tween_interval(0.13)
+	press_motion.tween_method(set_press, 1.0, 0.0, 0.2)
+
+func set_press(value: float):
+	press = value
+	update_pose()
+
+func step(delta: float, speed: float):
+	var target: = clampf(speed / 3.4, 0.0, 1.0)
+	stride = move_toward(stride, target, delta * 4.0)
+	phase = fmod(phase + speed * delta * 1.85, TAU)
+	if visible: update_pose()
+
+func update_pose():
+	var sway: = Vector2(sin(phase) * 2.6, cos(phase * 2) * 1.7) * stride
+	var tilt: = sin(phase) * 0.007 * stride
+	if paper_rig.visible:
+		place_grip(paper_rig, MAP_HAND, 0.71, true, sway, tilt)
+	if rig.visible and sprite.texture:
+		place_grip(rig, sprite.texture, 0.53 if pose == "radio" else 0.43, false, sway + Vector2(-3, 5) * press, tilt + press * 0.032)
+	if pose == "radio": ptt.set_shader_parameter("squeeze", press)
+	queue_redraw()
+
+func place_grip(node: Node2D, texture: Texture2D, fraction: float, left: bool, sway: Vector2, angle: float):
+	var height: = size.y * fraction
+	var factor: = height / texture.get_height()
+	var extent: = texture.get_size() * factor
+	var pivot: = extent * Vector2(0.55, 0.85)
+	var x: float = -4.0 if left else size.x - extent.x + 3
+	node.scale = Vector2.ONE * factor
+	node.rotation = angle
+	node.position = Vector2(x, size.y - height + size.y * 0.05) + sway + pivot - pivot.rotated(angle) + Vector2.DOWN * (1 - lift) * height
+
+func _draw():
+	if pose == "piece":
+		draw_set_transform_matrix(rig.transform)
+		var center: = Vector2(188, 145)
+		draw_circle(center, 92, Color("#424846"))
+		var phase4: = Time.get_ticks_msec() * 0.0006
+		var corners: = PackedVector2Array()
+		for i in 16:
+			var x: = float((i & 1) * 2 - 1)
+			var w: = float(((i >> 3) & 1) * 2 - 1)
+			var z: = float(((i >> 2) & 1) * 2 - 1)
+			var y: = float(((i >> 1) & 1) * 2 - 1)
+			var depth: = 3.5 - w * cos(phase4) - x * sin(phase4)
+			corners.append(center + Vector2(x * cos(phase4) - w * sin(phase4) + 0.38 * z, y + 0.35 * z) * 92 / depth)
+		for i in 16:
+			for bit in [1, 2, 4, 8]:
+				if not (i & bit): draw_line(corners[i], corners[i | bit], Color("#d2c99c"), 2.5, true)
+		return
+	if pose != "compass": return
+	draw_set_transform_matrix(rig.transform * Transform2D(0, Vector2(1.0, 0.77), 0, Vector2(188, 145)))
+	var origin: = Vector2.ZERO
+	var r: = 87.0
+	var ink: = Color("#473e31")
+	for i in 32:
+		var angle: = TAU * i / 32 - heading
+		var unit: = Vector2(sin(angle), - cos(angle))
+		draw_line(origin + unit * r * (0.88 if i % 4 == 0 else 0.95), origin + unit * r, ink, 1.3, true)
+	for i in 4:
+		var angle: = PI / 2 * i - heading
+		var center: = origin + Vector2(sin(angle), - cos(angle)) * r * 0.74
+		var label: String = ["N", "E", "S", "O"][i]
+		var font: = ThemeDB.fallback_font
+		var fs: = roundi(r * 0.32)
+		draw_string(font, center + Vector2( - font.get_string_size(label, HORIZONTAL_ALIGNMENT_LEFT, -1, fs).x / 2.0, fs * 0.35), label, HORIZONTAL_ALIGNMENT_LEFT, -1, fs, ink)
+	var north: = Vector2( - sin(heading), - cos(heading))
+	var base: = north.orthogonal() * r * 0.12
+	draw_colored_polygon(PackedVector2Array([origin + base, origin + north * r * 0.58, origin - base]), Color("#873526"))
+	draw_colored_polygon(PackedVector2Array([origin + base, origin - north * r * 0.58, origin - base]), ink)
+	draw_circle(origin, r * 0.06, Color("#b99b68"))
