@@ -29,10 +29,10 @@ Cada pasada avanza un solo punto del juego. Al cerrarla se actualiza el estado d
 - [x] Mostrar Mouse y F1 en la parada. Mostrar WASD y habilitar la caminata al recoger la mochila.
 - [x] Fijar la posición de la luz al abrir cada microescena y dejar el ocaso para después del puente. El sol queda detrás de las nubes.
 - [x] Abrir hacia adentro la puerta del refugio y alargar el gesto de mantener apretado el pulsador de la radio.
+- [x] Recuperar detalle de vegetación y piedras al alejarse del refugio. Los senderos largos tienen pastos curvos, copas irregulares con ramas y tres formas de roca con vetas y manchas.
 
 ### Por hacer
 
-- [ ] Recuperar detalle y textura de la vegetación y las piedras al alejarse del refugio.
 - [ ] Ampliar la historia comechingona en la sala de misterios. Ya hay una ficha sobre memoria y patrimonio.
 - [ ] Revisar la continuidad de la música. Escuchar los silencios largos, las entradas muy breves y los posibles cortes al hablar con Mara.
 - [ ] Identificar el ruido fuerte cerca del museo.
@@ -45,6 +45,11 @@ Cada pasada avanza un solo punto del juego. Al cerrarla se actualiza el estado d
 - [ ] Recorrer con el mapa abierto la ida del Día 36 para comprobar que las pircas guían desde el acceso hasta la pasarela.
 - [ ] Volver a mirar la tormenta desde las ventanas del refugio y evaluar cómo se lee su intensidad.
 - [ ] Hacer aparecer objetos en el refugio según lo que pasó con Mara. Queda anotada la botella de vino como posibilidad.
+
+## Pasada de vegetación y piedras
+
+- El acceso norte, el abra y la cantera usan mallas y materiales emparentados con los del refugio. El pasto, las copas, los troncos y las rocas se agrupan por sectores para el dibujado.
+- Se compararon las mismas vistas antes y después en Godot. Se verificaron las 1.060 colisiones de troncos y piedras y se probó el recorrido desde la tranquera hasta el filo y la subida y bajada de la cumbre.
 
 ## Pasada de los cuatro arcos
 
@@ -130,6 +135,6 @@ Esta lista reconstruye el estado informado del proyecto editable. La exportació
 
 - **Pasada narrativa.** Separar mejor las charlas de Mara durante cada caminata. Retomar lo que Hernán acaba de ver y darle espacio al escepticismo de Mara. Evaluar objetos ligados a decisiones, como una botella que pueda mandar Mara.
 - **Música y ambiente.** Revisar a oído los tramos largos sin música, las entradas que duran poco y los cortes al terminar de hablar por radio. Identificar el ruido fuerte cerca del museo. Volver a escuchar la mezcla de la última noche y comparar los sonidos de pisadas por superficie.
-- **Arte.** Afinar las texturas del prólogo y la lectura de objetos de cerca. Trabajar el detalle de vegetación y piedras que se pierde con la distancia. Ampliar la muestra ilustrada de historia comechingona. Revisar en conjunto las estrellas, la integración del planeta y las transiciones de fase lunar.
+- **Arte.** Afinar las texturas del prólogo y la lectura de objetos de cerca. Ampliar la muestra ilustrada de historia comechingona. Revisar en conjunto las estrellas, la integración del planeta y las transiciones de fase lunar.
 - **Mundo y recorridos.** Darle más puntos de interés a la caminata del cable. Revisar la distribución de destinos alrededor del refugio, ocultar mejor otros hallazgos y seguir afinando la cartografía. Revisar a velocidad normal el ritmo de las ocho microescenas, la tormenta desde las ventanas y el tiempo que llevan las idas y vueltas a la pasarela.
 - **Windows.** Validar la próxima exportación cuando se solicite.

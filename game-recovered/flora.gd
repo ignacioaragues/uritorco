@@ -69,12 +69,7 @@ static func branch(parent: Node3D, start: Vector3, end: Vector3, base: float, ti
 	mesh.top_radius = tip
 	var instance := MeshInstance3D.new()
 	instance.mesh = mesh
-	var bark := ShaderMaterial.new()
-	bark.shader = preload("res://grain.gdshader")
-	bark.set_shader_parameter("tint", Color("#685343"))
-	bark.set_shader_parameter("grain_strength", 0.13)
-	bark.set_shader_parameter("fiber_scale", 82.0)
-	instance.material_override = bark
+	instance.material_override = bark_material()
 	parent.add_child(instance)
 	instance.position = (start + end) * 0.5
 	instance.quaternion = Quaternion(Vector3.UP, (end - start).normalized())
@@ -86,17 +81,53 @@ static func crown(parent: Node3D, rng: RandomNumberGenerator, center: Vector3, s
 	mesh.rings = 5
 	var leaf := MeshInstance3D.new()
 	leaf.mesh = mesh
-	var finish := ShaderMaterial.new()
-	finish.shader = BRUSH
-	finish.set_shader_parameter("tint", Color(tint))
-	finish.set_shader_parameter("pattern", rng.randf_range(0.0, 27.0))
-	leaf.material_override = finish
+	leaf.material_override = leaf_material(tint, rng.randf_range(0.0, 27.0))
 	parent.add_child(leaf)
 	leaf.position = center
 	leaf.rotation = Vector3(rng.randf_range(-0.2, 0.2), angle, rng.randf_range(-0.27, 0.27))
 	leaf.scale = size
 
+static func leaf_material(tint: String, pattern := 0.0) -> ShaderMaterial:
+	var material := ShaderMaterial.new()
+	material.shader = BRUSH
+	material.set_shader_parameter("tint", Color(tint))
+	material.set_shader_parameter("pattern", pattern)
+	return material
+
+static func bark_material() -> ShaderMaterial:
+	var material := ShaderMaterial.new()
+	material.shader = preload("res://grain.gdshader")
+	material.set_shader_parameter("tint", Color("#685343"))
+	material.set_shader_parameter("grain_strength", 0.24)
+	material.set_shader_parameter("irregular", true)
+	return material
+
+static func crown_mesh(phase: float) -> ArrayMesh:
+	var source := SphereMesh.new()
+	source.radial_segments = 12
+	source.rings = 6
+	var arrays := source.get_mesh_arrays()
+	var vertices: PackedVector3Array = arrays[Mesh.ARRAY_VERTEX]
+	for index in vertices.size():
+		var vertex := vertices[index]
+		var axis := vertex.normalized()
+		var lobes := sin(axis.x * 5.2 + phase + axis.z * 2.1) * cos(axis.z * 4.5 - axis.y * 2.3)
+		var fringe := sin(axis.y * 8.0 + axis.x * 5.4 - phase) * cos(axis.z * 7.3 + axis.x * 2.5)
+		vertices[index] = vertex * (0.94 + 0.18 * lobes + 0.087 * fringe) + Vector3(axis.y * 0.048, axis.x * 0.041, 0.0)
+	arrays[Mesh.ARRAY_VERTEX] = vertices
+	var lobed := ArrayMesh.new()
+	lobed.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, arrays)
+	return lobed
+
 static func grass_batch(parent: Node3D, roots: Array[Vector4]):
+	if roots.is_empty(): return
+	var meadow := MeshInstance3D.new()
+	meadow.mesh = grass_mesh(roots)
+	meadow.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	meadow.material_override = grass_material()
+	parent.add_child(meadow)
+
+static func grass_mesh(roots: Array[Vector4]) -> ArrayMesh:
 	var surface := SurfaceTool.new()
 	surface.begin(Mesh.PRIMITIVE_TRIANGLES)
 	var palette: Array[Color] = [Color("#76744d"), Color("#8c8152"), Color("#a09460"), Color("#b49f70")]
@@ -121,12 +152,11 @@ static func grass_batch(parent: Node3D, roots: Array[Vector4]):
 				surface.set_color(lower if vertex < 2 else outer)
 				surface.set_normal(Vector3(0.28 * direction.x, 0.90, 0.28 * direction.z).normalized())
 				surface.add_vertex(corners[vertex])
-	var meadow := MeshInstance3D.new()
-	meadow.mesh = surface.commit()
-	meadow.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	return surface.commit()
+
+static func grass_material() -> StandardMaterial3D:
 	var dry_grass := StandardMaterial3D.new()
 	dry_grass.vertex_color_use_as_albedo = true
 	dry_grass.cull_mode = BaseMaterial3D.CULL_DISABLED
 	dry_grass.roughness = 1.0
-	meadow.material_override = dry_grass
-	parent.add_child(meadow)
+	return dry_grass

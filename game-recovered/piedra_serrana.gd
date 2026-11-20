@@ -26,6 +26,15 @@ static func finish(parent: Node3D, faces: SurfaceTool, name: String) -> MeshInst
 	parent.add_child(mesh)
 	return mesh
 
+static func hillside_mesh(variant: int) -> ArrayMesh:
+	var rng := RandomNumberGenerator.new()
+	rng.seed = 1549 + variant * 29
+	var faces := surface()
+	var proportions := Vector3(1.0, 0.72 + variant * 0.08, 1.0 - variant * 0.054)
+	fragment(faces, Vector3(0, -0.19, 0), proportions, 0.0, rng)
+	faces.generate_normals()
+	return faces.commit()
+
 static func fragment(faces: SurfaceTool, at: Vector3, size: Vector3, turn: float, rng: RandomNumberGenerator, ground := Callable()) -> PackedVector3Array:
 	var vertices := PackedVector3Array()
 	var radii := PackedFloat32Array()

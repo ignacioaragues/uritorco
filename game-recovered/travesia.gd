@@ -3,6 +3,10 @@ extends Node3D
 const Signage = preload("res://carteleria.gd")
 const Ladera = preload("res://ladera.gd")
 const Kit = preload("res://equipo_campo.gd")
+const Flora = preload("res://flora.gd")
+const Stone = preload("res://piedra_serrana.gd")
+const SCATTER_CELL_SIZE := 144.0
+const HILLSIDE_STONE_SHAPES := 3
 
 const ORIGIN_Z: = -76.0
 const WEST_START_Z := -22.0
@@ -176,25 +180,38 @@ func box(parent: Node3D, size_m: Vector3, pos: Vector3, color: String) -> MeshIn
 	node.position = pos
 	return node
 
-func scattered(mesh: PrimitiveMesh, transforms: Array[Transform3D], color: String):
-	var batch: = MultiMesh.new()
-	batch.transform_format = MultiMesh.TRANSFORM_3D
-	batch.mesh = mesh
-	batch.instance_count = transforms.size()
-	for i in transforms.size(): batch.set_instance_transform(i, transforms[i])
-	var inst: = MultiMeshInstance3D.new()
-	inst.multimesh = batch
-	var mat: = StandardMaterial3D.new()
-	mat.albedo_color = Color(color)
-	inst.material_override = mat
-	add_child(inst)
+func scattered(label: String, mesh: Mesh, transforms: Array[Transform3D], material: Material, shadows := true):
+	# Godot descarta un MultiMesh entero cuando su caja queda fuera de cámara.
+	var cells: Dictionary = {}
+	for placement in transforms:
+		var cell := Vector2i(
+			floori(placement.origin.x / SCATTER_CELL_SIZE + 0.5),
+			floori(placement.origin.z / SCATTER_CELL_SIZE))
+		var placements: Array = cells.get_or_add(cell, [])
+		placements.append(placement)
+	for cell in cells:
+		var placements: Array = cells[cell]
+		var batch := MultiMesh.new()
+		batch.transform_format = MultiMesh.TRANSFORM_3D
+		batch.mesh = mesh
+		batch.instance_count = placements.size()
+		for index in placements.size(): batch.set_instance_transform(index, placements[index])
+		var instance := MultiMeshInstance3D.new()
+		instance.name = "%s %d %d" % [label, cell.x, cell.y]
+		instance.multimesh = batch
+		instance.material_override = material
+		if not shadows: instance.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+		add_child(instance)
 
 func plant():
 	var grass: Array[Transform3D] = []
 	var shrubs: Array[Transform3D] = []
 	var open_crowns: Array[Transform3D] = []
 	var stems: Array[Transform3D] = []
-	var rocks: Array[Transform3D] = []
+	var rocks: Array[Array] = []
+	for _variant in HILLSIDE_STONE_SHAPES:
+		var stones: Array[Transform3D] = []
+		rocks.append(stones)
 	var join := summit_point(SUMMIT_JOIN)
 	var join_distance := ORIGIN_Z - join.z
 	var peak := summit_point(1.0)
@@ -228,32 +245,35 @@ func plant():
 			var canopy := Vector3(1.85, 0.80, 1.43) if open_tree else Vector3(2.25, 1.43, 1.82)
 			for j in range(4 if open_tree else 3):
 				var angle: = j * 2.1 + turn.get_euler().y
-				crowns.append(Transform3D(turn.scaled(canopy * scale_m), pos + Vector3(cos(angle) * 0.81, trunk_height - 0.12 + j * 0.23, sin(angle) * 0.74) * scale_m))
+				var crown := pos + Vector3(cos(angle) * 0.81, trunk_height - 0.12 + j * 0.23, sin(angle) * 0.74) * scale_m
+				var spread := 0.85 + 0.32 * sin(i * 0.37 + j * 1.33)
+				var leaf_turn := Basis.from_euler(Vector3(0.14 * sin(angle), angle, 0.22 * cos(angle)))
+				crowns.append(Transform3D(leaf_turn.scaled_local(canopy * scale_m * spread), crown))
+				var fork := pos + Vector3.UP * trunk_height * scale_m * 0.66
+				var branch_tip := crown - Vector3.UP * scale_m * canopy.y * 0.18
+				var limb := branch_tip - fork
+				var limb_turn := Basis(Quaternion(Vector3.UP, limb.normalized()))
+				stems.append(Transform3D(limb_turn.scaled_local(Vector3(0.13 * scale_m, limb.length(), 0.12 * scale_m)), (fork + branch_tip) * 0.5))
 		elif i % 8 == 0:
 			var dims := Vector3(2.1, 1.8, 2.4) * scale_m
-			rocks.append(Transform3D(turn.scaled(dims), pos))
+			rocks[(i / 8) % HILLSIDE_STONE_SHAPES].append(Transform3D(turn.scaled(dims), pos))
 			Kit.item(solids, pos + Vector3.UP * dims.y * 0.17, "", Vector3.ZERO, dims * Vector3(0.65, 0.52, 0.65)).basis = turn
 		else:
-			for j in range(4):
-				var angle: = j * 1.57
-				grass.append(Transform3D(turn.rotated(Vector3.FORWARD, 0.15 * j).scaled(Vector3(0.32, 0.74, 0.28) * scale_m), pos + Vector3(0.14 * cos(angle), 0.25, 0.14 * sin(angle)) * scale_m))
-	var ball: = SphereMesh.new()
-	ball.radial_segments = 7
-	ball.rings = 3
-	var blade: = CylinderMesh.new()
-	blade.top_radius = 0.0
-	blade.radial_segments = 3
-	blade.height = 1
-	scattered(blade, grass, "ae9865")
-	scattered(ball, shrubs, "546447")
-	scattered(ball, open_crowns, "7e8755")
+			var spread := Vector3(1.20, 0.92, 1.20) * scale_m
+			grass.append(Transform3D(turn.scaled_local(spread), pos - Vector3.UP * 0.045))
+	scattered("Pastos serranos", Flora.grass_mesh([Vector4(0, 0, 0, 1.18)]), grass, Flora.grass_material(), false)
+	scattered("Copas bajas", Flora.crown_mesh(0.4), shrubs, Flora.leaf_material("65744d"))
+	scattered("Copas abiertas", Flora.crown_mesh(2.5), open_crowns, Flora.leaf_material("7e8755"))
 	var bark := CylinderMesh.new()
-	bark.top_radius = 0.25
-	bark.radial_segments = 5
+	bark.top_radius = 0.31
+	bark.radial_segments = 7
 	bark.rings = 0
 	bark.height = 1.0
-	scattered(bark, stems, "705c49")
-	scattered(ball, rocks, "8c7e72")
+	scattered("Troncos y ramas", bark, stems, Flora.bark_material())
+	var granite := Stone.paint()
+	for variant in rocks.size():
+		var stones: Array[Transform3D] = rocks[variant]
+		scattered("Granito %d" % (variant + 1), Stone.hillside_mesh(variant), stones, granite)
 
 func animal_form(parent: Node3D, position: Vector3, proportions: Vector3, tint: String) -> MeshInstance3D:
 	var form := SphereMesh.new()
