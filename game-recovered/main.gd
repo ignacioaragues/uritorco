@@ -11,7 +11,7 @@ const Diary = preload("res://diario.gd")
 const SUMMIT_NIGHT_SECONDS := 40.0
 const SIGHTING_FOCUS_SECONDS := 0.4
 const NIGHT_SCENE_VIEW := 200.0
-enum Sighting { ABRA, QUARRY, CROSSING, SHELTER, CAVE }
+enum Sighting { ABRA, QUARRY, CROSSING, SHELTER, CAVE, CLEARING }
 const STATE = ["page", "stage", "keepsakes", "bedtime", "field_note", "crossing_note", "filo_report_reply", "quarry_reply", "fox_seen", "hiker_met", "route_reported", "observing", "pending_return", "heard", "read_note", "creek_note", "bed_pose", "bed_pitch", "gate_jumped", "map_read", "awaiting_call", "dream_count", "branch_found", "mapped_distance", "has_piece", "summit_mapped", "camp_read", "arrival_action", "second_sighting", "book_light_notes", "day7_dusk", "archive_read", "trail_replies", "crossing_response", "summit_echo_response", "night_investigation", "ending_at_door", "sky_memories", "compass_lost", "last_voice_reply", "scored_walks"]
 var flashlight_out: = false
 var camp_read: = false
@@ -66,6 +66,7 @@ var radio_hint: = Label.new()
 var sighting: Sighting
 var sighting_time := 0.0
 var sighting_focus := 0.0
+var sighting_resolving := false
 var book_light_notes := false
 var dream_count: = 0
 var compass_out: = false
@@ -873,8 +874,12 @@ func _unhandled_key_input(event):
 		player.velocity.y = 5.7
 		return
 	if mode == "sighting":
-		if key == KEY_E and sighting_focus >= SIGHTING_FOCUS_SECONDS and looking_at_sighting():
+		if key == KEY_E and not sighting_resolving and sighting_focus >= SIGHTING_FOCUS_SECONDS and looking_at_sighting():
 			observe_lights()
+	elif mode == "last_dream_prelude" and advance:
+		mode = "sleeping"
+		hint.text = ""
+		reveal_dream(create_tween())
 	elif mode == "last_voice_answer" and advance:
 		finish_dream()
 	elif mode == "night_cut" and advance:
@@ -1296,6 +1301,7 @@ func begin_dream(preserve_bed: bool = false, fade_from_black: bool = false):
 		bed_pose = player.transform
 		bed_pitch = player.camera.rotation.x
 	var first: = dream_count == 0
+	var last := stage == 18
 	dream_count += 1
 	overlay("sleeping", "", "")
 	shade.color = Color.BLACK if fade_from_black else Color.TRANSPARENT
@@ -1315,8 +1321,15 @@ func begin_dream(preserve_bed: bool = false, fade_from_black: bool = false):
 		position_on_planet()
 		player.velocity = Vector3.ZERO
 		player.rotation.y = 0.0
-		player.camera.rotation.x = 0.4)
-	fade.tween_interval(5.0)
+		player.camera.rotation.x = 0.4
+		if last:
+			mode = "last_dream_prelude"
+			hint.text = "Espacio · abrir los ojos")
+	if not last:
+		fade.tween_interval(5.0)
+		reveal_dream(fade)
+
+func reveal_dream(fade: Tween):
 	fade.tween_property(words, "modulate:a", 0.0, 1.0)
 	fade.tween_property(shade, "color:a", 0.0, 2.0)
 	fade.tween_callback( func():
@@ -1521,7 +1534,7 @@ func update_night_return(local: Vector3):
 		clearing_cued = true
 		cue_clearing()
 	if clearing_distance < 2.5:
-		start_final_dream(true)
+		show_sighting(Sighting.CLEARING)
 		return
 	if position.distance_to(LastNight.RETURN) < 3.4:
 		hint.text = "E · seguir la bajada"
@@ -1535,18 +1548,26 @@ func update_night_return(local: Vector3):
 func call_from_cave():
 	var local: Vector3 = player.position - LastNight.CAVE
 	var line := "«Buscá los bordes claros. Hay tres piedras que sobresalen. Si resbalás, volvé a la repisa y tomá aire»."
-	var interrupted := false
 	if cave_outside:
 		line = "«Si estás afuera, buscá el sur. Voy a dejar el canal abierto»." if not crux_found else "«Ya no oigo el agua. Si se corta, seguí el rumbo. Yo te escucho»."
 	elif local.z < -22.0:
 		line = "«Escuchá el viento. Si me dejás de oír, seguí hasta donde veas cielo»."
 		if not cave_station_called:
 			cave_station_called = true
-			interrupted = true
-			line = "«¿Estás al lado mío?» Hay un corte. La voz vuelve más baja. «Escuchá el viento. Por ahí tiene que estar la salida»."
-	if interrupted: radio.play_interference()
-	else: radio.play()
+			hear_station_cut()
+			return
+	radio.play()
 	overlay("cave_text", line, "Espacio · guardar la radio", "radio")
+
+func hear_station_cut():
+	radio.play()
+	overlay("station_cut", "«¿Estás al lado mío?»", "", "radio")
+	await get_tree().create_timer(0.95).timeout
+	radio.play_interference()
+	overlay("station_cut", "El canal se corta.", "", "radio")
+	await get_tree().create_timer(0.7).timeout
+	radio.play()
+	overlay("cave_text", "La voz vuelve más baja. «Escuchá el viento. Por ahí tiene que estar la salida».", "Espacio · guardar la radio", "radio")
 
 func inspect_cave():
 	if cave_outside:
@@ -1593,11 +1614,12 @@ func start_final_dream(blinded: bool):
 		cue_clearing()
 		night_investigation = 3
 		overlay("cave_flash", "", "")
-		shade.color = Color.WHITE
-		radio.play_interference()
+		shade.color = Color(1, 1, 0.96, 0)
 		var flash: = create_tween()
-		flash.tween_interval(0.3)
-		flash.tween_property(shade, "color", Color.BLACK, 0.8)
+		flash.tween_property(shade, "color:a", 1.0, 0.14)
+		flash.tween_callback(radio.play_interference)
+		flash.tween_interval(0.22)
+		flash.tween_property(shade, "color", Color.BLACK, 0.9)
 		await flash.finished
 	player.intro_center = Vector3.ZERO
 	player.position = bed_pose.origin
@@ -1802,8 +1824,9 @@ func show_sighting(kind: Sighting = Sighting.ABRA):
 	sighting = kind
 	sighting_time = 0.0
 	sighting_focus = 0.0
+	sighting_resolving = false
 	mode = "sighting"
-	player.walking = kind in [Sighting.ABRA, Sighting.QUARRY, Sighting.CROSSING]
+	player.walking = kind in [Sighting.ABRA, Sighting.QUARRY, Sighting.CROSSING, Sighting.CLEARING]
 	player.looking_only = true
 	Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
 	hands.show_map(false)
@@ -1829,6 +1852,9 @@ func show_sighting(kind: Sighting = Sighting.ABRA):
 			place_sighting_light(valley.second_beacon, center + Vector3(5, 3.2, 10))
 		Sighting.CAVE:
 			center = LastNight.CAVE + Vector3(LastNight.CLEARING.x, 15.0, LastNight.CLEARING.y)
+		Sighting.CLEARING:
+			var point := LastNight.CLEARING + Vector2(0, -5.0)
+			center = LastNight.CAVE + Vector3(point.x, LastNight.return_height(point.x, point.y) + 4.6, point.y)
 	place_sighting_light(valley.beacon, center)
 	update_sighting(0.0)
 
@@ -1851,13 +1877,21 @@ func looking_at_sighting() -> bool:
 	return false
 
 func update_sighting(delta: float):
+	if sighting_resolving: return
+	if sighting == Sighting.CLEARING:
+		var local: Vector3 = player.position - LastNight.CAVE
+		if Vector2(local.x, local.z).distance_to(LastNight.CLEARING) > 6.0 or local.y < -6.0:
+			valley.beacon.hide()
+			resume_cave()
+			return
 	sighting_time += delta
 	valley.beacon.modulate.a = 0.48 + 0.52 * pow(0.5 + 0.5 * sin(sighting_time * 3.3 + 0.8), 2.4)
 	valley.second_beacon.modulate.a = 0.38 + 0.62 * pow(0.5 + 0.5 * sin(sighting_time * 3.3 - 1.15), 2.4)
 	if looking_at_sighting():
 		sighting_focus += delta
 		var label := "?????" if sighting == Sighting.ABRA else "Luces extrañas"
-		hint.text = label + (" · E · observar" if sighting_focus >= SIGHTING_FOCUS_SECONDS else "")
+		var verb := " · E · quedarte mirando" if sighting == Sighting.CLEARING else " · E · observar"
+		hint.text = label + (verb if sighting_focus >= SIGHTING_FOCUS_SECONDS else "")
 		return
 	sighting_focus = 0.0
 	var camera: Camera3D = player.camera
@@ -1868,9 +1902,25 @@ func update_sighting(delta: float):
 	elif absf(sideways) > 0.23 or direction.dot(-camera.global_basis.z) < 0.0:
 		hint.text = "Mirá el cielo hacia la %s." % ("izquierda" if sideways < 0.0 else "derecha")
 	else:
-		hint.text = "Mirá arriba, donde se abrió el cielo." if sighting == Sighting.CAVE else "Buscá el destello sobre la ladera."
+		if sighting == Sighting.CLEARING:
+			hint.text = "Algo brilla por encima de los árboles."
+		else:
+			hint.text = "Mirá arriba, donde se abrió el cielo." if sighting == Sighting.CAVE else "Buscá el destello sobre la ladera."
 
 func observe_lights():
+	sighting_resolving = true
+	hint.text = ""
+	cross.hide()
+	var fade := create_tween()
+	if sighting == Sighting.CLEARING:
+		player.walking = false
+		fade.tween_property(valley.beacon, "modulate:a", 1.0, 0.85)
+	else:
+		fade.tween_property(valley.beacon, "modulate:a", 0.0, 0.45)
+		if valley.second_beacon.visible:
+			fade.parallel().tween_property(valley.second_beacon, "modulate:a", 0.0, 0.5).set_delay(0.35)
+		fade.tween_interval(0.28)
+	await fade.finished
 	valley.beacon.hide()
 	valley.second_beacon.hide()
 	match sighting:
@@ -1892,6 +1942,8 @@ func observe_lights():
 			overlay("last_night_choice", "Un punto queda quieto sobre los molles. El otro se pierde entre las ramas. Por la radio, Mara te pregunta si seguís despierto.", ["Salís y seguís las luces en el monte.", "Cerrás la cortina y te acostás."])
 		Sighting.CAVE:
 			overlay("cave_exit_choice", "La luz titila encima de un claro entre los árboles. Más abajo distinguís la huella de regreso.", ["Seguís el destello hasta el claro.", "Tomás la huella de regreso."])
+		Sighting.CLEARING:
+			start_final_dream(true)
 
 func day_card(title: String, caption: String, cue: String):
 	overlay("message", title.to_upper() + "\n\n" + caption, cue)
