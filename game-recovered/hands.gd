@@ -166,7 +166,10 @@ func update_pose():
 		var grip_height := 0.43
 		match pose:
 			"radio": grip_height = 0.53
-			"piece": grip_height = 0.51
+			"piece":
+				# The tesseract sprite has more space above the fingers than the compass.
+				var width_fit := size.x * 0.44 / maxf(size.y, 1.0) * PIECE.get_height() / PIECE.get_width()
+				grip_height = minf(0.63, width_fit)
 		place_grip(rig, sprite.texture, grip_height, false, sway + Vector2(-3, 5) * press, tilt + press * 0.032, lift)
 	if pose == "radio": ptt.set_shader_parameter("squeeze", press)
 	queue_redraw()
