@@ -1106,8 +1106,6 @@ func _unhandled_key_input(event):
 						var day: = calendar_day()
 						var date: = "%d de octubre" % day if day <= 31 else "%d de noviembre" % (day - 31)
 						overlay("message", "Calendario\n\n%s. Los días anteriores están tachados con lápiz rojo." % date if day > 1 else "Calendario\n\n%s. La hoja está recién dada vuelta." % date, "Espacio · volver")
-					"Guante izquierdo":
-						overlay("message", "Colgás del clavo el guante izquierdo. Fue el que te tocó la primera noche que saliste a mirar el cielo con Paula. Cuando lo das vuelta, todavía se ve la costura que ella arregló con hilo claro.", "Espacio · dejarlo colgado")
 					"Postal de Paula":
 						overlay("postcard", "", "")
 						postcard_view.pick_up("telescopio" in str(keepsakes.get("beca", "")))
@@ -1171,7 +1169,7 @@ func _unhandled_key_input(event):
 						if stage == 0:
 							overlay("message", "Dejaste la mochila en el suelo. Mañana acomodás las cosas.", "Espacio · seguir")
 						else:
-							valley.unpack_book()
+							valley.unpack_book(book_has_ribbon())
 							open_book()
 					"Puerta": valley.toggle_door()
 					"Puerta del baño": valley.swing_side_door(valley.privy_hinge)
@@ -1381,7 +1379,7 @@ func select_option(index: int):
 			show_mate_morning()
 			save_game(true, "mate_morning")
 			return
-		if stage == 0 and not valley.book_unpacked: valley.unpack_book()
+		if stage == 0 and not valley.book_unpacked: valley.unpack_book(book_has_ribbon())
 		bedtime = false
 		if stage in [7, 9]:
 			begin_dream()
@@ -1583,11 +1581,13 @@ func show_archive():
 		caption += "\n\nEn la cueva usaban columnas para hora, rumbo y respuesta. En este parte también. La hoja está cortada justo donde empezaría la última columna."
 	overlay("message", caption, "Espacio · seguir")
 
+func book_has_ribbon() -> bool:
+	return "cinta verde" in str(keepsakes.get("puesto", ""))
+
 func open_book():
 	overlay("book", "", "")
-	var book_memory: = str(keepsakes.get("libro", ""))
-	var travel_memory: = str(keepsakes.get("puesto", ""))
-	book_view.open("imprenta grande" in book_memory, "cinta verde" in travel_memory, stage >= 8)
+	var book_memory := str(keepsakes.get("libro", ""))
+	book_view.open("imprenta grande" in book_memory, book_has_ribbon(), stage >= 8)
 
 func turn_book(step: int):
 	book_view.turn(step)
@@ -1895,7 +1895,7 @@ func restore(data: Dictionary):
 		valley.dress_day32()
 		if camp_read: summit_mapped = true
 	if stage >= 1:
-		valley.unpack_book()
+		valley.unpack_book(book_has_ribbon())
 	elif stage == 0:
 		valley.leave_bag()
 		bedtime = heard
@@ -2137,7 +2137,7 @@ func debug_scene(code: String):
 	valley.toggle_door()
 	stage = int({"arrival": 0, "2": 1, "sighting": 7, "7": 6, "dream7": 7, "25": 8, "dream25": 9, "27": 10, "32": 13, "camp": 13, "36": 16, "dream36": 18, "41": 19}.get(code, 0))
 	heard = stage > 0
-	if stage > 0: valley.unpack_book()
+	if stage > 0: valley.unpack_book(book_has_ribbon())
 	else: valley.leave_bag()
 	if stage >= 10: valley.dress_day27()
 	if stage >= 13: valley.dress_day32()

@@ -3,6 +3,7 @@ extends Node3D
 const Climate = preload("res://clima.gd")
 const Signage = preload("res://carteleria.gd")
 const FieldKit = preload("res://equipo_campo.gd")
+const Refuge = preload("res://refugio.gd")
 const Creek = preload("res://cauce.gd")
 const LastNight = preload("res://final_night.gd")
 const Birds = preload("res://aves.gd")
@@ -142,12 +143,11 @@ func _ready():
 	for x in [-2.35, 2.35]:
 		plaster(box(Vector3(x, 1.4, -0.4), Vector3(2.35, 2.8, 0.22), "a89b87", true))
 	box(Vector3(0, 2.95, 2.65), Vector3(8, 0.23, 8), "5c5148", true).rotation.z = 0.035
-	box(Vector3(2.55, 0.45, 2.35), Vector3(1.8, 0.9, 0.7), "705744", true)
+	Refuge.desk(self)
 	desk_radio = FieldKit.desk_radio(self, Vector3(2.64, 0.90, 2.42))
 	desk_radio.rotation.y = PI + 0.24
 	desk_portable = desk_radio.get_node("Transceptor")
-	box(Vector3(1.95, 0.93, 2.35), Vector3(0.38, 0.05, 0.32), "dbc8a2", true, "Nota")
-	box(Vector3(2.55, 0.4, 4.5), Vector3(1.2, 0.8, 2.3), "787c61", true, "Cama")
+	Refuge.bed(self)
 	var lamp: = OmniLight3D.new()
 	add_child(lamp)
 	lamp.position = Vector3(-1, 1.95, 1)
@@ -371,26 +371,13 @@ func cave_moonlight():
 	tween.tween_property(env, "ambient_light_energy", 0.14, 1.3)
 
 func dress_shelter():
+	var finishes := [Refuge.wood("82674d", true), Refuge.wood("8d7053", true), Refuge.wood("877057", true)]
 	for i in range(15):
 		var z: = -0.33 + i * 0.43
-		timber(box(Vector3(0, 0.012, z), Vector3(6.8, 0.02, 0.42), ["82674d", "8d7053", "877057"][i % 3]), true)
+		FieldKit.block(self, Vector3(0, 0.012, z), Vector3(6.8, 0.02, 0.42), finishes[i % 3])
 	for i in range(6):
 		box(Vector3(0, 2.63, i * 1.15 - 0.25), Vector3(7.1, 0.16, 0.15), "5d4a39")
-	var pan: = CylinderMesh.new()
-	pan.top_radius = 0.185
-	pan.bottom_radius = 0.13
-	pan.height = 0.055
-	prop(pan, Vector3(-3.0, 1.04, 3.26), "383837")
-	box(Vector3(-2.82, 1.06, 3.26), Vector3(0.045, 0.035, 0.22), "49433c")
-	box(Vector3(2.55, 0.86, 5.26), Vector3(0.89, 0.13, 0.51), "c8b99a")
-	for i in range(6):
-		box(Vector3(2.55, 0.812, 3.42 + i * 0.075), Vector3(1.21, 0.014, 0.038), "ad825c")
-	var shade: = CylinderMesh.new()
-	shade.height = 0.21
-	shade.top_radius = 0.085
-	shade.bottom_radius = 0.24
-	prop(shade, Vector3(-1, 2.02, 1), "ba925f")
-	box(Vector3(-1, 2.4, 1), Vector3(0.018, 0.59, 0.018), "443f39")
+	Refuge.pendant(self, Vector3(-1, 2.02, 1))
 
 func dress_creek():
 	var bed: = SurfaceTool.new()
@@ -449,16 +436,6 @@ func dress_creek():
 	for i in range(30):
 		var x: = rng.randf_range(-12, 12)
 		stone(Vector3(x, 0.018, -33 + sin(x) * 0.6 + rng.randf_range(-0.7, 0.7)), Vector3(0.56, 0.12, 0.36), "696c66")
-
-func unpack_calendar():
-	var center: = Vector3(2.51, 0.9, 4.02)
-	box(center, Vector3(0.46, 0.035, 0.36), "ded1b4", true, "Calendario")
-	for i in range(5):
-		box(center + Vector3(-0.19 + i * 0.095, 0.02, 0), Vector3(0.004, 0.003, 0.27), "9e9988")
-	for i in range(4):
-		box(center + Vector3(0, 0.02, -0.13 + i * 0.086), Vector3(0.38, 0.003, 0.004), "9e9988")
-	var ticket: = box(center + Vector3(0.09, 0.026, 0.08), Vector3(0.24, 0.008, 0.105), "c18f61")
-	ticket.rotation.y = 0.18
 
 func morning():
 	exterior_light = true
@@ -533,46 +510,32 @@ func update_calendar(day: int):
 		calendar_dates[cell].modulate = Color("#893f34") if number == date else Color("#473c32")
 		calendar_strokes[cell].visible = number < date
 
-var wall_glove_added: = false
-var wall_postcard_added: = false
+var wall_postcard_added := false
 
 func update_shelter_wall(day: int):
-	if day >= 7 and not wall_glove_added:
-		wall_glove_added = true
-		var hook: = Vector3(1.82, 1.62, -0.24)
-		box(hook, Vector3(0.018, 0.024, 0.11), "665d50")
-		var glove: = box(hook + Vector3(0, -0.13, 0.065), Vector3(0.14, 0.17, 0.042), "6f6051", true, "Guante izquierdo")
-		glove.rotation.z = -0.12
-		box(hook + Vector3(0, -0.045, 0.064), Vector3(0.143, 0.038, 0.045), "514c42")
-		for finger in range(4):
-			stone(hook + Vector3(-0.043 + finger * 0.031, -0.224 + absf(finger - 1.5) * 0.015, 0.061), Vector3(0.033, 0.081, 0.041), "746557")
-		stone(hook + Vector3(0.075, -0.142, 0.064), Vector3(0.075, 0.036, 0.042), "746557")
 	if day >= 27 and not wall_postcard_added:
 		wall_postcard_added = true
-		var postcard: = Vector3(-2.57, 1.58, -0.255)
-		box(postcard, Vector3(0.32, 0.22, 0.023), "d4c19e", true, "Postal de Paula")
-		var illustration: = QuadMesh.new()
-		illustration.size = Vector2(0.31, 0.21)
-		var print_surface: = prop(illustration, postcard + Vector3(0, 0, 0.013), "ffffff")
-		var material: = print_surface.material_override as StandardMaterial3D
-		if ResourceLoader.exists("res://postal_munich.webp"):
-			material.albedo_texture = load("res://postal_munich.webp")
-		box(postcard + Vector3(0, 0.108, 0.022), Vector3(0.018, 0.018, 0.028), "6e5944")
+		Refuge.postcard(self)
 
-func furnish_desk_corner():
-	var chair: = Vector3(2.42, 0, 1.61)
-	timber(box(chair + Vector3.UP * 0.46, Vector3(0.43, 0.07, 0.41), "896448", true))
-	for x in [-0.17, 0.17]:
-		for z in [-0.16, 0.16]:
-			var height: = 0.93 if z < 0.0 else 0.46
-			timber(box(chair + Vector3(x, height * 0.5, z), Vector3(0.047, height, 0.047), "70513b"))
-	for height in [0.71, 0.86]:
-		timber(box(chair + Vector3(0, height, -0.16), Vector3(0.38, 0.08, 0.044), "896448", true))
-
-	var calendar: = Vector3(2.7, 1.62, -0.27)
-	box(calendar, Vector3(0.42, 0.5, 0.025), "d9c8a4", true, "Calendario")
-	box(calendar + Vector3(0, 0.185, 0.017), Vector3(0.418, 0.11, 0.012), "785044")
-	calendar_month = calendar_text(calendar + Vector3(0, 0.185, 0.028), "")
+func hang_calendar():
+	var calendar := Vector3(2.7, 1.62, -0.27)
+	var backing := box(calendar, Vector3(0.447, 0.523, 0.025), "9c886d", true, "Calendario")
+	backing.material_override = FieldKit.material("9c886d")
+	var page := FieldKit.material("dfcea7")
+	FieldKit.block(self, calendar + Vector3(0, 0, 0.013), Vector3(0.429, 0.506, 0.010), page)
+	var last_page := FieldKit.block(self, calendar + Vector3(0.122, -0.232, 0.021), Vector3(0.172, 0.033, 0.009), page)
+	last_page.rotation.x = -0.13
+	FieldKit.block(self, calendar + Vector3(0, 0.185, 0.021), Vector3(0.425, 0.108, 0.012), FieldKit.material("804f43"))
+	var clip_finish := FieldKit.material("6c6458", false, 0.49)
+	for side in [-1.0, 1.0]:
+		var clip := FieldKit.cylinder(self, calendar + Vector3(side * 0.128, 0.241, 0.024), 0.010, 0.010, 0.011, clip_finish)
+		clip.rotation.x = PI / 2.0
+	var grid := FieldKit.material("b29e7c")
+	for column in 8:
+		FieldKit.block(self, calendar + Vector3((column - 3.5) * 0.052, -0.039, 0.0184), Vector3(0.0015, 0.290, 0.0013), grid)
+	for row in 6:
+		FieldKit.block(self, calendar + Vector3(0, 0.106 - row * 0.058, 0.0185), Vector3(0.365, 0.0015, 0.0013), grid)
+	calendar_month = calendar_text(calendar + Vector3(0, 0.185, 0.030), "")
 	calendar_month.modulate = Color("#f4e6c8")
 	for cell in range(31):
 		var point: = calendar + Vector3((cell % 7 - 3) * 0.052, 0.077 - floorf(cell / 7.0) * 0.058, 0.025)
@@ -582,27 +545,10 @@ func furnish_desk_corner():
 		calendar_strokes.append(stroke)
 	update_calendar(1)
 
-	var notebook: = Vector3(2.35, 0.919, 2.53)
-	box(notebook, Vector3(0.25, 0.037, 0.19), "506354").rotation.y = -0.09
-	box(notebook + Vector3(0, -0.004, 0.088), Vector3(0.23, 0.022, 0.012), "d8c9a9").rotation.y = -0.09
-	box(Vector3(2.56, 0.909, 2.52), Vector3(0.014, 0.014, 0.16), "b18649").rotation.y = 0.31
-
 func furnish():
-	furnish_desk_corner()
-
-	box(Vector3(1.27, 0.032, 3.95), Vector3(0.84, 0.012, 1.72), "816956")
-	for j in range(9):
-		box(Vector3(1.27, 0.04, 3.25 + j * 0.16), Vector3(0.82, 0.006, 0.025), "a58c69")
-	var cup: = CylinderMesh.new()
-	cup.top_radius = 0.057
-	cup.bottom_radius = 0.05
-	cup.height = 0.11
-	prop(cup, Vector3(2.93, 0.96, 2.22), "d5c9a9")
-	stone(Vector3(2.93, 1.016, 2.22), Vector3(0.095, 0.005, 0.095), "60524b")
-	var handle: = TorusMesh.new()
-	handle.inner_radius = 0.026
-	handle.outer_radius = 0.035
-	prop(handle, Vector3(2.995, 0.965, 2.22), "d5c9a9").rotation.x = PI / 2
+	Refuge.chair(self)
+	hang_calendar()
+	Refuge.floor_runner(self)
 
 	add_child(hinge)
 	hinge.position = Vector3(-1.16, 0, -0.4)
@@ -619,7 +565,11 @@ func furnish():
 	var latch: = box(Vector3.ZERO, Vector3(0.14, 0.045, 0.18), "b5a17b")
 	latch.reparent(door, false)
 	latch.position = Vector3(0.43, -0.08, 0)
-	timber(box(Vector3(-1.7, 1.52, 5.7), Vector3(2.1, 0.09, 0.43), "745942", true), true)
+	var shelf := box(Vector3(-1.7, 1.52, 5.7), Vector3(2.1, 0.09, 0.43), "745942", true)
+	shelf.material_override = Refuge.wood("745942", true)
+	var bracket := Refuge.wood("654c3c")
+	for x in [-2.45, -0.95]:
+		Refuge.brace(self, Vector3(x, 1.30, 5.86), Vector3(x, 1.492, 5.56), 0.060, bracket)
 	kitchen_and_privy()
 
 var bag: StaticBody3D
@@ -630,39 +580,13 @@ func leave_bag():
 	bag = FieldKit.backpack(self, Vector3(1.58, 0.244, 5.03), "Bolso")
 	bag.rotation = Vector3(-1.44, 0.25, 0.0)
 
-func unpack_book():
+func unpack_book(ribbon := false):
 	if book_unpacked: return
 	book_unpacked = true
 	if bag:
 		bag.queue_free()
 		bag = null
-	for i in range(1):
-		var titles: = ["Observar el Cielo", "Flora serrana", "Cuaderno de campo"]
-		var cover: = box(Vector3(-1.75, 1.61, 5.66), Vector3(0.49, 0.58, 0.074), ["394c64", "506651", "955f43"][i], true, titles[i])
-		cover.rotation = Vector3(PI / 2, 0.1, 0)
-		cover.scale = Vector3(0.75, 0.67, 1)
-		var title: = Label3D.new()
-		cover.add_child(title)
-		title.position = Vector3(0, 0.045, -0.039)
-		title.rotation.y = PI
-		title.text = titles[i].replace(" el ", " el\n").replace(" de ", " de\n").replace("Flora ", "Flora\n")
-		title.font_size = 36
-		title.pixel_size = 0.00165
-		title.outline_size = 0
-		title.modulate = Color("#f4ddb0")
-		var pages: = box(Vector3.ZERO, Vector3(0.46, 0.011, 0.06), "ccbfa1")
-		pages.reparent(cover, false)
-		pages.position.y = 0.293
-		if i == 0:
-			var author: = Label3D.new()
-			cover.add_child(author)
-			author.position = Vector3(0, -0.175, -0.04)
-			author.rotation.y = PI
-			author.text = "DAVID H. LEVY"
-			author.outline_size = 0
-			author.font_size = 27
-			author.pixel_size = 0.00092
-			author.modulate = Color("#ecdbb1")
+	Refuge.closed_book(self, ribbon)
 
 func toggle_door():
 	if door_motion and door_motion.is_running(): return
@@ -708,12 +632,7 @@ func strange_sky(active: bool):
 	tween.tween_property(sun, "light_color", Color("#ecd0ac") if active else Color("#abc4ed"), 2.0)
 
 func kitchen_and_privy():
-	timber(box(Vector3(-3, 0.48, 3.6), Vector3(0.77, 0.95, 2.2), "6c5848", true))
-	box(Vector3(-3, 0.97, 3.6), Vector3(0.82, 0.06, 2.25), "ada69a")
-	box(Vector3(-3, 1.01, 3.25), Vector3(0.57, 0.05, 0.72), "494b46")
-	box(Vector3(-3, 1.01, 4.12), Vector3(0.5, 0.02, 0.55), "666e6b")
-	box(Vector3(-3.23, 1.2, 4.12), Vector3(0.04, 0.4, 0.04), "939893")
-	box(Vector3(-3.15, 1.39, 4.12), Vector3(0.2, 0.04, 0.04), "939893")
+	Refuge.kitchenette(self)
 	var center: = Vector3(6, 0, 3.5)
 	for side in [-1, 1]:
 		timber(box(center + Vector3(side * 0.82, 1.12, 0), Vector3(0.09, 2.24, 1.75), "897660", true))
@@ -744,8 +663,7 @@ func dress_day27():
 		box(end + Vector3(side, 0.6, -1), Vector3(0.23, 1.2, 0.4), "68594c", true)
 	box(end + Vector3(0, 0.82, -1), Vector3(2.3, 0.22, 0.23), "57534a", true)
 	quarry_plate = box(end + Vector3(0, 1.38, -1), Vector3(1.1, 0.76, 0.06), "b6aa8a", true, "Chapa del malacate")
-	box(Vector3(3.17, 0.923, 2.49), Vector3(0.33, 0.025, 0.24), "c9b994", true, "Recorte de astronomía").rotation.y = 0.18
-	box(Vector3(3.25, 0.95, 2.22), Vector3(0.19, 0.1, 0.12), "887a69")
+	Refuge.cutting(self)
 
 var arrival_bag: StaticBody3D
 var arrival_fragments: Array[Node3D] = []
