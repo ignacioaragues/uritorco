@@ -167,7 +167,7 @@ func _ready():
 	rock_banks()
 	add_child(route)
 	Creek.dress(self)
-	dress_west_trail_near_refugio()
+	dress_refuge_junction()
 	preload("res://museo.gd").build(self)
 	LastNight.build_door(self)
 
@@ -206,7 +206,15 @@ func build_distant_ridges():
 		ridge.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 		add_child(ridge)
 
-func dress_west_trail_near_refugio():
+func dress_refuge_junction():
+	route.signpost(Vector3(1.25, 0.0, -17.8), "Sendero del cauce", "← Cauce")
+	route.signpost(Vector3(6.75, 0.0, -17.8), "Camino al acceso", "Cumbre →")
+	dress_refuge_footpath(func(t: float):
+		var z: float = lerpf(route.WEST_START_Z, route.ORIGIN_Z, t)
+		return Vector3(route.western_x_at(z), 0.0, z), 55, 1.9)
+	dress_refuge_footpath(route.eastern_access, 65, 1.62)
+
+func dress_refuge_footpath(sample: Callable, samples: int, width: float):
 	var surface := SurfaceTool.new()
 	surface.begin(Mesh.PRIMITIVE_TRIANGLES)
 	var soil := StandardMaterial3D.new()
@@ -214,17 +222,20 @@ func dress_west_trail_near_refugio():
 	soil.vertex_color_use_as_albedo = true
 	surface.set_material(soil)
 	var previous := PackedVector3Array()
-	for i in range(55):
-		var z: float = route.WEST_START_Z - i
-		var x: float = route.western_x_at(z)
-		var row := PackedVector3Array([Vector3(x - 1.9, 0.04, z), Vector3(x, 0.04, z), Vector3(x + 1.9, 0.04, z)])
+	for i in range(samples):
+		var point: Vector3 = sample.call(float(i) / (samples - 1))
+		var d: float = route.ORIGIN_Z - point.z
+		var left: Vector3 = route.surface_point(point.x - width, d)
+		var middle: Vector3 = route.surface_point(point.x, d)
+		var right: Vector3 = route.surface_point(point.x + width, d)
+		var row := PackedVector3Array([left + Vector3.UP * 0.04, middle + Vector3.UP * 0.04, right + Vector3.UP * 0.04])
 		if i > 0:
 			for lane in range(2):
-				for point in [previous[lane], row[lane], previous[lane + 1], previous[lane + 1], row[lane], row[lane + 1]]:
-					var center := absf(point.x - route.western_x_at(point.z)) < 0.2
+				for vertex in [previous[lane], row[lane], previous[lane + 1], previous[lane + 1], row[lane], row[lane + 1]]:
+					var center: bool = vertex == previous[1] or vertex == row[1]
 					surface.set_color(Color("#a2886b") if center else Color("#82795b"))
 					surface.set_normal(Vector3.UP)
-					surface.add_vertex(point)
+					surface.add_vertex(vertex)
 		previous = row
 	var path := MeshInstance3D.new()
 	path.mesh = surface.commit()
@@ -658,7 +669,6 @@ var summit_dressed: = false
 func dress_day32():
 	if summit_dressed: return
 	summit_dressed = true
-	route.signpost(route.eastern_access(0.07) + Vector3(1.8, 0, 0), "Camino al acceso", "Cumbre · sendero este")
 	route.signpost(route.eastern_access(0.54) + Vector3(2.0, 0, 0), "Camino al acceso", "Acceso a la cumbre")
 	var access: Vector3 = route.ascent_point(0)
 	route.signpost(access + Vector3.RIGHT * 2.0, "Acceso a la cumbre", "Uritorco · Inicio del ascenso")
@@ -717,18 +727,16 @@ func dress_ascent_trail():
 	surface.set_material(material)
 	var left: = Vector3.ZERO
 	var right: = Vector3.ZERO
-	for i in range(-45, 425):
+	for i in range(425):
 		var point: Vector3
-		if i < 0:
-			point = route.eastern_access((i + 45) / 45.0)
-		elif i <= 375:
+		if i <= 375:
 			point = route.ascent_point(i / 375.0)
 		else:
 			point = route.summit_point(lerpf(route.SUMMIT_JOIN, 1.0, (i - 375) / 49.0))
 		var d: float = route.ORIGIN_Z - point.z
 		var next_left: Vector3 = route.surface_point(point.x - 1.0, d) + Vector3.UP * 0.044
 		var next_right: Vector3 = route.surface_point(point.x + 1.0, d) + Vector3.UP * 0.044
-		if i > -45:
+		if i > 0:
 			for vertex in [left, next_left, right, right, next_left, next_right]:
 				surface.add_vertex(vertex)
 		left = next_left
@@ -760,7 +768,8 @@ func dress_day36(show_crossing: bool = true):
 	var timber_fall: Vector3 = route.crossing_point(0.26)
 	box(timber_fall + Vector3.UP * 0.31, Vector3(4.7, 0.62, 0.52), "6c523c", true, "Tronco caído").rotation.y = 0.35
 	var shelf: Vector3 = route.crossing_point(0.72)
-	box(shelf + Vector3(0, 0.74, - 0.78), Vector3(5.0, 1.52, 2.5), "948371", true, "Subir al escalón")
+	var foot: Vector3 = route.surface_point(shelf.x, route.ORIGIN_Z - shelf.z - 0.47)
+	box(Vector3(shelf.x, foot.y + 0.61, shelf.z - 0.78), Vector3(5.0, 1.52, 2.5), "948371", true, "Subir al escalón")
 	var crossing: Vector3 = route.crossing_point(1)
 	for i in range(-5, 6):
 		var board: Vector3 = route.at(crossing.x + i * 0.41, route.ORIGIN_Z - crossing.z - 1.1)

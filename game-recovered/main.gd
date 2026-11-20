@@ -379,6 +379,9 @@ func _process(delta):
 			elif float(valley.sky_mat.get_shader_parameter("nightfall")) > 0.71:
 				show_sighting()
 				return
+	if mode in ["approach", "walk"] and not player.climb_points.is_empty():
+		hint.text = ("W · bajar con la cuerda" if player.rope_descending else "W · trepar con la cuerda") if player.rope_climbing else ""
+		return
 
 	if mode == "approach":
 		var hit = player.ray.get_collider()
@@ -436,15 +439,17 @@ func _process(delta):
 					hint.text = "E · ubicar el sur" if watching_crux_tonight() else "E · quedarte a mirar el cielo"
 				return
 			hint.text = star
+		elif stage >= 0 and target in ["", "Subir al escalón"] and not player.ledge_route().is_empty():
+			hint.text = "E · trepar el saliente"
 		else:
-			hint.text = "E · " + target if target != "" else ""
+			hint.text = "Acercate al escalón" if target == "Subir al escalón" else ("E · " + target if target != "" else "")
 
 func intro_objective() -> String:
 	if page == 0:
 		return "Seguí el camino de tierra al costado de la parada." if arrival_action else "Acercate a la parada y recogé la mochila."
 	if page == 7 or arrival_action:
 		return "Seguí la curva del sendero." if page >= 6 else "Caminá un poco más por la senda."
-	return ["", "Espacio · saltá el tronco.", "E · agarrate del pasamanos.", "B · probá la brújula.", "M · consultá el mapa.", "E · trepá con la cuerda.", "L · encendé la linterna."][page]
+	return ["", "Espacio · saltá el tronco.", "E · agarrate del pasamanos.", "B · probá la brújula.", "M · consultá el mapa.", "E · agarrá la cuerda. Mantené W para trepar.", "L · encendé la linterna."][page]
 
 func score_daily_walk(day: int):
 	if awaiting_call or day in scored_walks: return
@@ -662,6 +667,8 @@ func _unhandled_key_input(event):
 	if not event.pressed or event.echo: return
 	var key = event.keycode
 	var advance = key in [KEY_SPACE, KEY_ENTER]
+	if mode in ["approach", "walk"] and not player.climb_points.is_empty() and key not in [KEY_ESCAPE, KEY_F1]:
+		return
 	if mode == "postcard":
 		if key == KEY_X:
 			postcard_view.flip()
@@ -797,6 +804,10 @@ func _unhandled_key_input(event):
 				if can_watch_sky():
 					watch_sky()
 					return
+				if stage >= 0 and target in ["", "Subir al escalón"] and player.climb_ledge():
+					compass_out = false
+					hands.hold("")
+					return
 				var exhibits = Museum.LABELS
 				if exhibits.has(target):
 					if stage == 19 and target == "Maqueta del arco":
@@ -817,10 +828,6 @@ func _unhandled_key_input(event):
 						overlay("message", "Las pircas siguen la ladera oeste. Alcanzás a ver lo que queda de una pasarela más arriba.", "Espacio · seguir")
 					"Tronco caído":
 						overlay("message", "El arroyo dejó un tronco atravesado. Podés saltarlo con Espacio.", "Espacio · seguir")
-					"Subir al escalón":
-						var rock: Vector3 = valley.route.crossing_point(0.72)
-						var landing: = rock + Vector3(0, 1.54, - 0.7)
-						player.climb_to(landing)
 					"Pasarela de la quebrada":
 						if stage == 16 and not awaiting_call:
 							stage = 17

@@ -76,7 +76,6 @@ static func build_ground(valley):
 
 static func dress(valley):
 	var route = valley.route
-	route.signpost(point(-2.7, -20.6), "Sendero del cauce", "Cauce ↙")
 	route.signpost(point(-23.3, 18), "Sendero del cauce", "Cauce · bajada")
 	var date_post := post()
 	valley.box(date_post + Vector3.UP * 0.88, Vector3(0.24, 1.8, 0.23), "675747", true, "Poste")
