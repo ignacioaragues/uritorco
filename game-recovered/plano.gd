@@ -26,7 +26,7 @@ func _draw():
 		draw_route(limits, 81, func(t):
 			var z: = lerpf(6.0, -74.0, t)
 			return Vector3(4.5 * sin( - z / 13.0), 0, z), INK)
-		draw_route(limits, 21, func(t): return Vector3(lerpf(0, 33, minf(1, t * 2)), 0, lerpf(-3, -84, t)), ROUTE_COLOR)
+		draw_route(limits, 33, ROUTE.eastern_access, ROUTE_COLOR)
 		draw_route(limits, 141, ROUTE.western_approach, ROUTE_COLOR)
 		draw_route(limits, 101, Creek.trail_point, ROUTE_COLOR)
 		draw_route(limits, 41, func(t):

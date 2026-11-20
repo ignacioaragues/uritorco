@@ -1,9 +1,11 @@
 extends AudioStreamPlayer
 
 var interference: = AudioStreamPlayer.new()
+var knocks := AudioStreamPlayer.new()
 
 func _ready():
 	add_child(interference)
+	add_child(knocks)
 	var noise: = RandomNumberGenerator.new()
 	noise.seed = 513
 	var data: = PackedByteArray()
@@ -34,6 +36,27 @@ func _ready():
 	wave.mix_rate = rate
 	wave.data = samples
 	stream = wave
+	knocks.stream = make_knocks(rate)
+
+func make_knocks(rate: int) -> AudioStreamWAV:
+	var data := PackedByteArray()
+	data.resize(int(rate * 0.45) * 2)
+	for onset in [0.012, 0.29]:
+		var start := int(rate * onset)
+		var gain := 1.0 if onset < 0.1 else 0.76
+		for i in int(rate * 0.10):
+			var t := float(i) / rate
+			var envelope := minf(1.0, t * 700.0) * exp(-t * 55.0)
+			var sample := sin(TAU * 148.0 * t) + 0.35 * sin(TAU * 640.0 * t)
+			data.encode_s16((start + i) * 2, int(sample * envelope * 4900.0 * gain))
+	var wave := AudioStreamWAV.new()
+	wave.format = AudioStreamWAV.FORMAT_16_BITS
+	wave.mix_rate = rate
+	wave.data = data
+	return wave
 
 func play_interference():
 	interference.play()
+
+func play_knocks():
+	knocks.play()

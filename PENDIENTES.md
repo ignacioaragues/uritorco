@@ -11,6 +11,9 @@
 - **Mate.** Abre el Día 32. E baja la mano y la radio sube después en esa misma mano.
 - **Museo de sitio.** El edificio tiene rampa, puerta, vestíbulo y dos salas recorribles. La sala de los pueblos comechingones tiene vitrinas con réplicas didácticas de un mortero con su mano, un huso con tortero y una vasija. Las fichas explican los usos y el contexto arqueológico, y reconocen a las comunidades actuales. La segunda sala reúne los relatos del cerro. Las seis ilustraciones distinguen las réplicas, las hipótesis y los testimonios. El archivo del 12 de julio es opcional.
 - **Mara y finales.** Volvieron las cuatro charlas durante las caminatas y sus menciones en la despedida. Con al menos dos charlas aparece la opción de golpear su puerta. Se probó la llegada a pie al puesto integrado al valle, el paso entre ambas salas y los dos epílogos sobre negro.
+- **Primera noche.** Mara vuelve a dar la bienvenida por radio al entrar. Esa noche queda la mochila en el suelo. Después de dormir aparecen el libro y el primer encargo. Se probaron ambas respuestas de la bienvenida.
+- **Cumbre.** El sendero este sale desde la tranquera y lleva al banco del acceso. Las pircas se apoyan en la malla de colisión y los carteles de bajada miran hacia quien viene de la cumbre. Con E cerca del banco se cierra la travesía y el Día 36 retoma en el refugio. Se probó el recorrido a pie en ambos sentidos.
+- **Padre y Última Noche.** Cinco noches tienen recuerdos distintos. Mirar la Cruz del Sur en las noches 25 y 32 permite practicar el rumbo. Al salir de la cueva se puede encontrar el sur con o sin esa práctica. Los dos golpes vuelven en la cumbre, la pasarela y el receptor. Las bitácoras y el parte del 12 de julio enlazan la señal, y la procedencia queda abierta.
 - La rama `codigo-fuente` guarda el proyecto recuperado, sus recursos y este registro. Cada tanda de recuperación debe quedar en un commit de esa rama junto con su verificación.
 - Al cierre de cada pasada, registrar los cambios incorporados y los pendientes que quedan. Preparar una exportación de Windows cuando se pida.
 
@@ -30,11 +33,10 @@ Esta lista reconstruye el estado informado del proyecto editable. La exportació
 
 ## Todavía pendiente
 
-- **Cambios posteriores a la descarga.** Reincorporar los mojones apoyados en el terreno y el cierre del descenso en el banco del acceso, los recuerdos nocturnos del padre y la señal de los dos golpes.
 - **Pasada narrativa.** Recorrer de corrido el prólogo y los días para ajustar pausas, caminatas, charlas, pistas y saltos entre jornadas. Escuchar la mezcla de diálogo, música, interferencia y linterna durante la última noche.
-- **Prólogo y controles.** Volver a comprobar la mochila desde la cámara inicial, los extremos de la ruta, el agua a los costados del puente y el corte a la llegada. Pulir la trepada por la laja del mapa principal, con el cuerpo junto a la pared y apoyos visibles.
+- **Prólogo y controles.** Volver a comprobar la mochila desde la cámara inicial, los extremos de la ruta, el agua a los costados del puente y el corte a la llegada. Reincorporar las ayudas de F1 por unos segundos y revisar las dos últimas microescenas. Pulir la trepada por la laja del mapa principal, con el cuerpo junto a la pared y apoyos visibles.
 - **Valle y refugio.** Revisar el cambio de color del sendero hacia el corredor principal y el recorte del terreno visto desde arriba. Revisar el despeje de la tranquera y la orientación hacia la casa de Mara desde la parada.
 - **Arte y legibilidad.** Mejorar de cerca los modelos, la vegetación, los árboles y las texturas. Revisar el libro cerrado, los carteles tapados, el aspecto de la luna y las estrellas, y textos largos de radio a distintas resoluciones. Probar que los sonidos de pasos se lean como tierra.
-- **Caminatas y herramientas.** Dar a cada tramo nuevo una salida distinta alrededor del refugio. Revisar la lectura del acceso este y comparar la duración de las caminatas. Completar los hitos disponibles en el selector de depuración.
+- **Caminatas y herramientas.** Revisar desde el patio cómo se distinguen las salidas este, oeste y sur. Comparar la duración de las caminatas y completar los hitos disponibles en el selector de depuración.
 - **Cartografía.** Una vez definidos el terreno y los recorridos, rehacer las láminas fijas con el detalle de un mapa de campo. Incluir el relieve, los cauces y los senderos que existan en el mundo. Conservar los puntos cardinales, la cruz del jugador y la marca del objetivo. Actualizar el trazado funcional cuando cambien las rutas.
 - **Windows.** Validar la próxima exportación cuando se solicite.

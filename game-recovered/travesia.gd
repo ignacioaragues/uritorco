@@ -47,6 +47,20 @@ static func elevation(x: float, d: float) -> float:
 func at(x: float, d: float) -> Vector3:
 	return Vector3(x, elevation(x, d), ORIGIN_Z - d)
 
+func surface_point(x: float, d: float) -> Vector3:
+	var row := clampi(ground_rows.bsearch(d), 1, ground_rows.size() - 1)
+	var near := float(ground_rows[row - 1])
+	var far := float(ground_rows[row])
+	var left := clampf(floorf((x + HALF_WIDTH) / 4.0) * 4.0 - HALF_WIDTH, -HALF_WIDTH, HALF_WIDTH - 4.0)
+	var u := clampf((x - left) * 0.25, 0.0, 1.0)
+	var w := clampf(inverse_lerp(near, far, d), 0.0, 1.0)
+	var height: float
+	if u + w <= 1.0:
+		height = elevation(left, near) * (1.0 - u - w) + elevation(left + 4.0, near) * u + elevation(left, far) * w
+	else:
+		height = elevation(left + 4.0, far) * (u + w - 1.0) + elevation(left, far) * (1.0 - u) + elevation(left + 4.0, near) * (1.0 - w)
+	return Vector3(x, height, ORIGIN_Z - d)
+
 func creek_marker() -> Vector3:
 	return at(trail(CREEK_DISTANCE) + 1.5, CREEK_DISTANCE)
 
@@ -98,14 +112,15 @@ func _ready():
 	for h in [2.85, 3.45, 3.94]:
 		box(self, Vector3(1.15, 0.04, 0.07), repeater + Vector3(0, h, 0), "737a75")
 	signpost(at(trail(292) - 1.7, 292), "Sala de las sierras", "Museo de sitio →")
-	signpost(west_start + Vector3(0.7, 0.0, 1.6), "Sendero oeste", "Sendero oeste ↖")
+	signpost(Vector3(western_x_at(-27.0) - 1.8, 0.0, -27.0), "Sendero oeste", "Sendero oeste ↖")
 	signpost(west_end + Vector3(2.0, 0.0, 0.0), "Sendero oeste", "Refugio · senda del oeste")
 
-func signpost(pos: Vector3, tag: String, caption: String):
+func signpost(pos: Vector3, tag: String, caption: String, facing: float = 0.0):
 	var pole: = box(self, Vector3(0.17, 1.5, 0.14), pos + Vector3.UP * 0.75, "6c5443")
 	pole.create_trimesh_collision()
 	pole.get_child(0).set_meta("item", tag)
 	var board: = box(self, Vector3(1.35, 0.43, 0.1), pos + Vector3.UP * 1.25, "665847")
+	board.rotation.y = facing
 	board.create_trimesh_collision()
 	board.get_child(0).set_meta("item", tag)
 	var text: = Label3D.new()
@@ -261,6 +276,32 @@ static func ascent_point(progress: float) -> Vector3:
 	var x: = lerpf(33.0, join.x, progress)
 	x += sin(PI * progress) * 128.0 + sin(TAU * progress * 4.0) * sin(PI * progress) * 16.0
 	return Vector3(x, elevation(x, distance_along), ORIGIN_Z - distance_along)
+
+static func eastern_access(progress: float) -> Vector3:
+	const START_Z := -18.7
+	var access := ascent_point(0.0)
+	var z := lerpf(START_Z, access.z, progress)
+	var x := lerpf(4.5 * sin(-START_Z / 13.0), access.x, smoothstep(0.0, 0.65, progress))
+	return Vector3(x, elevation(x, ORIGIN_Z - z), z)
+
+static func eastern_x_at(z: float) -> float:
+	var progress := clampf(inverse_lerp(eastern_access(0.0).z, ascent_point(0.0).z, z), 0.0, 1.0)
+	return eastern_access(progress).x
+
+static func summit_return_marker(location: Vector3) -> Vector3:
+	var best := INF
+	var index := 0
+	var points := PackedVector3Array()
+	for step in range(101):
+		points.append(ascent_point(step / 100.0))
+	for step in range(1, 21):
+		points.append(summit_point(lerpf(SUMMIT_JOIN, 1.0, step / 20.0)))
+	for step in points.size():
+		var distance := location.distance_squared_to(points[step])
+		if distance < best:
+			best = distance
+			index = step
+	return points[maxi(0, index - (4 if index > 104 else 8))]
 
 static func crossing_point(progress: float) -> Vector3:
 	var start: = quarry_point(0.53)

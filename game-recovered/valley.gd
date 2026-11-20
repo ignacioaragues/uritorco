@@ -105,6 +105,7 @@ func _ready():
 		var x: = path_x(z) + side * rng.randf_range(17, 35)
 		var size_m := Vector3(rng.randf_range(12, 21), rng.randf_range(4, 9), rng.randf_range(10, 22))
 		if z > -36.0 and Creek.trail_distance(Vector2(x, z)) < size_m.x + 5.0: continue
+		if z < -13.0 and absf(x - route.eastern_x_at(z)) < size_m.x + 5.0: continue
 		if absf(x - LastNight.DOOR.x) < size_m.x + 5.0 and absf(z - LastNight.DOOR.z + 3.0) < size_m.z + 5.0: continue
 		if z < route.WEST_START_Z + size_m.z and absf(x - route.western_x_at(z)) < size_m.x + 7.0: continue
 		stone(Vector3(x, -1, z), size_m, "837f65", true)
@@ -113,6 +114,7 @@ func _ready():
 		var x: = rng.randf_range(-45, 45)
 		if abs(x - path_x(z)) < 4.8 or (abs(x) < 12.5 and z > -15.5): continue
 		if Creek.trail_distance(Vector2(x, z)) < 4.0: continue
+		if z < -17.0 and absf(x - route.eastern_x_at(z)) < 4.0: continue
 		if absf(x - LastNight.DOOR.x) < 6.0 and absf(z - LastNight.DOOR.z + 2.0) < 8.0: continue
 		if z < route.WEST_START_Z + 1.0 and absf(x - route.western_x_at(z)) < 5.0: continue
 		var k: = rng.randf_range(0.5, 2.1)
@@ -655,19 +657,32 @@ var summit_dressed: = false
 func dress_day32():
 	if summit_dressed: return
 	summit_dressed = true
-	route.signpost(Vector3(4.1, 0, -3.4), "Camino al acceso", "Acceso a la cumbre · Este")
-	route.signpost(Vector3(33, 0, -28), "Camino al acceso", "Acceso a la cumbre · Sur")
+	route.signpost(route.eastern_access(0.07) + Vector3(1.8, 0, 0), "Camino al acceso", "Cumbre · sendero este")
+	route.signpost(route.eastern_access(0.54) + Vector3(2.0, 0, 0), "Camino al acceso", "Acceso a la cumbre")
 	var access: Vector3 = route.ascent_point(0)
 	route.signpost(access + Vector3.RIGHT * 2.0, "Acceso a la cumbre", "Uritorco · Inicio del ascenso")
 	box(access + Vector3(-2.4, 0.42, 1.1), Vector3(1.8, 0.14, 0.42), "7a634c", true)
+	for offset in [-2.94, -1.86]:
+		box(access + Vector3(offset, 0.17, 1.1), Vector3(0.15, 0.42, 0.37), "665342", true)
 	dress_ascent_trail()
+	for progress in [0.31, 0.64, 0.92]:
+		var foot: Vector3 = route.ascent_point(progress)
+		var uphill: Vector3 = route.ascent_point(progress + 0.02) - foot
+		place_descent_sign(foot, uphill, "Acceso · seguí las pircas")
 	for i in range(1, 12):
 		var foot: Vector3 = route.summit_point(lerpf(route.SUMMIT_JOIN, 1.0, i / 12.0))
 		stack_ascent_stones(foot + Vector3(0, 0, 1.0))
 	var summit: Vector3 = route.summit_point(1)
+	var descent: Vector3 = route.summit_point(0.94)
+	place_descent_sign(descent, summit - descent, "Bajada · acceso")
 	route.signpost(summit, "Hito de la cumbre", "Uritorco · Cumbre")
 	box(summit + Vector3(0, 0.25, - 0.25), Vector3(0.8, 0.46, 0.42), "938273", true)
 	dress_camp()
+
+func place_descent_sign(foot: Vector3, uphill: Vector3, caption: String):
+	var beside := foot + Vector3(uphill.z, 0.0, -uphill.x).normalized() * 2.1
+	var ground: Vector3 = route.surface_point(beside.x, route.ORIGIN_Z - beside.z)
+	route.signpost(ground, "Bajada al acceso", caption, atan2(uphill.x, uphill.z))
 
 var camp_log: MeshInstance3D
 
@@ -701,28 +716,34 @@ func dress_ascent_trail():
 	surface.set_material(material)
 	var left: = Vector3.ZERO
 	var right: = Vector3.ZERO
-	for i in range(376):
-		var progress: = i / 375.0
-		var point: Vector3 = route.ascent_point(progress)
+	for i in range(-45, 425):
+		var point: Vector3
+		if i < 0:
+			point = route.eastern_access((i + 45) / 45.0)
+		elif i <= 375:
+			point = route.ascent_point(i / 375.0)
+		else:
+			point = route.summit_point(lerpf(route.SUMMIT_JOIN, 1.0, (i - 375) / 49.0))
 		var d: float = route.ORIGIN_Z - point.z
-		var next_left: Vector3 = route.at(point.x - 1.0, d) + Vector3.UP * 0.12
-		var next_right: Vector3 = route.at(point.x + 1.0, d) + Vector3.UP * 0.12
-		if i > 0:
+		var next_left: Vector3 = route.surface_point(point.x - 1.0, d) + Vector3.UP * 0.044
+		var next_right: Vector3 = route.surface_point(point.x + 1.0, d) + Vector3.UP * 0.044
+		if i > -45:
 			for vertex in [left, next_left, right, right, next_left, next_right]:
 				surface.add_vertex(vertex)
 		left = next_left
 		right = next_right
-		if i > 0 and i % 19 == 0:
-			stack_ascent_stones(route.at(point.x + 1.4, d))
+		if i > 0 and i <= 375 and i % 19 == 0:
+			stack_ascent_stones(route.surface_point(point.x + 1.4, d))
 	surface.generate_normals()
 	var path: = MeshInstance3D.new()
 	path.mesh = surface.commit()
 	add_child(path)
 
 func stack_ascent_stones(foot: Vector3):
+	var base: Vector3 = route.surface_point(foot.x, route.ORIGIN_Z - foot.z)
 	for level in 3:
 		var width: = 0.63 - 0.14 * level
-		stone(foot + Vector3.UP * (0.13 + level * 0.19), Vector3(width, 0.26, width * 0.7), "9a8971")
+		stone(base + Vector3.UP * (0.07 + level * 0.19), Vector3(width, 0.26, width * 0.7), "9a8971")
 
 var crossing_dressed: = false
 
