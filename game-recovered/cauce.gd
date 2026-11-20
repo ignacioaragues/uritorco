@@ -1,9 +1,6 @@
 extends RefCounted
 
 const LIMIT_Z := 122.0
-const GROUND := Color("#82795b")
-const FOOTPATH := Color("#aa8c68")
-const GRAVEL := Color("#867d72")
 const PATH := [
 	Vector2(3.8, -14.0), Vector2(3.8, -18.4), Vector2(-5, -19), Vector2(-15, -17),
 	Vector2(-21, -11), Vector2(-23, 4), Vector2(-20, 18),
@@ -45,32 +42,35 @@ static func trail_distance(position: Vector2) -> float:
 		nearest = minf(nearest, position.distance_squared_to(closest))
 	return sqrt(nearest)
 
-static func build_ground(valley):
-	const COLUMNS := 57
-	const ROWS := 120
+static func outer_height(x: float, z: float) -> float:
+	var outskirts := maxf(smoothstep(56.0, 150.0, absf(x)), smoothstep(166.0, 280.0, z))
+	var hills := (5.4 + 4.0 * sin(x * 0.018 + z * 0.019) + 3.7 * sin(z * 0.031 - x * 0.021))
+	hills *= smoothstep(-72.0, 8.0, z)
+	return lerpf(height(x, z), hills, outskirts)
+
+static func build_ground(valley, material: ShaderMaterial):
+	var columns := PackedFloat32Array()
+	for x in range(-360, -56, 8): columns.append(x)
+	for x in range(-56, 57, 2): columns.append(x)
+	for x in range(64, 361, 8): columns.append(x)
+	var rows := PackedFloat32Array()
+	for z in range(-72, 167, 2): rows.append(z)
+	for z in range(174, 511, 8): rows.append(z)
 	var surface := SurfaceTool.new()
 	surface.begin(Mesh.PRIMITIVE_TRIANGLES)
-	var material := StandardMaterial3D.new()
-	material.vertex_color_use_as_albedo = true
-	surface.set_material(material)
-	for row in ROWS:
-		var z := -72.0 + row * 2.0
-		for column in COLUMNS:
-			var x := -56.0 + column * 2.0
-			var grain := sin(x * 2.37 + sin(z)) * cos(z * 1.72)
-			var track := 1.0 - smoothstep(0.9, 2.7, trail_distance(Vector2(x, z)) + grain * 0.26)
-			var channel := 1.0 - smoothstep(2.2, 7.5, absf(z - channel_z(x)))
-			var color := GROUND.lerp(FOOTPATH, track).lerp(GRAVEL, channel * 0.95)
-			surface.set_color(color.darkened(maxf(0.0, grain * 0.10)))
-			surface.add_vertex(point(x, z))
-	for row in range(ROWS - 1):
-		for column in range(COLUMNS - 1):
-			var a := row * COLUMNS + column
-			for index in [a, a + 1, a + COLUMNS, a + 1, a + COLUMNS + 1, a + COLUMNS]:
+	for z in rows:
+		for x in columns:
+			surface.add_vertex(Vector3(x, outer_height(x, z), z))
+	var width := columns.size()
+	for row in range(rows.size() - 1):
+		for column in range(width - 1):
+			var a := row * width + column
+			for index in [a, a + 1, a + width, a + 1, a + width + 1, a + width]:
 				surface.add_index(index)
 	surface.generate_normals()
 	var ground := MeshInstance3D.new()
 	ground.mesh = surface.commit()
+	ground.material_override = material
 	valley.add_child(ground)
 	ground.create_trimesh_collision()
 

@@ -1065,6 +1065,8 @@ func _unhandled_key_input(event):
 					"Parada":
 						if at_departure_stop(): transmit()
 						else: overlay("message", "El poste marca la curva donde para el colectivo.", "Espacio · volver")
+					"Puesto de abajo":
+						overlay("message", "La huella llega hasta el puesto del otro lado de la curva.", "Espacio · volver")
 					"Antena del abra":
 						if stage == 7 and not bedtime:
 							if not second_sighting:

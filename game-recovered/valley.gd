@@ -2,9 +2,10 @@ extends Node3D
 
 const Creek = preload("res://cauce.gd")
 const LastNight = preload("res://final_night.gd")
+const Trail = preload("res://travesia.gd")
 
 var rng: = RandomNumberGenerator.new()
-var route = preload("res://travesia.gd").new()
+var route = Trail.new()
 var env: = Environment.new()
 var sun: = DirectionalLight3D.new()
 var beacon := Sprite3D.new()
@@ -77,28 +78,10 @@ func _ready():
 	sun.rotation_degrees = Vector3(-22, -52, 0)
 	sun.light_color = Color("#ffd3a1")
 	sun.shadow_enabled = true
-	Creek.build_ground(self)
-	var trail_mesh: = SurfaceTool.new()
-	trail_mesh.begin(Mesh.PRIMITIVE_TRIANGLES)
-	var soil: = StandardMaterial3D.new()
-	soil.vertex_color_use_as_albedo = true
-	soil.cull_mode = BaseMaterial3D.CULL_DISABLED
-	trail_mesh.set_material(soil)
-	var previous: = PackedVector3Array()
-	for i in range(79):
-		var z: = - float(i) + 0.5
-		var center: = path_x(z)
-		var strip: = PackedVector3Array([Vector3(center - rng.randf_range(1.28, 1.72), 0.028, z), Vector3(center, 0.028, z), Vector3(center + rng.randf_range(1.3, 1.65), 0.028, z)])
-		if i > 0:
-			for lane in range(2):
-				for v in [previous[lane], strip[lane], previous[lane + 1], previous[lane + 1], strip[lane], strip[lane + 1]]:
-					trail_mesh.set_color(Color("#ad9479") if abs(v.x - path_x(v.z)) < 0.2 else Color("#82795b"))
-					trail_mesh.set_normal(Vector3.UP)
-					trail_mesh.add_vertex(v)
-		previous = strip
-	var path: = MeshInstance3D.new()
-	path.mesh = trail_mesh.commit()
-	add_child(path)
+	route.ground_material = Trail.make_ground_material(PackedVector2Array(Creek.PATH), LastNight.STOP, LastNight.DOOR_PATH_END)
+	Creek.build_ground(self, route.ground_material)
+	# Se conserva la distribución de piedras de las partidas anteriores.
+	for sample in 79 * 2: rng.randf()
 	build_distant_ridges()
 	for i in range(24):
 		var z: = rng.randf_range(-80, 4)
@@ -175,8 +158,9 @@ func _ready():
 	dress_refuge_junction()
 	preload("res://museo.gd").build(self)
 	LastNight.build_door(self)
-	route.signpost(LastNight.STOP + Vector3(2.1, 0, -0.6), "Parada", "Parada · Colectivo")
-	dress_refuge_footpath(LastNight.door_approach, 38, 1.4)
+	route.signpost(LastNight.STOP + Vector3(2.1, 0, -0.6), "Parada", "Parada · Colectivo", 0.0, true)
+	var fork := LastNight.door_approach(0.22)
+	route.signpost(fork + Vector3(0.0, 0, -2.4), "Puesto de abajo", "Puesto de abajo →", -1.72, true)
 
 func build_distant_ridges():
 	const SECTIONS := 96
@@ -214,39 +198,8 @@ func build_distant_ridges():
 		add_child(ridge)
 
 func dress_refuge_junction():
-	route.signpost(Vector3(1.25, 0.0, -17.8), "Sendero del cauce", "← Cauce")
-	route.signpost(Vector3(6.75, 0.0, -17.8), "Camino al acceso", "Cumbre →")
-	dress_refuge_footpath(func(t: float):
-		var z: float = lerpf(route.WEST_START_Z, route.ORIGIN_Z, t)
-		return Vector3(route.western_x_at(z), 0.0, z), 55, 1.9)
-	dress_refuge_footpath(route.eastern_access, 65, 1.62)
-
-func dress_refuge_footpath(sample: Callable, samples: int, width: float):
-	var surface := SurfaceTool.new()
-	surface.begin(Mesh.PRIMITIVE_TRIANGLES)
-	var soil := StandardMaterial3D.new()
-	soil.cull_mode = BaseMaterial3D.CULL_DISABLED
-	soil.vertex_color_use_as_albedo = true
-	surface.set_material(soil)
-	var previous := PackedVector3Array()
-	for i in range(samples):
-		var point: Vector3 = sample.call(float(i) / (samples - 1))
-		var d: float = route.ORIGIN_Z - point.z
-		var left: Vector3 = route.surface_point(point.x - width, d)
-		var middle: Vector3 = route.surface_point(point.x, d)
-		var right: Vector3 = route.surface_point(point.x + width, d)
-		var row := PackedVector3Array([left + Vector3.UP * 0.04, middle + Vector3.UP * 0.04, right + Vector3.UP * 0.04])
-		if i > 0:
-			for lane in range(2):
-				for vertex in [previous[lane], row[lane], previous[lane + 1], previous[lane + 1], row[lane], row[lane + 1]]:
-					var center: bool = vertex == previous[1] or vertex == row[1]
-					surface.set_color(Color("#a2886b") if center else Color("#82795b"))
-					surface.set_normal(Vector3.UP)
-					surface.add_vertex(vertex)
-		previous = row
-	var path := MeshInstance3D.new()
-	path.mesh = surface.commit()
-	add_child(path)
+	route.signpost(Vector3(1.25, 0.0, -17.8), "Sendero del cauce", "← Cauce", 0.0, true)
+	route.signpost(Vector3(6.75, 0.0, -17.8), "Camino al acceso", "Cumbre →", 0.0, true)
 
 func build_sighting_lights():
 	var glow := Gradient.new()
