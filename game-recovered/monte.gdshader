@@ -1,5 +1,7 @@
 shader_type spatial;
 varying vec3 pos;
+uniform vec2 west_start;
+uniform vec2 west_end;
 void vertex(){pos=VERTEX;}
 void fragment(){
 	float d=-76.0-pos.z;
@@ -12,6 +14,12 @@ void fragment(){
 	}
 	float grain=sin(pos.x*5.1+sin(pos.z*2.1))*sin(pos.z*3.7);
 	float path=(1.0-smoothstep(1.0,2.0,distance_to_path+grain*0.24))*(1.0-smoothstep(923.0,926.0,d));
+	float west_t=(pos.z-west_start.y)/(west_end.y-west_start.y);
+	float west_path=0.0;
+	if (west_t>=0.0 && west_t<=1.0) {
+		float western_x=mix(west_start.x,west_end.x,west_t)-39.0*sin(PI*west_t);
+		west_path=1.0-smoothstep(1.1,2.25,abs(pos.x-western_x)+grain*0.23);
+	}
 	float band=sin(pos.z*0.031+cos(pos.x*0.12));
 	vec3 soil=mix(vec3(0.21,0.19,0.11),vec3(0.31,0.28,0.18),band*0.5+0.5);
 	vec3 ground=mix(soil,vec3(0.46,0.31,0.18),path);
@@ -19,6 +27,7 @@ void fragment(){
 	float creek_d=96.0+2.0*sin((pos.x-creek_x)/14.0);
 	float creek=(1.0-smoothstep(1.3,4.8,abs(d-creek_d)))*(1.0-smoothstep(46.0,68.0,abs(pos.x-creek_x)));
 	ground=mix(ground,vec3(0.33,0.29,0.24),creek);
-	ALBEDO=mix(vec3(0.224,0.191,0.105),ground,smoothstep(0.0,14.0,d))*(0.95+0.05*grain);
+	ground=mix(vec3(0.224,0.191,0.105),ground,smoothstep(0.0,14.0,d));
+	ALBEDO=mix(ground,vec3(0.39,0.27,0.15),west_path)*(0.95+0.05*grain);
 	ROUGHNESS=1.0;
 }

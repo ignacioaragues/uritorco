@@ -11,6 +11,9 @@ var paper_sprite: = Sprite2D.new()
 var ptt: = ShaderMaterial.new()
 var pose: = ""
 var requested_pose := ""
+var map_requested := false
+var map_lift := 0.0
+var map_movement: Tween
 var heading: = 0.0
 var phase: = 0.0
 var stride: = 0.0
@@ -33,6 +36,7 @@ func _ready():
 	rig.show_behind_parent = true
 	rig.add_child(sprite)
 	sprite.centered = false
+	rig.hide()
 	ptt.shader = preload("res://pulsador.gdshader")
 	hide()
 
@@ -63,16 +67,36 @@ func hold(next: String):
 
 func apply_pose(next: String):
 	pose = next
-	paper_rig.visible = pose == "map"
 	rig.visible = pose in ["radio", "compass", "piece", "mate"]
-	if not paper_rig.visible and not rig.visible:
+	if not rig.visible:
 		lift = 0.0
-		hide()
+		if not paper_rig.visible: hide()
+		queue_redraw()
 		return
 	sprite.texture = mate_texture if pose == "mate" else (RADIO if pose == "radio" else COMPASS)
 	sprite.material = ptt if pose == "radio" else null
 	show()
 	set_lift(0.0)
+
+func show_map(open: bool):
+	if open == map_requested: return
+	map_requested = open
+	if map_movement: map_movement.kill()
+	map_movement = create_tween().set_trans(Tween.TRANS_SINE)
+	if open:
+		show()
+		paper_rig.show()
+		update_pose()
+		map_movement.tween_method(set_map_lift, map_lift, 1.0, 0.28 * (1.0 - map_lift))
+	else:
+		map_movement.tween_method(set_map_lift, map_lift, 0.0, 0.22 * map_lift)
+		map_movement.tween_callback(func():
+			paper_rig.hide()
+			if not rig.visible: hide())
+
+func set_map_lift(value: float):
+	map_lift = value
+	update_pose()
 
 func set_lift(value: float):
 	lift = value
@@ -104,13 +128,13 @@ func update_pose():
 	var sway: = Vector2(sin(phase) * 2.6, cos(phase * 2) * 1.7) * stride
 	var tilt: = sin(phase) * 0.007 * stride
 	if paper_rig.visible:
-		place_grip(paper_rig, MAP_HAND, 0.71, true, sway, tilt)
+		place_grip(paper_rig, MAP_HAND, 0.71, true, sway, tilt, map_lift)
 	if rig.visible and sprite.texture:
-		place_grip(rig, sprite.texture, 0.53 if pose == "radio" else 0.43, false, sway + Vector2(-3, 5) * press, tilt + press * 0.032)
+		place_grip(rig, sprite.texture, 0.53 if pose == "radio" else 0.43, false, sway + Vector2(-3, 5) * press, tilt + press * 0.032, lift)
 	if pose == "radio": ptt.set_shader_parameter("squeeze", press)
 	queue_redraw()
 
-func place_grip(node: Node2D, texture: Texture2D, fraction: float, left: bool, sway: Vector2, angle: float):
+func place_grip(node: Node2D, texture: Texture2D, fraction: float, left: bool, sway: Vector2, angle: float, amount: float):
 	var height: = size.y * fraction
 	var factor: = height / texture.get_height()
 	var extent: = texture.get_size() * factor
@@ -118,7 +142,7 @@ func place_grip(node: Node2D, texture: Texture2D, fraction: float, left: bool, s
 	var x: float = -4.0 if left else size.x - extent.x + 3
 	node.scale = Vector2.ONE * factor
 	node.rotation = angle
-	node.position = Vector2(x, size.y - height + size.y * 0.05) + sway + pivot - pivot.rotated(angle) + Vector2.DOWN * (1 - lift) * height
+	node.position = Vector2(x, size.y - height + size.y * 0.05) + sway + pivot - pivot.rotated(angle) + Vector2.DOWN * (1 - amount) * height
 
 func _draw():
 	if pose == "piece":

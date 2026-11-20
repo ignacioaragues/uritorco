@@ -126,11 +126,14 @@ func _ready():
 		var z: = rng.randf_range(-80, 4)
 		var side: = -1 if i % 2 == 0 else 1
 		var x: = path_x(z) + side * rng.randf_range(17, 35)
-		stone(Vector3(x, -1, z), Vector3(rng.randf_range(12, 21), rng.randf_range(4, 9), rng.randf_range(10, 22)), "837f65", true)
+		var size_m := Vector3(rng.randf_range(12, 21), rng.randf_range(4, 9), rng.randf_range(10, 22))
+		if z < route.WEST_START_Z + size_m.z and absf(x - route.western_x_at(z)) < size_m.x + 7.0: continue
+		stone(Vector3(x, -1, z), size_m, "837f65", true)
 	for i in range(160):
 		var z: = rng.randf_range(-84, 10)
 		var x: = rng.randf_range(-45, 45)
 		if abs(x - path_x(z)) < 4.8 or (abs(x) < 12.5 and z > -15.5): continue
+		if z < route.WEST_START_Z + 1.0 and absf(x - route.western_x_at(z)) < 5.0: continue
 		var k: = rng.randf_range(0.5, 2.1)
 		if i % 3 == 0:
 			stone(Vector3(x, 0, z), Vector3(2.2, 1.4, 1.8) * k, "928678", true)
@@ -182,7 +185,32 @@ func _ready():
 	dress_creek()
 	rock_banks()
 	add_child(route)
+	dress_west_trail_near_refugio()
 	preload("res://museo.gd").build(self)
+
+func dress_west_trail_near_refugio():
+	var surface := SurfaceTool.new()
+	surface.begin(Mesh.PRIMITIVE_TRIANGLES)
+	var soil := StandardMaterial3D.new()
+	soil.cull_mode = BaseMaterial3D.CULL_DISABLED
+	soil.vertex_color_use_as_albedo = true
+	surface.set_material(soil)
+	var previous := PackedVector3Array()
+	for i in range(55):
+		var z: float = route.WEST_START_Z - i
+		var x: float = route.western_x_at(z)
+		var row := PackedVector3Array([Vector3(x - 1.9, 0.04, z), Vector3(x, 0.04, z), Vector3(x + 1.9, 0.04, z)])
+		if i > 0:
+			for lane in range(2):
+				for point in [previous[lane], row[lane], previous[lane + 1], previous[lane + 1], row[lane], row[lane + 1]]:
+					var center := absf(point.x - route.western_x_at(point.z)) < 0.2
+					surface.set_color(Color("#a2886b") if center else Color("#82795b"))
+					surface.set_normal(Vector3.UP)
+					surface.add_vertex(point)
+		previous = row
+	var path := MeshInstance3D.new()
+	path.mesh = surface.commit()
+	add_child(path)
 
 func transition() -> Tween:
 	if lighting and lighting.is_valid():
@@ -485,30 +513,6 @@ func furnish():
 var bag: MeshInstance3D
 var book_unpacked: = false
 
-var desk_mate: MeshInstance3D
-
-func place_mate():
-	if is_instance_valid(desk_mate): return
-	var position_mate: = Vector3(2.05, 0.971, 2.64)
-	var gourd: = CylinderMesh.new()
-	gourd.top_radius = 0.065
-	gourd.bottom_radius = 0.048
-	gourd.height = 0.14
-	desk_mate = prop(gourd, position_mate, "896647")
-	var rim: = TorusMesh.new()
-	rim.inner_radius = 0.054
-	rim.outer_radius = 0.068
-	prop(rim, position_mate + Vector3.UP * 0.071, "ada694")
-	var toward_player: = Vector3(-0.91, 0, -0.22).normalized()
-	var insertion: = position_mate + Vector3.UP * 0.064 + toward_player * 0.044
-	var mouthpiece: = insertion + Vector3.UP * 0.145 + toward_player * 0.069
-	var tube: = CylinderMesh.new()
-	tube.top_radius = 0.004
-	tube.bottom_radius = 0.004
-	tube.height = insertion.distance_to(mouthpiece)
-	var bombilla: = prop(tube, insertion.lerp(mouthpiece, 0.5), "a4a19a")
-	bombilla.basis = Basis(Quaternion(Vector3.UP, (mouthpiece - insertion).normalized()))
-
 func leave_bag():
 	if bag or book_unpacked: return
 	bag = box(Vector3(1.8, 0.21, 5.1), Vector3(0.64, 0.39, 0.37), "655143", true, "Bolso")
@@ -708,8 +712,6 @@ func stack_ascent_stones(foot: Vector3):
 		stone(foot + Vector3.UP * (0.13 + level * 0.19), Vector3(width, 0.26, width * 0.7), "9a8971")
 
 var crossing_dressed: = false
-var dream_arches: = false
-var dream_props: Array[Node] = []
 
 func dress_day36(show_crossing: bool = true):
 	if not crossing_dressed:
@@ -732,23 +734,6 @@ func dress_day36(show_crossing: bool = true):
 	for i in range(-10, 11):
 		var silt: Vector3 = route.at(crossing.x + i * 0.65, route.ORIGIN_Z - crossing.z - 2.0)
 		stone(silt + Vector3.UP * 0.05, Vector3(0.72, 0.17, 0.47), "706d5d")
-
-func dress_dream_arches():
-	if dream_arches: return
-	dream_arches = true
-	var before: = get_child_count()
-	var structures = preload("res://estructuras.gd")
-	var start: Vector3 = route.at(route.trail(850), 850)
-	for i in 5:
-		var arch: Vector3 = route.at(start.x + 3.5 + sin(i * 0.82) * 5, 858 + i * 8.0)
-		structures.arch(self, arch, 1.1 + i * 0.16, true, 0.13 * i, "Arco del sueño" if i == 4 else "")
-	for i in range(before, get_child_count()):
-		dream_props.append(get_child(i))
-
-func clear_dream_arches():
-	for prop in dream_props: prop.queue_free()
-	dream_props.clear()
-	dream_arches = false
 
 var yard_hinge: Node3D
 var privy_hinge: Node3D

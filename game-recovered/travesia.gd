@@ -2,6 +2,8 @@ extends Node3D
 
 
 const ORIGIN_Z: = -76.0
+const WEST_START_Z := -22.0
+const WEST_JOIN := 0.44
 const HALF_WIDTH: = 360.0
 const FAR: = 980.0
 const CREST: = 922.0
@@ -71,6 +73,10 @@ func _ready():
 	land.mesh = surface.commit()
 	var mat: = ShaderMaterial.new()
 	mat.shader = preload("res://monte.gdshader")
+	var west_start := western_approach(0.0)
+	var west_end := western_approach(1.0)
+	mat.set_shader_parameter("west_start", Vector2(west_start.x, west_start.z))
+	mat.set_shader_parameter("west_end", Vector2(west_end.x, west_end.z))
 	land.material_override = mat
 	add_child(land)
 	land.create_trimesh_collision()
@@ -92,6 +98,8 @@ func _ready():
 	for h in [2.85, 3.45, 3.94]:
 		box(self, Vector3(1.15, 0.04, 0.07), repeater + Vector3(0, h, 0), "737a75")
 	signpost(at(trail(292) - 1.7, 292), "Sala de las sierras", "Museo de sitio →")
+	signpost(west_start + Vector3(0.7, 0.0, 1.6), "Sendero oeste", "Sendero oeste ↖")
+	signpost(west_end + Vector3(2.0, 0.0, 0.0), "Sendero oeste", "Refugio · senda del oeste")
 
 func signpost(pos: Vector3, tag: String, caption: String):
 	var pole: = box(self, Vector3(0.17, 1.5, 0.14), pos + Vector3.UP * 0.75, "6c5443")
@@ -142,6 +150,8 @@ func plant():
 	for i in range(7600):
 		var d: = rng.randf_range(8, FAR)
 		var x: = trail(d) + rng.randf_range(-120, 120)
+		var west_t := inverse_lerp(WEST_START_Z, quarry_point(WEST_JOIN).z, ORIGIN_Z - d)
+		if west_t < 1.0 and absf(x - western_approach(west_t).x) < 3.8: continue
 		if absf(d - 292) < 8 and absf(x - trail(292) - 6) < 7: continue
 		if absf(x - trail(d)) < 2.6 or (d > 124 and d < 218 and absf(x - detour(d)) < 2.6): continue
 		var pos: = at(x, d)
@@ -223,6 +233,16 @@ static func quarry_point(t: float) -> Vector3:
 	var d: = 300 + 310 * t
 	var x: = trail(300) - 220 * t + 12 * sin(TAU * t)
 	return Vector3(x, elevation(x, d), ORIGIN_Z - d)
+
+static func western_approach(t: float) -> Vector3:
+	var join := quarry_point(WEST_JOIN)
+	var z := lerpf(WEST_START_Z, join.z, t)
+	var x := lerpf(4.5 * sin(-WEST_START_Z / 13.0), join.x, t) - 39.0 * sin(PI * t)
+	return Vector3(x, elevation(x, ORIGIN_Z - z), z)
+
+static func western_x_at(z: float) -> float:
+	var progress := clampf(inverse_lerp(WEST_START_Z, quarry_point(WEST_JOIN).z, z), 0.0, 1.0)
+	return western_approach(progress).x
 
 static func summit_point(t: float) -> Vector3:
 	var d: = lerpf(CREST, 948, t) + 11 * sin(TAU * t)

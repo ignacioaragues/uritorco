@@ -2,6 +2,9 @@ extends RefCounted
 
 const CAVE: = Vector3(0, 80, 1900)
 const DOOR: = Vector3(0, 80, 2100)
+const PLANET := Vector3(0, 88, 2450)
+const GROUND_COLORS = [Color("544663"), Color("354b4c"), Color("615062")]
+const ROCK_COLORS = ["746182", "698283", "7a6479"]
 const ENTRY: = Vector3(0, 0.08, -5)
 const CHECKPOINT: = Vector3(0, 0.78, -23)
 
@@ -43,3 +46,81 @@ static func build_door(v):
 	v.plaster(v.box(DOOR + Vector3(0, 1.6, -5.1), Vector3(7.4, 3.2, 0.35), "b09d80", true))
 	v.timber(v.box(DOOR + Vector3(0, 1.12, -4.86), Vector3(1.22, 2.24, 0.15), "705342", true, "Puerta de Mara"))
 	v.box(DOOR + Vector3(0.42, 1.12, -4.76), Vector3(0.12, 0.065, 0.06), "a08d68")
+static func dream_x(variant: int, distance: float) -> float:
+	match variant:
+		1: return 5.5 * sin(distance * 0.09)
+		2: return -8.0 * sin(distance * 0.055)
+		_: return 5.0 * sin(distance * 0.10)
+
+static func planet_height(variant: int, x: float, distance: float) -> float:
+	var edge := absf(x - dream_x(variant, distance))
+	var banks := smoothstep(6.0, 36.0, edge)
+	var relief := (6.0 + 4.0 * sin(distance * 0.12 + x * 0.09 + variant)) * banks
+	match variant:
+		1: return relief + 0.7 * sin(distance * 0.13)
+		2: return relief * 0.55 + 1.8 * sin(distance * 0.069)
+		_: return relief * 1.30 + 0.9 * sin(distance * 0.16)
+
+static func dream_point(variant: int, distance: float) -> Vector3:
+	var x := dream_x(variant, distance)
+	return PLANET + Vector3(x, planet_height(variant, x, distance), -distance)
+
+static func final_arch() -> Vector3:
+	return dream_point(3, 46.0)
+
+static func build_planet(valley, variant: int) -> Node3D:
+	var root := Node3D.new()
+	var first_prop: int = valley.get_child_count()
+	var surface := SurfaceTool.new()
+	surface.begin(Mesh.PRIMITIVE_TRIANGLES)
+	const COLUMNS := 73
+	const ROWS := 53
+	for row in ROWS:
+		var distance := 4.0 * row - 64.0
+		for column in COLUMNS:
+			var x := 4.0 * column - 144.0
+			var tone := 0.11 * sin(row * 0.57 + column * 0.84) + 0.06 * cos(column * 0.29 - row * 0.92)
+			surface.set_color(GROUND_COLORS[variant - 1].lightened(tone))
+			surface.add_vertex(Vector3(x, planet_height(variant, x, distance), -distance))
+	for row in range(ROWS - 1):
+		for column in range(COLUMNS - 1):
+			var a := row * COLUMNS + column
+			for index in [a, a + COLUMNS, a + 1, a + 1, a + COLUMNS, a + COLUMNS + 1]:
+				surface.add_index(index)
+	surface.generate_normals()
+	var ground := MeshInstance3D.new()
+	ground.mesh = surface.commit()
+	var material := StandardMaterial3D.new()
+	material.vertex_color_use_as_albedo = true
+	ground.material_override = material
+	valley.add_child(ground)
+	ground.position = PLANET
+	ground.create_trimesh_collision()
+	var rng := RandomNumberGenerator.new()
+	rng.seed = 571 + variant
+	for side in [-1, 1]:
+		for distance in range(-22, 62, 5):
+			var x: float = dream_x(variant, distance) + side * rng.randf_range(5.5, 14.0)
+			var foot := PLANET + Vector3(x, planet_height(variant, x, distance), -distance)
+			var size := Vector3(rng.randf_range(1.6, 3.2), rng.randf_range(3.8, 7.5), rng.randf_range(1.4, 2.8))
+			if variant == 2: size = Vector3(size.x * 1.8, size.y * 0.36, size.z)
+			var rock: MeshInstance3D = valley.stone(foot + Vector3.UP * size.y * 0.23, size, ROCK_COLORS[variant - 1])
+			rock.rotation.z = rng.randf_range(-0.45, 0.45)
+		for distance in range(-44, 90, 12):
+			var x: float = side * rng.randf_range(22.0, 36.0)
+			var foot := PLANET + Vector3(x, planet_height(variant, x, distance), -distance)
+			valley.stone(foot, Vector3(16.0, rng.randf_range(12.0, 24.0), 15.0), ROCK_COLORS[variant - 1])
+	for distance in [-31.0, 67.0, 82.0]:
+		valley.stone(dream_point(variant, distance), Vector3(28, 17, 10), ROCK_COLORS[variant - 1])
+	if variant == 3:
+		for i in 5:
+			var arch := dream_point(3, 10.0 + 9.0 * i)
+			preload("res://estructuras.gd").arch(valley, arch, 1.05 + i * 0.13, true, i * 0.11)
+		var glow: MeshInstance3D = valley.stone(final_arch() + Vector3(0, 1.65, 0.36), Vector3(0.58, 0.68, 0.31), "e4ccaa")
+		(glow.material_override as StandardMaterial3D).shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	var props: Array[Node] = []
+	for i in range(first_prop, valley.get_child_count()):
+		props.append(valley.get_child(i))
+	valley.add_child(root)
+	for prop in props: prop.reparent(root)
+	return root

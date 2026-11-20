@@ -1,9 +1,12 @@
 # Uritorco · Registro de pasadas
 
-## Hecho en esta pasada
+## Hecho en la copia actual
 
 - Se recuperó una copia editable del paquete del 19 de noviembre en `game-recovered/`. Se verificó la importación desde cero y que arranca en Godot 4.6.3. El proyecto editable `uritorco/game/` usado en las últimas pasadas sigue ausente. [Descarga que sirvió de base](https://github.com/ignacioaragues/uritorco/blob/descarga-windows-2026-11-19/Uritorco-Windows-x64.zip)
-- En la copia recuperada, las manos bajan al guardar un objeto antes de subir el siguiente. El mapa se muestra con una sola mano y al cerrarlo vuelve la brújula si estaba afuera. Pasaron las pruebas de guardar, cambiar al mapa, alternar teclas rápido y pasar del mapa a la radio.
+- **Manos.** El mapa y la brújula tienen animaciones independientes. Abrir o cerrar el mapa deja la brújula donde está. B mueve solo la derecha. La radio reemplaza el objeto de la derecha y el mapa sigue afuera. Se comprobó la posición de ambas manos durante estos cambios.
+- **Rutas desde el refugio.** Hay un desvío por el oeste a pocos pasos de la tranquera que enlaza con el cable de la cantera y la quebrada oeste. Figura en las láminas y en las indicaciones de Mara. Se recorrió hasta el cable con movimiento y colisiones. El ascenso a la cumbre conserva el acceso del este.
+- **Sueños.** Se reconstruyeron los tres relieves alienígenas. El primero permite saltar con baja gravedad y mirar el cielo para despertar. El cuaderno registra el dibujo de las estrellas antes de pasar al Día 25. El segundo usa la pieza y el tercero el último arco por cercanía. En los tres aparece «????» al mirar hacia el cielo. Se probaron las tres transiciones y se caminó hasta el último arco.
+- **Mate.** Abre el Día 32. E baja la mano y la radio sube después en esa misma mano.
 - La rama `codigo-fuente` guarda el proyecto recuperado, sus recursos y este registro. Cada tanda de recuperación debe quedar en un commit de esa rama junto con su verificación.
 - Al cierre de cada pasada, registrar los cambios incorporados y los pendientes que quedan. Preparar una exportación de Windows cuando se pida.
 
@@ -23,11 +26,10 @@ Esta lista reconstruye el estado informado del proyecto editable. La exportació
 
 ## Todavía pendiente
 
-- **Cambios posteriores a la descarga.** Recuperar o reincorporar en la copia editable los tres terrenos alienígenas y sus interacciones, el despertar y el mate, la ampliación del museo y la visita opcional, la casa de Mara integrada al valle, los mojones y el cierre del descenso, las charlas de caminata y la condición de la puerta, los recuerdos del padre y la señal de los dos golpes. La descarga recuperada todavía conserva las luces del primer sueño y la entrega obligatoria de la nota en el museo.
-- **Cielo de los sueños.** Mostrar «????» también al apuntar a estrellas o lunas en los otros sueños.
+- **Cambios posteriores a la descarga.** Reincorporar la ampliación del museo y su visita opcional, la casa de Mara integrada al valle, los mojones y el cierre del descenso, las charlas de caminata y la condición de la puerta, los epílogos sobre negro, los recuerdos del padre y la señal de los dos golpes. Esta copia todavía exige dejar una nota en el museo.
 - **Pasada narrativa.** Recorrer de corrido el prólogo y los días para ajustar pausas, caminatas, charlas, pistas y saltos entre jornadas. Escuchar la mezcla de diálogo, música, interferencia y linterna durante la última noche.
 - **Prólogo y controles.** Volver a comprobar la mochila desde la cámara inicial, los extremos de la ruta, el agua a los costados del puente y el corte a la llegada. Pulir la trepada por la laja del mapa principal, con el cuerpo junto a la pared y apoyos visibles.
 - **Valle y refugio.** Corregir la unión diagonal, el cambio de color del sendero y el recorte del terreno visto desde arriba. Dar al cauce un acceso cuesta abajo y comprobar su extensión visible. Revisar el despeje de la tranquera y la orientación hacia la casa de Mara desde la parada.
 - **Arte y legibilidad.** Mejorar de cerca los modelos, la vegetación, los árboles y las texturas. Revisar el libro cerrado, los carteles tapados, el aspecto de la luna y las estrellas, y textos largos de radio a distintas resoluciones. Probar que los sonidos de pasos se lean como tierra.
-- **Caminatas y herramientas.** Ampliar la red de ramales, comparar duración de caminatas y completar los hitos disponibles en el selector de depuración.
+- **Caminatas y herramientas.** Dar a cada tramo nuevo una salida distinta alrededor del refugio. Falta llevar el encargo del Día 2 a un cauce cuesta abajo, revisar la lectura del acceso este y comparar duración de las caminatas. Completar los hitos disponibles en el selector de depuración.
 - **Windows.** Validar la próxima exportación cuando se solicite.
