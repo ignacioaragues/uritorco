@@ -516,7 +516,8 @@ func conversation(lines: Array, next: String):
 
 func speak():
 	radio.play()
-	overlay("talk", "Mara\n\n" + str(sequence.pop_front()), "Espacio · seguir")
+	var cue := "Espacio · seguir   /   Esc · volver" if after == "last_call" else "Espacio · seguir"
+	overlay("talk", "Mara\n\n" + str(sequence.pop_front()), cue)
 
 func radio_available() -> bool:
 	return stage == 19 or mission_radio_available() or not available_trail_chat().is_empty()
@@ -929,7 +930,7 @@ func _unhandled_key_input(event):
 	elif mode == "crossing_warning" and advance:
 		radio.play_interference()
 		overlay("crossing_response", "La estática cede. «¿Ya llegaste? Recién prendo la radio». Ahora la voz de Mara suena más lejos. Una luz sube desde el fondo del cauce. Cuando te quedás quieto, se detiene.", ["Retrocedés con Mara en línea.", "Apagás la linterna y esperás.", "Alumbrás el cauce."], "radio")
-	elif mode in ["departure_radio", "trail_chat"] and key == KEY_ESCAPE:
+	elif key == KEY_ESCAPE and (mode in ["departure_radio", "trail_chat"] or (mode == "talk" and after == "last_call")):
 		walk()
 	elif mode == "talk" and advance:
 		if radio_panel.line.visible_ratio < 1.0:
@@ -999,8 +1000,9 @@ func _unhandled_key_input(event):
 	elif mode == "bench" and advance:
 		walk()
 		observing = true
-	elif mode == "departure_choice" and advance and not can_visit_mara():
-		select_option(0)
+	elif mode == "departure_choice":
+		if key == KEY_ESCAPE: walk()
+		elif advance and not can_visit_mara(): select_option(0)
 	elif mode == "end" and (advance or key == KEY_F2):
 		if advance and ending_paragraph + 1 < ending_paragraphs.size():
 			ending_paragraph += 1
@@ -1381,7 +1383,7 @@ func show_departure_choice():
 	if can_visit_mara():
 		overlay("departure_choice", caption + " Un poco antes sale el sendero al puesto de abajo.", ["Subís al colectivo.", "Tomás el sendero y vas a golpear la puerta de Mara."])
 	else:
-		overlay("departure_choice", caption, "Espacio · subir al colectivo")
+		overlay("departure_choice", caption, "Espacio · subir al colectivo   /   Esc · volver")
 
 func approach_mara_door():
 	valley.morning()

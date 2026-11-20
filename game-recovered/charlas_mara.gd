@@ -4,10 +4,12 @@ const Creek = preload("res://cauce.gd")
 const Museum = preload("res://museo.gd")
 const Trail = preload("res://travesia.gd")
 
-# Jornada, pregunta de Mara, opciones de Hernán y respuesta para cada opción.
+const VISIT_PERCENT := 60
+
+# Respuesta que genera cercanía, pregunta, opciones de Hernán y réplicas de Mara.
 const TOPICS = {
 	"alero": [
-		1, "¿Escuchás un golpecito arriba de la ventana? En ese alero hizo nido un benteveo. Hace años que vuelve al mismo rincón.",
+		0, "¿Escuchás un golpecito arriba de la ventana? En ese alero hizo nido un benteveo. Hace años que vuelve al mismo rincón.",
 		["«Lo escuché al entrar».", "«Por ahora escucho más la heladera»."],
 		[
 			["Cuando se levanta viento mueve una chapita. La primera vez salí tres veces a ver quién golpeaba."],
@@ -15,7 +17,7 @@ const TOPICS = {
 		]
 	],
 	"primera_noche": [
-		1, "¿Desde ahí se ve una luz amarilla abajo? Es la de mi cocina. Le dejé la cortina abierta.",
+		0, "¿Desde ahí se ve una luz amarilla abajo? Es la de mi cocina. Le dejé la cortina abierta.",
 		["«Se agradece ver otra luz».", "«¿Vos también hacés el turno de noche?»"],
 		[
 			["Yo la dejaba prendida cuando mi vieja volvía tarde. Después se me hizo costumbre."],
@@ -23,7 +25,7 @@ const TOPICS = {
 		]
 	],
 	"cauce": [
-		2, "¿Cómo te está tratando el camino?",
+		1, "¿Cómo te está tratando el camino?",
 		["Se agradece el silencio.", "Me vendría bien un poco de charla."],
 		[
 			["Te entiendo. Hay días que bajo por ahí para escuchar los pasos."],
@@ -31,7 +33,7 @@ const TOPICS = {
 		]
 	],
 	"piedras": [
-		2, "De chica llevaba una piedra de cada caminata. Una vez volví con tantas que tuve que dejar el agua para cerrar la mochila.",
+		0, "De chica llevaba una piedra de cada caminata. Una vez volví con tantas que tuve que dejar el agua para cerrar la mochila.",
 		["«¿Todavía guardás alguna?»", "«Hoy casi me traigo una de acá»."],
 		[
 			["Una blanca y chata. La uso para que no se me vuele el mantel."],
@@ -39,7 +41,7 @@ const TOPICS = {
 		]
 	],
 	"museo": [
-		7, "Si vas por el museo, probá la puerta. El de la llave se fue al pueblo. Acá decidimos llamarlo horario corrido.",
+		0, "Si vas por el museo, probá la puerta. El de la llave se fue al pueblo. Acá decidimos llamarlo horario corrido.",
 		["«¿Venías mucho al museo?»", "«Con razón le falta el cartel de horarios»."],
 		[
 			["Mi vieja me traía cuando llovía. Había un mortero que podías tocar.", "Un día nos dejaron encerradas. Mi vieja siguió leyendo las fichas hasta que volvieron."],
@@ -47,15 +49,15 @@ const TOPICS = {
 		]
 	],
 	"antena": [
-		7, "Mi vieja me enseñó a usar esa antena. La primera vez me hizo llamar desde el cerro para preguntarle qué había de comer.",
-		["«¿Y qué había?»", "«¿Te dio vergüenza hablar?»"],
+		1, "Mi vieja me enseñó a usar esa antena. La primera vez me hizo llamar desde el cerro para preguntarle qué había de comer.",
+		["«¿Y qué había?»", "«¿Te quedaste sin saber qué decir?»"],
 		[
 			["Sopa. Yo esperaba que me dijera que se escuchaba clarito. Me dijo que no dejara enfriar la sopa."],
 			["Le di al botón y me quedé muda. La oí decir «tomate tu tiempo». Eso me dio más vergüenza todavía."]
 		]
 	],
 	"vaguada": [
-		25, "Tenés dos huellas ahí. La vuelta por abajo la aprendí tarde. Antes me empecinaba con la laja hasta cuando estaba mojada.",
+		0, "Tenés dos huellas ahí. La vuelta por abajo la aprendí tarde. Antes me empecinaba con la laja hasta cuando estaba mojada.",
 		["«¿Quién te mostró la otra vuelta?»", "«Mi viejo me decía que mirara dónde pisa el agua»."],
 		[
 			["Una vecina que subía con una bolsa de pan en cada mano. Yo estaba juntando coraje frente a la cuerda. Me gritó desde arriba."],
@@ -63,7 +65,7 @@ const TOPICS = {
 		]
 	],
 	"sueno": [
-		25, "Hoy me desperté antes que el despertador. Me quedé escuchando los pájaros y cuando sonó ya no sabía de qué lado venía el ruido.",
+		0, "Hoy me desperté antes que el despertador. Me quedé escuchando los pájaros y cuando sonó ya no sabía de qué lado venía el ruido.",
 		["«Yo soñé con un cielo que no conocía».", "«Todavía me despierto buscando la ventana de casa»."],
 		[
 			["¿Te acordás de alguna parte? A mí me sirve dibujar una sola cosa, aunque sea una esquina."],
@@ -71,7 +73,7 @@ const TOPICS = {
 		]
 	],
 	"cielo": [
-		27, "Desde acá veo el cable, así que calculo que vas bien. Te iba a preguntar algo. ¿Mirabas el cielo antes de venir acá?",
+		0, "Desde acá veo el cable, así que calculo que vas bien. Te iba a preguntar algo. ¿Mirabas el cielo antes de venir acá?",
 		["«Lo miraba con mi viejo. Desde que murió me cuesta un poco».", "«Estudié astronomía. Hace rato que miro más papel que cielo»."],
 		[
 			["Podés contarme de él si te dan ganas. A mí me gustaba escuchar a mi vieja reconocer pájaros.", "Ahora reconozco alguno. A veces me encuentro por decirle cuál es."],
@@ -79,7 +81,7 @@ const TOPICS = {
 		]
 	],
 	"cable": [
-		27, "Cuando el cable se mueve con el viento, desde mi patio parece que alguien hubiera dejado una cuerda de guitarra tirante.",
+		1, "Cuando el cable se mueve con el viento, desde mi patio parece que alguien hubiera dejado una cuerda de guitarra tirante.",
 		["«Desde acá lo escucho distinto».", "«¿Tocás la guitarra?»"],
 		[
 			["Algún día me gustaría oírlo desde donde estás vos. Siempre me doy vuelta antes de llegar al corte."],
@@ -87,7 +89,7 @@ const TOPICS = {
 		]
 	],
 	"pircas": [
-		32, "En esa subida hay una pirca que armé con mi hermano. De chicos jugábamos a dejar la piedra más chiquita bien arriba.",
+		0, "En esa subida hay una pirca que armé con mi hermano. De chicos jugábamos a dejar la piedra más chiquita bien arriba.",
 		["«¿Siguen subiendo juntos?»", "«Yo le voy a dejar una al lado»."],
 		[
 			["Ahora vive en el pueblo. Cuando viene a verme, nos quedamos hablando en el patio y se nos hace tarde."],
@@ -95,7 +97,7 @@ const TOPICS = {
 		]
 	],
 	"bajada": [
-		32, "Ya debe darte la sombra. Bajá tranquilo. El primer día que salí de ahí me apuré tanto que llegué con dos piedras adentro de la bota.",
+		1, "Ya debe darte la sombra. Bajá tranquilo. El primer día que salí de ahí me apuré tanto que llegué con dos piedras adentro de la bota.",
 		["«¿Dónde te dejo la llave el último día?»", "«¿Me dejás la radio abierta un rato?»"],
 		[
 			["En el buzón del puesto. La puerta de madera que te dije, antes de la parada.", "Le iba a poner un timbre. Por ahora tengo dos tornillos y un agujero."],
@@ -103,7 +105,7 @@ const TOPICS = {
 		]
 	],
 	"lluvia": [
-		36, "Cuando llueve así saco las macetas del alero. Siempre me acuerdo de una que mi vieja ponía afuera en la primera lluvia de noviembre.",
+		0, "Cuando llueve así saco las macetas del alero. Siempre me acuerdo de una que mi vieja ponía afuera en la primera lluvia de noviembre.",
 		["«¿Qué tenía plantado?»", "«En casa poníamos una olla bajo la gotera»."],
 		[
 			["Malvones. Dejó uno en una lata de duraznos. Esa lata duró más que todas las macetas buenas."],
@@ -111,7 +113,7 @@ const TOPICS = {
 		]
 	],
 	"ventana": [
-		36, "Ya se ve la luz del refugio desde acá. Antes de que entres, ¿querés que te deje el canal abierto?",
+		0, "Ya se ve la luz del refugio desde acá. Antes de que entres, ¿querés que te deje el canal abierto?",
 		["«Sí. Quedate un rato».", "«Por hoy me alcanza con llegar»."],
 		[
 			["Bueno. Voy a poner agua. Si escuchás la pava, soy yo."],
@@ -119,7 +121,7 @@ const TOPICS = {
 		]
 	],
 	"regreso": [
-		41, "¿Qué es lo primero que vas a hacer cuando llegues a casa?",
+		1, "¿Qué es lo primero que vas a hacer cuando llegues a casa?",
 		["«Abrir la ventana de mi pieza».", "«Volver a mirar el cielo desde la vereda»."],
 		[
 			["La primera noche que volví al pueblo dormí con la ventana abierta. Quería ver si de día me acordaba del ruido de los árboles."],
@@ -127,11 +129,11 @@ const TOPICS = {
 		]
 	],
 	"ultima_curva": [
-		41, "Los días que voy al pueblo me siento del lado de la ventanilla. En la última curva todavía se ve un pedazo de la sierra.",
+		1, "Los días que voy al pueblo me siento del lado de la ventanilla. En la última curva todavía se ve un pedazo de la sierra.",
 		["«Voy a buscar ese asiento».", "«No sé si me dan ganas de mirar»."],
 		[
 			["El vidrio suele estar sucio. Con el puño del buzo alcanza para hacerte un huequito."],
-			["Entonces llevate algo para leer. Cuando quieras levantar la vista, levantala."]
+			["Entonces llevá el libro a mano. Si querés, después me contás qué página te tocó en la última curva."]
 		]
 	]
 }
@@ -179,13 +181,11 @@ static func near(position: Vector3, center: Vector3, radius: float) -> bool:
 	return Vector2(position.x - center.x, position.z - center.z).length_squared() < radius * radius
 
 static func can_visit(answered: Dictionary) -> bool:
-	var first_day := 0
-	for topic in answered:
-		if not TOPICS.has(topic): continue
-		var day: int = TOPICS[topic][0]
-		if first_day != 0 and day != first_day: return true
-		first_day = day
-	return false
+	var connected := 0
+	for topic in TOPICS:
+		if answered.get(topic, -1) == TOPICS[topic][0]:
+			connected += 1
+	return connected * 100 >= TOPICS.size() * VISIT_PERCENT
 
 static func saved_replies(state: Dictionary) -> Dictionary:
 	var replies: Dictionary = state.get("trail_replies", {}).duplicate()
