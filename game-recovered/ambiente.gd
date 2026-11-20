@@ -39,11 +39,12 @@ func sound(song: bool) -> AudioStreamWAV:
 	wave.data = samples
 	return wave
 
-func update(delta: float, speed: float, daytime: bool):
+func update(delta: float, speed: float, daytime: bool, cave_interior: bool = false):
 	travel += speed * delta
 	if travel >= 1.72:
 		travel = 0
 		step.pitch_scale = rng.randf_range(0.86, 1.12)
+		step.volume_db = -16.0 if cave_interior else -24.0
 		step.play()
 	if daytime:
 		silence -= delta

@@ -3,6 +3,7 @@ extends RefCounted
 const Creek = preload("res://cauce.gd")
 const Museum = preload("res://museo.gd")
 const Trail = preload("res://travesia.gd")
+const LastNight = preload("res://final_night.gd")
 
 const VISIT_PERCENT := 60
 
@@ -165,7 +166,7 @@ static func available(stage: int, position: Vector3, bedtime: bool, sighting: bo
 		13:
 			if near(position, Trail.ascent_point(0.24), 115.0): topic = "pircas"
 		15:
-			if position.z < Trail.ORIGIN_Z - 32.0: topic = "bajada"
+			if near(position, Trail.ascent_point(0.67), 155.0): topic = "bajada"
 		16:
 			if near(position, Trail.crossing_point(0.17), 97.0): topic = "lluvia"
 		18:
@@ -173,7 +174,7 @@ static func available(stage: int, position: Vector3, bedtime: bool, sighting: bo
 		19:
 			if near(position, Vector3.ZERO, 52.0):
 				topic = "regreso"
-			elif near(position, Vector3(Trail.trail(Museum.DISTANCE), 0.0, Trail.ORIGIN_Z - Museum.DISTANCE), 65.0):
+			elif LastNight.near_stop(position) or near(position, Vector3(Trail.trail(Museum.DISTANCE), 0.0, Trail.ORIGIN_Z - Museum.DISTANCE), 65.0):
 				topic = "ultima_curva"
 	return topic if not answered.has(topic) else ""
 

@@ -328,7 +328,7 @@ func _process(delta):
 		update_cave()
 	elif mode == "mara_door":
 		update_night_target()
-		hint.text = "E · golpear la puerta" if target == "Puerta de Mara" else ""
+		hint.text = "E · golpear la puerta" if target == "Puerta de Mara" else ("Seguí la huella que sale al este de la parada." if objective_seconds > 0.0 else "")
 	update_flashlight()
 	if mode == "dream":
 		hint.text = "????" if looking_at_dream_sky() else ""
@@ -348,20 +348,21 @@ func _process(delta):
 				elif hint.text.is_empty(): hint.text = "Seguí los arcos hacia la luz."
 	radio_hint.visible = mode in ["walk", "map"] and radio_available()
 	if radio_hint.visible:
-		radio_hint.text = "R   ·   Charlá con Mara" if stage != 19 and not mission_radio_available() else "R   ·   Mara"
+		radio_hint.text = "R   ·   Charlá con Mara" if not at_departure_stop() and not mission_radio_available() else "R   ·   Mara"
 	if mode in ["walk", "map"] and stage == 8 and not awaiting_call and crossing_note.is_empty():
 		record_filo_route()
 	if mode in ["walk", "map"] and stage >= 10 and not branch_found:
 		if player.position.distance_to(valley.route.at(valley.route.trail(300), 300)) < 22:
 			branch_found = true
-	if mode in ["approach", "walk", "dream", "map", "sighting", "cave"]:
+	if mode in ["approach", "walk", "dream", "map", "sighting", "cave", "mara_door"]:
 		var velocity: = Vector2(player.velocity.x, player.velocity.z).length() if player.is_on_floor() else 0.0
 		var outdoors: bool = player.position.z < 0 or absf(player.position.x) > 3.5
 		hands.step(delta, velocity)
 		if mode == "map":
 			map.location = player.position
 			map.queue_redraw()
-		ambience.update(delta, velocity, mode != "dream" and outdoors and float(valley.sky_mat.get_shader_parameter("nightfall")) < 0.5)
+		var daytime: bool = mode != "dream" and outdoors and float(valley.sky_mat.get_shader_parameter("nightfall")) < 0.5
+		ambience.update(delta, velocity, daytime, mode == "cave" and not cave_outside)
 		if hands.pose == "compass":
 			var look: Vector3 = - player.camera.global_basis.z
 			hands.heading = atan2(look.x, look.z)
@@ -493,7 +494,8 @@ func objective() -> String:
 	if stage == 17: return "R · Pasale la marca del agua a Mara."
 	if stage == 18: return "Volvé a dormir al refugio."
 	if stage == 19:
-		return "R · Hablá con Mara antes de salir. Podés pasar por el museo."
+		if at_departure_stop(): return "R · Despedite de Mara en la parada."
+		return "Andá a la parada para despedirte de Mara. Podés pasar por el museo antes."
 	if stage == 14: return "R · Pasale a Mara lo que ves desde la cumbre."
 	if stage == 8: return "Día 25 · Pasá el museo y el abra para llegar al hito del filo."
 	if stage == 9: return "R · Pasá el parte del filo." if not route_reported else "Volvé al refugio."
@@ -620,7 +622,10 @@ func speak():
 	overlay("talk", "Mara\n\n" + str(sequence.pop_front()), cue)
 
 func radio_available() -> bool:
-	return stage == 19 or mission_radio_available() or not available_trail_chat().is_empty()
+	return at_departure_stop() or mission_radio_available() or not available_trail_chat().is_empty()
+
+func at_departure_stop() -> bool:
+	return stage == 19 and LastNight.near_stop(player.position)
 
 func mission_radio_available() -> bool:
 	return (stage == 0 and not heard) or awaiting_call or stage == 2 or (stage == 5 and not bedtime) or observing or (stage == 9 and not route_reported) or stage in [11, 14, 17]
@@ -652,7 +657,9 @@ func radio_exchange():
 		return
 	var chat := available_trail_chat()
 	if stage == 19:
-		if chat.is_empty():
+		if not at_departure_stop():
+			if not chat.is_empty(): start_trail_chat(chat)
+		elif chat.is_empty():
 			farewell_mara()
 		else:
 			trail_topic = chat
@@ -822,7 +829,7 @@ func _unhandled_key_input(event):
 	if key == KEY_E and mode == "approach":
 		use_arrival_item()
 		return
-	if key == KEY_F1 and mode in ["walk", "approach", "cave"]:
+	if key == KEY_F1 and mode in ["walk", "approach", "cave", "mara_door"]:
 		objective_seconds = 4.0
 		intro_controls_seconds = 0.0
 		return
@@ -1050,6 +1057,9 @@ func _unhandled_key_input(event):
 							creek_note = "Día 2 · Cauce seco. Mica en la piedra del cruce."
 						overlay("message", "Cero centímetros. Cuando te agachás, una escama de mica devuelve el sol. Desde arriba la misma piedra parece gris.", "Espacio · levantarse")
 					"Banco": overlay("message", "La madera está lisa donde se sienta la gente.", "Espacio · volver")
+					"Parada":
+						if at_departure_stop(): transmit()
+						else: overlay("message", "El poste marca la curva donde para el colectivo.", "Espacio · volver")
 					"Antena del abra":
 						if stage == 7 and not bedtime:
 							if not second_sighting:
@@ -1376,7 +1386,7 @@ func finish_dream():
 			stage = 19
 			save_game(true, "walk")
 			var waking: = "Abrís los ojos en tu cama. No sabés si volviste caminando. Buscás el cuaderno de la estación entre tus cosas. Solo está el tuyo.\n\n" if night_investigation > 0 else ""
-			day_card("Día 41 · El dibujo", waking + "Intentás dibujar el arco en el reverso de un parte. Cuando enderezás el dintel, deja de parecerse al del sueño. Hoy termina tu relevo. Podés pasar por el museo antes de bajar la llave. Mara sigue en la radio.", "Espacio · levantarse")
+			day_card("Día 41 · El dibujo", waking + "Intentás dibujar el arco en el reverso de un parte. Cuando enderezás el dintel, deja de parecerse al del sueño. Hoy termina tu relevo. Podés pasar por el museo antes de ir a la parada. Mara te espera en la radio para despedirse.", "Espacio · levantarse")
 		elif stage == 7:
 			show_first_dream_wake()
 			save_game(true, "first_dream_wake")
@@ -1607,12 +1617,10 @@ func approach_mara_door():
 	hands.show_map(false)
 	player.intro_center = Vector3.ZERO
 	player.intro_heading = 0.0
-	player.position = LastNight.DOOR + Vector3(0, 0.08, 0)
-	player.rotation.y = 0.0
-	player.camera.rotation.x = 0.0
 	player.velocity = Vector3.ZERO
 	walk()
 	mode = "mara_door"
+	objective_seconds = 4.0
 
 func crux_axis() -> Vector3:
 	var sidereal: float = SkyGuide.NIGHTS[valley.sky_chapter][0]
@@ -1929,7 +1937,6 @@ func debug_scene(code: String):
 func map_destination() -> Variant:
 	if stage < 0: return Vector3.ZERO
 	if stage == 15: return valley.route.summit_return_marker(player.position)
-	if stage == 19 and archive_read: return null
 	if (bedtime or awaiting_call) and stage != 19: return Vector3.ZERO
 	var route = valley.route
 	match stage:
@@ -1943,5 +1950,5 @@ func map_destination() -> Variant:
 			if not summit_mapped: return route.ascent_point(0)
 			return route.summit_point(1) if camp_read else route.camp_point()
 		16: return route.crossing_point(1)
-		19: return route.at(route.trail(292), 292)
+		19: return LastNight.STOP
 	return null

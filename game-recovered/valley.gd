@@ -109,6 +109,10 @@ func _ready():
 		if z < -13.0 and absf(x - route.eastern_x_at(z)) < size_m.x + 5.0: continue
 		if absf(x - LastNight.DOOR.x) < size_m.x + 5.0 and absf(z - LastNight.DOOR.z + 3.0) < size_m.z + 5.0: continue
 		if z < route.WEST_START_Z + size_m.z and absf(x - route.western_x_at(z)) < size_m.x + 7.0: continue
+		if LastNight.door_path_distance(x, z) < maxf(size_m.x, size_m.z) * 0.6 + 4.0:
+			# Se conserva el sorteo de orientación para las piedras siguientes.
+			rng.randf()
+			continue
 		stone(Vector3(x, -1, z), size_m, "837f65", true)
 	for i in range(160):
 		var z: = rng.randf_range(-84, 10)
@@ -120,7 +124,10 @@ func _ready():
 		if z < route.WEST_START_Z + 1.0 and absf(x - route.western_x_at(z)) < 5.0: continue
 		var k: = rng.randf_range(0.5, 2.1)
 		if i % 3 == 0:
-			stone(Vector3(x, 0, z), Vector3(2.2, 1.4, 1.8) * k, "928678", true)
+			if LastNight.door_path_distance(x, z) < 5.5:
+				rng.randf()
+			else:
+				stone(Vector3(x, 0, z), Vector3(2.2, 1.4, 1.8) * k, "928678", true)
 		else:
 			for j in range(3):
 				var grass: = CylinderMesh.new()
@@ -168,6 +175,8 @@ func _ready():
 	dress_refuge_junction()
 	preload("res://museo.gd").build(self)
 	LastNight.build_door(self)
+	route.signpost(LastNight.STOP + Vector3(2.1, 0, -0.6), "Parada", "Parada · Colectivo")
+	dress_refuge_footpath(LastNight.door_approach, 38, 1.4)
 
 func build_distant_ridges():
 	const SECTIONS := 96
@@ -368,6 +377,7 @@ func dress_creek():
 	for i in range(12):
 		var z: = -7 - i * 5.9
 		var x: = path_x(z) + (4.0 + i % 4) * (-1 if i % 2 else 1)
+		if LastNight.door_path_distance(x, z) < 2.5: x += 4.6
 		var foot: = Vector3(x, 0, z)
 		box(foot + Vector3(0, 0.87, 0), Vector3(0.14, 1.8, 0.18), "635648").rotation.z = 0.1
 		for j in [-1, 1]:
@@ -415,6 +425,10 @@ func rock_banks():
 			var z: = float(cluster[0]) + rng.randf_range(-2.8, 2.8)
 			var width: = rng.randf_range(1.3, 3.3)
 			var x: = path_x(z) + float(cluster[1]) * (2.8 + width + rng.randf_range(0, 3))
+			var west: float = route.western_x_at(z)
+			if z < route.WEST_START_Z and absf(x - west) < width + 2.6:
+				var outer := minf(west, path_x(z)) if cluster[1] < 0 else maxf(west, path_x(z))
+				x = outer + float(cluster[1]) * (width + 3.0)
 			var height: = rng.randf_range(1.1, 3.5)
 			var vertices: = PackedVector3Array()
 			for j in range(7):
@@ -434,7 +448,8 @@ func rock_banks():
 					surface.set_smooth_group(-1)
 					surface.add_vertex(v)
 			surface.generate_normals()
-			prop(surface.commit(), Vector3(x, 0, z), shades[i % shades.size()], true)
+			if LastNight.door_path_distance(x, z) >= width + 3.6:
+				prop(surface.commit(), Vector3(x, 0, z), shades[i % shades.size()], true)
 
 func plaster(wall: MeshInstance3D):
 	var material: = ShaderMaterial.new()
@@ -785,7 +800,7 @@ func dress_day36(show_crossing: bool = true):
 		preload("res://museo.gd").dress_archive(self)
 	if not show_crossing: return
 	var fork: Vector3 = route.crossing_point(0)
-	route.signpost(fork + Vector3.UP * 0.12, "Desvío de la quebrada", "Pasarela · quebrada oeste")
+	route.signpost(route.surface_point(fork.x - 1.9, route.ORIGIN_Z - fork.z), "Desvío de la quebrada", "Pasarela · quebrada oeste")
 	for i in range(1, 25):
 		stack_ascent_stones(route.crossing_point(i / 25.0) + Vector3.RIGHT)
 	var timber_fall: Vector3 = route.crossing_point(0.26)

@@ -2,6 +2,7 @@ extends Control
 
 const ROUTE = preload("res://travesia.gd")
 const Creek = preload("res://cauce.gd")
+const LastNight = preload("res://final_night.gd")
 const INK = Color("#424a3c")
 const ROUTE_COLOR = Color("#936c49")
 var objective_mark: Variant = null
@@ -33,7 +34,7 @@ func _draw():
 			var x := lerpf(-46.0, 46.0, t)
 			return Creek.point(x, Creek.channel_z(x)), Color("#59757a"))
 		pin(limits, Vector3(0, 0, 0), "Refugio")
-		pin(limits, Vector3(-4, 0, -68), "Parada")
+		pin(limits, LastNight.STOP, "Parada")
 		pin(limits, ROUTE.ascent_point(0), "Acceso")
 		pin(limits, Creek.post(), "Poste")
 		pin(limits, Creek.marker(), "Regla del cauce")

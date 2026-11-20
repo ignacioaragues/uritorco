@@ -2,6 +2,8 @@ extends RefCounted
 
 const CAVE: = Vector3(0, 80, 1900)
 const DOOR := Vector3(18, 0, -52)
+const STOP := Vector3(-3.2, 0, -70)
+const DOOR_PATH_END := DOOR + Vector3(0, 0, -2.6)
 const PLANET := Vector3(0, 88, 2450)
 const GROUND_COLORS = [Color("544663"), Color("354b4c"), Color("615062")]
 const ROCK_COLORS = ["746182", "698283", "7a6479"]
@@ -12,6 +14,20 @@ const RETURN_START := Vector3(0, 0, -48)
 const FORK_Z := -60.0
 const CLEARING := Vector2(14.0, -79.0)
 const RETURN := Vector2(-8.5, -88.0)
+
+static func near_stop(position: Vector3) -> bool:
+	return position.distance_squared_to(STOP) < 64.0
+
+static func door_approach(progress: float) -> Vector3:
+	var point := STOP.lerp(DOOR_PATH_END, progress)
+	point.z += sin(PI * progress) * 1.9
+	return point
+
+static func door_path_distance(x: float, z: float) -> float:
+	var point := Vector2(x, z)
+	var start := Vector2(STOP.x, STOP.z)
+	var end := Vector2(DOOR_PATH_END.x, DOOR_PATH_END.z)
+	return point.distance_to(Geometry2D.get_closest_point_to_segment(point, start, end))
 
 static func build_cave(v):
 	v.box(CAVE + Vector3(0, -0.45, -5), Vector3(8, 0.9, 12), "474239", true)
