@@ -1,6 +1,57 @@
 # Uritorco · Registro de pasadas
 
-## Última pasada
+## Lista de revisión
+
+Cada pasada avanza un solo punto del juego. Al cerrarla se actualiza el estado de ese punto y se conserva lo que falta.
+
+### Resuelto
+
+- [x] Colgar progresivamente los croquis del puente, el cauce, los avistamientos y la cumbre en la pared de la cabaña.
+- [x] Activar las luces y la cueva la noche anterior a la partida. En «Elegir escena» hay accesos directos a «Última noche · Luces», «Última noche · Cueva» y «Última noche · Los arcos».
+- [x] Mantener tres sueños. En los dos primeros se despierta tras 2:30 de exploración y en el tercero al terminar la conversación de la voz.
+- [x] Alargar el trayecto del último sueño, retirar los cuerpos flotantes entre los pilares y abrir una conversación al acercarse a cada uno de los cuatro arcos. Los diálogos pasan de una indicación extraña a un recuerdo que Hernán reconoce.
+- [x] Bajar volumen e intensidad de la lluvia. Las gotas caen dentro del paisaje y se generan también cuando Hernán está bajo techo.
+- [x] Mostrar la lectura real de la regla con el cauce crecido. La regla marcó 78 centímetros en la prueba del Día 36.
+- [x] Mover la vasija fuera de la huella, entre piquillines.
+- [x] Retirar el puesto de Mara del recorrido habitual. Su casa queda reservada para el final de la puerta.
+- [x] Darle un cierre jugable a la primera noche. Mara dice «Te dejo que te sigas acomodando» y Hernán deja la mochila junto a la cama antes de acostarse. Afuera oscurece mientras se instala.
+- [x] Apoyar el cartel «Relatos del cerro» sobre el dintel.
+- [x] Poner una bandera argentina, una garrafa exterior y un panel solar en el puesto de Hernán.
+- [x] Alejar la cartelería de la puerta y apoyar «Refugio · senda del oeste» sobre el terreno.
+- [x] Hacer que los modelos de los hallazgos desaparezcan al recogerlos y mostrar unos segundos «C para ver Coleccionables».
+- [x] Corregir las estrellas estiradas en el cenit. El cielo ya tiene un planeta y una luna más grande, con fases y visibilidad a la tarde.
+- [x] Reducir el volumen de los pasos y oscurecer las manos y los objetos sostenidos según la hora y la luz del refugio.
+- [x] Marcar la pasarela en el mapa cuando es el objetivo del Día 36. La hoja local marca el acceso al quedar la pasarela fuera de sus bordes.
+- [x] Reservar el color de selección de «Nuevo juego» para el mouse o la navegación con teclado.
+- [x] Abrir el horizonte de la ruta en ambos sentidos y el del arroyo del prólogo. La corriente se desplaza en el eje X local del cauce.
+- [x] Fundir la imagen y las manos juntas al entrar a un recuerdo, también cuando el jugador se aleja fuera de la huella.
+- [x] Cambiar «diez minutos» por «un minuto» y el recuerdo de los 16 años por el del primer telescopio.
+- [x] Mostrar Mouse y F1 en la parada. Mostrar WASD y habilitar la caminata al recoger la mochila.
+- [x] Fijar la posición de la luz al abrir cada microescena y dejar el ocaso para después del puente. El sol queda detrás de las nubes.
+- [x] Abrir hacia adentro la puerta del refugio y alargar el gesto de mantener apretado el pulsador de la radio.
+
+### Por hacer
+
+- [ ] Recuperar detalle y textura de la vegetación y las piedras al alejarse del refugio.
+- [ ] Ampliar la historia comechingona en la sala de misterios. Ya hay una ficha sobre memoria y patrimonio.
+- [ ] Revisar la continuidad de la música. Escuchar los silencios largos, las entradas muy breves y los posibles cortes al hablar con Mara.
+- [ ] Identificar el ruido fuerte cerca del museo.
+- [ ] Buscar otros carteles y objetos de ladera que hayan quedado flotando.
+- [ ] Agregar puntos de interés al camino del cable.
+- [ ] Disimular mejor los hallazgos que todavía están demasiado a la vista.
+- [ ] Distribuir las conversaciones de Mara a lo largo de cada caminata.
+- [ ] Hacer que las charlas recojan el avistamiento anterior y den lugar a una reacción más escéptica de Mara.
+- [ ] Afinar la carta del cielo y evaluar más planetas y estrellas reconocibles en el estilo del juego.
+- [ ] Recorrer con el mapa abierto la ida del Día 36 para comprobar que las pircas guían desde el acceso hasta la pasarela.
+- [ ] Volver a mirar la tormenta desde las ventanas del refugio y evaluar cómo se lee su intensidad.
+- [ ] Hacer aparecer objetos en el refugio según lo que pasó con Mara. Queda anotada la botella de vino como posibilidad.
+
+## Pasada de los cuatro arcos
+
+- Cada arco abre un intercambio al acercarse. Hernán puede leerlo completo y seguir con Espacio. El último arco conserva las dos preguntas y el despertar llega después de la respuesta.
+- Se recorrieron los cuatro arcos desde ambos ramales de la cueva y se probaron las dos preguntas finales. Al reabrir la partida se conserva el último intercambio completado.
+
+## Pasada anterior
 
 - **Sueños.** Los dos primeros terminan solos tras 2 minutos y 30 segundos de exploración. La pausa y el diario suspenden el tiempo. Mirar el cielo, recoger el teseracto y explorar los hallazgos dejan seguir jugando. El despertar del primero pasa por un fundido a negro, la anotación nocturna y la placa del Día 25. Al levantarse, el interior del refugio aparece gradualmente.
 - **Última noche.** El último sueño dura lo que lleve recorrerlo. Cuatro arcos separados revelan la voz al acercarse. El cuarto permite preguntar «¿Quién es…?» o «¿Papá…?». La respuesta queda unos segundos en pantalla antes del despertar. El menú de pruebas permite abrir la última noche junto a la ventana o entrar directamente a la cueva a oscuras. La cueva pertenece a la noche previa a la despedida y el misterio queda abierto.

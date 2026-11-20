@@ -17,10 +17,10 @@ const SUMMIT_NIGHT_SECONDS := 40.0
 const SIGHTING_FOCUS_SECONDS := 0.4
 const NIGHT_SCENE_VIEW := 200.0
 const DREAM_SECONDS := 150.0
-const DREAM_ARCH_LINES := [
-	"«¿Ya la encontraste?». La voz viene del fondo del corredor. Más adelante se abre otro arco.",
-	"«Esa de ahí. Esperá a que los ojos se acostumbren». Hay cuatro estrellas sobre el próximo arco.",
-	"Dos golpes secos. «Todavía nos queda una». La voz suena cerca, como si alguien caminara con vos."
+const DREAM_ARCH_EXCHANGES := [
+	"—¿La ves?\n—¿Qué cosa?\n—La que tarda en aparecer. Quedate un segundo sin mover la cabeza.\n\nLa voz viene del otro lado de la piedra. Al fondo distinguís otro arco.",
+	"—¿Me hablás por la radio?\n—Probá apagarla.\n\nTanteás la perilla. Ya está apagada.\n\n—¿Me oís igual?",
+	"Del otro lado suenan dos golpes secos.\n\n—Hay dos lunas. ¿Cuál tengo que mirar?\n—El huequito entre las cuatro estrellas. Como en la vereda, cuando tapábamos el farol."
 ]
 enum Sighting { ABRA, QUARRY, CROSSING, SHELTER, CAVE, CLEARING }
 const STATE = ["page", "stage", "keepsakes", "bedtime", "field_note", "crossing_note", "filo_report_reply", "quarry_reply", "fox_seen", "hiker_met", "route_reported", "observing", "pending_return", "heard", "radio_taken", "bag_left", "read_note", "creek_note", "bed_pose", "bed_pitch", "gate_jumped", "map_read", "awaiting_call", "dream_count", "branch_found", "mapped_distance", "has_piece", "summit_mapped", "camp_read", "arrival_action", "intro_bridge_drawn", "second_sighting", "book_light_notes", "day7_dusk", "archive_read", "trail_replies", "crossing_response", "summit_echo_response", "night_investigation", "ending_at_door", "sky_memories", "compass_lost", "last_voice_reply", "scored_walks", "found_collectibles"]
@@ -134,8 +134,6 @@ var journal_page := 0
 var journal_collection := false
 var journal_dream := false
 var journal_intro_from := ""
-var dream_note_seconds := 0.0
-var dream_note := ""
 var collect_notice := ""
 var collect_notice_seconds := 0.0
 var found_collectibles: Dictionary = {}
@@ -414,7 +412,6 @@ func _process(delta):
 		if dream_seconds_left == 0.0:
 			finish_dream()
 	if mode == "dream":
-		dream_note_seconds = maxf(0.0, dream_note_seconds - delta)
 		hint.text = "????" if looking_at_dream_sky() else ""
 		match dream_variant():
 			2:
@@ -430,8 +427,6 @@ func _process(delta):
 		var find := aimed_collectible()
 		if collect_notice_seconds > 0.0:
 			hint.text = collect_notice
-		elif dream_note_seconds > 0.0:
-			hint.text = dream_note
 		elif Alien.FINDS.has(find):
 			hint.text = "E · " + str(Alien.FINDS[find][1])
 		elif hands.map_requested:
@@ -1228,6 +1223,10 @@ func _unhandled_key_input(event):
 		mode = "sleeping"
 		hint.text = ""
 		reveal_dream(create_tween())
+	elif mode == "dream_arch_talk" and advance:
+		dream_arches += 1
+		explore_dream()
+		save_game(true, "dream")
 	elif mode == "night_cut" and advance:
 		enter_cave()
 	elif mode == "cave":
@@ -1652,7 +1651,6 @@ func select_option(index: int):
 func begin_dream(preserve_bed: bool = false, fade_from_black: bool = false):
 	dream_seconds_left = DREAM_SECONDS
 	dream_arches = 0
-	dream_note_seconds = 0.0
 	score.cue("otromundo", 63, -14.0, 2.5)
 	if not preserve_bed:
 		bed_pose = player.transform
@@ -1752,13 +1750,11 @@ func update_dream_arch():
 	if hint.text.is_empty():
 		hint.text = "La pieza late más fuerte en esta dirección." if bearing > 0.6 else "Buscá el siguiente arco entre las paredes."
 	if player.position.distance_to(arch) > 4.3: return
-	dream_arches += 1
-	if dream_arches <= DREAM_ARCH_LINES.size():
-		radio.play_knocks()
-		dream_note = DREAM_ARCH_LINES[dream_arches - 1]
-		dream_note_seconds = 7.0
-		save_game(true, "dream")
+	if dream_arches < DREAM_ARCH_EXCHANGES.size():
+		if dream_arches == 2: radio.play_knocks()
+		overlay("dream_arch_talk", DREAM_ARCH_EXCHANGES[dream_arches], "Espacio · seguir")
 	else:
+		dream_arches += 1
 		hear_last_voice()
 
 func finish_dream():
@@ -2068,7 +2064,7 @@ func watch_sky():
 
 func hear_last_voice():
 	radio.play_interference()
-	overlay("last_voice", "Del otro lado del arco el cielo tiene dos lunas. Oís una voz: «¿Ya la encontraste?». La radio está apagada. Te acordás de esa pregunta, pero no del todo de la voz.", ["«¿Quién es…?»", "«¿Papá…?»"])
+	overlay("last_voice", "La voz vuelve del otro lado del arco. «¿Ya la encontraste?». Tu papá te hacía esa pregunta cuando miraban el cielo. Abrís la boca sin saber a quién le hablás.", ["«¿Quién es…?»", "«¿Papá…?»"])
 
 func show_ending():
 	var memory_of_book := str(keepsakes.get("libro", "En la guarda sigue el dibujo que hiciste con tu papá."))
