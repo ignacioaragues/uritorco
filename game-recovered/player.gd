@@ -1,5 +1,7 @@
 extends CharacterBody3D
 
+const Creek = preload("res://cauce.gd")
+
 var camera: = Camera3D.new()
 var flashlight: = SpotLight3D.new()
 var ray: = RayCast3D.new()
@@ -7,6 +9,7 @@ var intro_center: = Vector3.ZERO
 var intro_heading: = 0.0
 var low_gravity: = false
 var walking: = false
+var looking_only := false
 var climb_points: Array[Vector3] = []
 var look_speed: = 0.002
 
@@ -34,7 +37,7 @@ func _ready():
 	ray.add_exception(self)
 
 func _unhandled_input(event):
-	if walking and event is InputEventMouseMotion:
+	if (walking or looking_only) and event is InputEventMouseMotion:
 		rotate_y( - event.relative.x * look_speed)
 		camera.rotation.x = clampf(camera.rotation.x - event.relative.y * look_speed, -1.45, 1.45)
 
@@ -69,4 +72,4 @@ func _physics_process(delta):
 		return
 	var lateral: = lerpf(46, 354, smoothstep(0, 55, -76 - position.z))
 	position.x = clampf(position.x, - lateral, lateral)
-	position.z = clampf(position.z, -1049, 12)
+	position.z = clampf(position.z, -1049, Creek.LIMIT_Z)

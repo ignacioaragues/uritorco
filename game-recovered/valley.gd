@@ -1,5 +1,7 @@
 extends Node3D
 
+const Creek = preload("res://cauce.gd")
+
 var rng: = RandomNumberGenerator.new()
 var route = preload("res://travesia.gd").new()
 var env: = Environment.new()
@@ -73,7 +75,7 @@ func _ready():
 	sun.rotation_degrees = Vector3(-22, -52, 0)
 	sun.light_color = Color("#ffd3a1")
 	sun.shadow_enabled = true
-	box(Vector3(0, -0.25, -24.5), Vector3(112, 0.5, 95), "82795b", true)
+	Creek.build_ground(self)
 	var trail_mesh: = SurfaceTool.new()
 	trail_mesh.begin(Mesh.PRIMITIVE_TRIANGLES)
 	var soil: = StandardMaterial3D.new()
@@ -95,44 +97,20 @@ func _ready():
 	var path: = MeshInstance3D.new()
 	path.mesh = trail_mesh.commit()
 	add_child(path)
-	for layer in range(2):
-		var ridge: = SurfaceTool.new()
-		ridge.begin(Mesh.PRIMITIVE_TRIANGLES)
-		var ridge_mat: = StandardMaterial3D.new()
-		ridge_mat.cull_mode = BaseMaterial3D.CULL_DISABLED
-		ridge_mat.albedo_color = Color("#70919c") if layer == 0 else Color("#516e78")
-		ridge.set_material(ridge_mat)
-		var radius: = 166.0 - layer * 39.0
-		var crest: = PackedVector3Array()
-		for i in range(96):
-			var a: = TAU * i / 96.0
-			var h: = 24 + 9 * sin(a * 3 + layer) + 8 * sin(a * 7.0 + layer) + 3 * cos(a * 13) + rng.randf_range(-2, 2) - layer * 7
-			var back: = smoothstep(0.0, 0.8, - sin(a))
-			var far_radius: = radius + back * (1200 - layer * 100)
-			crest.append(Vector3(far_radius * cos(a), h + back * (218 - layer * 40), -28 + far_radius * sin(a)))
-		for i in range(96):
-			var top: = crest[i]
-			var next: = crest[(i + 1) % 96]
-			var foot: = Vector3(top.x * 0.79, -2, (top.z + 28) * 0.79 - 28)
-			var foot_next: = Vector3(next.x * 0.79, -2, (next.z + 28) * 0.79 - 28)
-			for vertex in [top, foot, next, next, foot, foot_next]:
-				ridge.set_smooth_group(-1)
-				ridge.add_vertex(vertex)
-		ridge.generate_normals()
-		var horizon: = MeshInstance3D.new()
-		horizon.mesh = ridge.commit()
-		add_child(horizon)
+	build_distant_ridges()
 	for i in range(24):
 		var z: = rng.randf_range(-80, 4)
 		var side: = -1 if i % 2 == 0 else 1
 		var x: = path_x(z) + side * rng.randf_range(17, 35)
 		var size_m := Vector3(rng.randf_range(12, 21), rng.randf_range(4, 9), rng.randf_range(10, 22))
+		if z > -36.0 and Creek.trail_distance(Vector2(x, z)) < size_m.x + 5.0: continue
 		if z < route.WEST_START_Z + size_m.z and absf(x - route.western_x_at(z)) < size_m.x + 7.0: continue
 		stone(Vector3(x, -1, z), size_m, "837f65", true)
 	for i in range(160):
 		var z: = rng.randf_range(-84, 10)
 		var x: = rng.randf_range(-45, 45)
 		if abs(x - path_x(z)) < 4.8 or (abs(x) < 12.5 and z > -15.5): continue
+		if Creek.trail_distance(Vector2(x, z)) < 4.0: continue
 		if z < route.WEST_START_Z + 1.0 and absf(x - route.western_x_at(z)) < 5.0: continue
 		var k: = rng.randf_range(0.5, 2.1)
 		if i % 3 == 0:
@@ -171,8 +149,6 @@ func _ready():
 	lamp.omni_range = 8
 	lamp.light_energy = 1.5
 	var end: = Vector3(path_x(-72), 0, -72)
-	box(end + Vector3(0, 1, 0), Vector3(0.22, 2, 0.22), "675747", true, "Poste")
-	box(end + Vector3(0, 1.6, 0), Vector3(1.3, 0.28, 0.17), "998567", true, "Poste")
 	box(end + Vector3(2, 0.45, 0), Vector3(2.2, 0.15, 0.58), "79614a", true, "Banco")
 	for offset in [1.25, 2.75]:
 		box(end + Vector3(offset, 0.2, 0), Vector3(0.18, 0.45, 0.42), "675747", true)
@@ -185,8 +161,44 @@ func _ready():
 	dress_creek()
 	rock_banks()
 	add_child(route)
+	Creek.dress(self)
 	dress_west_trail_near_refugio()
 	preload("res://museo.gd").build(self)
+
+func build_distant_ridges():
+	const SECTIONS := 96
+	const ROWS := [Vector2(0.67, 0.0), Vector2(0.82, 0.36), Vector2(1.0, 1.0), Vector2(1.18, 0.16)]
+	for layer in 2:
+		var surface := SurfaceTool.new()
+		surface.begin(Mesh.PRIMITIVE_TRIANGLES)
+		var material := StandardMaterial3D.new()
+		material.cull_mode = BaseMaterial3D.CULL_DISABLED
+		material.albedo_color = Color("#7d8b8a") if layer == 0 else Color("#6c7772")
+		surface.set_material(material)
+		for index in SECTIONS:
+			var angle := TAU * index / SECTIONS
+			var south := smoothstep(0.0, 0.68, sin(angle))
+			var north := smoothstep(0.0, 0.8, -sin(angle))
+			var hills := 24 + 9 * sin(angle * 3 + layer) + 8 * sin(angle * 7 + layer) + 3 * cos(angle * 13) + rng.randf_range(-2, 2) - layer * 7
+			var radius := 166.0 - layer * 39.0 + north * (1200 - layer * 100) + south * (250 - layer * 25)
+			var bottom := lerpf(-2.0, -26.0, south)
+			var crest := hills + north * (218 - layer * 40) + south * (17 - layer * 9)
+			for row in ROWS:
+				var distance: float = radius * row.x
+				var y := lerpf(bottom, crest, row.y)
+				surface.add_vertex(Vector3(distance * cos(angle), y, -28.0 + distance * sin(angle)))
+		for index in SECTIONS:
+			var next := ((index + 1) % SECTIONS) * ROWS.size()
+			for row in range(ROWS.size() - 1):
+				var a := index * ROWS.size() + row
+				var b := next + row
+				for vertex in [a + 1, a, b + 1, b + 1, a, b]:
+					surface.add_index(vertex)
+		surface.generate_normals()
+		var ridge := MeshInstance3D.new()
+		ridge.mesh = surface.commit()
+		ridge.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+		add_child(ridge)
 
 func dress_west_trail_near_refugio():
 	var surface := SurfaceTool.new()
@@ -328,9 +340,6 @@ func dress_creek():
 		var d: float = route.CREEK_DISTANCE + 2.0 * sin((x - route.trail(route.CREEK_DISTANCE)) / 14.0)
 		for j in range(-2, 3):
 			stone(route.at(x, d + j * 0.44) + Vector3.UP * 0.03, Vector3(1.0, 0.2, 0.64), "8a8272")
-	box(marker + Vector3(0, 0.62, 0), Vector3(0.19, 1.24, 0.13), "86705b", true, "Regla del cauce")
-	for i in range(6):
-		box(marker + Vector3(0, 0.17 + i * 0.18, 0.071), Vector3(0.16, 0.045, 0.012), "e4d3a7")
 	for i in range(30):
 		var x: = rng.randf_range(-12, 12)
 		stone(Vector3(x, 0.018, -33 + sin(x) * 0.6 + rng.randf_range(-0.7, 0.7)), Vector3(0.56, 0.12, 0.36), "696c66")
