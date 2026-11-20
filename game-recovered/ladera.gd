@@ -70,7 +70,6 @@ static func clear_of_other_trails(route, at: Vector3, margin: float) -> bool:
 	var d: float = route.ORIGIN_Z - at.z
 	if absf(at.x - route.trail(d)) < margin: return false
 	if d > 124.0 and d < 218.0 and absf(at.x - route.detour(d)) < margin: return false
-	if d > 43.0 and d < 104.0 and absf(at.x - route.creek_overlook((d - 43.0) / 61.0).x) < margin: return false
 	if d > 300.0 and d < 610.0 and absf(at.x - route.quarry_point((d - 300.0) / 310.0).x) < margin: return false
 	var connector: float = route.western_x_at(at.z)
 	return absf(at.x - connector) >= margin

@@ -37,8 +37,8 @@
  {
   "key": "patio",
   "lines": [
-   "Tenés 16 años. Hace un mes que marcás en papel de calcar dónde ves la Luna desde el patio. Esta noche la encontrás justo en el hueco que dejaste en el dibujo.",
-   "Mañana hay una feria en la escuela. En el formulario, al lado de tu nombre, queda un renglón para el título."
+   "Tenés 16 años. Tu papá te ayuda a sacar al patio el telescopio usado que conseguiste. Lo apuntás a la Luna. Cuando por fin encontrás el borde de un cráter, corrés la silla para que mire él.",
+   "Mañana lo llevás a la feria de la escuela. En el formulario, al lado de tu nombre, queda un renglón para el título."
   ],
   "options": [
    {
@@ -46,8 +46,8 @@
     "keepsake": "En la feria pegás también una foto del patio, con el tender lleno."
    },
    {
-    "label": "Le ponés «Un cielo de papel».",
-    "keepsake": "Una chica levanta el calco hacia la ventana. Por fin alguien entiende tu dibujo."
+    "label": "Le ponés «A la altura de los ojos».",
+    "keepsake": "En la feria bajás el trípode para que un chico pueda ver por el ocular."
    }
   ]
  },
@@ -92,7 +92,7 @@
   "lines": [
    "Tenés 25 años. A tu papá le fallan los riñones. Lo llevás a diálisis y te quedás con él hasta que le vuelve el color a la cara.",
    "La beca empieza en marzo. No hay quién lo acompañe esos días. Escribís para ceder tu plaza. Paula acepta la suya.",
-   "La acompañás a la terminal. Tienen diez minutos antes de que suba."
+   "La acompañás a la terminal. Tienen un minuto antes de que suba."
   ],
   "options": [
    {

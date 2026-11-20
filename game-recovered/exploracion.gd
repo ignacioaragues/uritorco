@@ -19,7 +19,7 @@ const FINDS = {
 	"tiesto": [0, "Tiesto con guarda", Vector2(-35.5, -23.2), "Asomaba de la tierra junto a una laja del oeste. La guarda sigue el borde. Uno de los surcos todavía tiene tierra. Dibujé cómo estaba apoyado."],
 	"tortero": [1, "Tortero de piedra", Vector2(31, 13.6), "A la sombra del mollar. La perforación se ensancha de un lado. Se parece a los torteros que vi en el museo. Dibujé el lado más gastado."],
 	"mano": [2, "Mano de moler", Vector2(-30.0, 59.5), "En el recodo del cauce. La cara que queda arriba brilla como si la hubieran pulido. Al lado hay una piedra chata con una marca ancha. Dibujé la pieza de canto."],
-	"vasija": [3, "Vasija de barro", Vector2(-8.4, -64.5), "Asomaba entre las raíces, por arriba de la parada. Tiene el borde grueso y una rajadura con tierra adentro. La dibujé en el hueco, con la boca hacia la ladera."],
+	"vasija": [3, "Vasija de barro", Vector2(-17.4, -62.0), "Asomaba al pie de un piquillín, al oeste de la huella. Tiene el borde grueso y una rajadura con tierra adentro. La dibujé en el hueco, con la boca hacia la ladera."],
 	"negativo": [4, "Negativo velado", Vector2(42.6, -0.6), "En el borde del mollar, contra la luz. Uno de los cuadros tiene dos manchas. La mayor podría ser una raya de la película. Dibujé también las perforaciones."],
 	"cinta": [5, "Casete rajado", Vector2(-201.8, -574.4), "Entre el cable y la cantera, detrás de unas lajas. La caja se abre por una esquina. Hay cinta entre los dos carretes. Al margen de la etiqueta, alguien escribió «canal libre»."],
 	"placa": [6, "Chapa perforada", Vector2(14, 46), "En la vuelta por el sur. Los agujeros tienen rebaba de un solo lado. Si la levanto hacia el cielo, parecen un grupo de estrellas. Cambia por completo al girarla."],
@@ -78,6 +78,7 @@ static func build(valley):
 		[Flora.Kind.PIQUILLIN, -30, -16, 1.28], [Flora.Kind.PIQUILLIN, -36, -12, 1.2],
 		[Flora.Kind.PIQUILLIN, -41, -26, 0.88], [Flora.Kind.PIQUILLIN, 35, 4, 0.97],
 		[Flora.Kind.PIQUILLIN, 9, 49, 1.3], [Flora.Kind.PIQUILLIN, -10, 61, 1.4],
+		[Flora.Kind.PIQUILLIN, -18.8, -61.5, 1.36], [Flora.Kind.PIQUILLIN, -15.9, -63.3, 1.12],
 	]
 	for plant in vegetation:
 		var at := Vector2(plant[1], plant[2])
@@ -107,6 +108,8 @@ static func dress_find(valley, id: String):
 	var old_piece := int(entry[0]) < 4
 	var root := Node3D.new()
 	valley.add_child(root)
+	root.add_to_group("field_finds")
+	root.set_meta("find_id", id)
 	if old_piece:
 		var exposed := 0.27 if id == "tiesto" else 0.16
 		valley.stone(footprint + Vector3.DOWN * 0.11, Vector3(1.35, exposed * 2.0 + 0.24, 0.97), "877b6a", true)

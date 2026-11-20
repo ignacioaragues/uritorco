@@ -12,6 +12,8 @@ const LABELS = {
 	"Sala de las sierras": "Museo de sitio · Pueblos comechingones\n\nLas salas reúnen réplicas, ilustraciones y documentos. En la primera están los objetos y sus contextos arqueológicos. En la segunda están los relatos que circularon sobre el cerro.",
 	"Pueblos comechingones": "Los documentos coloniales usaron el nombre comechingones para referirse a poblaciones de las Sierras Centrales. Sus modos de vida variaban según el lugar y la época. Hoy hay comunidades comechingonas en Córdoba que se reconocen como parte de esa historia.",
 	"Vivir en las sierras": "En los sitios arqueológicos serranos aparecen instrumentos para moler, restos de plantas y fragmentos de vasijas. Un objeto encontrado junto al lugar donde se lo usó aporta más información que una pieza suelta. Las ilustraciones muestran usos posibles de las réplicas.",
+	"Relatos del cerro": "Esta sala reúne testimonios, ilustraciones y reconstrucciones. Los relatos modernos también forman parte de la historia del cerro. Las fichas indican cuándo hay un testimonio y cuándo hay evidencia material.",
+	"Memoria comechingona": "Durante la colonización se repartieron tierras y comunidades bajo el sistema de encomiendas. Algunos pueblos sostuvieron reclamos por sus tierras durante generaciones. Hoy las comunidades comechingonas conservan memorias familiares y lugares de importancia, y participan en las discusiones sobre cómo se cuida el patrimonio serrano.",
 	"Mortero y mano": "Réplica · Molienda\n\nSe golpeaba o frotaba el material con una piedra de mano sobre una cavidad. Moler podía servir para preparar alimentos y también otros materiales. El desgaste y los residuos que quedan en la piedra ayudan a investigar qué se molió.",
 	"Tortero": "Réplica · Hilado\n\nEl disco perforado se monta en un huso. Su peso sostiene el giro mientras se estira y se tuerce la fibra. En un hallazgo, la forma del disco y el contexto ayudan a reconocer la herramienta. El hilo rara vez se conserva.",
 	"Vasija de cerámica": "Réplica · Alfarería\n\nUna forma de hacer una vasija es superponer rollos de arcilla, alisar las uniones y cocerla. El borde y el cuerpo ayudan a reconstruir su forma a partir de tiestos. Para conocer su uso también se examinan las huellas de calor y los residuos.",
@@ -71,7 +73,8 @@ static func build(valley):
 		lamp.light_energy = 0.73
 		valley.box(c + Vector3(0, 2.68, z), Vector3(0.48, 0.08, 0.32), "dcc9a4")
 	plaque(valley, c + Vector3(0, 2.32, -1.66), "Pueblos comechingones", 0.0, 2.55)
-	lettering(valley, c + Vector3(0, 2.32, 1.66), "Relatos del cerro", PI, 32)
+	plaque(valley, c + Vector3(0, 2.49, 1.646), "Relatos del cerro", PI, 2.55)
+	plaque(valley, c + Vector3(2.94, 1.47, 1.925), "Memoria comechingona", 0.0, 2.35)
 	plaque(valley, c + Vector3(-3.19, 1.47, -1.66), "Vivir en las sierras", 0.0, 2.1)
 	valley.box(c + Vector3(3.65, 0.44, -0.76), Vector3(2.3, 0.14, 0.49), "846b50", true, "Banco")
 	for x in [2.7, 4.58]:

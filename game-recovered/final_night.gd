@@ -3,9 +3,10 @@ extends RefCounted
 const Alien = preload("res://hallazgos_sueno.gd")
 const Kit = preload("res://equipo_campo.gd")
 const DREAM_BOUNDS := Rect2(-73.0, -144.0, 146.0, 177.0)
+const DREAM_ARCH_DISTANCES := [17.0, 38.0, 62.0, 92.0]
 
 const CAVE: = Vector3(0, 80, 1900)
-const DOOR := Vector3(18, 0, -52)
+const DOOR := Vector3(39.5, 0, -57)
 const STOP := Vector3(-3.2, 0, -70)
 const DOOR_PATH_END := DOOR + Vector3(0, 0, -2.6)
 const PLANET := Vector3(0, 88, 2450)
@@ -179,7 +180,10 @@ static func dream_point(variant: int, distance: float) -> Vector3:
 	return PLANET + Vector3(x, planet_height(variant, x, distance), -distance)
 
 static func final_arch() -> Vector3:
-	return dream_point(3, 46.0)
+	return dream_arch(DREAM_ARCH_DISTANCES.size() - 1)
+
+static func dream_arch(index: int) -> Vector3:
+	return dream_point(3, DREAM_ARCH_DISTANCES[index])
 
 static func build_planet(valley, variant: int) -> Node3D:
 	var root := Node3D.new()
@@ -227,11 +231,8 @@ static func build_planet(valley, variant: int) -> Node3D:
 		var ridge: MeshInstance3D = valley.stone(dream_point(variant, distance), Vector3(39, 19, 17), ROCK_COLORS[variant - 1])
 		ridge.material_override = crag
 	if variant == 3:
-		for i in 5:
-			var arch := dream_point(3, 10.0 + 9.0 * i)
-			preload("res://estructuras.gd").arch(valley, arch, 1.05 + i * 0.13, true, i * 0.11)
-		var glow: MeshInstance3D = valley.stone(final_arch() + Vector3(0, 1.65, 0.36), Vector3(0.58, 0.68, 0.31), "e4ccaa")
-		(glow.material_override as StandardMaterial3D).shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+		for i in DREAM_ARCH_DISTANCES.size():
+			preload("res://estructuras.gd").arch(valley, dream_arch(i), 1.12 + i * 0.22, true, i * 0.11)
 	var props: Array[Node] = []
 	for i in range(first_prop, valley.get_child_count()):
 		props.append(valley.get_child(i))

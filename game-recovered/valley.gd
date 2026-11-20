@@ -17,6 +17,9 @@ var rng: = RandomNumberGenerator.new()
 var route = Trail.new()
 var birds = Birds.new()
 var desk_radio: StaticBody3D
+var desk_note: StaticBody3D
+var bag_drop: StaticBody3D
+var mara_path_open := false
 var desk_portable: Node3D
 var env: = Environment.new()
 var sun: = DirectionalLight3D.new()
@@ -78,7 +81,6 @@ func _ready():
 	sky_mat.shader = preload("res://sierra.gdshader")
 	sky_mat.set_shader_parameter("dusk", 0.0)
 	sky_mat.set_shader_parameter("other_world", 0.0)
-	sky_mat.set_shader_parameter("faint_stars", preload("res://estrellas.png"))
 	configure_sky(0)
 	env.sky.sky_material = sky_mat
 	env.ambient_light_source = Environment.AMBIENT_SOURCE_COLOR
@@ -131,9 +133,7 @@ func _ready():
 		elif Exploration.clearance(Vector2(x, z)) >= 1.0:
 			tufts.append(Vector4(x, Creek.height(x, z) - 0.05, z, k))
 	Flora.grass_batch(self, tufts)
-	for i in range(24):
-		var x: = i * 1.2 - 14
-		stone(Vector3(x, 0, -33 + sin(x) * 0.6), Vector3(1, 0.17, 0.7), "a29b92")
+	for sample in 24: rng.randf()
 
 	plaster(box(Vector3(0, 1.4, 6), Vector3(7, 2.8, 0.22), "a79679", true))
 	plaster(box(Vector3(-3.5, 1.4, 2.8), Vector3(0.22, 2.8, 6.5), "998975", true))
@@ -143,42 +143,57 @@ func _ready():
 	box(Vector3(3.5, 1.65, 2.8), Vector3(0.12, 1.32, 0.09), "755c48")
 	for x in [-2.35, 2.35]:
 		plaster(box(Vector3(x, 1.4, -0.4), Vector3(2.35, 2.8, 0.22), "a89b87", true))
-	box(Vector3(0, 2.95, 2.65), Vector3(8, 0.23, 8), "5c5148", true).rotation.z = 0.035
-	Refuge.desk(self)
+	box(Vector3(0, 2.93, 2.65), Vector3(8, 0.23, 8), "5c5148", true).rotation.z = 0.025
+	box(Vector3(0, 2.795, 2.76), Vector3(7.19, 0.16, 6.66), "73614d", true)
+	var fascia := box(Vector3(0, 2.825, -0.52), Vector3(7.27, 0.20, 0.092), "665648")
+	fascia.material_override = Refuge.wood("665648", true)
+	desk_note = Refuge.desk(self)
 	desk_radio = FieldKit.desk_radio(self, Vector3(2.64, 0.90, 2.42))
 	desk_radio.rotation.y = PI + 0.24
 	desk_portable = desk_radio.get_node("Transceptor")
 	Refuge.bed(self)
+	Refuge.exterior_equipment(self, Creek.point(-5.15, -5.65), Creek.point(-4.17, 2.27))
+	bag_drop = FieldKit.item(self, Vector3(1.52, 0.20, 5.03), "Dejar la mochila", Vector3.ZERO, Vector3(0.51, 0.33, 0.62))
+	bag_drop.collision_layer = 0
 	var lamp: = OmniLight3D.new()
 	add_child(lamp)
 	lamp.position = Vector3(-1, 1.95, 1)
 	lamp.light_color = Color("#ffbe77")
 	lamp.omni_range = 8
 	lamp.light_energy = 1.5
-	Signage.shelter(self, Vector3(0.32, 0.0, -72.0), true)
 	Signage.station(self)
 	build_sighting_lights()
 	dress_shelter()
 	furnish()
-	dress_creek()
+	dress_path_verges()
 	rock_banks()
 	add_child(route)
 	Creek.dress(self, Exploration.clearance)
 	South.build(self)
 	dress_birds()
-	dress_refuge_junction()
 	preload("res://museo.gd").build(self)
-	LastNight.build_door(self)
-	Signage.flag(self, Vector3(2.86, 0.0, -71.33))
-	var fork := LastNight.door_approach(0.22)
-	route.signpost(fork + Vector3(0.0, 0, -2.4), "Puesto de abajo", "Puesto de abajo →", -1.72, true)
-
 	Exploration.build(self)
+
+func open_mara_path():
+	if mara_path_open: return
+	mara_path_open = true
+	route.ground_material.set_shader_parameter("mara_track", true)
+	LastNight.build_door(self)
+	var fork := LastNight.door_approach(0.22)
+	route.signpost(fork + Vector3(0.0, 0, -2.4), "", "Puesto de abajo →", -1.72, true)
 
 func update_desk_radio(held: bool):
 	if desk_portable.visible != held: return
 	desk_portable.visible = not held
 	desk_radio.collision_layer = 0 if held else 1
+
+func set_desk_note(present: bool):
+	if desk_note.visible == present: return
+	desk_note.visible = present
+	desk_note.collision_layer = 1 if present else 0
+
+func set_bag_drop(active: bool):
+	bag_drop.collision_layer = 2 if active else 0
 
 func dress_birds():
 	add_child(birds)
@@ -247,10 +262,6 @@ func shade_ridges():
 	for mat in ridge_materials:
 		mat.set_shader_parameter("nightfall", nightfall)
 		mat.set_shader_parameter("dusk", dusk)
-
-func dress_refuge_junction():
-	route.signpost(Vector3(1.25, 0.0, -17.8), "Sendero del cauce", "← Cauce", 0.0, true)
-	route.signpost(Vector3(6.75, 0.0, -17.8), "Camino al acceso", "Cumbre →", 0.0, true)
 
 func build_sighting_lights():
 	var glow := Gradient.new()
@@ -323,6 +334,7 @@ func update_weather(day: int, rain: float = 0.0, local_mist: float = 0.0):
 	var cloud := lerpf(lerpf(coverage.x, coverage.y, maxf(dark, dusk * 0.26)), 0.97, rain)
 	if changed_day:
 		sky_mat.set_shader_parameter("cloud_pattern", day * 0.873)
+		sky_mat.set_shader_parameter("moon_phase", wrapf((day - 7.0) * TAU / 29.53, -PI, PI))
 		sky_mat.set_shader_parameter("high_day", profile.sky)
 		sky_mat.set_shader_parameter("rim_day", profile.rim)
 		sky_mat.set_shader_parameter("cirrus_amount", profile.cirrus)
@@ -343,16 +355,17 @@ func shape_daylight(profile: Dictionary, rain: float, local_mist: float, dusk: f
 	var diffuse := maxf(drizzle, clampf(local_mist * 70.0, 0.0, 0.55))
 	var setting := sun_tone.lerp(Color("#ffb78f"), dusk).lerp(Color("#bccbd3"), diffuse)
 	sun.light_color = setting.lerp(Color("#abc4ed"), dark)
-	sun.light_energy = lerpf(float(profile.sun) * (1.0 - 0.67 * diffuse) * (1.0 - dusk * 0.24), 0.045, dark)
+	sun.light_energy = lerpf(float(profile.sun) * (1.0 - 0.67 * diffuse) * (1.0 - dusk * 0.24), 0.025, dark)
 	sun.shadow_enabled = dark < 0.76
 	sun.shadow_opacity = (1.0 - 0.86 * diffuse) * (1.0 - smoothstep(0.32, 0.76, dark))
 	sun.rotation_degrees = Vector3(lerpf(-24.0, -10.0, dusk), lerpf(68.0, 114.0, dusk), 0.0)
+	sky_mat.set_shader_parameter("daylight_dir", sun.global_basis.z.normalized())
 
 	var ambient := Color("#dce6de").lerp(Color("#d5b9ac"), dusk).lerp(Color("#bac6ce"), diffuse)
 	env.ambient_light_color = ambient.lerp(Color("#9ba5bf"), dark)
-	env.ambient_light_energy = lerpf(lerpf(0.86, 0.69, dusk), 0.18, dark)
+	env.ambient_light_energy = lerpf(lerpf(0.86, 0.69, dusk), 0.115, dark)
 	var air := Color("#a9b7b7").lerp(Color("#b4a5a0"), dusk).lerp(Color("#899fa9"), diffuse)
-	env.fog_light_color = air.lerp(Color("#424960"), dark)
+	env.fog_light_color = air.lerp(Color("#30374c"), dark)
 	env.fog_density = lerpf(float(profile.mist) + local_mist, 0.0105, drizzle * 0.87)
 
 func cave_darkness():
@@ -380,28 +393,8 @@ func dress_shelter():
 		box(Vector3(0, 2.63, i * 1.15 - 0.25), Vector3(7.1, 0.16, 0.15), "5d4a39")
 	Refuge.pendant(self, Vector3(-1, 2.02, 1))
 
-func dress_creek():
-	var bed: = SurfaceTool.new()
-	bed.begin(Mesh.PRIMITIVE_TRIANGLES)
-	var gravel: = StandardMaterial3D.new()
-	gravel.cull_mode = BaseMaterial3D.CULL_DISABLED
-	gravel.vertex_color_use_as_albedo = true
-	bed.set_material(gravel)
-	var last: = PackedVector3Array()
-	for i in range(39):
-		var x: = i * 0.8 - 15.2
-		var z: = -33.0 + sin(x) * 0.6
-		var row: = PackedVector3Array([Vector3(x, 0.036, z - rng.randf_range(0.8, 1.4)), Vector3(x, 0.038, z), Vector3(x, 0.036, z + rng.randf_range(0.8, 1.4))])
-		if i > 0:
-			for j in range(2):
-				for point in [last[j], row[j], last[j + 1], last[j + 1], row[j], row[j + 1]]:
-					bed.set_color(Color("#7c7871") if point == row[1] or point == last[1] else Color("#9c907a"))
-					bed.set_normal(Vector3.UP)
-					bed.add_vertex(point)
-		last = row
-	var channel: = MeshInstance3D.new()
-	channel.mesh = bed.commit()
-	add_child(channel)
+func dress_path_verges():
+	for sample in 39 * 2: rng.randf()
 	var tufts: = SurfaceTool.new()
 	tufts.begin(Mesh.PRIMITIVE_TRIANGLES)
 	var mat: = StandardMaterial3D.new()
@@ -432,15 +425,8 @@ func dress_creek():
 				x = west + (4.15 if x > path_x(z) else -4.15)
 		if Exploration.clearance(Vector2(x, z)) >= 2.85:
 			Flora.tree(self, Creek.point(x, z), i % 3, 0.9 + i % 4 * 0.13, i * 1.93)
-	var marker: Vector3 = route.creek_marker()
-	for i in range(-60, 61):
-		var x: float = marker.x + i * 0.72
-		var d: float = route.CREEK_DISTANCE + 2.0 * sin((x - route.trail(route.CREEK_DISTANCE)) / 14.0)
-		for j in range(-2, 3):
-			stone(route.at(x, d + j * 0.44) + Vector3.UP * 0.03, Vector3(1.0, 0.2, 0.64), "8a8272")
-	for i in range(30):
-		var x: = rng.randf_range(-12, 12)
-		stone(Vector3(x, 0.018, -33 + sin(x) * 0.6 + rng.randf_range(-0.7, 0.7)), Vector3(0.56, 0.12, 0.36), "696c66")
+	for sample in 121 * 5: rng.randf()
+	for sample in 30 * 3: rng.randf()
 
 func morning():
 	exterior_light = true
@@ -516,11 +502,18 @@ func update_calendar(day: int):
 		calendar_strokes[cell].visible = number < date
 
 var wall_postcard_added := false
+var wall_sketches: Dictionary = {}
 
 func update_shelter_wall(day: int):
 	if day >= 27 and not wall_postcard_added:
 		wall_postcard_added = true
 		Refuge.postcard(self)
+
+func hang_sketch(index: int, image: Texture2D, motif := -1):
+	if wall_sketches.has(index): return
+	var x := -0.38 + index * 0.51
+	var y := 1.53 + (0.1 if index % 2 == 0 else 0.0)
+	wall_sketches[index] = Refuge.wall_sketch(self, Vector3(x, y, 5.85), image, motif)
 
 func hang_calendar():
 	var calendar := Vector3(2.7, 1.62, -0.27)
@@ -558,13 +551,17 @@ func furnish():
 	add_child(hinge)
 	hinge.position = Vector3(-1.16, 0, -0.4)
 
-	box(Vector3(0.65, 1.36, -0.4), Vector3(1.05, 2.72, 0.17), "987e64", true)
-	box(Vector3(-0.52, 2.5, -0.4), Vector3(1.3, 0.46, 0.2), "75624d", true)
+	plaster(box(Vector3(0.65, 1.40, -0.4), Vector3(1.05, 2.80, 0.22), "a89b87", true))
+	plaster(box(Vector3(-0.52, 2.53, -0.4), Vector3(1.30, 0.55, 0.22), "a89b87", true))
+	var trim := Refuge.wood("735f4d")
+	FieldKit.block(self, Vector3(-0.51, 2.265, -0.43), Vector3(1.39, 0.078, 0.24), trim)
+	for x in [-1.168, 0.153]:
+		FieldKit.block(self, Vector3(x, 1.127, -0.43), Vector3(0.068, 2.255, 0.24), trim)
 	var door: = box(Vector3(-0.51, 1.13, -0.4), Vector3(1.28, 2.24, 0.085), "785a43", true, "Puerta")
 	door.reparent(hinge)
-	timber(door)
+	door.material_override = Refuge.wood("785a43")
 	for i in range(7):
-		var grain: = box(Vector3.ZERO, Vector3(0.008, 2.18, 0.09), "624e40")
+		var grain: = box(Vector3.ZERO, Vector3(0.004, 2.18, 0.087), "6f5745")
 		grain.reparent(door, false)
 		grain.position.x = -0.48 + i * 0.16
 	var latch: = box(Vector3.ZERO, Vector3(0.14, 0.045, 0.18), "b5a17b")
@@ -597,7 +594,7 @@ func toggle_door():
 	if door_motion and door_motion.is_running(): return
 	door_open = not door_open
 	door_motion = create_tween().set_trans(Tween.TRANS_SINE)
-	door_motion.tween_property(hinge, "rotation:y", deg_to_rad(90) if door_open else 0.0, 0.42)
+	door_motion.tween_property(hinge, "rotation:y", deg_to_rad(-90) if door_open else 0.0, 0.42)
 
 func arrival_light(amount: float):
 	exterior_light = true
@@ -638,7 +635,8 @@ func strange_sky(active: bool):
 
 func kitchen_and_privy():
 	Refuge.kitchenette(self)
-	var center: = Vector3(6, 0, 3.5)
+	Refuge.refrigerator(self)
+	var center := Vector3(8.0, 0.0, 7.35)
 	for side in [-1, 1]:
 		timber(box(center + Vector3(side * 0.82, 1.12, 0), Vector3(0.09, 2.24, 1.75), "897660", true))
 	timber(box(center + Vector3(0, 1.12, 0.84), Vector3(1.65, 2.24, 0.1), "87725a", true))

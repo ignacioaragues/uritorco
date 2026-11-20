@@ -10,6 +10,7 @@ var stack: = VBoxContainer.new()
 var volume: = 75.0
 var sensitivity: = 1.0
 var showing_settings: = false
+var showing_home := false
 
 func _ready():
 	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
@@ -46,14 +47,21 @@ func _ready():
 	panel.modulate.a = 0
 	panel.hide()
 	var reveal: = create_tween()
-	reveal.tween_interval(3.0)
+	reveal.tween_interval(5.0)
 	reveal.tween_callback(panel.show)
 	reveal.tween_property(panel, "modulate:a", 1.0, 0.42)
-	reveal.tween_callback( func():
-		if visible and not in_game and stack.get_child_count() > 0 and stack.get_child(0) is Button:
-			stack.get_child(0).grab_focus())
+
+func _input(event):
+	if not showing_home or not panel.is_visible_in_tree(): return
+	var focused := get_viewport().gui_get_focus_owner()
+	if event is InputEventMouseMotion and is_instance_valid(focused) and focused.get_parent() == stack:
+		focused.release_focus()
+	elif event is InputEventKey and event.pressed and not event.echo and not focused and event.keycode in [KEY_TAB, KEY_UP, KEY_DOWN]:
+		stack.get_child(0).grab_focus()
+		get_viewport().set_input_as_handled()
 
 func clear():
+	showing_home = false
 	for child in stack.get_children():
 		stack.remove_child(child)
 		child.queue_free()
@@ -87,8 +95,8 @@ func action(text: String, callback: Callable) -> Button:
 
 func home():
 	clear()
-	var first: = action("Nuevo juego", func(): slots(true))
-	if panel.is_visible_in_tree(): first.grab_focus()
+	showing_home = true
+	action("Nuevo juego", func(): slots(true))
 	action("Cargar partida", func(): slots(false))
 	action("Ajustes", settings)
 	action("Salir", func(): get_tree().quit())
@@ -203,6 +211,6 @@ func debug_login():
 
 func debug_scenes():
 	clear()
-	for chapter in [["intro", "Prólogo · Ruta"], ["arrival", "Noche 1 · Refugio"], ["2", "Día 2 · El arroyo"], ["sighting", "Día 2 · Avistamiento"], ["7", "Día 7 · Alcance"], ["dream7", "Noche 7 · Primer sueño"], ["25", "Día 25 · La quebrada"], ["dream25", "Noche 25 · La pieza"], ["27", "Día 27 · La cantera"], ["32", "Día 32 · La cumbre"], ["camp", "Día 32 · Campamento"], ["36", "Día 36 · La pasarela"], ["dream36", "Noche 36 · Los arcos"], ["41", "Día 41 · Museo"]]:
+	for chapter in [["intro", "Prólogo · Ruta"], ["arrival", "Noche 1 · Refugio"], ["2", "Día 2 · El arroyo"], ["7", "Día 7 · Alcance"], ["sighting", "Día 7 · Avistamiento"], ["dream7", "Noche 7 · Primer sueño"], ["25", "Día 25 · La quebrada"], ["dream25", "Noche 25 · La pieza"], ["27", "Día 27 · La cantera"], ["32", "Día 32 · La cumbre"], ["camp", "Día 32 · Campamento"], ["36", "Día 36 · La pasarela"], ["ultima_noche", "Última noche · Luces"], ["cueva", "Última noche · Cueva"], ["dream36", "Última noche · Los arcos"], ["41", "Día 41 · Museo"]]:
 		action(chapter[1], func(): debug_requested.emit(chapter[0]))
 	action("Volver", home)

@@ -7,6 +7,7 @@ const INK := Color("#41352f")
 const PAPER_PATH := "res://diario_papel.webp"
 const ARRIVAL_BRIDGE = preload("res://diario_puente_llegada.webp")
 const DRAWINGS_PATH := "res://diario_dibujos.webp"
+const WALL_ATLAS = preload(DRAWINGS_PATH)
 const CREEK := 0
 const LIGHTS := 1
 const ROPE := 2
@@ -89,8 +90,8 @@ func display(entry: Dictionary, index: int, total: int, collection: bool, sectio
 	var illustrated := sketch != null or (motif >= 0 and is_instance_valid(atlas))
 	drawing.visible = illustrated
 	drawing.material.set_shader_parameter("charcoal", dream or sketch != null)
-	drawing.position = Vector2(508, 125) if sketch else Vector2(474, 104)
-	drawing.size = Vector2(232, 247) if sketch else Vector2(302, 318)
+	drawing.position = Vector2(480, 105) if sketch else Vector2(474, 104)
+	drawing.size = Vector2(286, 285) if sketch else Vector2(302, 318)
 	if sketch:
 		drawing.texture = sketch
 	elif illustrated:

@@ -8,6 +8,7 @@ uniform vec4 ascent_curve; // X y distancia de cada punta del sendero este.
 uniform vec4 summit_curve;
 uniform vec2 ascent_bend;
 uniform vec2 summit_shape;
+uniform bool mara_track = false;
 uniform vec2 mara_start;
 uniform vec2 mara_end;
 uniform vec2 creek_path[12];
@@ -45,10 +46,6 @@ void fragment() {
 	if (d > 124.0 && d < 218.0) {
 		distance_to_path = min(distance_to_path, abs(p.x - ridge_path - 36.0 * sin(PI * (d - 124.0) / 94.0)));
 	}
-	if (d > 43.0 && d < 104.0) {
-		float fork = ridge_path - 19.0 * sin(PI * (d - 43.0) / 61.0);
-		distance_to_path = min(distance_to_path, abs(p.x - fork) + 0.46);
-	}
 	float trail_width = mix(1.87, 2.34, smoothstep(0.0, 26.0, d));
 	float central = track(distance_to_path, trail_width, grain);
 	central *= (1.0 - smoothstep(923.0, 926.0, d)) * (1.0 - smoothstep(-0.5, 1.5, p.y));
@@ -83,7 +80,7 @@ void fragment() {
 		ascent_shoulder = max(ascent_shoulder, 1.0 - smoothstep(1.8, 21.0, distance));
 	}
 	float mara = 0.0;
-	if (p.x > mara_start.x - 3.0 && p.x < mara_end.x + 3.0 && p.y > -74.0 && p.y < -51.0) {
+	if (mara_track && p.x > mara_start.x - 3.0 && p.x < mara_end.x + 3.0 && p.y > -74.0 && p.y < -51.0) {
 		float t = clamp((p.x - mara_start.x) / (mara_end.x - mara_start.x), 0.0, 1.0);
 		vec2 via = mix(mara_start, mara_end, t) + vec2(0.0, sin(PI * t) * 1.9);
 		mara = track(length(p - via), 1.9, grain);
@@ -135,11 +132,7 @@ void fragment() {
 	float low_channel = 82.0 + 4.6 * sin(p.x * 0.082) + 1.4 * sin(p.x * 0.17) + 24.0 * smoothstep(54.0, 140.0, -p.x);
 	float channel = (1.0 - smoothstep(2.2, 7.5, abs(p.y - low_channel)));
 	float low_water = channel * (1.0 - max(smoothstep(49.0, 71.0, p.x), smoothstep(156.0, 207.0, -p.x)));
-	float creek_x = -1.9 + 54.0 * sin(96.0 / 83.0) + 18.0 * sin(96.0 / 27.0);
-	float creek_d = 96.0 + 2.0 * sin((p.x - creek_x) / 14.0);
-	float creek = (1.0 - smoothstep(1.3, 4.8, abs(d - creek_d))) * (1.0 - smoothstep(46.0, 68.0, abs(p.x - creek_x)));
 	ground = mix(ground, vec3(0.251, 0.221, 0.182), low_water);
-	ground = mix(ground, vec3(0.33, 0.29, 0.24), creek);
 	vec3 brushwork = texture(soil_detail, p * 0.22).rgb;
 	float brush_value = dot(brushwork, vec3(0.30, 0.59, 0.11));
 	float paint = clamp((brush_value - 0.516) * 2.4, -0.19, 0.19);

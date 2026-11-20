@@ -4,21 +4,14 @@ uniform float dusk : hint_range(0.0, 1.0) = 0.0;
 uniform float nightfall : hint_range(0.0, 1.0) = 0.0;
 uniform vec4 high_day : source_color = vec4(0.38,0.57,0.71,1.0);
 uniform vec4 rim_day : source_color = vec4(0.95,0.77,0.62,1.0);
-uniform vec4 high_night : source_color = vec4(0.045,0.067,0.14,1.0);
-uniform vec4 rim_night : source_color = vec4(0.29,0.31,0.43,1.0);
-
-uniform sampler2D faint_stars : filter_linear_mipmap, repeat_enable;
-float star_field(vec3 dir){
-	vec2 uv=vec2(atan(dir.x,dir.z)/TAU+0.5,acos(clamp(dir.y,-1.0,1.0))/PI);
-	// Explicit gradients avoid a mip level discontinuity across the azimuth seam.
-	vec2 dx=dFdx(uv), dy=dFdy(uv);
-	dx.x-=round(dx.x); dy.x-=round(dy.x);
-	return textureGrad(faint_stars,uv,dx,dy).r;
-}
+uniform vec4 high_night : source_color = vec4(0.039,0.054,0.116,1.0);
+uniform vec4 rim_night : source_color = vec4(0.19,0.205,0.30,1.0);
 
 uniform vec4 catalog[20];
 uniform vec3 moon_dir;
 uniform vec3 sun_dir;
+uniform vec3 daylight_dir = vec3(0.69, 0.41, 0.59);
+uniform float moon_phase = 0.0;
 uniform float other_world = 0.0;
 uniform float cloud_cover = 0.0;
 uniform float cloud_pattern = 0.0;
@@ -30,6 +23,28 @@ float cloud_hash(vec2 p) {
 	vec3 q = fract(vec3(p.xyx) * 0.1031);
 	q += dot(q, q.yzx + 33.33);
 	return fract((q.x + q.y) * q.z);
+}
+
+float star_field(vec3 dir) {
+	vec3 axis = abs(dir);
+	vec3 face = dir;
+	float seed = 19.3;
+	if (axis.y > max(axis.x,axis.z)) {
+		face = dir.xzy;
+		seed = 46.2;
+	} else if (axis.x > axis.z) {
+		face = dir.yzx;
+		seed = 76.9;
+	}
+	float side = sign(face.z);
+	vec2 cell = floor(face.xy / abs(face.z) * 41.0);
+	vec2 key = cell + vec2(seed * side, seed);
+	float power = cloud_hash(key + vec2(17.3, 29.1));
+	if (power < 0.42) return 0.0;
+	vec2 offset = vec2(cloud_hash(key), cloud_hash(key + vec2(31.5, 7.4)));
+	vec3 point = normalize(vec3((cell + mix(vec2(0.21), vec2(0.79), offset)) / 41.0, side));
+	float radius = mix(0.0013, 0.0032, power * power);
+	return (1.0 - smoothstep(radius * 0.3, radius, length(face - point))) * (0.13 + power * power * 0.66);
 }
 
 float cloud_noise(vec2 p) {
@@ -47,14 +62,15 @@ float cloud_texture(vec2 p) {
 }
 
 // Project the solar direction onto the visible lunar hemisphere for the terminator.
-vec3 disc(vec3 sight, vec3 center, vec3 light, float radius, vec3 tint, vec3 backdrop) {
+vec3 disc(vec3 sight, vec3 center, vec3 light, float radius, vec3 tint, vec3 backdrop, float opacity) {
 	vec3 offset = (sight-center)/radius;
 	float r = length(offset);
 	if (r>1.15) return backdrop;
 	vec3 normal = normalize(offset-center*sqrt(max(0.0,1.0-r*r)));
 	float lit = smoothstep(-0.025,0.06,dot(normal,light));
 	float maria = 0.84+0.16*sin(offset.x*10.0+sin(offset.y*7.0))*cos(offset.y*9.0);
-	return mix(backdrop,tint*(0.065+lit*maria),1.0-smoothstep(0.85,1.15,r));
+	float edge = 1.0 - smoothstep(0.95, 1.035, r);
+	return mix(backdrop,tint*(0.065+lit*maria),edge*mix(lit*opacity, 1.0, opacity*opacity));
 }
 
 void sky(){
@@ -63,18 +79,27 @@ void sky(){
 	vec3 horizon = mix(rim_day.rgb,vec3(0.92,0.43,0.24),dusk);
 	vec3 daytime = mix(horizon,high_day.rgb,blend);
 	vec3 dark = mix(rim_night.rgb,high_night.rgb,smoothstep(0.0,0.48,height));
-	float points = star_field(EYEDIR);
+	float points = nightfall > 0.0 && other_world < 1.0 ? star_field(EYEDIR) : 0.0;
 	vec3 earth = dark;
 	for (int i=0; i<20; i++){
 		float power = clamp(1.4-0.22*catalog[i].w,0.65,1.8);
 		points += power*(1.0-smoothstep(0.0,0.0042*power,length(EYEDIR-catalog[i].xyz)));
 	}
 	earth += vec3(0.90,0.93,1.0)*points;
-	earth = disc(EYEDIR,moon_dir,sun_dir,0.019,vec3(1.0,0.95,0.84),earth);
+	float planet = 1.0 - smoothstep(0.0008, 0.0034, length(EYEDIR - normalize(vec3(-0.51, 0.55, -0.61))));
+	earth += vec3(1.0, 0.81, 0.56) * planet * 0.65;
+	vec3 lunar_limb = normalize(sun_dir - moon_dir * dot(sun_dir, moon_dir));
+	vec3 lunar_light = lunar_limb * sin(moon_phase) - moon_dir * cos(moon_phase);
+	earth = disc(EYEDIR,moon_dir,lunar_light,0.057,vec3(1.25,1.16,0.99),earth,1.0);
+	float from_sun = length(EYEDIR - daylight_dir);
+	float solar_glow = exp(-from_sun * from_sun * 58.0);
+	float sun_edge = 1.0 - smoothstep(0.017, 0.021, from_sun);
+	daytime += mix(vec3(1.0,0.86,0.61), vec3(1.0,0.45,0.20), dusk) * (solar_glow * 0.16 + sun_edge * 0.72);
+	daytime = disc(EYEDIR,moon_dir,lunar_light,0.057,vec3(1.03,0.99,0.90),daytime,0.38 + dusk*0.22);
 	vec3 alien = mix(vec3(0.19,0.095,0.18),vec3(0.024,0.013,0.07),blend);
-	alien += vec3(0.66,0.86,0.95)*(star_field(EYEDIR.zxy));
-	alien=disc(EYEDIR,normalize(vec3(0.35,0.48,-1.0)),normalize(vec3(-1.0,0.6,0.4)),0.038,vec3(0.95,0.72,0.51),alien);
-	alien=disc(EYEDIR,normalize(vec3(0.08,0.66,-1.0)),normalize(vec3(-1.0,0.6,0.4)),0.016,vec3(0.65,0.83,0.91),alien);
+	if (other_world > 0.0) alien += vec3(0.66,0.86,0.95)*star_field(EYEDIR.zxy);
+	alien=disc(EYEDIR,normalize(vec3(0.35,0.48,-1.0)),normalize(vec3(-1.0,0.6,0.4)),0.038,vec3(0.95,0.72,0.51),alien,1.0);
+	alien=disc(EYEDIR,normalize(vec3(0.08,0.66,-1.0)),normalize(vec3(-1.0,0.6,0.4)),0.016,vec3(0.65,0.83,0.91),alien,1.0);
 	vec2 shift = vec2(cloud_pattern * 0.31, cloud_pattern * 0.59);
 	vec2 alto = EYEDIR.xz * vec2(3.5, 7.0) / (height + 0.47) + shift;
 	float silk = smoothstep(0.53, 0.75, cloud_texture(alto)) * cirrus_amount;
@@ -83,7 +108,7 @@ void sky(){
 	float density = cloud_texture(p);
 	float mask = smoothstep(edge, edge + 0.14, density);
 	float body = smoothstep(edge + 0.025, edge + 0.34, density);
-	float glow = clamp(dot(normalize(vec3(sun_dir.x, 0.18, sun_dir.z)), EYEDIR) * 0.53 + 0.45, 0.0, 1.0);
+	float glow = clamp(dot(daylight_dir, EYEDIR) * 0.53 + 0.45, 0.0, 1.0);
 	float low_haze = smoothstep(0.018, 0.16, height);
 	float horizon_veil = (1.0 - smoothstep(0.017, 0.17, height)) * valley_mist;
 	daytime = mix(daytime, vec3(0.66, 0.71, 0.71), horizon_veil * (0.71 - dusk * 0.20));

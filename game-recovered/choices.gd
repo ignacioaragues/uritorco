@@ -15,6 +15,7 @@ func present(captions: Array):
 		var button: = Button.new()
 		button.text = captions[index]
 		button.alignment = HORIZONTAL_ALIGNMENT_LEFT
+		button.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 		button.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
 		button.add_theme_font_size_override("font_size", 19)
 		for state in ["normal", "hover", "pressed", "focus"]:

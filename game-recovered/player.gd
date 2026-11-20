@@ -8,6 +8,7 @@ const LEDGE_REACH := 1.02
 
 var camera: = Camera3D.new()
 var flashlight: = SpotLight3D.new()
+var flashlight_haze := ShaderMaterial.new()
 var ray: = RayCast3D.new()
 var capsule := CapsuleShape3D.new()
 var intro_center: = Vector3.ZERO
@@ -38,13 +39,29 @@ func _ready():
 	add_child(camera)
 	camera.position.y = 1.59
 	camera.add_child(flashlight)
+	var beam_axis := Vector3(-0.031, 0.033, -1.0).normalized()
+	flashlight.position = Vector3(0.22, -0.23, -0.18)
+	flashlight.quaternion = Quaternion(Vector3.FORWARD, beam_axis)
 	flashlight.light_color = Color("#ffedc9")
 	flashlight.light_energy = 1.9
 	flashlight.spot_range = 26.0
 	flashlight.spot_angle = 24.0
 	flashlight.spot_attenuation = 1.65
 	flashlight.shadow_enabled = true
+	flashlight.shadow_bias = 0.20
+	flashlight.shadow_normal_bias = 3.0
 	flashlight.hide()
+	var beam := MeshInstance3D.new()
+	var screen := QuadMesh.new()
+	screen.size = Vector2(2.0, 2.0)
+	beam.mesh = screen
+	beam.extra_cull_margin = 1000.0
+	beam.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	flashlight_haze.shader = preload("res://haz_linterna.gdshader")
+	flashlight_haze.set_shader_parameter("light_origin", flashlight.position)
+	flashlight_haze.set_shader_parameter("light_axis", beam_axis)
+	beam.material_override = flashlight_haze
+	flashlight.add_child(beam)
 	camera.fov = 72
 	camera.add_child(ray)
 	ray.target_position = Vector3(0, 0, -2.7)

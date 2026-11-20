@@ -134,7 +134,7 @@ func press_button():
 	elif lift < 0.5:
 		press_motion.tween_interval(0.2)
 	press_motion.tween_method(set_press, press, 1.0, 0.12)
-	press_motion.tween_interval(0.13)
+	press_motion.tween_interval(0.58)
 	press_motion.tween_method(set_press, 1.0, 0.0, 0.2)
 
 func set_press(value: float):

@@ -28,7 +28,7 @@ static func direction(star: Array, sidereal: float = NIGHTS[0][0]) -> Vector3:
 	return Vector3( - cos(dec) * sin(h), sin(dec) * sin(lat) + cos(dec) * cos(lat) * cos(h), sin(dec) * cos(lat) - cos(dec) * sin(lat) * cos(h)).normalized()
 
 static func identify(look: Vector3, chapter: int = 0) -> String:
-	if look.dot(NIGHTS[chapter][1]) > cos(deg_to_rad(1.5)): return "Luna"
+	if look.dot(NIGHTS[chapter][1]) > cos(deg_to_rad(3.4)): return "Luna"
 	var closest: = cos(deg_to_rad(2.0))
 	var name: = ""
 	for star in STARS:

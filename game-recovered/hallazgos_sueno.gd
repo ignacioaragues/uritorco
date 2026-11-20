@@ -84,6 +84,7 @@ static func build_find(parent: Node3D, id: String, at: Vector3):
 	root.collision_layer = 2
 	root.collision_mask = 0
 	root.set_meta("find_id", id)
+	root.add_to_group("field_finds")
 	root.rotation.y = -0.20 + entry[0] * 0.41
 	var brass := Kit.material("746057", false, 0.67)
 	var nickel := Kit.material("46515a", false, 0.60)

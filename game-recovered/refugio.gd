@@ -49,7 +49,7 @@ static func print_surface(parent: Node3D, pos: Vector3, size: Vector2, image: Te
 	picture.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	return picture
 
-static func desk(parent: Node3D):
+static func desk(parent: Node3D) -> StaticBody3D:
 	var table := Kit.item(parent, Vector3(2.55, 0, 2.35), "", Vector3.UP * 0.45, Vector3(1.8, 0.90, 0.7))
 	var timber := wood("735340")
 	var pine := wood("aa805c", true)
@@ -72,9 +72,9 @@ static func desk(parent: Node3D):
 			Vector3(x - 0.035, 0.705, -0.357), Vector3(x + 0.035, 0.705, -0.357),
 			Vector3(x + 0.052, 0.713, -0.349), Vector3(x + 0.067, 0.73, -0.325),
 		]), 0.007, brass)
-	desk_items(parent)
+	return desk_items(parent)
 
-static func desk_items(parent: Node3D):
+static func desk_items(parent: Node3D) -> StaticBody3D:
 	var paper := Kit.material("e2d2ad")
 	var ink := Kit.material("8b8271")
 	var note := Kit.item(parent, Vector3(1.96, 0.905, 2.35), "Nota", Vector3.UP * 0.011, Vector3(0.35, 0.043, 0.26))
@@ -102,6 +102,7 @@ static func desk_items(parent: Node3D):
 	tip.rotation.x = -PI / 2.0
 	Kit.block(pencil, Vector3(0, 0, 0.070), Vector3(0.013, 0.013, 0.016), Kit.material("925b48"))
 	mug(parent, Vector3(2.93, 0.903, 2.21))
+	return note
 
 static func mug(parent: Node3D, pos: Vector3):
 	var cup := Node3D.new()
@@ -229,11 +230,63 @@ static func closed_book(parent: Node3D, ribbon: bool):
 		]), 0.019, Kit.material("536952", true))
 
 static func postcard(parent: Node3D):
-	var card := Kit.item(parent, Vector3(-2.57, 1.58, -0.248), "Postal de Paula", Vector3.ZERO, Vector3(0.23, 0.157, 0.024))
-	card.rotation.z = -0.08
+	var card := Kit.item(parent, Vector3(2.20, 1.54, 5.857), "Postal de Paula", Vector3.ZERO, Vector3(0.23, 0.157, 0.024))
+	card.rotation = Vector3(0, PI, -0.08)
 	Kit.block(card, Vector3.ZERO, Vector3(0.220, 0.148, 0.006), Kit.material("d5bf9b"))
 	print_surface(card, Vector3.BACK * 0.0035, Vector2(0.216, 0.144), POSTCARD)
 	Kit.cylinder(card, Vector3(0, 0.067, 0.005), 0.006, 0.006, 0.009, Kit.material("a47e58")).rotation.x = PI / 2.0
+
+static func wall_sketch(parent: Node3D, pos: Vector3, drawing: Texture2D, motif: int) -> Node3D:
+	var sheet := Node3D.new()
+	parent.add_child(sheet)
+	sheet.position = pos
+	sheet.rotation = Vector3(0, PI, 0.045 if motif < 0 else -0.055 + 0.019 * motif)
+	var patch := QuadMesh.new()
+	patch.size = Vector2(0.34, 0.31)
+	var ink := ShaderMaterial.new()
+	ink.shader = preload("res://croquis_pared.gdshader")
+	ink.set_shader_parameter("drawing", drawing)
+	ink.set_shader_parameter("paper", preload("res://diario_papel.webp"))
+	if motif >= 0:
+		ink.set_shader_parameter("tile", Vector4((motif % 4) * 0.25, floorf(motif / 4.0) * 0.5, 0.25, 0.5))
+	Kit.mesh_part(sheet, patch, Vector3.ZERO, ink).cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	Kit.cylinder(sheet, Vector3(0, 0.142, 0.006), 0.006, 0.006, 0.010, Kit.material("8d7959")).rotation.x = PI / 2.0
+	return sheet
+
+static func exterior_equipment(parent: Node3D, flag_foot: Vector3, cylinder_foot: Vector3):
+	var flag_pole := Kit.item(parent, flag_foot, "", Vector3.UP * 1.68, Vector3(0.10, 3.36, 0.10))
+	var steel := Kit.material("847f72", false, 0.58)
+	Kit.cylinder(flag_pole, Vector3.UP * 1.65, 0.026, 0.041, 3.30, steel)
+	Kit.cylinder(flag_pole, Vector3.UP * 0.09, 0.13, 0.15, 0.18, Kit.material("968b75"))
+	var fabric := Node3D.new()
+	flag_pole.add_child(fabric)
+	fabric.position = Vector3(0.47, 2.79, 0)
+	fabric.rotation.z = -0.065
+	for row in 3:
+		var tone := "e4ded0" if row == 1 else "73a6c3"
+		Kit.block(fabric, Vector3(0, (1 - row) * 0.158, 0), Vector3(0.88, 0.158, 0.014), Kit.material(tone, true))
+	var gold := Kit.material("c9994f")
+	for side in [-1.0, 1.0]:
+		Kit.cylinder(fabric, Vector3.BACK * side * 0.009, 0.045, 0.045, 0.005, gold).rotation.x = PI / 2.0
+
+	var tank := Kit.item(parent, cylinder_foot, "", Vector3.UP * 0.34, Vector3(0.36, 0.68, 0.36))
+	var enamel := Kit.material("a58260", false, 0.72)
+	Kit.cylinder(tank, Vector3.UP * 0.07, 0.135, 0.147, 0.11, steel)
+	Kit.cylinder(tank, Vector3.UP * 0.35, 0.157, 0.161, 0.48, enamel)
+	Kit.cylinder(tank, Vector3.UP * 0.60, 0.090, 0.157, 0.13, enamel)
+	Kit.cylinder(tank, Vector3.UP * 0.70, 0.045, 0.056, 0.08, gold)
+
+	var solar := Node3D.new()
+	parent.add_child(solar)
+	solar.position = Vector3(-2.65, 3.13, 1.02)
+	solar.rotation.z = 0.025
+	for x in [-0.42, 0.42]:
+		Kit.block(solar, Vector3(x, -0.091, 0), Vector3(0.06, 0.13, 0.61), steel)
+	Kit.block(solar, Vector3.ZERO, Vector3(1.16, 0.076, 0.79), steel)
+	var cell := Kit.material("334151", false, 0.53)
+	for column in 5:
+		for row in 4:
+			Kit.block(solar, Vector3((column - 2) * 0.22, 0.044, (row - 1.5) * 0.177), Vector3(0.211, 0.016, 0.166), cell)
 
 static func cutting(parent: Node3D):
 	var clipping := Kit.item(parent, Vector3(3.165, 0.905, 2.505), "Recorte de astronomía", Vector3.UP * 0.014, Vector3(0.33, 0.030, 0.24))
@@ -303,6 +356,49 @@ static func kitchenette(parent: Node3D):
 			Kit.block(cabinet, Vector3(x, 1.061, z), Vector3(0.022, 0.025, 0.204), griddle)
 	Kit.cylinder(cabinet, Vector3(-0.024, 1.093, -0.251), 0.079, 0.131, 0.036, Kit.material("42423a"))
 	Kit.block(cabinet, Vector3(0.181, 1.097, -0.23), Vector3(0.21, 0.023, 0.031), iron).rotation.y = -0.12
+
+static func refrigerator(parent: Node3D):
+	var fridge := Kit.item(parent, Vector3(-2.96, 0, 1.65), "", Vector3.UP * 0.69, Vector3(0.67, 1.38, 0.67))
+	fridge.name = "Heladera"
+	var enamel := Kit.material("a6aa92", false, 0.66)
+	var door := Kit.material("c3c5a8", false, 0.53)
+	var seal := Kit.material("6d6e5d", false, 0.88)
+	var steel := Kit.material("9e9988", false, 0.42)
+	Kit.block(fridge, Vector3(-0.045, 0.72, 0), Vector3(0.565, 1.32, 0.64), enamel)
+	Kit.block(fridge, Vector3(0.245, 0.72, 0), Vector3(0.026, 1.27, 0.626), seal)
+	Kit.block(fridge, Vector3(0.274, 0.58, 0), Vector3(0.072, 0.98, 0.64), door)
+	Kit.block(fridge, Vector3(0.274, 1.225, 0), Vector3(0.071, 0.283, 0.64), door)
+	for y in [0.88, 1.19]:
+		Kit.block(fridge, Vector3(0.326, y, -0.13), Vector3(0.051, 0.042, 0.215), steel)
+	for z in [-0.24, 0.24]:
+		Kit.block(fridge, Vector3(0.17, 0.037, z), Vector3(0.10, 0.074, 0.10), seal)
+	for vent in 5:
+		Kit.block(fridge, Vector3(0.255, 0.031 + vent * 0.009, 0.105), Vector3(0.006, 0.003, 0.188), seal)
+	var motor := AudioStreamPlayer3D.new()
+	motor.stream = refrigerator_hum()
+	motor.volume_db = -29.0
+	motor.unit_size = 1.10
+	motor.max_distance = 5.6
+	fridge.add_child(motor)
+	motor.position.y = 0.43
+	motor.play()
+
+static func refrigerator_hum() -> AudioStreamWAV:
+	const RATE := 11025
+	const FRAMES := RATE * 2
+	var samples := PackedByteArray()
+	samples.resize(FRAMES * 2)
+	for i in FRAMES:
+		var t := float(i) / RATE
+		var vibration := sin(TAU * 50.0 * t) * 0.42 + sin(TAU * 100.0 * t) * 0.31 + sin(TAU * 150.0 * t) * 0.09
+		samples.encode_s16(i * 2, roundi(vibration * (0.76 + 0.21 * cos(PI * t)) * 16384.0))
+	var tape := AudioStreamWAV.new()
+	tape.format = AudioStreamWAV.FORMAT_16_BITS
+	tape.mix_rate = RATE
+	tape.loop_mode = AudioStreamWAV.LOOP_FORWARD
+	tape.loop_end = FRAMES
+	tape.data = samples
+	return tape
 
 static func pendant(parent: Node3D, pos: Vector3):
 	var fixture := Node3D.new()

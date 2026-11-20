@@ -39,8 +39,8 @@ static func plate(parent: Node3D, at: Vector3, size: Vector2, coating: String, a
 static func station(parent: Node3D):
 	var post := Node3D.new()
 	parent.add_child(post)
-	post.position = Vector3(0.82, 0.0, -15.35)
-	post.rotation.y = PI + 0.12
+	post.position = Vector3(-2.47, 0.0, -15.95)
+	post.rotation.y = PI - 0.25
 	var iron := Kit.material("626963")
 	for x in [-0.67, 0.67]:
 		solid(post, Vector3(x, 0.77, 0), Vector3(0.071, 1.54, 0.073), iron)

@@ -4,7 +4,6 @@ const Arrival = preload("res://llegada.gd")
 const ROUTE = preload("res://travesia.gd")
 const Exploration = preload("res://exploracion.gd")
 const Creek = preload("res://cauce.gd")
-const LastNight = preload("res://final_night.gd")
 const Museum = preload("res://museo.gd")
 const INK = Color("#384235")
 const ROUTE_COLOR = Color("#875d41")
@@ -131,9 +130,7 @@ func draw_markers():
 	var at := point(limits, location).clamp(inside.position, inside.end)
 	if objective_mark is Vector3:
 		var destination: Vector3 = objective_mark
-		if zone == 0 and zone_at(destination) == 3:
-			destination = Creek.crossing_point(0.0)
-		elif zone == 3 and Vector2(destination.x, destination.z).length() < 1.0:
+		if zone == 3 and Vector2(destination.x, destination.z).length() < 1.0:
 			destination = Creek.return_point(1.0)
 		var goal := point(limits, destination)
 		if inside.has_point(goal):
@@ -197,7 +194,7 @@ func draw_local(limits: Rect2):
 	pin(limits, Vector3(Exploration.MOLLAR.x, 0, Exploration.MOLLAR.y), "Mollar", Vector2(-54, 13))
 	pin(limits, Creek.crossing_point(0.0), "Lajas", Vector2(-48, -8))
 	pin(limits, Creek.crossing_point(0.28), "Quebrada sur", Vector2(8, -5))
-	pin(limits, LastNight.STOP, "Parada", Vector2(-49, -9))
+	pin(limits, Creek.crossing_point(1.0), "Pasarela", Vector2(9, 18))
 	pin(limits, ROUTE.ascent_point(0), "Acceso")
 	pin(limits, Creek.post(), "Poste")
 	pin(limits, Creek.marker(), "Regla del cauce", Vector2(11, 18))
@@ -228,16 +225,10 @@ func draw_ridge(limits: Rect2):
 	draw_route(limits, 49, func(t):
 		var d := lerpf(ROUTE.LAJA_FORK, ROUTE.LAJA_JOIN, t)
 		return Vector3(ROUTE.detour(d), 0, ROUTE.ORIGIN_Z - d), ROUTE_COLOR)
-	draw_route(limits, 45, ROUTE.creek_overlook, ROUTE_COLOR)
 	draw_route(limits, 91, ROUTE.quarry_point, ROUTE_COLOR)
 	draw_route(limits, 141, ROUTE.western_approach, ROUTE_COLOR)
 	draw_route(limits, 201, ROUTE.ascent_point, INK)
 	draw_route(limits, 31, func(t): return ROUTE.summit_point(lerpf(ROUTE.SUMMIT_JOIN, 1, t)), INK)
-	draw_route(limits, 61, func(t):
-		var x := ROUTE.trail(ROUTE.CREEK_DISTANCE) + lerpf(-55, 55, t)
-		var d := ROUTE.CREEK_DISTANCE + 2.0 * sin((x - ROUTE.trail(ROUTE.CREEK_DISTANCE)) / 14.0)
-		return Vector3(x, 0, ROUTE.ORIGIN_Z - d), WATER)
-	pin(limits, ROUTE.creek_overlook(0.63), "Mirador", Vector2(-52, 16))
 	pin(limits, Vector3(ROUTE.trail(Museum.DISTANCE) + Museum.SITE_OFFSET, 0, ROUTE.ORIGIN_Z - Museum.DISTANCE), "Museo")
 	pin(limits, Vector3(ROUTE.trail(420), 0, ROUTE.ORIGIN_Z - 420), "Abra")
 	pin(limits, ROUTE.quarry_point(1), "Cantera", Vector2(-15, 15))
@@ -259,7 +250,7 @@ func draw_arrival(limits: Rect2):
 		draw_route(limits, 50, func(t):
 			var x := lerpf(2.8, 47.0, t)
 			return Arrival.world_position(index, Vector3(x, 0, Arrival.branch_z(x))), ROUTE_COLOR)
-		pin(limits, Arrival.world_position(index, Vector3(-0.57, 0, -7.95)), "Parada")
+		pin(limits, Arrival.world_position(index, Arrival.STOP_CENTER), "Parada")
 	else:
 		if index == 2:
 			draw_route(limits, 89, func(t):

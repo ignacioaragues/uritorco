@@ -66,7 +66,7 @@ func update(delta: float, speed: float, daytime: bool, cave_interior: bool = fal
 		travel = 0
 		step.pitch_scale = rng.randf_range(0.86, 1.12)
 		step.stream = water_step if depth > 0.07 else dry_step
-		step.volume_db = -16.0 if cave_interior else (-20.5 if depth > 0.07 else -24.0)
+		step.volume_db = -20.0 if cave_interior else (-24.0 if depth > 0.07 else -28.0)
 		step.play()
 	if daytime:
 		silence -= delta
@@ -80,8 +80,8 @@ func weather(delta: float, rain: float, sheltered: bool, radio_active: bool):
 	var target := pow(rain, 0.78) * (0.52 if radio_active else 1.0)
 	rain_gain = move_toward(rain_gain, target, delta * 0.9)
 	roof_mix = move_toward(roof_mix, 1.0 if sheltered else 0.0, delta * 2.5)
-	weather_volume(rain_air, rain_gain * (1.0 - roof_mix), -22.0)
-	weather_volume(rain_roof, rain_gain * roof_mix, -26.0)
+	weather_volume(rain_air, rain_gain * (1.0 - roof_mix), -28.0)
+	weather_volume(rain_roof, rain_gain * roof_mix, -32.0)
 
 func weather_volume(channel: AudioStreamPlayer, gain: float, peak: float):
 	if gain < 0.0015:

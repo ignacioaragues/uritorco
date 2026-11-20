@@ -11,9 +11,9 @@ func begin():
 	envelope = create_tween()
 	envelope.tween_property(self, "volume_db", -12.0, 2.6).set_trans(Tween.TRANS_SINE)
 
-func close():
+func close(seconds := 4.0):
 	if not playing: return
 	if envelope: envelope.kill()
 	envelope = create_tween()
-	envelope.tween_property(self, "volume_db", -55.0, 4.0).set_trans(Tween.TRANS_SINE)
+	envelope.tween_property(self, "volume_db", -55.0, seconds).set_trans(Tween.TRANS_SINE)
 	envelope.tween_callback(stop)

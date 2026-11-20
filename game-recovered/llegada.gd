@@ -2,12 +2,17 @@ extends RefCounted
 
 const Signage = preload("res://carteleria.gd")
 const FieldKit = preload("res://equipo_campo.gd")
+const Refuge = preload("res://refugio.gd")
+const STOP_START := Vector3(-2.82, 0.12, -6.43)
+const STOP_CENTER := Vector3(-0.57, 0.0, -9.55)
 const BRIDGE_WATER_Y := -0.71
 const BRIDGE_WATER_Z := -10.45
 const BRIDGE_WATER_WIDTH := 15.8
 
-const ACTIONS = ["Recoger la mochila", "Saltar el tronco", "Agarrarte del pasamanos", "Probar la brújula", "Consultar el mapa", "Trepar con la cuerda", "Encender la linterna", "Seguir el sendero"]
+const ACTIONS = ["Recoger la mochila", "Saltar el tronco", "", "Probar la brújula", "Consultar el mapa", "Trepar con la cuerda", "Encender la linterna", "Seguir el sendero"]
 const HEADINGS = [0.0, -0.52, 0.72, 1.05, -0.8, 0.26, -1.19, 0.5]
+const DUSK = [0.0, 0.0, 0.0, 0.25, 0.51, 0.76, 0.95, 1.0]
+const DARK = [0.0, 0.0, 0.0, 0.02, 0.14, 0.44, 0.76, 0.90]
 const SOIL = ["77765d", "786e50", "697353", "7d7958", "83724f", "777260", "666754", "6f7259"]
 const TRACK = ["9c815c", "aa866a", "98836a", "a88c65", "be9b71", "987457", "937a62", "988571"]
 
@@ -19,6 +24,12 @@ static func local_position(index: int, point: Vector3) -> Vector3:
 
 static func world_position(index: int, point: Vector3) -> Vector3:
 	return origin(index) + point.rotated(Vector3.UP, HEADINGS[index])
+
+static func spawn_point(index: int) -> Vector3:
+	return world_position(index, STOP_START if index == 0 else Vector3.UP * 0.12)
+
+static func spawn_heading(index: int) -> float:
+	return -0.94 if index == 0 else HEADINGS[index]
 
 static func track_x(index: int, distance: float) -> float:
 	match index:
@@ -65,6 +76,9 @@ static func reached_exit(index: int, local: Vector3) -> bool:
 	var cut := 25.0 if index >= 6 else 18.0
 	return local.z < -cut and absf(local.x - track_x(index, -local.z)) < 3.0
 
+static func left_fragment(local: Vector3) -> bool:
+	return absf(local.x) > 24.0 or local.z > 9.6 or local.z < -33.0
+
 static func safe_saved_position(index: int, position: Vector3, action_done: bool) -> Vector3:
 	var local := local_position(index, position)
 	if not action_done and index in [1, 5] and local.z < -10.15:
@@ -90,14 +104,18 @@ static func rope_route() -> Array[Vector3]:
 
 static func show_fragment(v, active: int):
 	for index in v.arrival_fragments.size():
-		v.arrival_fragments[index].visible = index == active
+		var fragment: Node3D = v.arrival_fragments[index]
+		fragment.visible = index == active
+		fragment.process_mode = Node.PROCESS_MODE_INHERIT if index == active else Node.PROCESS_MODE_DISABLED
 
 static func build_fragments(v):
+	var ridges := ridge_materials(v)
 	for index in ACTIONS.size():
 		var center := origin(index)
 		var first: int = v.get_child_count()
 		build_ground(v, center, index)
 		dress_landscape(v, center, index)
+		build_ridges(v, center, index, ridges)
 		match index:
 			0: build_stop(v, center)
 			1: build_log(v, center)
@@ -110,19 +128,24 @@ static func build_fragments(v):
 		for prop in props: prop.reparent(fragment)
 		fragment.rotation.y = HEADINGS[index]
 		fragment.hide()
+		fragment.process_mode = Node.PROCESS_MODE_DISABLED
 		v.arrival_fragments.append(fragment)
 
 static func build_ground(v, center: Vector3, index: int):
 	var surface := SurfaceTool.new()
 	surface.begin(Mesh.PRIMITIVE_TRIANGLES)
 	var xs := PackedFloat32Array()
+	for x in range(-212, -116, 12): xs.append(x)
 	for x in range(-116, -24, 4): xs.append(x)
 	for x in range(-24, 25): xs.append(x)
 	for x in range(28, 117, 4): xs.append(x)
+	for x in range(128, 213, 12): xs.append(x)
 	var distances := PackedFloat32Array()
+	for d in range(-198, -42, 12): distances.append(d)
 	for d in range(-42, -14, 4): distances.append(d)
 	for d in range(-14, 49): distances.append(d)
 	for d in range(52, 101, 4): distances.append(d)
+	for d in range(112, 221, 12): distances.append(d)
 	for d in distances:
 		for x in xs:
 			surface.add_vertex(Vector3(x, ground_height(index, x, d), -d))
@@ -139,6 +162,7 @@ static func build_ground(v, center: Vector3, index: int):
 	material.set_shader_parameter("fragment_index", index)
 	material.set_shader_parameter("soil_tint", Color(SOIL[index]))
 	material.set_shader_parameter("track_tint", Color(TRACK[index]))
+	material.set_shader_parameter("brushwork", preload("res://tierra_serrana.webp"))
 	ground.material_override = material
 
 static func dress_landscape(v, center: Vector3, index: int):
@@ -156,19 +180,59 @@ static func dress_landscape(v, center: Vector3, index: int):
 			if slot % 3 == index % 3:
 				v.box(foot + Vector3.UP * size_m, Vector3(0.14, 2.05, 0.16) * size_m, "6b5745")
 				v.stone(foot + Vector3.UP * 2.2 * size_m, Vector3(2.4, 1.42, 2.2) * size_m, ["657551", "58644e", "777856"][slot % 3])
-		for i in 5:
-			var d := -28.0 + i * 29.0
-			var x: float = side * (34.0 + rng.randf_range(0.0, 10.0))
-			if index == 0 and absf(d - 3.0) < 4.0: d -= 12.0
-			if index == 2 and absf(d - 10.45) < 9.0: d += 13.0
-			var hill := center + Vector3(x, ground_height(index, x, d), -d)
-			v.stone(hill, Vector3(rng.randf_range(20, 34), rng.randf_range(12, 27), rng.randf_range(22, 44)), "69705d")
-		for d in [-34.0, 32.0, 92.0]:
-			var x: float = side * rng.randf_range(77.0, 95.0)
-			v.stone(center + Vector3(x, 0.0, -d), Vector3(64, rng.randf_range(37, 56), 64), "6b7a73")
-	for x in [-39.0, 9.0, 58.0]:
-		v.stone(center + Vector3(x, 1.0, -91.0), Vector3(60, rng.randf_range(24.0, 48.0), 44), "69796f")
 	dress_verges(v, center, index, rng)
+
+static func ridge_materials(v) -> Array[ShaderMaterial]:
+	var materials: Array[ShaderMaterial] = []
+	var colors := [Color("#70745e"), Color("#7b8980"), Color("#88959b")]
+	for layer in colors.size():
+		var finish := ShaderMaterial.new()
+		finish.shader = preload("res://perfil_sierra.gdshader")
+		finish.set_shader_parameter("stone", colors[layer])
+		finish.set_shader_parameter("distance_layer", layer / 2.5)
+		materials.append(finish)
+		v.ridge_materials.append(finish)
+	return materials
+
+static func build_ridges(v, center: Vector3, index: int, materials: Array[ShaderMaterial]):
+	const SECTIONS := 160
+	const PROFILE := [Vector2(0.60, 0), Vector2(0.73, 0.15), Vector2(0.83, 0.41),
+		Vector2(0.93, 0.73), Vector2(1.0, 1.0), Vector2(1.12, 0.52), Vector2(1.23, 0)]
+	for layer in materials.size():
+		var surface := SurfaceTool.new()
+		surface.begin(Mesh.PRIMITIVE_TRIANGLES)
+		var phase := 0.61 * index + 1.48 * layer
+		var reach: float = [128.0, 235.0, 414.0][layer]
+		for section in SECTIONS:
+			var angle := TAU * section / SECTIONS
+			var arm := Vector2(cos(angle), sin(angle))
+			var spur := sin(angle * 8.0 + phase) * 0.54 + sin(angle * 17.0 - phase) * 0.27
+			var broad := 0.58 * sin(angle * 3.0 + phase) + 0.31 * cos(angle * 7.0 - phase)
+			var serration := 0.45 - absf(sin(angle * 11.0 - phase))
+			var distance := reach * (1.0 + 0.13 * cos(angle * 2.0 - phase) + 0.075 * spur)
+			var notch := pow(absf(arm.x), 18.0) if index in [0, 2] else pow(maxf(0, -arm.y), 22.0)
+			var crest := distance * (0.151 + 0.075 * broad + 0.029 * spur + 0.031 * serration)
+			crest *= 1.0 - notch * (0.98 if index in [0, 2] else (0.63 if layer == 0 else 0.24))
+			for row in PROFILE:
+				var radius: float = distance * (row.x + spur * 0.075 * sin(PI * row.y))
+				var relief := 0.63 + 0.22 * cos(angle * 8.0 + phase + row.y) + 0.09 * cos(angle * 17.0 - phase)
+				surface.set_uv(Vector2(relief, row.y))
+				surface.add_vertex(Vector3(arm.x * radius, lerpf(-5.3, crest, pow(row.y, 1.24)), arm.y * radius))
+		var stride := PROFILE.size()
+		for section in SECTIONS:
+			var next := (section + 1) % SECTIONS
+			for row in range(stride - 1):
+				var a := section * stride + row
+				var b := next * stride + row
+				for vertex in [a + 1, a, b + 1, b + 1, a, b]:
+					surface.add_index(vertex)
+		var ridge := MeshInstance3D.new()
+		ridge.name = "Perfil serrano %d" % (layer + 1)
+		ridge.mesh = surface.commit()
+		ridge.material_override = materials[layer]
+		ridge.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+		v.add_child(ridge)
+		ridge.position = center
 
 static func dress_verges(v, center: Vector3, index: int, rng: RandomNumberGenerator):
 	var grass := SurfaceTool.new()
@@ -204,9 +268,10 @@ static func dress_verges(v, center: Vector3, index: int, rng: RandomNumberGenera
 	verge.position = center
 
 static func build_stop(v, center: Vector3):
-	Signage.shelter(v, center + Vector3(-0.57, 0.0, -7.95))
-	Signage.flag(v, center + Vector3(-3.24, 0, -7.23))
-	v.arrival_bag = FieldKit.backpack(v, center + Vector3(0.68, 0.318, -6.31), ACTIONS[0])
+	Signage.shelter(v, center + STOP_CENTER)
+	Signage.flag(v, center + Vector3(-3.72, 0, -8.73))
+	Signage.trail_post(v, center + Vector3(4.7, 0.0, branch_z(4.7) - 1.52), "", "Refugio →", -0.72, true)
+	v.arrival_bag = FieldKit.backpack(v, center + Vector3(-1.10, 0.318, -6.95), ACTIONS[0])
 	v.arrival_bag.rotation.y = -0.14
 
 static func build_log(v, center: Vector3):
@@ -233,12 +298,16 @@ static func build_bridge(v, center: Vector3):
 	water.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	for index in 16:
 		var plank := center + Vector3(0, -0.067, -7.18 - index * 0.47)
-		v.box(plank, Vector3(2.76, 0.15, 0.47), ["987954", "8d6e4b", "9c7c58"][index % 3], true)
+		var tone: String = ["987954", "8d775e", "9c7c58"][index % 3]
+		var board: MeshInstance3D = v.box(plank, Vector3(2.76, 0.15, 0.47), tone, true)
+		board.material_override = Refuge.wood(tone, true)
+	var railing := Refuge.wood("735944")
 	for side in [-1, 1]:
-		var label := ACTIONS[2] if side == 1 else ""
-		v.timber(v.box(center + Vector3(side * 1.38, 0.81, -10.45), Vector3(0.13, 0.11, 5.55), "735944", true, label))
+		var rail: MeshInstance3D = v.box(center + Vector3(side * 1.38, 0.81, -10.45), Vector3(0.13, 0.11, 5.55), "735944", true)
+		rail.material_override = railing
 		for d in [8.17, 10.45, 12.72]:
-			v.timber(v.box(center + Vector3(side * 1.38, -0.45, -d), Vector3(0.13, 2.58, 0.14), "735944", true, label))
+			var post: MeshInstance3D = v.box(center + Vector3(side * 1.38, -0.45, -d), Vector3(0.13, 2.58, 0.14), "735944", true)
+			post.material_override = railing
 
 static func bridge_depth(pos: Vector3) -> float:
 	var local := local_position(2, pos)
@@ -294,6 +363,3 @@ static func sign_at(v, point: Vector3, caption: String):
 static func build(v):
 	v.build_yard_fence()
 	sign_at(v, Vector3(v.path_x(-34) + 2, 0, -34), "PUESTO ↑")
-	for side in [-1, 1]:
-		for i in 8:
-			v.stone(Vector3(v.path_x(-18) + side * 2.4, 0.25, -18 + i * 0.48), Vector3(0.68, 0.5, 0.65), "80796a")

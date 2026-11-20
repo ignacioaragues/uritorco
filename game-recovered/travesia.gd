@@ -12,7 +12,6 @@ const FAR: = 980.0
 const CREST: = 922.0
 const LAJA_FORK := 124.0
 const LAJA_JOIN := 218.0
-const CREEK_DISTANCE: = 96.0
 const SUMMIT_JOIN: = 0.37
 const SUMMIT_SWAY := 11.0
 const ASCENT_BOW := 128.0
@@ -35,21 +34,13 @@ static func trail(d: float) -> float:
 static func detour(d: float) -> float:
 	return trail(d) + 36.0 * sin(PI * clampf(inverse_lerp(LAJA_FORK, LAJA_JOIN, d), 0, 1))
 
-static func creek_overlook(t: float) -> Vector3:
-	var d: = lerpf(43.0, 104.0, t)
-	var x: = trail(d) - 19.0 * sin(PI * t)
-	return Vector3(x, elevation(x, d), ORIGIN_Z - d)
-
 static func elevation(x: float, d: float) -> float:
 	var t: = smoothstep(0, 65, d)
 	var roll: = 6.0 * sin(d / 63.0) + 4.0 * sin(x / 53.0 + d / 89.0)
 	var shoulder: = 20.0 * pow(clampf(absf(x - trail(d)) / 180.0, 0, 1), 2)
 	var lip: = 3.1 * smoothstep(169.8, 170.2, d) * (1.0 - smoothstep(9, 26, absf(x - trail(170)))) * (1.0 - smoothstep(180, 218, d))
 	var summit: = 45.0 * exp( - pow((x - 146.0) / 76.0, 2) - pow((d - 948.0) / 61.0, 2))
-	var bed: = CREEK_DISTANCE + 2.0 * sin((x - trail(CREEK_DISTANCE)) / 14.0)
-	var banks: = 1.0 - smoothstep(1.8, 8.0, absf(d - bed))
-	var reach: = 1.0 - smoothstep(47.0, 69.0, absf(x - trail(CREEK_DISTANCE)))
-	return summit + (0.136 * maxf(0, d) + roll + shoulder) * t + lip - 2.3 * banks * reach
+	return summit + (0.136 * maxf(0, d) + roll + shoulder) * t + lip
 
 func at(x: float, d: float) -> Vector3:
 	return Vector3(x, elevation(x, d), ORIGIN_Z - d)
@@ -67,9 +58,6 @@ func surface_point(x: float, d: float) -> Vector3:
 	else:
 		height = elevation(left + 4.0, far) * (u + w - 1.0) + elevation(left, far) * (1.0 - u) + elevation(left + 4.0, near) * (1.0 - w)
 	return Vector3(x, height, ORIGIN_Z - d)
-
-func creek_marker() -> Vector3:
-	return at(trail(CREEK_DISTANCE) + 1.5, CREEK_DISTANCE)
 
 static func make_ground_material(route_to_creek: PackedVector2Array, mara_start: Vector3, mara_end: Vector3, exploration: PackedVector2Array) -> ShaderMaterial:
 	var material := ShaderMaterial.new()
@@ -99,8 +87,6 @@ static func make_ground_material(route_to_creek: PackedVector2Array, mara_start:
 func _ready():
 	rng.seed = 853
 	for i in range(-1, 246): ground_rows.append(i * 4.0)
-	for d in range(89, 106):
-		if d % 4 != 0: ground_rows.append(float(d))
 	ground_rows.append(169.8)
 	ground_rows.append(170.2)
 	ground_rows.sort()
@@ -121,10 +107,6 @@ func _ready():
 	add_child(land)
 	land.create_trimesh_collision()
 	Ladera.build(self)
-	signpost(creek_overlook(0.0) + Vector3(-1.6, 0, 0), "Desvío del cauce", "Mirador del cauce ↖")
-	var overlook: = creek_overlook(0.63)
-	signpost(overlook + Vector3(-1.4, 0, 0), "Mirador del cauce", "Mirador del cauce")
-	box(self, Vector3(0.42, 0.43, 1.35), overlook + Vector3(-1.4, 0.2, -1.3), "978a73").create_trimesh_collision()
 	signpost(at(trail(124) + 2, 124), "Paso de la laja", "Filo por la laja  ↑\nRodeo por la vaguada  →")
 	build_laja_rope()
 	signpost(at(trail(CREST), CREST), "Hito del filo", "Filo del puesto")
@@ -138,7 +120,8 @@ func _ready():
 		box(self, Vector3(1.15, 0.04, 0.07), repeater + Vector3(0, h, 0), "737a75")
 	signpost(at(trail(292) - 1.7, 292), "Sala de las sierras", "Museo de sitio →")
 	signpost(Vector3(western_x_at(-27.0) - 1.8, 0.0, -27.0), "Sendero oeste", "Cantera ↖", 0.0, true)
-	signpost(western_approach(1.0) + Vector3(2.0, 0.0, 0.0), "Sendero oeste", "Refugio · senda del oeste")
+	var west_sign := western_approach(1.0) + Vector3(2.0, 0.0, 0.0)
+	signpost(surface_point(west_sign.x, ORIGIN_Z - west_sign.z), "Sendero oeste", "Refugio · senda del oeste")
 
 func laja_rope_route() -> Array[Vector3]:
 	var x := trail(170.0) - 0.64
