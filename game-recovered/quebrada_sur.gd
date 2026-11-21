@@ -150,6 +150,7 @@ static func water(valley) -> MeshInstance3D:
 	stream.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	var flow := ShaderMaterial.new()
 	flow.shader = preload("res://arroyo.gdshader")
+	flow.set_shader_parameter("sediment", 0.68)
 	stream.material_override = flow
 	valley.add_child(stream)
 	return stream

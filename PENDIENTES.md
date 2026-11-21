@@ -2,7 +2,7 @@
 
 ## Lista de revisión
 
-Cada pasada avanza un solo punto del juego. Al cerrarla se actualiza el estado de ese punto y se conserva lo que falta.
+Al cierre de cada pasada se actualizan los puntos resueltos y se conserva lo que falta.
 
 ### Resuelto
 
@@ -43,10 +43,11 @@ Cada pasada avanza un solo punto del juego. Al cerrarla se actualiza el estado d
 - [x] Afinar la carta del cielo con 32 estrellas identificables, Júpiter, Saturno y la Vía Láctea. La Cruz del Sur coincide con el rumbo del mapa.
 - [x] Quitar la cruz que indicaba la posición del jugador en el mapa de mano. Las láminas muestran los puntos cardinales, los objetivos y las siluetas de hallazgos.
 - [x] Recorrer la ida del Día 36 con el mapa de mano y las doce pircas. Se comprobó el cambio de lámina y se llegó desde la tranquera hasta la marca en la pasarela, guardando el mapa para saltar el tronco y trepar la laja.
+- [x] Revisar la tormenta completa del Día 36. Se ve desde la ventana, la lluvia aumenta al bajar al cauce y el sonido baja bajo techo y durante la radio. Se despeja de a poco al regresar, con el arroyo todavía crecido y el suelo mojado.
+- [x] Darle al Sol un ocaso hacia el oeste y a la Luna un disco más grande y luminoso, con fases según la fecha y visibilidad algunas tardes. Las nubes pasan delante de los dos.
 
 ### Por hacer
 
-- [ ] Volver a mirar la tormenta desde las ventanas del refugio y evaluar cómo se lee su intensidad.
 - [ ] Hacer aparecer objetos en el refugio según lo que pasó con Mara. Queda anotada la botella de vino como posibilidad.
 
 ## Ritmo de las charlas de Mara
@@ -133,7 +134,7 @@ Cada pasada avanza un solo punto del juego. Al cerrarla se actualiza el estado d
 - **Cartografía de campo.** La quebrada sur tiene su propia lámina con el cauce, el poste, la pasarela y curvas de nivel. La ficha local marca el acceso por las lajas cuando la pasarela queda fuera de su alcance. Laderas y cumbre muestran su relieve y los hitos por los que pasa Hernán.
 - **Fondos y aves.** Cuatro perfiles de sierra se superponen, con colores que cambian con la distancia, el atardecer y la noche. Dos capas dibujan nubes altas y bajas según el clima de la jornada. Los jotes planean alto, los caranchos alternan aleteo y planeo, y las golondrinas vuelan bajo en el cauce.
 - **Equipo de Hernán.** La mochila de lona del prólogo y la del refugio comparten modelo, con bolsillo, cierre, costuras, correas y hebillas. Se puede recoger con E o clic en la parada y queda apoyada junto a la cama la primera noche. La radio del escritorio mira hacia la silla y muestra el canal 03. Al levantarla, queda su base en el escritorio. En la mano conserva su carcasa y la animación del pulsador. La brújula recupera su cara original, con la aguja amortiguada y alineada con el norte del mapa. Se probaron las interacciones y la independencia de ambas manos.
-- **Clima del Día 36.** Un frente de nubes bajas cubre también el horizonte. La intensidad de la lluvia oscurece la luz directa y aumenta la bruma. Al regresar, el frente se despeja gradualmente y el cauce sigue crecido.
+- **Clima del Día 36.** Las gotas caen sobre el paisaje, dejan marcas en el vidrio y salpican el suelo y el agua. Se oyen truenos ocasionales y lejanos. La lluvia se mantiene en la pasarela y, después del parte, tarda unos 52 segundos en ceder. La noche entra durante el regreso. Si se recarga una partida en el sendero, se conserva el punto de la lluvia y del ocaso.
 - **Carta de campo.** La carta impresa ocupa toda la hoja al abrirla. Las cuatro láminas del cerro tienen escala proporcional, cuadrícula, curvas y relieve del terreno. Distinguen cauces y sendas en papel texturado, con una mancha de café en la esquina de la lámina del refugio. La marca de objetivo muestra el destino de cada encargo.
 - **Señalética.** La parada del prólogo y la de la despedida tienen techo de chapa, reparo, banco de listones y un poste al costado que dice «Ómnibus · Capilla del Monte». Un cartel independiente en el patio identifica el «Puesto de Observación Serrana · Uritorco». Los cruces tienen letreros esmaltados con flechas y remaches.
 - **Teseracto.** La pieza del segundo sueño tiene una estructura abierta con aristas de luz azulada y una ilustración propia de la mano que la sostiene. Vuelve en el último sueño si Hernán la recogió. El pulso se intensifica al mirar hacia el arco y acompaña la caminata hasta tocarlo.
@@ -168,5 +169,5 @@ Esta lista reconstruye el estado informado del proyecto editable. La exportació
 - **Pasada narrativa.** Evaluar objetos ligados a decisiones, como una botella que pueda mandar Mara.
 - **Ambiente.** Volver a escuchar la mezcla de la última noche y comparar los sonidos de pisadas por superficie.
 - **Arte.** Afinar las texturas del prólogo, la lectura de objetos de cerca y la integración visual del terreno de los sueños.
-- **Mundo y recorridos.** Revisar la distribución de destinos alrededor del refugio y seguir afinando la cartografía. Revisar a velocidad normal el ritmo de las ocho microescenas, la tormenta desde las ventanas y el tiempo que llevan las idas y vueltas a la pasarela.
+- **Mundo y recorridos.** Revisar la distribución de destinos alrededor del refugio, seguir afinando la cartografía y revisar a velocidad normal el ritmo de las ocho microescenas.
 - **Windows.** Validar la próxima exportación cuando se solicite.

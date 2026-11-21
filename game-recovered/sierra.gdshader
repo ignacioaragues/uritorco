@@ -11,13 +11,12 @@ uniform vec4 catalog[32];
 uniform vec3 planet_dirs[2];
 uniform vec3 galactic_pole;
 uniform vec3 moon_dir;
-uniform vec3 sun_dir;
 uniform vec3 daylight_dir = vec3(0.69, 0.41, 0.59);
-uniform float moon_phase = 0.0;
-uniform float moon_radius = 0.061;
+uniform float moon_radius = 0.083;
 uniform float other_world = 0.0;
 uniform float cloud_cover = 0.0;
 uniform float cloud_pattern = 0.0;
+uniform vec2 cloud_drift = vec2(0.0);
 uniform float storm_amount = 0.0;
 uniform float cirrus_amount = 0.32;
 uniform float valley_mist = 0.0;
@@ -87,7 +86,7 @@ vec3 night_stars(vec3 sight) {
 }
 
 // Project the solar direction onto the visible lunar hemisphere for the terminator.
-vec3 disc(vec3 sight, vec3 center, vec3 light, float radius, vec3 tint, vec3 backdrop, float opacity) {
+vec3 disc(vec3 sight, vec3 center, vec3 light, float radius, vec3 tint, vec3 backdrop, float opacity, float shadow) {
 	vec3 offset = (sight-center)/radius;
 	float r = length(offset);
 	if (r>1.15) return backdrop;
@@ -97,30 +96,33 @@ vec3 disc(vec3 sight, vec3 center, vec3 light, float radius, vec3 tint, vec3 bac
 	vec2 surface = vec2(dot(offset, right), dot(offset, cross(right, center)));
 	float maria = 0.72 + 0.30 * cloud_texture(surface * 3.4 + vec2(5.3, 13.1));
 	float edge = 1.0 - smoothstep(0.95, 1.035, r);
-	return mix(backdrop,tint*(0.065+lit*maria),edge*mix(lit*opacity, 1.0, opacity*opacity));
+	return mix(backdrop, tint * (0.065 + lit * maria), edge * opacity * mix(lit, 1.0, shadow));
 }
 
 void sky(){
 	float height = max(EYEDIR.y,0.0);
 	float blend = smoothstep(0.0,0.79,height);
-	vec3 horizon = mix(rim_day.rgb,vec3(0.92,0.43,0.24),dusk);
+	float facing_sunset = pow(clamp(0.5 + dot(EYEDIR.xz, normalize(daylight_dir.xz)) * 0.5, 0.0, 1.0), 2.8);
+	vec3 horizon = mix(rim_day.rgb, vec3(0.91,0.39,0.21), dusk * (0.20 + facing_sunset * 0.80));
 	vec3 daytime = mix(horizon,high_day.rgb,blend);
 	vec3 dark = mix(rim_night.rgb,high_night.rgb,smoothstep(0.0,0.48,height));
 	vec3 earth = dark;
 	if (nightfall > 0.0 && other_world < 1.0) earth += night_stars(EYEDIR);
-	vec3 lunar_limb = normalize(sun_dir - moon_dir * dot(sun_dir, moon_dir));
-	vec3 lunar_light = lunar_limb * sin(moon_phase) - moon_dir * cos(moon_phase);
-	earth = disc(EYEDIR,moon_dir,lunar_light,moon_radius,vec3(1.36,1.25,1.08),earth,1.0);
 	float from_sun = length(EYEDIR - daylight_dir);
-	float solar_glow = exp(-from_sun * from_sun * 58.0);
-	float sun_edge = 1.0 - smoothstep(0.017, 0.021, from_sun);
-	daytime += mix(vec3(1.0,0.86,0.61), vec3(1.0,0.45,0.20), dusk) * (solar_glow * 0.16 + sun_edge * 0.72);
-	daytime = disc(EYEDIR,moon_dir,lunar_light,moon_radius,vec3(1.03,0.99,0.90),daytime,0.38 + dusk*0.22);
+	float solar_glow = exp(-from_sun * from_sun * 42.0) * smoothstep(-0.18, 0.20, daylight_dir.y);
+	float sun_edge = (1.0 - smoothstep(0.017, 0.021, from_sun)) * smoothstep(-0.019, 0.008, EYEDIR.y);
+	daytime += mix(vec3(1.0,0.91,0.76), vec3(1.0,0.49,0.24), dusk) * (solar_glow * 0.26 + sun_edge * 1.12);
+	if (moon_dir.y > -moon_radius && EYEDIR.y > -0.008) {
+		float phase = 0.5 - 0.5 * dot(daylight_dir, moon_dir);
+		float moonlight = smoothstep(0.015, 0.085, phase) * smoothstep(-0.008, 0.048, EYEDIR.y);
+		earth = disc(EYEDIR,moon_dir,daylight_dir,moon_radius,vec3(1.28,1.21,1.10),earth,moonlight,1.0);
+		daytime = disc(EYEDIR,moon_dir,daylight_dir,moon_radius,vec3(1.03,1.06,1.10),daytime,moonlight * (0.48 + dusk * 0.19),dusk * 0.12);
+	}
 	vec3 alien = mix(vec3(0.19,0.095,0.18),vec3(0.024,0.013,0.07),blend);
 	if (other_world > 0.0) alien += vec3(0.66,0.86,0.95)*star_field(EYEDIR.zxy);
-	alien=disc(EYEDIR,normalize(vec3(0.35,0.48,-1.0)),normalize(vec3(-1.0,0.6,0.4)),0.038,vec3(0.95,0.72,0.51),alien,1.0);
-	alien=disc(EYEDIR,normalize(vec3(0.08,0.66,-1.0)),normalize(vec3(-1.0,0.6,0.4)),0.016,vec3(0.65,0.83,0.91),alien,1.0);
-	vec2 shift = vec2(cloud_pattern * 0.31, cloud_pattern * 0.59);
+	alien=disc(EYEDIR,normalize(vec3(0.35,0.48,-1.0)),normalize(vec3(-1.0,0.6,0.4)),0.038,vec3(0.95,0.72,0.51),alien,1.0,1.0);
+	alien=disc(EYEDIR,normalize(vec3(0.08,0.66,-1.0)),normalize(vec3(-1.0,0.6,0.4)),0.016,vec3(0.65,0.83,0.91),alien,1.0,1.0);
+	vec2 shift = vec2(cloud_pattern * 0.31, cloud_pattern * 0.59) + cloud_drift;
 	vec2 alto = EYEDIR.xz * vec2(3.5, 7.0) / (height + 0.47) + shift;
 	float silk = smoothstep(0.53, 0.75, cloud_texture(alto)) * cirrus_amount;
 	vec2 p = EYEDIR.xz * vec2(5.2, 4.4) / (height + 0.38) + shift;
@@ -140,13 +142,14 @@ void sky(){
 	daytime = mix(daytime, mix(cloud_rim, cloud_core, body), mask * low_haze * 0.96);
 	earth = mix(earth, dark * 0.94 + cloud_core * 0.014, mask * low_haze * (0.20 + 0.57 * cloud_cover));
 	if (storm_amount > 0.0) {
-		vec2 front_uv = EYEDIR.xz * vec2(2.5, 3.65) / (0.53 + height) + shift;
+		vec2 front_uv = EYEDIR.xz * vec2(2.5, 3.65) / (0.53 + height) + shift * 1.8;
 		float front = cloud_texture(front_uv);
 		float fine = cloud_texture(front_uv * 1.84 + 11.3);
 		float underside = smoothstep(0.21, 0.85, front * 0.81 + fine * 0.19);
-		vec3 low_cloud = mix(vec3(0.32, 0.39, 0.44), vec3(0.63, 0.68, 0.69), underside);
-		low_cloud = mix(vec3(0.52, 0.58, 0.61), low_cloud, smoothstep(0.01, 0.37, height));
-		float overcast = smoothstep(0.10, 0.70, storm_amount);
+		vec3 low_cloud = mix(vec3(0.22, 0.29, 0.35), vec3(0.58, 0.63, 0.65), underside);
+		low_cloud = mix(vec3(0.45, 0.52, 0.57), low_cloud, smoothstep(0.01, 0.37, height));
+		float overcast = smoothstep(0.10, 0.62, storm_amount) * mix(1.0, 0.83, underside);
+		if (storm_amount > 0.52) overcast = mix(overcast, 1.0, smoothstep(0.52, 0.68, storm_amount));
 		daytime = mix(daytime, low_cloud, overcast);
 		earth = mix(earth, dark * (0.79 + 0.31 * underside), overcast * 0.97);
 	}

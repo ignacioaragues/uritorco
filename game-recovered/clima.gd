@@ -1,5 +1,9 @@
 extends RefCounted
 
+const STORM_CLEAR_SECONDS := 52.0
+const STORM_RETURN_NIGHT := 72.0
+const STORM_RETURN_DUSK := 42.0
+
 # Nubosidad de día y de noche, bruma base, capa alta, exposición al viento y luz directa.
 const DAYS := {
 	1: {"cloud": Vector2(0.27, 0.17), "mist": 0.0028, "cirrus": 0.52, "wind": 0.18,
@@ -23,9 +27,11 @@ const DAYS := {
 static func profile(day: int) -> Dictionary:
 	return DAYS.get(day, DAYS[1])
 
-static func rain(stage: int, position: Vector3) -> float:
-	if stage in [16, 17]:
-		return lerpf(0.73, 0.91, smoothstep(10.0, 95.0, position.z))
+static func rain(stage: int, position: Vector3, return_seconds: float = STORM_CLEAR_SECONDS) -> float:
+	if stage in [16, 17, 18]:
+		var front := lerpf(0.54, 0.72, smoothstep(-8.0, 95.0, position.z))
+		if stage == 18: front *= 1.0 - smoothstep(1.5, STORM_CLEAR_SECONDS, return_seconds)
+		return front
 	if stage in [10, 11]:
 		var into_ladera := smoothstep(182.0, 465.0, -position.z)
 		var quarry_side := 0.65 + 0.35 * smoothstep(10.0, 142.0, -position.x)
@@ -36,6 +42,8 @@ static func local_mist(day: int, position: Vector3) -> float:
 	if day == 25:
 		var hollow := 1.0 - smoothstep(12.0, 67.0, absf(position.z + 172.0))
 		return hollow * (1.0 - smoothstep(18.0, 40.0, position.y)) * 0.0060
+	if day == 36:
+		return smoothstep(25.0, 92.0, position.z) * (1.0 - smoothstep(-6.5, 4.0, position.y)) * 0.0030
 	if day == 41:
 		return smoothstep(-64.0, -12.0, position.z) * (1.0 - smoothstep(7.0, 19.0, position.y)) * 0.0045
 	return 0.0

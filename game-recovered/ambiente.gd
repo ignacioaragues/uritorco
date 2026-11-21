@@ -10,10 +10,13 @@ var travel: = 0.0
 var silence: = 3.0
 var rain_air := AudioStreamPlayer.new()
 var rain_roof := AudioStreamPlayer.new()
+var thunder := AudioStreamPlayer.new()
 var rain_gain := 0.0
 var roof_mix := 0.0
+var thunder_wait := 11.0
 static var open_rain: AudioStreamWAV
 static var covered_rain: AudioStreamWAV
+static var distant_thunder: AudioStreamWAV
 var rng: = RandomNumberGenerator.new()
 
 func _ready():
@@ -30,10 +33,13 @@ func _ready():
 	if not open_rain:
 		open_rain = rain_sound(false)
 		covered_rain = rain_sound(true)
+		distant_thunder = thunder_sound()
 	add_child(rain_air)
 	add_child(rain_roof)
+	add_child(thunder)
 	rain_air.stream = open_rain
 	rain_roof.stream = covered_rain
+	thunder.stream = distant_thunder
 
 func sound(song: bool, splash := false) -> AudioStreamWAV:
 	var rate: = 22050
@@ -87,12 +93,21 @@ func update(delta: float, listener: Vector3, speed: float, daytime: bool, cave_i
 		bird.volume_db = move_toward(bird.volume_db, -50.0, delta * 110.0)
 		if bird.volume_db <= -50.0: bird.stop()
 
-func weather(delta: float, rain: float, sheltered: bool, radio_active: bool):
+func weather(delta: float, rain: float, sheltered: bool, radio_active: bool, storm: bool):
 	var target := pow(rain, 1.2) * (0.52 if radio_active else 1.0)
 	rain_gain = move_toward(rain_gain, target, delta * 0.9)
 	roof_mix = move_toward(roof_mix, 1.0 if sheltered else 0.0, delta * 2.5)
 	weather_volume(rain_air, rain_gain * (1.0 - roof_mix), -32.0)
 	weather_volume(rain_roof, rain_gain * roof_mix, -36.0)
+	thunder.volume_db = lerpf(-27.0, -34.0, roof_mix) - (12.0 if radio_active else 0.0)
+	if not storm:
+		thunder_wait = 11.0
+	elif rain > 0.44 and not radio_active:
+		thunder_wait -= delta
+		if thunder_wait <= 0.0:
+			thunder.pitch_scale = rng.randf_range(0.88, 1.10)
+			thunder.play()
+			thunder_wait = rng.randf_range(29.0, 43.0)
 
 func weather_volume(channel: AudioStreamPlayer, gain: float, peak: float):
 	if gain < 0.0015:
@@ -137,3 +152,27 @@ static func rain_sound(muffled: bool) -> AudioStreamWAV:
 	tape.loop_end = LOOP
 	tape.data = data
 	return tape
+
+static func thunder_sound() -> AudioStreamWAV:
+	const RATE := 22050
+	const SECONDS := 3.4
+	var count := int(RATE * SECONDS)
+	var samples := PackedByteArray()
+	samples.resize(count * 2)
+	var noise := RandomNumberGenerator.new()
+	noise.seed = 3619
+	var low := 0.0
+	var bass := 0.0
+	for i in count:
+		var time := float(i) / RATE
+		low = lerpf(low, noise.randf_range(-1.0, 1.0), 0.044)
+		bass = lerpf(bass, low, 0.009)
+		var swell := smoothstep(0.0, 0.32, time) * (1.0 - smoothstep(0.48, SECONDS, time))
+		var roll := 0.65 + 0.35 * sin(time * TAU * 1.71 + 0.4)
+		var value := clampf((low - bass * 0.70) * swell * roll * 3.2, -1.0, 1.0)
+		samples.encode_s16(i * 2, roundi(value * 30000.0))
+	var sound := AudioStreamWAV.new()
+	sound.format = AudioStreamWAV.FORMAT_16_BITS
+	sound.mix_rate = RATE
+	sound.data = samples
+	return sound

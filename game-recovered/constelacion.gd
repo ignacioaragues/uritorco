@@ -1,15 +1,11 @@
 extends RefCounted
 
 const CHAPTER_DAYS := [1, 2, 7, 25]
-const MOON_RADIUS := 0.061
+const MOON_RADIUS := 0.083
 const GALACTIC_POLE := ["", 12.8573, 27.1283, 0.0]
-
-const NIGHTS = [
-	[13.00854, Vector3(-0.000117, 0.934241, -0.356643), Vector3(-0.700679, -0.713473, 0.002364)],
-	[13.07425, Vector3(0.17595, 0.949098, -0.261257), Vector3(-0.700207, -0.71394, -0.000478)],
-	[13.4028, Vector3(0.830332, 0.502559, 0.240799), Vector3(-0.698499, -0.715486, -0.013342)],
-	[14.5856, Vector3(-0.870401, 0.313345, -0.37976), Vector3(-0.701349, -0.711734, -0.03929)]
-]
+const SIDEREAL_HOURS := [13.00854, 13.07425, 13.4028, 14.5856]
+const LATITUDE := -30.75 * PI / 180.0
+const AXIAL_TILT := 23.44 * PI / 180.0
 
 const STARS = [
 	["Acrux · Cruz del Sur", 12.443, -63.1, 0.76], ["Mimosa · Cruz del Sur", 12.795, -59.69, 1.25], 
@@ -33,20 +29,33 @@ const STARS = [
 const PLANETS = [["Júpiter", 16.71, -21.1, -2.16], ["Saturno", 19.32, -22.9, 0.55]]
 
 static func sidereal_at(chapter: int, day: int) -> float:
-	return NIGHTS[chapter][0] + (day - CHAPTER_DAYS[chapter]) * 0.055
+	return SIDEREAL_HOURS[chapter] + (day - CHAPTER_DAYS[chapter]) * 0.055
 
-static func direction(star: Array, sidereal: float = NIGHTS[0][0]) -> Vector3:
-	var h: = deg_to_rad((sidereal - float(star[1])) * 15.0)
-	var dec: = deg_to_rad(float(star[2]))
-	var lat: = deg_to_rad(-30.75)
+static func direction(star: Array, sidereal: float = SIDEREAL_HOURS[0]) -> Vector3:
+	return horizontal(deg_to_rad((sidereal - float(star[1])) * 15.0), deg_to_rad(float(star[2])))
+
+static func horizontal(h: float, dec: float) -> Vector3:
 	var east := -cos(dec) * sin(h)
-	var up := sin(dec) * sin(lat) + cos(dec) * cos(lat) * cos(h)
+	var up := sin(dec) * sin(LATITUDE) + cos(dec) * cos(LATITUDE) * cos(h)
 	# North is -Z on Hernán's map and compass.
-	var north := sin(dec) * cos(lat) - cos(dec) * sin(lat) * cos(h)
+	var north := sin(dec) * cos(LATITUDE) - cos(dec) * sin(LATITUDE) * cos(h)
 	return Vector3(east, up, -north).normalized()
 
-static func identify(look: Vector3, chapter: int, day: int) -> String:
-	if look.distance_squared_to(NIGHTS[chapter][1]) < MOON_RADIUS * MOON_RADIUS: return "Luna"
+static func sun_and_moon(day: int, dusk: float, dark: float) -> Array[Vector3]:
+	# Aproximación para octubre y noviembre, con luna llena alrededor del Día 7.
+	var sun_longitude := TAU * (273.0 + day - 80.0) / 365.24
+	var sun_declination := asin(sin(AXIAL_TILT) * sin(sun_longitude))
+	var sunset_angle := acos(-tan(LATITUDE) * tan(sun_declination))
+	var hour_angle := lerpf(deg_to_rad(37.0), sunset_angle + deg_to_rad(1.6), dusk) + dark * deg_to_rad(28.0)
+	var sun_ra := atan2(sin(sun_longitude) * cos(AXIAL_TILT), cos(sun_longitude))
+	var moon_longitude := sun_longitude + PI + TAU * (day - 7.0) / 29.53
+	var tilt := deg_to_rad(4.2) * sin(TAU * (day - 4.0) / 27.2)
+	var moon_declination := asin(sin(tilt) * cos(AXIAL_TILT) + cos(tilt) * sin(AXIAL_TILT) * sin(moon_longitude))
+	var moon_ra := atan2(sin(moon_longitude) * cos(AXIAL_TILT) - tan(tilt) * sin(AXIAL_TILT), cos(moon_longitude))
+	return [horizontal(hour_angle, sun_declination), horizontal(hour_angle + sun_ra - moon_ra, moon_declination)]
+
+static func identify(look: Vector3, chapter: int, day: int, moon: Vector3) -> String:
+	if moon.y > 0.0 and look.distance_squared_to(moon) < MOON_RADIUS * MOON_RADIUS: return "Luna"
 	var sidereal := sidereal_at(chapter, day)
 	var closest: = cos(deg_to_rad(2.0))
 	var name: = ""

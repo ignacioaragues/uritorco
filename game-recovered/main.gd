@@ -88,6 +88,7 @@ var score = preload("res://banda_sonora.gd").new()
 var book_view = preload("res://libro.gd").new()
 var postcard_view = preload("res://postal.gd").new()
 var rain_strength := 0.0
+var storm_return_seconds := 0.0
 var mist_strength := 0.0
 var rain_view := CPUParticles3D.new()
 var rain_material := ShaderMaterial.new()
@@ -558,7 +559,7 @@ func _process(delta):
 			hint.text = "E · dejar la mochila al lado de la cama"
 			return
 		if not hit and ( - player.camera.global_basis.z).y > 0.12 and float(valley.sky_mat.get_shader_parameter("nightfall")) > 0.6:
-			var star := SkyGuide.identify(-player.camera.global_basis.z, valley.sky_chapter, day)
+			var star := SkyGuide.identify(-player.camera.global_basis.z, valley.sky_chapter, day, valley.moon_direction)
 			if can_pause_under_sky():
 				if watching_crux_tonight() and not looking_at_crux():
 					hint.text = star if not star.is_empty() else "Buscá las dos estrellas del eje largo de la Cruz del Sur."
@@ -575,50 +576,58 @@ func _process(delta):
 
 func setup_rain():
 	rain_view.emitting = false
-	rain_view.amount = 920
+	rain_view.local_coords = false
+	rain_view.amount = 1550
 	rain_view.lifetime = 1.45
 	rain_view.lifetime_randomness = 0.18
 	rain_view.emission_shape = CPUParticles3D.EMISSION_SHAPE_BOX
-	rain_view.emission_box_extents = Vector3(15.0, 2.4, 15.0)
+	rain_view.emission_box_extents = Vector3(15.0, 3.0, 15.0)
 	rain_view.visibility_aabb = AABB(Vector3(-19.0, -28.0, -19.0), Vector3(38.0, 34.0, 38.0))
 	rain_view.direction = Vector3.DOWN
 	rain_view.spread = 2.0
 	rain_view.gravity = Vector3(0.0, -3.7, 0.0)
-	rain_view.initial_velocity_min = 8.0
-	rain_view.initial_velocity_max = 10.0
+	rain_view.initial_velocity_min = 9.0
+	rain_view.initial_velocity_max = 13.0
+	rain_view.scale_amount_min = 0.72
+	rain_view.scale_amount_max = 1.25
 	rain_view.particle_flag_align_y = true
 	rain_view.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	var drop := CylinderMesh.new()
-	drop.top_radius = 0.004
-	drop.bottom_radius = 0.009
-	drop.height = 0.22
+	drop.top_radius = 0.010
+	drop.bottom_radius = 0.0025
+	drop.height = 0.31
 	drop.radial_segments = 3
 	drop.rings = 0
 	rain_view.mesh = drop
 	rain_material.shader = preload("res://lluvia.gdshader")
+	rain_material.set_shader_parameter("museum_center", Museum.center(valley) + Vector3.UP * Museum.HEIGHT * 0.5)
+	rain_material.set_shader_parameter("museum_half_extents", Vector3(Museum.HALF_WIDTH, Museum.HEIGHT * 0.5 + 0.10, Museum.HALF_DEPTH))
 	rain_view.material_override = rain_material
 	add_child(rain_view)
 
 func update_weather(day: int, delta: float, in_museum: bool):
 	var position: Vector3 = player.position
-	var target_rain := Climate.rain(stage, position)
+	if stage == 18 and mode in ["walk", "map"] and player.intro_center == Vector3.ZERO:
+		storm_return_seconds = minf(Climate.STORM_CLEAR_SECONDS, storm_return_seconds + delta)
+	var target_rain := Climate.rain(stage, position, storm_return_seconds)
 	var target_mist := Climate.local_mist(day, position)
 	if stage in [16, 17] and valley.weather_day != 36:
-		rain_strength = maxf(rain_strength, 0.77)
+		rain_strength = target_rain
 	rain_strength = move_toward(rain_strength, target_rain, delta * (0.095 if target_rain > rain_strength else 0.075))
 	mist_strength = move_toward(mist_strength, target_mist, delta * 0.0013)
 	valley.update_weather(day, rain_strength, mist_strength)
 	var outside := position.z < -0.5 or absf(position.x) > 3.45 or position.z > 5.97
-	var shows_world: bool = mode in ["walk", "map", "sighting", "mara_door"] or radio_panel.visible
+	var shows_world: bool = stage >= 0 and player.intro_center == Vector3.ZERO and (mode in ["walk", "map", "sighting", "mara_door", "message", "rest", "journal", "pause_menu"] or radio_panel.visible)
 	var rain_active: bool = shows_world and rain_strength > 0.025
 	rain_view.visible = rain_active
 	rain_view.emitting = rain_active
 	if rain_active:
 		var wind := Climate.wind(day, position, rain_strength)
-		rain_view.position = position + Vector3.UP * 8.8
-		rain_view.direction = Vector3(wind * 0.12, -1.0, 0.07).normalized()
+		var gust := 0.72 + 0.28 * sin(Time.get_ticks_msec() * 0.0019)
+		rain_view.position = position + Vector3(0.0, 10.2, 0.0) + Vector3(player.velocity.x, 0.0, player.velocity.z) * 0.30
+		rain_view.direction = Vector3(wind * gust * 0.28, -1.0, 0.04 + wind * 0.12).normalized()
 		rain_material.set_shader_parameter("intensity", rain_strength)
-	ambience.weather(delta, rain_strength if shows_world else 0.0, shows_world and (not outside or in_museum), radio_panel.visible)
+	ambience.weather(delta, rain_strength if shows_world else 0.0, shows_world and (not outside or in_museum), radio_panel.visible, day == 36)
 
 func update_water(delta: float):
 	var depth := 0.0
@@ -1377,7 +1386,7 @@ func _unhandled_key_input(event):
 						if stage == 16 and not awaiting_call:
 							stage = 17
 							field_note += " El agua llegó al travesaño inferior de la pasarela."
-							valley.sunset()
+							valley.sunset(Climate.STORM_RETURN_DUSK)
 							score.cue("misterio", 33, -18.0)
 							radio.play_knocks()
 							var sound := "La radio da dos golpes secos." if summit_echo_response < 0 else "La radio repite los dos golpes de la cumbre."
@@ -1514,8 +1523,9 @@ func _unhandled_key_input(event):
 			show_sighting(Sighting.QUARRY)
 		elif after == "crossing_home":
 			stage = 18
+			storm_return_seconds = 0.0
 			bedtime = true
-			valley.night()
+			valley.night(Climate.STORM_RETURN_NIGHT, Climate.STORM_RETURN_DUSK)
 			walk()
 		elif after == "summit_home":
 			valley.night(SUMMIT_NIGHT_SECONDS)
@@ -1743,7 +1753,7 @@ func begin_dream(preserve_bed: bool = false, fade_from_black: bool = false):
 		if night_investigation == 3:
 			words.text = "El blanco se vuelve tela. Oís a tu papá pasar una hoja. Del otro lado del arco alguien gira la perilla de una radio. El papel y la estática hacen el mismo ruido."
 		elif stage == 18:
-			words.text = "Apoyás la radio en el piso. Contás los golpes del alero hasta perder la cuenta."
+			words.text = "Apoyás la radio en el piso. Todavía caen gotas del alero. Las contás hasta perder la cuenta."
 			if night_investigation > 0:
 				words.text = "Agarrás la bajada. Después hay un tramo que no podés ubicar. En el sueño, la radio sigue abierta."
 		valley.strange_sky(true)
@@ -1893,10 +1903,12 @@ func start_day36():
 	player.rotation.y = 0.0
 	player.camera.rotation = Vector3.ZERO
 	player.velocity = Vector3.ZERO
+	storm_return_seconds = 0.0
+	rain_strength = Climate.rain(stage, player.position)
 	valley.morning()
 	valley.dress_day36()
 	save_game(true, "walk")
-	day_card("Día 36 · Después de la lluvia", "En el banco del acceso guardás el mapa. Para cuando entrás al refugio, ya se escucha el agua en el techo.\n\nLa lluvia sigue varios días. Esta mañana hay barro en el escalón y el arroyo se oye desde la puerta.", "Espacio · levantarse")
+	day_card("Día 36 · La crecida", "En el banco del acceso guardás el mapa. Para cuando entrás al refugio, ya se escucha el agua en el techo.\n\nLa lluvia sigue varios días. Esta mañana hay barro en el escalón y el agua del alero golpea contra la tierra.", "Espacio · levantarse")
 
 func show_archive():
 	archive_read = true
@@ -2191,6 +2203,7 @@ func save_game(automatic: bool, resume_mode: String) -> bool:
 	var state: Dictionary = {}
 	for key in STATE: state[key] = get(key)
 	state["abra_told_mara"] = abra_told_mara
+	if stage == 18: state["storm_return_seconds"] = storm_return_seconds
 	if trail_spacing_day == calendar_day() and trail_walk_left > 0.0:
 		state["trail_walk_left"] = trail_walk_left
 	if resume_mode == "dream":
@@ -2260,12 +2273,15 @@ func restore(data: Dictionary):
 	var night_value: Variant = data.get("night")
 	var saved_dusk := clampf(float(dusk_value) if dusk_value != null else 0.0, 0.0, 1.0)
 	var saved_night := clampf(float(night_value) if night_value != null else 0.0, 0.0, 1.0)
-	rain_strength = clampf(float(data.get("rain", Climate.rain(stage, player.position))), 0.0, 1.0)
+	var old_storm_return := Climate.STORM_CLEAR_SECONDS if stage == 18 else 0.0
+	storm_return_seconds = clampf(float(data.state.get("storm_return_seconds", old_storm_return)), 0.0, Climate.STORM_CLEAR_SECONDS)
+	rain_strength = clampf(float(data.get("rain", Climate.rain(stage, player.position, storm_return_seconds))), 0.0, 1.0)
 	mist_strength = Climate.local_mist(calendar_day(), player.position)
 	valley.restore_light(maxf(saved_dusk, saved_night), saved_night)
 	var seconds := float(data.get("light_left", 0.0))
 	if seconds > 0.01 and data.get("light_target") == "night":
-		valley.night(seconds)
+		var dusk_left := maxf(0.1, seconds - (Climate.STORM_RETURN_NIGHT - Climate.STORM_RETURN_DUSK)) if stage == 18 else 14.0
+		valley.night(seconds, dusk_left)
 	elif seconds > 0.01 and data.get("light_target") == "dusk":
 		valley.sunset(seconds)
 	elif stage == 7 and day7_dusk and not second_sighting and saved_night < 1.0:
@@ -2500,6 +2516,7 @@ func debug_scene(code: String):
 	player.rotation.y = PI
 	valley.toggle_door()
 	stage = int({"arrival": 0, "2": 1, "sighting": 7, "7": 6, "dream7": 7, "25": 8, "dream25": 9, "27": 10, "32": 13, "camp": 13, "36": 16, "ultima_noche": 18, "cueva": 18, "dream36": 18, "41": 19}.get(code, 0))
+	storm_return_seconds = Climate.STORM_CLEAR_SECONDS if stage == 18 else 0.0
 	heard = stage > 0
 	if stage > 0:
 		valley.unpack_book(book_has_ribbon())

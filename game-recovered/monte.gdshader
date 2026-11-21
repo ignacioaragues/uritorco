@@ -15,6 +15,7 @@ uniform vec2 creek_path[12];
 uniform vec2 exploration_segments[36];
 uniform vec2 south_paths[62];
 uniform float wet_ground = 0.0;
+uniform float surface_rain = 0.0;
 uniform sampler2D soil_detail : filter_linear_mipmap, repeat_enable;
 varying vec2 ground_position;
 
@@ -137,6 +138,18 @@ void fragment() {
 	float brush_value = dot(brushwork, vec3(0.30, 0.59, 0.11));
 	float paint = clamp((brush_value - 0.516) * 2.4, -0.19, 0.19);
 	float damp = wet_ground * (0.19 + 0.29 * low_water + 0.15 * south);
-	ALBEDO = ground * (0.98 + paint + 0.042 * grain - damp);
+	float puddle = smoothstep(0.31, 0.79, band * 0.41 + stipple * 0.37 + paint);
+	damp += wet_ground * 0.16 * puddle;
+	float splash = 0.0;
+	if (surface_rain > 0.01 && length(VERTEX) < 20.0) {
+		vec2 cells = p * 5.0;
+		float seed = fract(sin(dot(floor(cells), vec2(127.1, 311.7))) * 43758.5453);
+		float age = fract(seed * 13.1 + TIME * (1.6 + seed * 1.4));
+		vec2 offset = vec2(seed, fract(seed * 31.7)) * 0.52 + 0.24;
+		float ring = abs(length(fract(cells) - offset) - age * 0.48);
+		splash = (1.0 - smoothstep(0.029, 0.085, ring)) * (1.0 - smoothstep(0.05, 0.48, age));
+		splash *= step(0.70, seed) * (1.0 - smoothstep(8.0, 20.0, length(VERTEX))) * surface_rain;
+	}
+	ALBEDO = ground * (0.98 + paint + 0.042 * grain - damp) + vec3(0.20, 0.24, 0.25) * splash;
 	ROUGHNESS = 1.0 - damp * 0.47;
 }
