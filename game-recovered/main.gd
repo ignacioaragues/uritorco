@@ -17,13 +17,24 @@ const SUMMIT_NIGHT_SECONDS := 40.0
 const SIGHTING_FOCUS_SECONDS := 0.4
 const NIGHT_SCENE_VIEW := 200.0
 const DREAM_SECONDS := 150.0
+const WALK_SCORE := {
+	2: ["calma1", "domestic"],
+	7: ["domestic", "quietud"],
+	25: ["domestic", "calma1"],
+	27: ["domestic", "quietud"],
+	32: ["calma2", "domestic"],
+	36: ["quietud", "calma2"],
+	41: ["calma1", "domestic"],
+}
+const WALK_SCORE_DELAY := 5.0
+const WALK_SCORE_GAP := 27.0
 const DREAM_ARCH_EXCHANGES := [
 	"—¿La ves?\n—¿Qué cosa?\n—La que tarda en aparecer. Quedate un segundo sin mover la cabeza.\n\nLa voz viene del otro lado de la piedra. Al fondo distinguís otro arco.",
 	"—¿Me hablás por la radio?\n—Probá apagarla.\n\nTanteás la perilla. Ya está apagada.\n\n—¿Me oís igual?",
 	"Del otro lado suenan dos golpes secos.\n\n—Hay dos lunas. ¿Cuál tengo que mirar?\n—El huequito entre las cuatro estrellas. Como en la vereda, cuando tapábamos el farol."
 ]
 enum Sighting { ABRA, QUARRY, CROSSING, SHELTER, CAVE, CLEARING }
-const STATE = ["page", "stage", "keepsakes", "bedtime", "field_note", "crossing_note", "filo_report_reply", "quarry_reply", "fox_seen", "hiker_met", "route_reported", "observing", "pending_return", "heard", "radio_taken", "bag_left", "read_note", "creek_note", "bed_pose", "bed_pitch", "gate_jumped", "map_read", "awaiting_call", "dream_count", "branch_found", "mapped_distance", "has_piece", "summit_mapped", "camp_read", "arrival_action", "intro_bridge_drawn", "second_sighting", "book_light_notes", "day7_dusk", "archive_read", "trail_replies", "crossing_response", "summit_echo_response", "night_investigation", "ending_at_door", "sky_memories", "compass_lost", "last_voice_reply", "scored_walks", "found_collectibles"]
+const STATE = ["page", "stage", "keepsakes", "bedtime", "field_note", "crossing_note", "filo_report_reply", "quarry_reply", "fox_seen", "hiker_met", "route_reported", "observing", "pending_return", "heard", "radio_taken", "bag_left", "read_note", "creek_note", "bed_pose", "bed_pitch", "gate_jumped", "map_read", "awaiting_call", "dream_count", "branch_found", "mapped_distance", "has_piece", "summit_mapped", "camp_read", "arrival_action", "intro_bridge_drawn", "second_sighting", "book_light_notes", "day7_dusk", "archive_read", "trail_replies", "crossing_response", "summit_echo_response", "night_investigation", "ending_at_door", "sky_memories", "compass_lost", "last_voice_reply", "found_collectibles"]
 var flashlight_out: = false
 var camp_read: = false
 var summit_mapped: = false
@@ -66,7 +77,9 @@ const SKY_MEMORIES = {
 	27: "Apoyás el pulgar en el canto del cuaderno. Tu papá se quedaba un rato en la vereda después de que vos entrabas. Dejaba la silla afuera hasta la mañana. Hoy entendés por qué a veces volvía a sacarla aunque estuviera nublado.",
 	32: "Esta vez encontrás la cruz aunque la ladera te tape una parte del cielo. Marcás el sur entre dos piedras. Después guardás la brújula y te quedás un momento más."
 }
-var scored_walks: Array = []
+var walk_score_day := 0
+var walk_score_wait := WALK_SCORE_DELAY
+var walk_score_turn := 0
 var score = preload("res://banda_sonora.gd").new()
 var book_view = preload("res://libro.gd").new()
 var postcard_view = preload("res://postal.gd").new()
@@ -399,7 +412,8 @@ func _process(delta):
 	var hand_tone := Color.WHITE.lerp(Color("#7d869e") if not in_refuge else Color("#b4a392"), darkness)
 	if mode == "cave" and not cave_outside: hand_tone = Color("#6c6b69") if flashlight_out else Color("#45444c")
 	hands.modulate = hand_tone
-	if mode == "walk": score_daily_walk(day)
+	score.radio_active = radio_panel.visible
+	if mode in ["walk", "map"]: score_daily_walk(day, delta)
 	if mode == "sighting": update_sighting(delta)
 	if mode == "cave":
 		update_cave()
@@ -630,16 +644,29 @@ func intro_objective() -> String:
 		return "Seguí la curva del sendero." if page >= 6 else "Caminá un poco más por la senda."
 	return ["", "Espacio · saltá el tronco.", "Cruzá el puente y seguí la huella.", "B · probá la brújula.", "M · consultá el mapa.", "E · agarrá la cuerda. Mantené W para trepar.", "L · encendé la linterna."][page]
 
-func score_daily_walk(day: int):
-	if awaiting_call or day in scored_walks: return
-	if (Creek.trail_distance(Vector2(player.position.x, player.position.z)) > 5.0 if day == 2 else player.position.z > -20.0): return
-	if float(valley.sky_mat.get_shader_parameter("nightfall")) > 0.3: return
-	if stage == 1:
-		scored_walks.append(day)
-		score.cue("calma1", 46, -16.0)
-	elif stage in [7, 8]:
-		scored_walks.append(day)
-		score.cue("domestic", 52, -16.0)
+func score_daily_walk(day: int, delta: float):
+	if day != walk_score_day:
+		walk_score_day = day
+		walk_score_wait = WALK_SCORE_DELAY
+		walk_score_turn = 0
+	if awaiting_call or stage < 1 or score.is_playing(): return
+	var here: Vector3 = player.position
+	if absf(here.x) < 12.0 and here.z > -15.0 and here.z < 12.0: return
+	var museum_z: float = valley.route.ORIGIN_Z - Museum.DISTANCE
+	var museum_x: float = valley.route.trail(Museum.DISTANCE) + Museum.SITE_OFFSET
+	if absf(here.z - museum_z) < Museum.HALF_DEPTH and absf(here.x - museum_x) < Museum.HALF_WIDTH:
+		return
+	if not player.is_on_floor() or Vector2(player.velocity.x, player.velocity.z).length_squared() < 0.36:
+		return
+	walk_score_wait -= delta
+	if walk_score_wait > 0.0: return
+	var themes: Array = WALK_SCORE[day]
+	var dark := float(valley.sky_mat.get_shader_parameter("nightfall")) > 0.65
+	var theme: String = "noche" if dark else themes[walk_score_turn % themes.size()]
+	var start := 28.0 if walk_score_turn > 0 and (dark or walk_score_turn >= themes.size()) else 0.0
+	score.cue(theme, 92.0, -14.0, 3.0, start)
+	walk_score_turn += 1
+	walk_score_wait = WALK_SCORE_GAP
 
 func at_summit_finish() -> bool:
 	return stage == 15 and player.position.distance_to(valley.route.ascent_point(0.0)) < 3.2
@@ -1441,7 +1468,6 @@ func _unhandled_key_input(event):
 		if not sequence.is_empty(): speak()
 		elif after == "wait_flash":
 			mode = "listen_quarry"
-			score.silence(0.8)
 			radio_panel.hide()
 			await get_tree().create_timer(2.2).timeout
 			show_sighting(Sighting.QUARRY)
@@ -1452,7 +1478,6 @@ func _unhandled_key_input(event):
 			walk()
 		elif after == "summit_home":
 			valley.night(SUMMIT_NIGHT_SECONDS)
-			score.silence(0.6)
 			radio.play_knocks()
 			overlay("summit_echo", "Soltás el botón. La radio da dos golpes secos. Después se oye «hasta el banco». La frase es de Mara. La voz suena como la tuya.", ["«¿Eso lo dijiste vos?»", "Guardás la radio y empezás a bajar."], "radio")
 		elif after == "quarry_home":
@@ -1580,6 +1605,7 @@ func select_option(index: int):
 	elif mode == "rest" and index == 1: walk()
 	elif mode == "rest" and index == 0:
 		if stage == 18:
+			score.silence(2.5)
 			save_game(true, "walk")
 			bedtime = false
 			bed_pose = Transform3D(Basis.IDENTITY, Vector3(1.37, 0.06, 4.55))
@@ -1605,6 +1631,7 @@ func select_option(index: int):
 		if stage in [7, 9]:
 			begin_dream()
 		else:
+			score.silence(2.5)
 			valley.morning()
 			if stage == 0:
 				valley.configure_sky(1)
@@ -1651,7 +1678,7 @@ func select_option(index: int):
 func begin_dream(preserve_bed: bool = false, fade_from_black: bool = false):
 	dream_seconds_left = DREAM_SECONDS
 	dream_arches = 0
-	score.cue("otromundo", 63, -14.0, 2.5)
+	score.cue("otromundo", 100, -14.0, 2.5)
 	if not preserve_bed:
 		bed_pose = player.transform
 		bed_pitch = player.camera.rotation.x
@@ -1809,6 +1836,7 @@ func fade_in_caption():
 	fade.parallel().tween_property(hint, "modulate:a", 1.0, 0.8).set_delay(0.15)
 
 func start_day36():
+	score.silence(3.0)
 	stage = 16
 	bedtime = false
 	awaiting_call = true
@@ -2067,6 +2095,7 @@ func hear_last_voice():
 	overlay("last_voice", "La voz vuelve del otro lado del arco. «¿Ya la encontraste?». Tu papá te hacía esa pregunta cuando miraban el cielo. Abrís la boca sin saber a quién le hablás.", ["«¿Quién es…?»", "«¿Papá…?»"])
 
 func show_ending():
+	score.silence(3.5)
 	var memory_of_book := str(keepsakes.get("libro", "En la guarda sigue el dibujo que hiciste con tu papá."))
 	ending_paragraphs = [
 		"Subís al ómnibus. Desde el asiento ves la curva que baja al puesto. Antes de que desaparezca, abrís Observar el Cielo. " + memory_of_book,
@@ -2200,7 +2229,7 @@ func restore(data: Dictionary):
 		"dream":
 			dream_seconds_left = clampf(float(data.state.get("dream_seconds_left", DREAM_SECONDS)), 0.0, DREAM_SECONDS)
 			dream_arches = clampi(int(data.state.get("dream_arches", 0)), 0, LastNight.DREAM_ARCH_DISTANCES.size())
-			score.cue("otromundo", 63, -14.0, 2.5)
+			score.cue("otromundo", 100, -14.0, 2.5)
 			player.low_gravity = true
 			valley.strange_sky(true)
 			explore_dream()

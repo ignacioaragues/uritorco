@@ -31,10 +31,10 @@ Cada pasada avanza un solo punto del juego. Al cerrarla se actualiza el estado d
 - [x] Abrir hacia adentro la puerta del refugio y alargar el gesto de mantener apretado el pulsador de la radio.
 - [x] Recuperar detalle de vegetación y piedras al alejarse del refugio. Los senderos largos tienen pastos curvos, copas irregulares con ramas y tres formas de roca con vetas y manchas.
 - [x] Ampliar la historia comechingona con tres afiches ilustrados en la sala de objetos, el pasillo principal y la sala de relatos.
+- [x] Dar más presencia a la música de las caminatas y sostenerla a menor volumen durante las llamadas de Mara.
 
 ### Por hacer
 
-- [ ] Revisar la continuidad de la música. Escuchar los silencios largos, las entradas muy breves y los posibles cortes al hablar con Mara.
 - [ ] Identificar el ruido fuerte cerca del museo.
 - [ ] Buscar otros carteles y objetos de ladera que hayan quedado flotando.
 - [ ] Agregar puntos de interés al camino del cable.
@@ -45,6 +45,11 @@ Cada pasada avanza un solo punto del juego. Al cerrarla se actualiza el estado d
 - [ ] Recorrer con el mapa abierto la ida del Día 36 para comprobar que las pircas guían desde el acceso hasta la pasarela.
 - [ ] Volver a mirar la tormenta desde las ventanas del refugio y evaluar cómo se lee su intensidad.
 - [ ] Hacer aparecer objetos en el refugio según lo que pasó con Mara. Queda anotada la botella de vino como posibilidad.
+
+## Pasada de continuidad musical
+
+- Las siete jornadas de exploración tienen temas de caminata. El primero entra después de unos pasos. Las entradas duran alrededor de un minuto y medio, con pausas que se cuentan mientras Hernán camina. Al oscurecer entra el tema nocturno. Se mantienen los silencios de la llegada y de la entrada a la cueva.
+- Durante una llamada, la música baja 7 dB y sigue avanzando. Al guardar la radio recupera su volumen con un fundido. Se grabó una charla en la vaguada para comprobar la continuidad y se verificaron las entradas de las siete jornadas, la vuelta con el mapa abierto y las transiciones del malacate, la cumbre y la última noche.
 
 ## Pasada de historia comechingona
 
@@ -139,7 +144,7 @@ Esta lista reconstruye el estado informado del proyecto editable. La exportació
 ## Todavía pendiente
 
 - **Pasada narrativa.** Separar mejor las charlas de Mara durante cada caminata. Retomar lo que Hernán acaba de ver y darle espacio al escepticismo de Mara. Evaluar objetos ligados a decisiones, como una botella que pueda mandar Mara.
-- **Música y ambiente.** Revisar a oído los tramos largos sin música, las entradas que duran poco y los cortes al terminar de hablar por radio. Identificar el ruido fuerte cerca del museo. Volver a escuchar la mezcla de la última noche y comparar los sonidos de pisadas por superficie.
+- **Ambiente.** Identificar el ruido fuerte cerca del museo. Volver a escuchar la mezcla de la última noche y comparar los sonidos de pisadas por superficie.
 - **Arte.** Afinar las texturas del prólogo y la lectura de objetos de cerca. Revisar en conjunto las estrellas, la integración del planeta y las transiciones de fase lunar.
 - **Mundo y recorridos.** Darle más puntos de interés a la caminata del cable. Revisar la distribución de destinos alrededor del refugio, ocultar mejor otros hallazgos y seguir afinando la cartografía. Revisar a velocidad normal el ritmo de las ocho microescenas, la tormenta desde las ventanas y el tiempo que llevan las idas y vueltas a la pasarela.
 - **Windows.** Validar la próxima exportación cuando se solicite.
