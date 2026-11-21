@@ -53,6 +53,11 @@ Al cierre de cada pasada se actualizan los puntos resueltos y se conserva lo que
 - [x] Darles materiales y siluetas distintas a los tres sueños. El primero tiene placas azules fracturadas, el segundo terrazas cobrizas y el tercero crestas de obsidiana y arcos erosionados. Las formaciones cercanas son sólidas y dejan pasos abiertos hacia los seis hallazgos.
 - [x] Conectar las lajas con la bajada al cauce y abrir un atajo del este a la vuelta del mollar. Las dos huellas están señalizadas y se dibujan en la hoja local, centrada en el refugio. Se recorrieron los enlaces con el mapa de mano abierto.
 
+## Pasada del pastizal
+
+- Dos cuises moros aparecen en el pasto corto junto a la bajada al cauce el Día 2. En jornadas posteriores se los puede encontrar al costado del sendero de las lajas. Comen a poca distancia uno del otro y se meten entre los pastos altos cuando Hernán se acerca. Se resguardan con lluvia fuerte y de noche. [Ficha de SAREM](https://doi.org/10.31687/SaremLR.19.332)
+- E registra un solo croquis por especie. N abre su página en Flora y fauna. La observación conserva la fecha al cargar y el dibujo se cuelga junto a la cama a partir de la jornada siguiente.
+
 ## Pasada de flora y fauna
 
 - El zorro gris pampeano cruza al trote la huella del mollar. El lagarto overo toma sol sobre una laja en la bajada al cauce y se refugia al acercarse Hernán. Las cortaderas de la orilla también se pueden dibujar.
@@ -229,6 +234,6 @@ Esta lista reconstruye el estado informado del proyecto editable. La exportació
 ## Todavía pendiente
 
 - **Arte.** Cotejar el acabado de las rocas con más fotos del cerro y seguir afinando los objetos de cerca, la vegetación y las lomadas de fondo en los sectores secundarios.
-- **Fauna.** Buscar registros de observación del Uritorco para afinar el reparto por ambientes. El cuis moro queda como candidato para una próxima ampliación.
+- **Fauna.** Buscar registros de observación del Uritorco para afinar el reparto por ambientes y contrastar la presencia local de las especies elegidas con referencias de las sierras cordobesas.
 - **Prueba de campaña.** Cronometrar una primera partida de principio a fin con alguien que esté descubriendo los caminos.
 - **Windows.** Probar la campaña y el audio de la exportación en un equipo con Windows.

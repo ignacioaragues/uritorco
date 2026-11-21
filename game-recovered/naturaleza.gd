@@ -7,21 +7,28 @@ const Models = preload("res://fauna_modelos.gd")
 const FOX := "zorro"
 const TEGU := "overo"
 const REED := "cortadera"
+const CAVY := "cuis"
 const FOX_START := Vector2(18.1, -2.6)
 const FOX_END := Vector2(30.2, -7.1)
 const FOX_MID := (FOX_START + FOX_END) * 0.5
 const FOX_CROSS_SECONDS := 3.3
 const NATURAL_TARGET_DISTANCE := 13.0
 const TEGU_REST_ANGLE := -2.89
+const CAVY_CREEK := Vector2(-20.45, 31.0)
+const CAVY_LAJAS := Vector2(-22.0, -28.75)
+const CAVY_REFUGE_CREEK := Vector2(3.18, 0.80)
+const CAVY_REFUGE_LAJAS := Vector2(-1.38, -3.0)
 const ENTRIES := {
 	FOX: ["Zorro gris pampeano", "Cruzó la huella del mollar al trote. Alcancé a ver el lomo gris y, antes de que se metiera en los arbustos, la punta negra de la cola."],
 	TEGU: ["Lagarto overo", "Se calentaba sobre una laja de la orilla. Tenía manchas claras entre las bandas oscuras y una cola larga que casi tocaba el suelo."],
 	REED: ["Cortadera", "Las hojas se doblan hacia el agua. De cerca, cada penacho está hecho de ramitas finas. Dibujé la mata entera para acordarme de su forma."],
+	CAVY: ["Cuis moro", "Había dos comiendo al borde de la huella. Uno levantó la cabeza un momento. Alcancé a ver la raya clara arriba del ojo antes de que se metiera entre los pastos."],
 }
 const SKETCHES := {
 	FOX: "res://naturaleza_zorro.webp",
 	TEGU: "res://naturaleza_overo.webp",
 	REED: "res://naturaleza_cortadera.webp",
+	CAVY: "res://naturaleza_cuis.webp",
 }
 
 var fox: Node3D
@@ -32,6 +39,10 @@ var day_seen := 0
 var fox_clock := -1.0
 var fox_armed := true
 var tegu_clock := -1.0
+var cavies: Array[Node3D] = []
+var cavy_idle := 0.0
+var cavy_bolt := -1.0
+var cavy_start := PackedVector2Array([Vector2.ZERO, Vector2.ZERO])
 var drawings_on_wall: Dictionary = {}
 
 func _ready():
@@ -41,6 +52,14 @@ func _ready():
 	fox.hide()
 	tegu.hide()
 	dress_bank()
+	var first := models.make_cavy(self)
+	var second := first.duplicate() as Node3D
+	add_child(second)
+	second.scale *= 0.91
+	cavies.assign([first, second])
+	reset_cavies()
+	dress_pastizal(CAVY_CREEK, CAVY_REFUGE_CREEK, 2097)
+	dress_pastizal(CAVY_LAJAS, CAVY_REFUGE_LAJAS, 2781)
 
 func dress_bank():
 	const ROCK_X := -31.6
@@ -70,6 +89,22 @@ func dress_bank():
 		tuft.append(Vector4(at.x, at.y - 0.08, at.z, 1.15 if offset == Vector3.ZERO else 0.74))
 	Flora.herb_batch(self, tuft, Flora.Herb.CORTADERA)
 
+func dress_pastizal(site: Vector2, shelter: Vector2, seed_value: int):
+	var rng := RandomNumberGenerator.new()
+	rng.seed = seed_value
+	var roots: Array[Vector4] = []
+	for tuft in 16:
+		var at := site + shelter + Vector2.from_angle(rng.randf_range(0.0, TAU)) * rng.randf_range(0.15, 1.25)
+		var foot := ground(at)
+		roots.append(Vector4(foot.x, foot.y - 0.07, foot.z, rng.randf_range(0.58, 1.16)))
+	Flora.herb_batch(self, roots, Flora.Herb.PAJA)
+	roots.clear()
+	for tuft in 13:
+		var at := site + shelter.normalized() * 0.89 + Vector2.from_angle(rng.randf_range(0.0, TAU)) * rng.randf_range(0.35, 1.06)
+		var foot := ground(at)
+		roots.append(Vector4(foot.x, foot.y - 0.04, foot.z, rng.randf_range(0.20, 0.46)))
+	Flora.grass_batch(self, roots)
+
 func ground(at: Vector2) -> Vector3:
 	return Creek.surface_point(Vector3(at.x, 0.0, at.y))
 
@@ -81,11 +116,13 @@ func advance(delta: float, day: int, player_position: Vector3, dark: float, rain
 		tegu_clock = -1.0
 		fox.hide()
 		tegu.hide()
+		reset_cavies()
 	if not walking: return
 
 	var player_xz := Vector2(player_position.x, player_position.z)
 	advance_fox(delta, player_xz, day >= 7 and day <= 32 and rain < 0.57 and dark < 0.68)
 	advance_tegu(delta, player_position, day >= 2 and day <= 36 and rain < 0.23 and dark < 0.32)
+	advance_cavies(delta, player_xz, day == 2, day >= 2 and day <= 36 and rain < 0.30 and dark < 0.39)
 
 func advance_fox(delta: float, player_xz: Vector2, active: bool):
 	var distance := player_xz.distance_to(FOX_MID)
@@ -147,14 +184,61 @@ func advance_tegu(delta: float, player_position: Vector3, active: bool):
 		if part.has_meta("walking_leg"):
 			part.rotation.y = 0.35 * sin(u * 47.0 + (PI if i in [3, 4] else 0.0))
 
+func reset_cavies():
+	cavy_idle = 0.0
+	cavy_bolt = -1.0
+	for cavy in cavies: cavy.hide()
+
+func advance_cavies(delta: float, player_xz: Vector2, creek: bool, active: bool):
+	var site := CAVY_CREEK if creek else CAVY_LAJAS
+	var distance := player_xz.distance_to(site)
+	if not active or distance > 18.0:
+		reset_cavies()
+		return
+	if (not cavies[0].visible and distance > 11.0) or cavy_bolt >= 1.65: return
+	var shelter := CAVY_REFUGE_CREEK if creek else CAVY_REFUGE_LAJAS
+	cavy_idle += delta
+	if cavy_bolt < 0.0 and distance <= 2.40:
+		cavy_bolt = 0.0
+		for i in cavies.size():
+			var foot := cavies[i].position
+			cavy_start[i] = Vector2(foot.x, foot.z) if cavies[i].visible else site
+	if cavy_bolt >= 0.0: cavy_bolt += delta
+	for i in cavies.size():
+		var cavy := cavies[i]
+		var step := clampf((cavy_bolt - 0.15 * i) / 1.48, 0.0, 1.0)
+		if step >= 1.0:
+			cavy.hide()
+			continue
+		var local_time := cavy_idle + 1.16 * i
+		var feeding := site + Vector2(0.58, 0.49) * (i if creek else -i)
+		feeding += Vector2(0.17 * sin(local_time * 1.04), 0.11 * cos(local_time * 0.86))
+		var retreat := site + shelter + Vector2(shelter.y, -shelter.x).normalized() * (0.44 * i)
+		var point := cavy_start[i].lerp(retreat, step) if cavy_bolt >= 0.0 else feeding
+		var direction := (retreat - cavy_start[i]).normalized()
+		var stride := step * 61.0
+		var running := step > 0.0
+		var height := 0.009 + 0.013 * absf(sin(stride)) if running else 0.002
+		cavy.position = ground(point) + Vector3.UP * height
+		var feeding_angle := (2.35 if creek else 1.47) - i * 0.69
+		cavy.rotation.y = atan2(-direction.x, -direction.y) if running else feeding_angle + 0.20 * sin(local_time * 0.87)
+		cavy.rotation.x = 0.10 * sin(local_time * 4.2) if not running else 0.07 * sin(stride)
+		for leg in cavy.get_child_count():
+			cavy.get_child(leg).rotation.x = sin(stride + (PI if leg in [1, 2] else 0.0)) * 0.76 if running else 0.0
+		cavy.show()
+
 func aimed(camera: Camera3D, player: CharacterBody3D, observations: Dictionary) -> String:
 	var head := camera.global_position
 	var look := -camera.global_basis.z
-	for observation in [
+	var samples := [
 		[FOX, fox.global_position + Vector3.UP * 0.40, 0.47, fox.visible, NATURAL_TARGET_DISTANCE],
 		[TEGU, tegu.global_position + Vector3.UP * 0.12, 0.33, tegu.visible, 8.0],
 		[REED, to_global(reed_foot + Vector3.UP * 0.71), 0.47, true, 6.0],
-	]:
+	]
+	if not observations.has(CAVY):
+		for cavy in cavies:
+			samples.append([CAVY, cavy.global_position + Vector3.UP * 0.076, 0.18, cavy.visible, 7.2])
+	for observation in samples:
 		var id: String = observation[0]
 		if observations.has(id) or not observation[3]: continue
 		var point: Vector3 = observation[1]

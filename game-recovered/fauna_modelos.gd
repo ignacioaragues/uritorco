@@ -82,6 +82,52 @@ func tinted(tone: Color) -> Callable:
 	return func(at: Vector3, side: int) -> Color:
 		return tone.lightened(0.075 * (0.5 + 0.5 * sin(side * 7.7 + at.z * 38.0)))
 
+func cavy_color(at: Vector3, side: int) -> Color:
+	var back := Color("#594f40").lerp(Color("#88775e"), 0.5 + 0.5 * sin(at.z * 98.0 + side * 2.1))
+	var flank := Color("#8c775d").lerp(back, smoothstep(0.042, 0.125, at.y))
+	return flank.lerp(Color("#ada084"), 1.0 - smoothstep(0.027, 0.056, at.y))
+
+func make_cavy(parent: Node3D) -> Node3D:
+	var surface := SurfaceTool.new()
+	surface.begin(Mesh.PRIMITIVE_TRIANGLES)
+	loft(surface, [
+		ring(0.124, 0.065, 0.006, 0.010), ring(0.106, 0.071, 0.032, 0.034),
+		ring(0.074, 0.075, 0.052, 0.051), ring(0.026, 0.071, 0.057, 0.056),
+		ring(-0.030, 0.068, 0.052, 0.049), ring(-0.063, 0.072, 0.040, 0.037),
+		ring(-0.091, 0.074, 0.038, 0.032), ring(-0.117, 0.064, 0.028, 0.026),
+		ring(-0.138, 0.054, 0.013, 0.016), ring(-0.143, 0.056, 0.002, 0.004),
+	], 12, cavy_color)
+	loft(surface, [ring(-0.134, 0.057, 0.010, 0.008), ring(-0.142, 0.058, 0.012, 0.008),
+		ring(-0.148, 0.056, 0.002, 0.003)], 8, tinted(Color("#3a2d28")))
+	for side in [-1.0, 1.0]:
+		var m := float(side)
+		var eye := Vector3(m * 0.037, 0.079, -0.102)
+		var brow := eye + Vector3(-m * 0.002, 0.010, 0.002)
+		polygon(surface, [brow + Vector3(0, -0.001, -0.013), brow + Vector3(-m * 0.004, 0.005, -0.003),
+			brow + Vector3(0, 0.003, 0.013), brow + Vector3(m * 0.004, -0.002, 0.007)], Color("#cab996"), Vector3(m, 0.4, 0))
+		polygon(surface, [eye + Vector3(-m * 0.002, 0, -0.007), eye + Vector3(-m * 0.001, 0.006, 0.002),
+			eye + Vector3(m * 0.003, 0.001, 0.008), eye + Vector3(m * 0.001, -0.005, 0.001)], Color("#241c1b"), Vector3(m, 0, 0))
+		var ear := Vector3(m * 0.030, 0.096, -0.070)
+		var rim := PackedVector3Array([ear+Vector3(0, 0, -0.005), ear+Vector3(m*0.008, 0.013, -0.007),
+			ear+Vector3(m*0.012, 0.021, 0.002), ear+Vector3(m*0.008, 0.019, 0.009), ear+Vector3(0, 0.004, 0.011)])
+		polygon(surface, rim, Color("#6b5b4c"), Vector3(m * 0.55, 0.23, -0.60))
+		polygon(surface, [rim[0] + Vector3.FORWARD * 0.002, rim[2].lerp(ear, 0.29) + Vector3.FORWARD * 0.002,
+			rim[3].lerp(ear, 0.33) + Vector3.FORWARD * 0.002], Color("#4e403a"), Vector3(m, 0.3, -0.60))
+	var cavy := finish(parent, surface, "Cuis moro", false)
+	for side in [-1.0, 1.0]:
+		cavy_leg(cavy, side, -0.069)
+		cavy_leg(cavy, side, 0.061)
+	return cavy
+
+func cavy_leg(cavy: Node3D, side: float, longitudinal: float):
+	var surface := SurfaceTool.new()
+	surface.begin(Mesh.PRIMITIVE_TRIANGLES)
+	loft(surface, [[Vector3.ZERO, 0.013, 0.017], [Vector3(side * 0.008, -0.021, 0.004), 0.008, 0.009],
+		[Vector3(side * 0.009, -0.037, -0.006), 0.010, 0.007],
+		[Vector3(side * 0.009, -0.039, -0.020), 0.006, 0.004]], 7, tinted(Color("#88765e")), true)
+	var foot := finish(cavy, surface, "Pata", false)
+	foot.position = Vector3(side * 0.033, 0.041, longitudinal)
+
 func fox_color(at: Vector3, side: int) -> Color:
 	var saddle := Color("#575650").lerp(Color("#827e71"), 0.5 + 0.5 * sin(side * 8.2 + at.z * 33.0))
 	var flank := Color("#927c62").lerp(saddle, smoothstep(0.33, 0.51, at.y))
