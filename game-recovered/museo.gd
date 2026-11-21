@@ -8,6 +8,8 @@ const HALF_DEPTH := 7.0
 const HEIGHT := 2.85
 const REPLICAS := ["Mortero y mano", "Tortero", "Vasija de cerámica"]
 const STORIES := ["Bastón de Mando", "Vikingos en las sierras", "Luces sobre el cerro"]
+const REPLICA_CAPTIONS := ["Réplica · Molienda", "Réplica · Hilado", "Réplica · Alfarería"]
+const STORY_CAPTIONS := ["Relato esotérico", "Hipótesis sin respaldo arqueológico", "Archivo de testimonios"]
 const LABELS = {
 	"Sala de las sierras": "Museo de sitio · Pueblos comechingones\n\nEl pasillo cuenta qué pasó con la tierra después de la conquista. En la sala de objetos se puede ver cómo se vivía y trabajaba en las sierras. Al fondo, la sala de relatos también reúne memoria de las comunidades de hoy.",
 	"Pueblos comechingones": "Los documentos coloniales usaron el nombre comechingones para referirse a poblaciones de las Sierras Centrales. Sus modos de vida variaban según el lugar y la época. Hoy hay comunidades comechingonas en Córdoba que se reconocen como parte de esa historia.",
@@ -86,8 +88,8 @@ static func build(valley):
 	for i in 3:
 		var x := (i - 1) * 3.30
 		vitrine(valley, c + Vector3(x, 0, -4.37), i)
-		display_panel(valley, c + Vector3(x, 1.67, -6.85), REPLICAS[i], "comechingones", i, 0.0)
-		display_panel(valley, c + Vector3(x, 1.67, 6.85), STORIES[i], "relatos", i, PI)
+		display_panel(valley, c + Vector3(x, 1.67, -6.85), REPLICAS[i], "comechingones", i, 0.0, REPLICA_CAPTIONS[i])
+		display_panel(valley, c + Vector3(x, 1.67, 6.85), STORIES[i], "relatos", i, PI, STORY_CAPTIONS[i])
 
 static func wall(valley, at: Vector3, size_m: Vector3):
 	valley.plaster(valley.box(at, size_m, "baaa90", true))
@@ -175,31 +177,28 @@ static func dress_archive(valley):
 	preload("res://estructuras.gd").arch(valley, base, 0.31)
 	plaque(valley, base + Vector3(0, -0.14, -0.58), "Maqueta del arco", PI, 1.55)
 
-static func display_panel(valley, center_pos: Vector3, title: String, group: String, index: int, angle: float, caption := ""):
-	var poster := not caption.is_empty()
-	var dimensions := Vector3(0.82, 1.58, 0.055) if poster else Vector3(0.94, 1.42, 0.055)
-	var frame: MeshInstance3D = valley.box(center_pos, dimensions, "766650", true, title)
-	frame.rotation.y = angle
+static func display_panel(valley, center_pos: Vector3, title: String, group: String, index: int, angle: float, caption: String):
 	var art_path := "res://museo/" + group + ".webp"
-	if ResourceLoader.exists(art_path):
-		var atlas: Texture2D = load(art_path)
-		var artwork := AtlasTexture.new()
-		artwork.atlas = atlas
-		var width := atlas.get_width() / 3.0
-		artwork.region = Rect2(width * index, 0, width, atlas.get_height())
-		artwork.filter_clip = true
-		var image := Sprite3D.new()
-		frame.add_child(image)
-		image.texture = artwork
-		image.position.z = 0.033
-		image.pixel_size = (1.50 if poster else 1.33) / atlas.get_height()
-		image.shaded = false
-		if poster:
-			image.alpha_cut = SpriteBase3D.ALPHA_CUT_DISCARD
-			poster_text(frame, title, 0.637, 0.064)
-			poster_text(frame, caption, -0.647, 0.047)
-			return
-	plaque(valley, center_pos + Vector3(0, -0.81, 0), title, angle, 1.95)
+	if not ResourceLoader.exists(art_path):
+		plaque(valley, center_pos, title, angle, 1.95)
+		return
+	var frame: MeshInstance3D = valley.box(center_pos, Vector3(0.82, 1.58, 0.055), "766650", true, title)
+	frame.rotation.y = angle
+	var atlas: Texture2D = load(art_path)
+	var artwork := AtlasTexture.new()
+	artwork.atlas = atlas
+	var width := atlas.get_width() / 3.0
+	artwork.region = Rect2(width * index, 0, width, atlas.get_height())
+	artwork.filter_clip = true
+	var image := Sprite3D.new()
+	frame.add_child(image)
+	image.texture = artwork
+	image.position.z = 0.033
+	image.pixel_size = 1.50 / atlas.get_height()
+	image.shaded = false
+	image.alpha_cut = SpriteBase3D.ALPHA_CUT_DISCARD
+	poster_text(frame, title, 0.637, 0.064)
+	poster_text(frame, caption, -0.647, 0.047)
 
 static func poster_text(frame: Node3D, caption: String, y: float, height: float):
 	var print_label := Label3D.new()

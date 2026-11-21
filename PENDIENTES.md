@@ -55,7 +55,7 @@ Cada pasada avanza un solo punto del juego. Al cerrarla se actualiza el estado d
 
 - La sala de objetos incorpora «Sembrar en las sierras», sobre agricultura, caza y recolección. «Tierra y encomienda» queda en el pasillo principal, y «Memoria comechingona» lleva a la sala de relatos la historia de la comunidad del Pueblo de La Toma.
 - Los tres afiches llevan el título y el pie impresos en la pared, con escenas ilustradas de personas comechingonas en cada época. Al acercarse, E abre la ficha. Se probó la visita a pie y el acceso a las vitrinas y al archivo.
-- Se redibujaron las escenas con contornos gruesos e irregulares, figuras simples y pocos colores sobre papel crema, como láminas didácticas de un museo serrano.
+- Las nueve láminas de historia, réplicas y relatos comparten el estilo de la referencia, con contornos de tinta, sombras rayadas y tonos de ladrillo, ocre y turquesa. Se comprobó que las nueve se ven colgadas en Godot y que sus fichas se abren con E.
 
 ## Pasada de vegetación y piedras
 
