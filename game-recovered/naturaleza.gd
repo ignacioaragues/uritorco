@@ -45,13 +45,17 @@ func _ready():
 func dress_bank():
 	const ROCK_X := -31.6
 	const REED_X := -25.4
-	var ridge := ground(Vector2(ROCK_X, Creek.channel_z(ROCK_X) - 9.7))
+	var ridge := ground(Vector2(ROCK_X, Creek.channel_z(ROCK_X) - 9.7)) - Vector3.UP * 0.09
 	var rng := RandomNumberGenerator.new()
 	rng.seed = 958
 	var face := Stone.surface()
 	var shape := Stone.fragment(face, ridge, Vector3(3.35, 0.31, 2.75), 0.8, rng, Creek.surface_point)
 	Stone.solid(self, ridge, shape, "Laja calentada por el sol")
-	Stone.finish(self, face, "Laja del lagarto")
+	for offset in [Vector3(-1.32, 0, 0.69), Vector3(0.88, 0, 1.13)]:
+		var foot := Creek.surface_point(ridge + offset) - Vector3.UP * 0.06
+		var chip := Stone.fragment(face, foot, Vector3(0.96, 0.22, 0.63), rng.randf() * TAU, rng, Creek.surface_point)
+		Stone.solid(self, foot, chip, "Laja menor")
+	Stone.finish(self, face, "Lajas de la orilla").material_override = Stone.paint("928679")
 	tegu_home = ridge
 	for point in shape.slice(-Stone.SIDES):
 		tegu_home.y += (point.y - ridge.y) / Stone.SIDES
