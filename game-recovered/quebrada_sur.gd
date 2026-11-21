@@ -43,6 +43,31 @@ static func build(valley):
 	dress_log(valley)
 	dress_ledge(valley)
 	dress_bridge(valley, rng)
+	dress_banks(valley)
+
+static func dress_banks(valley):
+	var rng := RandomNumberGenerator.new()
+	rng.seed = 62352
+	var south_path := Creek.crossing_trace()
+	var rule := Creek.marker()
+	var bridge := Creek.crossing_point(1.0)
+	for start in [-162, -110, -58, -6]:
+		var roots: Array[Vector4] = []
+		for i in range(7):
+			var center := float(start) + i * 6.7 + rng.randf_range(-2.0, 2.0)
+			var bank := -1.0 if i % 3 == 0 else 1.0
+			for tuft in rng.randi_range(5, 9):
+				var x := center + rng.randf_range(-3.8, 3.8)
+				var z := Creek.channel_z(x) + bank * (water_width(x) + rng.randf_range(0.35, 2.9))
+				var at := Vector2(x, z)
+				if at.distance_to(Vector2(rule.x, rule.z)) < 5.5 or absf(x - bridge.x) < 4.5: continue
+				if Creek.trail_distance(at) < 1.9 or Creek.near_south_path(at, south_path, 2.65): continue
+				var foot := ground(Vector3(x, 0.0, z))
+				if foot.y < water_level(x) - 0.20: continue
+				var rise := maxf(ground(foot + Vector3.BACK * 0.6).y, ground(foot + Vector3.FORWARD * 0.6).y) - foot.y
+				if rise > 0.36: continue
+				roots.append(Vector4(x, foot.y - 0.085, z, rng.randf_range(0.66, 1.18)))
+		Flora.herb_batch(valley, roots, Flora.Herb.CORTADERA)
 
 static func ground(at: Vector3) -> Vector3:
 	return Creek.surface_point(at)

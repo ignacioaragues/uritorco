@@ -105,6 +105,11 @@ static func build(valley):
 		[Flora.Kind.MOLLE, 42, 16, 1.65], [Flora.Kind.MOLLE, 33, 16, 1.55],
 		[Flora.Kind.MOLLE, 42, 24, 1.42], [Flora.Kind.MOLLE, 37, 28, 1.1],
 		[Flora.Kind.MOLLE, 44, 33, 1.27], [Flora.Kind.ESPINILLO, 29, 8, 0.96],
+		[Flora.Kind.MOLLE, 46, 10.3, 1.54], [Flora.Kind.MOLLE, 45, 20.3, 1.32],
+		[Flora.Kind.MOLLE, 49.7, 18.4, 1.18], [Flora.Kind.MOLLE, 38.8, 22.3, 0.88],
+		[Flora.Kind.TALA, 42.9, 30.2, 1.43], [Flora.Kind.TALA, 48.4, 26.7, 1.22],
+		[Flora.Kind.ESPINILLO, 30.2, -7, 1.07], [Flora.Kind.ESPINILLO, 33, 6.4, 0.92],
+		[Flora.Kind.PIQUILLIN, 32.7, 3.1, 0.87], [Flora.Kind.PIQUILLIN, 38, 24.4, 0.96],
 		[Flora.Kind.ESPINILLO, 25, -10, 1.13], [Flora.Kind.ESPINILLO, 19, -16, 0.96],
 		[Flora.Kind.ESPINILLO, -9, -28, 1.01], [Flora.Kind.ESPINILLO, -26, -30, 0.91],
 		[Flora.Kind.TALA, 18, 34, 1.22], [Flora.Kind.TALA, 1, 57, 1.25],
@@ -116,8 +121,23 @@ static func build(valley):
 	for plant in vegetation:
 		var at := Vector2(plant[1], plant[2])
 		if clearance(at) >= 2.65:
-			Flora.tree(valley, ground(at, route), plant[0], plant[3], at.x * 0.71)
+			Flora.tree(valley, Creek.surface_point(Vector3(at.x, 0.0, at.y)), plant[0], plant[3], at.x * 0.71)
 	dress_verges(valley)
+	dress_scrub(valley)
+
+static func dress_scrub(valley):
+	var rng := RandomNumberGenerator.new()
+	rng.seed = 32801
+	var roots: Array[Vector4] = []
+	var south_path := Creek.crossing_trace()
+	for center: Vector2 in [Vector2(24, -10), Vector2(35, 4), Vector2(42, 20), Vector2(30, 26),
+		Vector2(21, 21), Vector2(24, 37), Vector2(-16, 53), Vector2(-38, -24), Vector2(-39, 4)]:
+		for i in rng.randi_range(9, 14):
+			var at := center + Vector2.from_angle(rng.randf_range(0.0, TAU)) * rng.randf_range(0.5, 5.7)
+			if clearance(at) < 2.05 or Creek.trail_distance(at) < 2.1 or Creek.near_south_path(at, south_path, 2.5): continue
+			var foot := Creek.surface_point(Vector3(at.x, 0.0, at.y))
+			roots.append(Vector4(foot.x, foot.y - 0.080, foot.z, rng.randf_range(0.72, 1.27)))
+	Flora.herb_batch(valley, roots, Flora.Herb.ROMERILLO)
 
 static func dress_verges(valley):
 	var rng := RandomNumberGenerator.new()

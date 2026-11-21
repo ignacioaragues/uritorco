@@ -40,6 +40,7 @@ static func dress_verge(parent: Node3D, route):
 	var ground := Callable(route, "terrain_point")
 	var faces := Stone.surface()
 	var tufts: Array[Vector4] = []
+	var scrub: Array[Vector4] = []
 	for i in range(20):
 		var t := 0.07 + i * 0.046
 		if minf(absf(t - route.WEST_JOIN), minf(absf(t - REEL_AT), minf(absf(t - SPLICE_AT), absf(t - FACE_AT)))) < 0.023:
@@ -56,13 +57,18 @@ static func dress_verge(parent: Node3D, route):
 		for blade in rng.randi_range(6, 14):
 			var jitter := Vector3(rng.randf_range(-1.7, 1.7), 0, rng.randf_range(-2.8, 2.8))
 			var tuft: Vector3 = ground.call(foot + jitter) - Vector3.UP * 0.05
-			tufts.append(Vector4(tuft.x, tuft.y, tuft.z, rng.randf_range(0.48, 1.1)))
+			var size_m := rng.randf_range(0.48, 1.1)
+			if blade % 3 == 0 and (tuft - at).dot(side * margin_left) > 3.7:
+				scrub.append(Vector4(tuft.x, tuft.y - 0.03, tuft.z, size_m))
+			else:
+				tufts.append(Vector4(tuft.x, tuft.y, tuft.z, size_m))
 		if i % 5 in [1, 4]:
 			var farther: Vector3 = ground.call(foot + side * margin_left * rng.randf_range(3.8, 6.7))
 			var kind := Flora.Kind.MOLLE if i % 2 == 0 else Flora.Kind.ESPINILLO
 			Flora.tree(parent, farther, kind, rng.randf_range(0.88, 1.35), rng.randf() * TAU)
 	Stone.finish(parent, faces, "Afloramientos junto al cable")
 	Flora.grass_batch(parent, tufts)
+	Flora.herb_batch(parent, scrub, Flora.Herb.ROMERILLO)
 
 static func roadside(parent: Node3D, route, progress: float, offset: float) -> Node3D:
 	var center: Vector3 = route.quarry_point(progress)

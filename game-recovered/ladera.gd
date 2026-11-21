@@ -11,6 +11,7 @@ static func build(route):
 		return route.surface_point(at.x, route.ORIGIN_Z - at.z)
 	var stone_faces := Stone.surface()
 	var tufts: Array[Vector4] = []
+	var tussocks: Array[Vector4] = []
 	var rng := RandomNumberGenerator.new()
 	rng.seed = 32619
 	for index in range(1, 99):
@@ -34,7 +35,11 @@ static func build(route):
 			var offset := rng.randf_range(1.36, 8.5) * (-1.0 if i % 2 == 0 else 1.0)
 			var patch: Vector3 = ground.call(at.lerp(next, rng.randf()) + side * offset)
 			var size_m := rng.randf_range(0.48, 1.45) * lerpf(1.0, 0.72, progress)
-			tufts.append(Vector4(patch.x, patch.y - 0.052, patch.z, size_m))
+			var root := Vector4(patch.x, patch.y - 0.085, patch.z, size_m)
+			if index > 27 and index % 9 in [0, 1, 2, 3] and absf(offset) > 2.5:
+				tussocks.append(root)
+			else:
+				tufts.append(root)
 		if index < 61 and index % 7 == 0:
 			var foot: Vector3 = ground.call(at + side * (5.2 * sign_of_side))
 			var kind := Flora.Kind.ESPINILLO if index < 23 else Flora.Kind.PIQUILLIN
@@ -54,13 +59,14 @@ static func build(route):
 		for i in 7:
 			var shoulder: Vector3 = ground.call(at.lerp(next, rng.randf()) + peak_side * rng.randf_range(2.7, 7.8) * (-mark_side if i % 2 == 0 else mark_side))
 			var size_m := rng.randf_range(0.40, 0.90)
-			tufts.append(Vector4(shoulder.x, shoulder.y - 0.047, shoulder.z, size_m))
+			tussocks.append(Vector4(shoulder.x, shoulder.y - 0.085, shoulder.z, size_m))
 		if index % 2 == 0:
 			var ledge: Vector3 = ground.call(at - side * rng.randf_range(4.3, 7.8) * mark_side)
 			var shape := Stone.fragment(stone_faces, ledge, Vector3(2.4, 0.58, 1.71), rng.randf() * TAU, rng, ground)
 			Stone.solid(hillside, ledge, shape, "Laja")
 	Stone.finish(hillside, stone_faces, "Piedras del ascenso")
 	Flora.grass_batch(hillside, tufts)
+	Flora.herb_batch(hillside, tussocks, Flora.Herb.PAJA)
 
 static func lateral(from: Vector3, to: Vector3) -> Vector3:
 	var delta := to - from

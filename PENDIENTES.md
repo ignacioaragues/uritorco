@@ -53,6 +53,12 @@ Al cierre de cada pasada se actualizan los puntos resueltos y se conserva lo que
 - [x] Darles materiales y siluetas distintas a los tres sueños. El primero tiene placas azules fracturadas, el segundo terrazas cobrizas y el tercero crestas de obsidiana y arcos erosionados. Las formaciones cercanas son sólidas y dejan pasos abiertos hacia los seis hallazgos.
 - [x] Conectar las lajas con la bajada al cauce y abrir un atajo del este a la vuelta del mollar. Las dos huellas están señalizadas y se dibujan en la hoja local, centrada en el refugio. Se recorrieron los enlaces con el mapa de mano abierto.
 
+## Pasada de vegetación por ambientes
+
+- El mollar gana molles, talas y espinillos de diferentes alturas, con piquillines y romerillos en los bordes. El camino del cable tiene matas bajas de romerillo entre los afloramientos.
+- Las orillas del cauce tienen grupos de cortaderas con hojas arqueadas y penachos claros. La regla y el acceso a la pasarela quedan despejados. A medida que sube la senda de la cumbre, aparecen grupos de paja con espigas finas entre los pastos bajos.
+- La propuesta visual de fauna muestra un zorro gris cruzando la huella al atardecer y un lagarto overo tomando sol sobre una laja. La incorporación de estos diseños queda pendiente de revisión.
+
 ## Pasada de la cantera y el paisaje
 
 - El frente de granito tiene nueve rebajes tallados y una cuña oxidada. El malacate tiene tambor, vueltas de cable y soportes. La chapa gira y habilita el parte del Día 27.
@@ -216,5 +222,6 @@ Esta lista reconstruye el estado informado del proyecto editable. La exportació
 ## Todavía pendiente
 
 - **Arte.** Cotejar el acabado de las rocas con más fotos del cerro y seguir afinando los objetos de cerca, la vegetación y las lomadas de fondo en los sectores secundarios.
+- **Fauna.** Revisar la lámina de zorro gris y lagarto overo antes de decidir el modelado y las animaciones.
 - **Prueba de campaña.** Cronometrar una primera partida de principio a fin con alguien que esté descubriendo los caminos.
 - **Windows.** Probar la campaña y el audio de la exportación en un equipo con Windows.
