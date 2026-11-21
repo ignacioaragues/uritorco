@@ -127,7 +127,6 @@ func draw_markers():
 	var limits := survey_extent(zone)
 	var inside := frame(limits).grow(-9.0)
 	if zone != ARRIVAL_ZONE: draw_finds(limits)
-	var at := point(limits, location).clamp(inside.position, inside.end)
 	if objective_mark is Vector3:
 		var destination: Vector3 = objective_mark
 		if zone == 3 and Vector2(destination.x, destination.z).length() < 1.0:
@@ -146,9 +145,6 @@ func draw_markers():
 			var arrow := PackedVector2Array([back - side, tip, back + side])
 			markers.draw_polyline(arrow, LABEL_HALO, 5.0, true)
 			markers.draw_polyline(arrow, Color("#805035"), 2.4, true)
-	for axis in [Vector2(5.7, 0), Vector2(0, 5.7)]:
-		markers.draw_line(at - axis, at + axis, Color("#f3e0b9"), 4.4, true)
-		markers.draw_line(at - axis, at + axis, Color("#983e2d"), 2.1, true)
 
 func draw_cardinals():
 	var font := ThemeDB.fallback_font

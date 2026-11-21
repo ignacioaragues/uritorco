@@ -1,6 +1,7 @@
 extends Node3D
 
 const Climate = preload("res://clima.gd")
+const SkyGuide = preload("res://constelacion.gd")
 const Signage = preload("res://carteleria.gd")
 const FieldKit = preload("res://equipo_campo.gd")
 const Refuge = preload("res://refugio.gd")
@@ -336,6 +337,7 @@ func update_weather(day: int, rain: float = 0.0, local_mist: float = 0.0):
 	if changed_day:
 		sky_mat.set_shader_parameter("cloud_pattern", day * 0.873)
 		sky_mat.set_shader_parameter("moon_phase", wrapf((day - 7.0) * TAU / 29.53, -PI, PI))
+		update_night_catalog(day)
 		sky_mat.set_shader_parameter("high_day", profile.sky)
 		sky_mat.set_shader_parameter("rim_day", profile.rim)
 		sky_mat.set_shader_parameter("cirrus_amount", profile.cirrus)
@@ -608,16 +610,25 @@ var sky_chapter: = 0
 
 func configure_sky(chapter: int):
 	sky_chapter = chapter
-	var catalog = preload("res://constelacion.gd")
-	var night_data: Array = catalog.NIGHTS[chapter]
-	var stars: = PackedVector4Array()
-	for star in catalog.STARS:
-		var dir: Vector3 = catalog.direction(star, night_data[0])
-		stars.append(Vector4(dir.x, dir.y, dir.z, star[3]))
-	sky_mat.set_shader_parameter("catalog", stars)
+	var night_data: Array = SkyGuide.NIGHTS[chapter]
 	sky_mat.set_shader_parameter("moon_dir", night_data[1])
 	sky_mat.set_shader_parameter("sun_dir", night_data[2])
+	sky_mat.set_shader_parameter("moon_radius", SkyGuide.MOON_RADIUS)
+	update_night_catalog(weather_day if weather_day > 0 else SkyGuide.CHAPTER_DAYS[chapter])
 	if chapter == 0: sky_mat.set_shader_parameter("nightfall", 0.0)
+
+func update_night_catalog(day: int):
+	var sidereal := SkyGuide.sidereal_at(sky_chapter, day)
+	var stars := PackedVector4Array()
+	for star in SkyGuide.STARS:
+		var dir := SkyGuide.direction(star, sidereal)
+		stars.append(Vector4(dir.x, dir.y, dir.z, star[3]))
+	var planets := PackedVector3Array()
+	for planet in SkyGuide.PLANETS:
+		planets.append(SkyGuide.direction(planet, sidereal))
+	sky_mat.set_shader_parameter("catalog", stars)
+	sky_mat.set_shader_parameter("planet_dirs", planets)
+	sky_mat.set_shader_parameter("galactic_pole", SkyGuide.direction(SkyGuide.GALACTIC_POLE, sidereal))
 
 func strange_sky(active: bool):
 	exterior_light = false

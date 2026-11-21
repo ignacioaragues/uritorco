@@ -132,6 +132,7 @@ var music = preload("res://intro_music.gd").new()
 var overlay_choices = preload("res://choices.gd").new()
 var recall = preload("res://recall.gd").new()
 var second_sighting := false # Guardados anteriores usan esta clave para el avistamiento del abra.
+var abra_told_mara := false
 var day7_dusk: = false
 var debug_run: = false
 var arrival_action: = false
@@ -557,10 +558,10 @@ func _process(delta):
 			hint.text = "E · dejar la mochila al lado de la cama"
 			return
 		if not hit and ( - player.camera.global_basis.z).y > 0.12 and float(valley.sky_mat.get_shader_parameter("nightfall")) > 0.6:
-			var star: = SkyGuide.identify( - player.camera.global_basis.z, valley.sky_chapter)
+			var star := SkyGuide.identify(-player.camera.global_basis.z, valley.sky_chapter, day)
 			if can_pause_under_sky():
 				if watching_crux_tonight() and not looking_at_crux():
-					hint.text = "Buscá las dos estrellas del eje largo de la Cruz del Sur."
+					hint.text = star if not star.is_empty() else "Buscá las dos estrellas del eje largo de la Cruz del Sur."
 				else:
 					hint.text = "E · ubicar el sur" if watching_crux_tonight() else "E · quedarte a mirar el cielo"
 				return
@@ -931,7 +932,15 @@ func start_trail_chat(topic: String):
 	trail_topic = topic
 	var chat: Array = Mara.TOPICS[topic]
 	radio.play()
-	overlay("trail_chat", "Mara · " + chat[1], chat[2], "radio")
+	var aside := ""
+	match topic:
+		"antena":
+			if abra_told_mara: aside = "Guardá ese croquis del abra. Si vuelve a pasar, podemos comparar. "
+		"cable":
+			if quarry_reply >= 0: aside = "Mañana pregunto a qué hora se fue la última camioneta del corte. "
+		"ventana":
+			if crossing_response >= 0: aside = "Mañana voy a la pasarela con luz. Quiero probar el canal desde esa orilla. "
+	overlay("trail_chat", "Mara · " + aside + chat[1], chat[2], "radio")
 
 func transmit():
 	if not radio_available(): return
@@ -1030,24 +1039,26 @@ func radio_exchange():
 				"Podés probar la cuerda o rodear por la vaguada, a la derecha del cartel. Las dos huellas se juntan.",
 				"Pasá el museo y el abra hasta el hito del filo. Desde ahí se ve dónde se junta todo. Avisame qué camino les marco."
 			]
+		if stage == 8 and abra_told_mara:
+			brief.insert(0, "Pregunté por tus destellos del abra. Me confirmaron que esa tarde bajó una camioneta. Desde acá se ve el camino un rato y después lo tapa el filo.")
 		conversation(brief, "brief")
 		return
 	if stage == 17:
-		var reply := "Bien. Mañana llevo pintura para marcarlo."
+		var lines: Array = []
 		if summit_echo_response == 0:
-			reply = "Lo de arriba podía ser un rebote. Esto lo escuchaste antes de que yo prendiera la radio."
-		elif crossing_response == 0:
-			reply = "Oí tu indicativo dos veces. Entre una y otra soltaste el botón."
-		elif crossing_response == 1:
-			reply = "Avisame cuando prendas la linterna. Te sigo escuchando desde el puesto."
-		elif crossing_response == 2:
-			reply = "Dejá libre la pasarela. Si había algo en el agua, desde la orilla tampoco lo vas a ver bien."
-		conversation([reply, "Ya tengo la marca. Si la loma se embarró, en el cruce podés cortar por el poste.", "¿Sabés qué hice mientras subía el agua? Puse dos tazas en la mesa.", "Siempre me sobra una."], "crossing_home")
+			lines.append("Lo del filo podía ser un rebote. Ese «no cruces» te entró antes de que yo prendiera la radio. Voy a preguntar quién más usa el canal.")
+		match crossing_response:
+			0: lines.append("Oí tu indicativo dos veces. Capaz se pisaron dos equipos. Anotá cómo sonaba la segunda voz.")
+			1: lines.append("Con tu linterna apagada, el reflejo tuyo lo podemos tachar. De la figura, anotá desde qué orilla la viste. Mañana miro si hay algo a esa altura.")
+			2: lines.append("Puede haber ramas trabadas bajo el puente. Dejá esa orilla libre. Mañana con luz veo qué arrastró el agua.")
+		lines.append_array(["Ya tengo la marca. Si la loma se embarró, en el cruce podés cortar por el poste.", "¿Sabés qué hice mientras subía el agua? Puse dos tazas en la mesa.", "Siempre me sobra una."])
+		conversation(lines, "crossing_home")
 		return
 	if stage == 14:
-		var bearing := "Entonces el camino de la camioneta y la muesca quedan a distinta altura."
-		if quarry_reply == 1: bearing = "El rumbo que anotaste en el malacate cae por detrás de la ladera. Marcá también desde dónde lo viste."
-		conversation([bearing, "En el plano me quedaban casi en la misma línea. Me gusta que me cuentes qué hay del otro lado.", "Por hoy, con que llegues al banco del acceso alcanza."], "summit_home")
+		var bearing := "En el plano me quedaban casi en la misma línea. Con lo que ves desde ahí puedo marcar el camino de la camioneta aparte."
+		if quarry_reply == 1: bearing = "Puse en el plano el rumbo que me pasaste desde el malacate. Cae por detrás de la ladera. Marcá también dónde estabas parado."
+		elif quarry_reply == 0: bearing = "La chapa me daba justo en la ventana. Con lo que ves desde la cumbre, el reflejo y la luz de arriba quedan en rumbos distintos."
+		conversation([bearing, "El cuaderno tiene dos horas. Habría que averiguar si esa camioneta tuvo tiempo de aparecer del otro lado.", "Por hoy, con que llegues al banco del acceso alcanza."], "summit_home")
 		return
 	if stage == 11:
 		conversation(["Ahí bajó el reflejo. La chapa devolvía el sol contra el puesto.", "Pará. Dejá la chapa como está."], "wait_flash")
@@ -1102,6 +1113,8 @@ func farewell_mara():
 	elif trail_replies.get("ultima_curva", -1) == 0:
 		memory = "Si conseguís el asiento de la ventanilla, fijate en la última curva. A esta hora le da el sol a la ladera."
 	var lines := [reply, farewell]
+	if night_investigation > 0:
+		lines.insert(1, "Anoche se me abrió el canal solo. Desde la ventana del puesto veía la curva vacía. A la segunda vez, ya ni me fijé si venía de la radio.")
 	if not memory.is_empty(): lines.append(memory)
 	if close_enough:
 		lines.append("Si te queda tiempo, pasá por casa. De la curva sale una huella. La mía es la de la puerta de madera con el buzón al lado.")
@@ -1526,6 +1539,7 @@ func _unhandled_key_input(event):
 			save_game(true, "walk")
 		elif after == "sighting_return":
 			walk()
+			if stage == 7 and second_sighting: save_game(true, "walk")
 		elif after == "brief" or after == "day2_confirm":
 			awaiting_call = false
 			if stage == 6: stage = 7
@@ -1575,7 +1589,7 @@ func select_option(index: int):
 		field_note += " Día 36 · " + CROSSING_NOTES[index]
 		if index != 0: flashlight_out = index == 2
 		if index == 1: score.cue("cosmic", 28, -15.0, 1.5)
-		overlay("message", CROSSING_NOTES[index] + "\n\nEl canal queda abierto. Desde el puesto, Mara te pide la marca del agua.", "Espacio · volver")
+		overlay("message", CROSSING_NOTES[index] + "\n\nEl canal queda abierto. Mara te pide la marca del agua y quiere saber qué notaste en la orilla.", "Espacio · volver")
 	elif mode == "summit_echo":
 		summit_echo_response = index
 		stage = 15
@@ -1674,16 +1688,21 @@ func select_option(index: int):
 				save_game(true, "walk")
 				day_card("Día 7 · Alcance", "Llevás una semana en el puesto. Reconocés el doble clic de Mara antes de que empiece a hablar.", "Espacio · levantarse")
 	elif mode == "sighting_response":
-		if index == 0:
+		abra_told_mara = index == 0
+		if abra_told_mara:
 			field_note += " Se lo conté a Mara."
-			conversation(["¿Celeste? Qué fino el cerro, ahora hace juego con el cielo.", "Guardá el rumbo. Cuando llegues a la antena probamos el canal."], "sighting_return")
+			conversation(["Desde mi ventana veo la curva hasta el primer poste. Pasó un rato sin que viera faros.", "Dos destellos pueden ser dos luces del camino. Si una quedó arriba del filo, marcame dónde estabas cuando la viste.", "En la antena probamos el canal. Lo de la voz puede ser alguien que entró en la misma frecuencia."], "sighting_return")
 		else:
 			field_note += " Guardé el rumbo para compararlo después."
 			walk()
+			save_game(true, "walk")
 	elif mode == "quarry_sighting_response":
 		quarry_reply = index
-		var line := "Entonces el reflejo que me llegaba a la ventana era de la chapa. La luz arriba del corte la viste vos." if index == 0 else "Guardá también la hora. Con lo que me cuentes desde la cumbre voy a poder comparar los rumbos."
-		conversation([line, "Entre el ruido oí «todavía». Pensé que habías hablado vos.", "¿Seguís ahí? Me quedo hasta que llegues."], "quarry_home")
+		var line := "Desde que paraste la chapa no me entra el reflejo. Si arriba siguió prendida, anotala aparte. Puede haber un foco de trabajo atrás del corte." if index == 0 else "Con ese rumbo ya puedo mirar el plano. Pasame también la hora. Quiero saber si todavía quedaba gente trabajando arriba."
+		var lines := [line]
+		if abra_told_mara: lines.append("La otra vez eran dos destellos. Guardá los dos rumbos. Desde abajo se te mezcla todo en la misma ladera.")
+		lines.append_array(["Entre el ruido oí «todavía». Pensé que habías hablado vos.", "¿Seguís ahí? Me quedo hasta que llegues."])
+		conversation(lines, "quarry_home")
 	elif mode == "fox":
 		valley.route.release_fox(index == 0)
 		field_note += " Lo ves bajar al cauce." if index == 0 else " Le dejás libre el paso."
@@ -1694,7 +1713,9 @@ func select_option(index: int):
 		var line := "Les marco la vuelta por abajo." if index == 0 else "Les aviso que en el escalón suban de a uno."
 		conversation([line, "Van a mirar el malacate. Dicen que vieron algo brillar por ahí al cerrar el otro turno."], "filo")
 	elif mode == "reception":
-		conversation(["Ahora sí. Te oigo clarito."] if index == 0 else ["Dale. Dejo la radio prendida."], "reception_done")
+		var lines := ["Ahora sí. Te oigo clarito."] if index == 0 else ["Dale. Dejo la radio prendida."]
+		if abra_told_mara: lines.append("Desde la antena tu voz entra limpia. Guardá la hora de los destellos. Puedo preguntar si había alguien del otro lado.")
+		conversation(lines, "reception_done")
 	elif mode == "report":
 		if index == 0:
 			creek_note += " Parte enviado."
@@ -2100,7 +2121,7 @@ func approach_mara_door():
 	objective_seconds = 4.0
 
 func crux_axis() -> Vector3:
-	var sidereal: float = SkyGuide.NIGHTS[valley.sky_chapter][0]
+	var sidereal := SkyGuide.sidereal_at(valley.sky_chapter, calendar_day())
 	return (SkyGuide.direction(SkyGuide.STARS[0], sidereal) + SkyGuide.direction(SkyGuide.STARS[2], sidereal)).normalized()
 
 func looking_at_crux() -> bool:
@@ -2169,6 +2190,7 @@ func save_game(automatic: bool, resume_mode: String) -> bool:
 	if debug_run: return false
 	var state: Dictionary = {}
 	for key in STATE: state[key] = get(key)
+	state["abra_told_mara"] = abra_told_mara
 	if trail_spacing_day == calendar_day() and trail_walk_left > 0.0:
 		state["trail_walk_left"] = trail_walk_left
 	if resume_mode == "dream":
@@ -2187,6 +2209,7 @@ func restore(data: Dictionary):
 	slot = data.slot
 	for key in STATE:
 		if data.state.has(key): set(key, data.state[key])
+	abra_told_mara = bool(data.state.get("abra_told_mara", "Se lo conté a Mara." in str(data.state.get("field_note", ""))))
 	found_collectibles = data.state.get("found_collectibles", {}).duplicate()
 	remove_collected_objects()
 	trail_replies = Mara.saved_replies(data.state)
@@ -2446,13 +2469,13 @@ func observe_lights():
 			score.cue("melancholy", 31, -15.0, 1.7)
 			radio.play_interference()
 			field_note += " Camino al abra vi dos destellos sobre la ladera. El segundo estaba más alto."
-			overlay("sighting_response", "Un punto azul se apaga. El otro tarda un instante más. La radio se corta a mitad de una palabra: «…cruces…».", ["Le preguntás a Mara si los vio.", "Anotás el rumbo para más tarde."])
+			overlay("sighting_response", "Un punto azul se apaga. El otro tarda un instante más. La radio se corta a mitad de una palabra: «…cruces…».", ["Le contás a Mara lo que viste y oíste.", "Anotás el rumbo para más tarde."])
 		Sighting.QUARRY:
 			score.cue("cosmic", 28, -16.0, 2.0)
 			radio.play_interference()
 			var caption := "La luz queda suspendida por encima del corte. La chapa sigue contra el bastidor."
 			if book_light_notes: caption += " Te acordás de las dos marcas que dejaste en el libro. Desde acá el rumbo es otro."
-			overlay("quarry_sighting_response", caption, ["Le decís a Mara que la chapa sigue quieta.", "Anotás el rumbo antes de contestar."], "radio")
+			overlay("quarry_sighting_response", caption, ["Le decís a Mara que la chapa sigue quieta.", "Anotás el rumbo y se lo pasás."], "radio")
 		Sighting.CROSSING:
 			overlay("crossing_response", "La estática cede. «¿Ya llegaste? Recién prendo la radio». La luz titila por encima de la quebrada. Entre un destello y otro no se oye el agua.", ["Retrocedés con Mara en línea.", "Apagás la linterna y esperás.", "Alumbrás el cauce."], "radio")
 		Sighting.SHELTER:
