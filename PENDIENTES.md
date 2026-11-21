@@ -53,6 +53,12 @@ Al cierre de cada pasada se actualizan los puntos resueltos y se conserva lo que
 - [x] Darles materiales y siluetas distintas a los tres sueños. El primero tiene placas azules fracturadas, el segundo terrazas cobrizas y el tercero crestas de obsidiana y arcos erosionados. Las formaciones cercanas son sólidas y dejan pasos abiertos hacia los seis hallazgos.
 - [x] Conectar las lajas con la bajada al cauce y abrir un atajo del este a la vuelta del mollar. Las dos huellas están señalizadas y se dibujan en la hoja local, centrada en el refugio. Se recorrieron los enlaces con el mapa de mano abierto.
 
+## Pasada de la cantera y el paisaje
+
+- El frente de granito tiene nueve rebajes tallados y una cuña oxidada. El malacate tiene tambor, vueltas de cable y soportes. La chapa gira y habilita el parte del Día 27.
+- Las sierras del fondo tienen crestas más variadas y pliegues que pierden contraste con la distancia. El monte del regreso nocturno tiene molles bajos, talas más altos y pastos junto a las piedras. Las rocas y sus colisiones apoyan sobre la malla del terreno.
+- Se recorrió el camino del cable de ida y vuelta, se comprobó la carga de la partida y se completó la secuencia desde la cueva hasta el último sueño. La revisión de terreno comprobó 888 apoyos de roca y nueve puntos de unión entre sectores.
+
 ## Pasada del prólogo, la cantera y la cumbre
 
 - **Parada.** El abrigo queda junto a la banquina. Hernán arranca mirando la ruta. Puede girar y levantar la mochila con E o clic desde donde está. Después se habilita la caminata hacia la huella lateral. Las partidas viejas guardadas antes de recoger la mochila abren con la posición nueva.
@@ -191,7 +197,7 @@ Al cierre de cada pasada se actualizan los puntos resueltos y se conserva lo que
 - **Arroyos.** Hernán puede vadear el arroyo del puente y la quebrada cuando lleva agua. El paso se vuelve más lento, los pasos salpican y la vista cambia si la cámara se sumerge. Se probaron la entrada y la salida desde la orilla y el paso seco sobre el puente.
 - **Cartel y manos.** El cartel del puesto está afuera de la verja, del lado del camino. La aguja roja y las marcas cardinales de la brújula tienen más contraste y el borde de la esfera toma el tono de la carcasa. Se compararon la palma y los dedos del teseracto y la brújula a la misma resolución. Se agrandó la mano del teseracto y se ajustó su tamaño en ventanas angostas para dejar espacio a la hoja.
 - La rama `codigo-fuente` guarda el proyecto recuperado, sus recursos y este registro. Cada tanda de recuperación debe quedar en un commit de esa rama junto con su verificación.
-- Al cierre de cada pasada, registrar los cambios incorporados y los pendientes que quedan. Preparar una exportación de Windows cuando se pida.
+- Al cierre de cada pasada, registrar los cambios incorporados y los pendientes que quedan. Publicar un ZIP de Windows x64 en cada entrega.
 
 ## Ya implementado en las pasadas anteriores
 

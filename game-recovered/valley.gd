@@ -236,7 +236,7 @@ var ridge_materials: Array[ShaderMaterial] = []
 var ridge_light := Vector2(-1.0, -1.0)
 
 func build_distant_ridges():
-	const SECTIONS := 144
+	const SECTIONS := 192
 	const ROWS := [Vector2(0.78, 0.0), Vector2(0.86, 0.33), Vector2(0.92, 0.70), Vector2(1.0, 1.0), Vector2(1.09, 0.0)]
 	const PALETTE := ["737869", "7c8986", "879aa1", "9babba"]
 	# Se conserva la secuencia original de piedras junto al refugio.
@@ -248,8 +248,11 @@ func build_distant_ridges():
 			var azimuth := TAU * index / SECTIONS
 			var north := smoothstep(0.0, 0.86, -sin(azimuth))
 			var south := smoothstep(0.0, 0.84, sin(azimuth))
-			var rolls := 0.43 * sin(azimuth * 5.0 + 1.8 * layer) + 0.29 * sin(azimuth * 9.0 - layer) + 0.19 * cos(azimuth * 16.0 + 0.6 * layer)
-			var peaks := 0.48 * pow(absf(sin(azimuth * 3.0 + 0.77 * layer)), 3.5) + rolls
+			var rolls := 0.43 * sin(azimuth * 5.0 + 1.8 * layer) + 0.29 * sin(azimuth * 9.0 - layer) + 0.15 * cos(azimuth * 16.0 + 0.6 * layer)
+			var summits := 0.53 * pow(absf(sin(azimuth * 3.0 + 0.77 * layer)), 3.5)
+			var facets := 0.11 * sin(azimuth * 23.0 + 1.5 * layer) + 0.045 * cos(azimuth * 47.0 - layer)
+			var saddle := 0.16 * pow(maxf(0.0, cos(azimuth * 12.0 - 0.75 * layer)), 6.0)
+			var peaks := summits + rolls + facets * (1.0 - layer * 0.19) - saddle
 			var base := 228.0 + north * 1040.0 + south * 142.0
 			var distance := base * (1.0 + layer * 0.40) * (1.0 + rolls * 0.055)
 			var angle := 0.100 + 0.011 * layer + peaks * 0.063 + north * 0.076
@@ -766,6 +769,8 @@ func dress_day27():
 		ground_support(end + Vector3(side, 1.2, -1), 0.23, 0.4, "68594c")
 	box(end + Vector3(0, 0.82, -1), Vector3(2.3, 0.22, 0.23), "57534a", true)
 	quarry_plate = box(end + Vector3(0, 1.38, -1), Vector3(1.1, 0.76, 0.06), "b6aa8a", true, "Chapa del malacate")
+	quarry_plate.material_override = FieldKit.material("a99a7c", false, 0.47)
+	Cable.dress_winch(self, end)
 	Cable.build(self)
 	Refuge.cutting(self)
 

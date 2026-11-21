@@ -16,6 +16,11 @@ void vertex() {
 void fragment() {
 	float hatch = sin(rock_position.x * 0.193 + rock_position.y * 0.45) * sin(rock_position.z * 0.120 + rock_position.y * 0.24);
 	float relief = (UV.x - 0.65) * (0.36 - 0.23 * distance_layer) + hatch * (0.018 - 0.012 * distance_layer);
+	float shoulder = sin(rock_position.x * 0.045 + rock_position.z * 0.034 + UV.y * 2.7)
+		* cos(rock_position.z * 0.039 - UV.y * 2.0);
+	float cleft = 1.0 - smoothstep(0.02, 0.25, abs(sin(rock_position.x * 0.137 + rock_position.z * 0.079 - UV.y * 4.2 + shoulder * 1.9)));
+	float visible_slope = smoothstep(0.14, 0.65, UV.y) * (1.0 - 0.76 * distance_layer);
+	relief += (shoulder * 0.034 - cleft * 0.032) * visible_slope * (1.0 - nightfall * 0.85);
 	vec3 morning = stone.rgb * (0.92 + relief);
 	morning = mix(morning, vec3(0.69, 0.72, 0.71), (1.0 - UV.y) * 0.16 + distance_layer * 0.11);
 	vec3 rain_haze = mix(vec3(0.45, 0.52, 0.54), vec3(0.61, 0.66, 0.67), distance_layer);
