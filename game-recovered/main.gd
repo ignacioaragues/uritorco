@@ -9,6 +9,7 @@ const South = preload("res://quebrada_sur.gd")
 const Creek = preload("res://cauce.gd")
 const SkyGuide = preload("res://constelacion.gd")
 const LastNight = preload("res://final_night.gd")
+const CaveRunes = preload("res://piedra_cueva.gd")
 const Saves = preload("res://partidas.gd")
 const Mara = preload("res://charlas_mara.gd")
 const Exploration = preload("res://exploracion.gd")
@@ -145,8 +146,7 @@ var journal_pages: Array[Dictionary] = []
 var journal_view := Diary.new()
 var journal_page := 0
 var journal_collection := false
-var journal_dream := false
-var journal_intro_from := ""
+var journal_from := ""
 var collect_notice := ""
 var collect_notice_seconds := 0.0
 var found_collectibles: Dictionary = {}
@@ -739,7 +739,7 @@ func overlay(kind: String, caption: String, footer: Variant, prop: String = ""):
 func open_journal():
 	journal_collection = false
 	journal_page = 0
-	if not journal_intro_from.is_empty():
+	if journal_from in ["approach", "intro"]:
 		recall.hide()
 		journal_pages = [bridge_diary_entry() if intro_bridge_drawn or page > 2 else {
 			"title": "Camino al puesto", "text": "Dejé una hoja libre para anotar lo que vaya viendo."}]
@@ -751,7 +751,7 @@ func open_journal():
 	add_field_notes()
 	if journal_pages.is_empty():
 		journal_pages.append({"title": "Cuaderno", "text": ""})
-	if not journal_dream: journal_page = journal_pages.size() - 1
+	if journal_from != "dream": journal_page = journal_pages.size() - 1
 	show_journal_page()
 
 func bridge_diary_entry() -> Dictionary:
@@ -821,6 +821,18 @@ func record_collectible(id: String):
 	collect_notice_seconds = 4.0
 	save_game(true, "dream" if in_dream else "walk")
 
+func record_cave_runes():
+	if found_collectibles.has(CaveRunes.ID): return
+	found_collectibles[CaveRunes.ID] = calendar_day()
+	collect_notice = "Signos copiados · C para ver Coleccionables"
+	collect_notice_seconds = 4.0
+	if debug_run: return
+	# La última noche tiene un autoguardado en el refugio, antes de partir.
+	var checkpoint := Saves.read(slot, true)
+	if not checkpoint.is_empty() and checkpoint.state.get("stage") == 18:
+		checkpoint.state["found_collectibles"] = found_collectibles.duplicate()
+		Saves.write(slot, true, checkpoint)
+
 func remove_collected_objects():
 	for object in get_tree().get_nodes_in_group("field_finds"):
 		if found_collectibles.has(object.get_meta("find_id")):
@@ -828,13 +840,14 @@ func remove_collected_objects():
 			object.queue_free()
 
 func toggle_journal_section():
-	if not journal_intro_from.is_empty(): return
+	if journal_from in ["approach", "intro"]: return
 	if journal_collection:
 		open_journal()
 		return
 	journal_collection = true
 	journal_page = 0
-	var introduction := "%d de %d anotados.\n\nPiezas que vi en el cerro y en los sueños." % [found_collectibles.size(), Exploration.FINDS.size() + Alien.FINDS.size()]
+	var total := Exploration.FINDS.size() + Alien.FINDS.size() + 1
+	var introduction := "%d de %d anotados.\n\nHallazgos del cerro y de los sueños." % [found_collectibles.size(), total]
 	if not found_collectibles.is_empty():
 		introduction += " Pasá la hoja para ver los dibujos y las notas."
 	journal_pages = [{"title": "Coleccionables", "text": introduction}]
@@ -845,11 +858,13 @@ func toggle_journal_section():
 			var entry: Array = listings[id]
 			var place := "Sueño %d" % entry[4] if dream else "Día %d" % found_collectibles[id]
 			journal_pages.append({"title": entry[1], "text": place + " · " + entry[3], "drawing": entry[0], "dream": dream})
+	if found_collectibles.has(CaveRunes.ID):
+		journal_pages.append({"title": CaveRunes.TITLE, "text": "Última noche · Cueva\n\n" + CaveRunes.NOTE, "sketch": CaveRunes.sketch()})
 	show_journal_page()
 
 func show_journal_page():
 	overlay("journal", "", "")
-	journal_view.display(journal_pages[journal_page], journal_page, journal_pages.size(), journal_collection, journal_intro_from.is_empty())
+	journal_view.display(journal_pages[journal_page], journal_page, journal_pages.size(), journal_collection, journal_from not in ["approach", "intro"])
 
 func walk():
 	journal_view.hide()
@@ -1111,19 +1126,17 @@ func update_flashlight():
 
 func close_journal():
 	journal_view.hide()
-	var source := journal_intro_from
-	journal_intro_from = ""
+	var source := journal_from
+	journal_from = ""
 	match source:
 		"approach": approach()
 		"intro":
 			mode = "intro"
 			shade.color = Color.BLACK
 			recall.show()
-		_:
-			if journal_dream:
-				journal_dream = false
-				explore_dream()
-			else: walk()
+		"dream": explore_dream()
+		"cave": resume_cave()
+		_: walk()
 
 func _unhandled_key_input(event):
 	if not event.pressed or event.echo: return
@@ -1205,17 +1218,17 @@ func _unhandled_key_input(event):
 		hands.hold("compass" if compass_out else "")
 		return
 	if key == KEY_TAB and (mode in ["approach", "intro"] or (mode == "map" and paused_from == "approach")):
-		journal_intro_from = "approach" if mode == "map" else mode
-		if journal_intro_from == "approach" and page == 2:
+		journal_from = "approach" if mode == "map" else mode
+		if journal_from == "approach" and page == 2:
 			note_intro_bridge(Arrival.local_position(page, player.position))
 		open_journal()
 		return
-	if mode == "dream" and key == KEY_TAB:
-		journal_dream = true
+	if mode in ["dream", "cave"] and key == KEY_TAB:
+		journal_from = mode
 		open_journal()
 		return
-	if (mode == "dream" or (mode == "walk" and stage >= 0)) and key == KEY_C:
-		journal_dream = mode == "dream"
+	if (mode in ["dream", "cave"] or (mode == "walk" and stage >= 0)) and key == KEY_C:
+		journal_from = mode
 		journal_collection = false
 		toggle_journal_section()
 		return
@@ -1924,8 +1937,13 @@ func update_cave():
 	if local.z < -38.0 and not cave_exit_open:
 		player.position.z = LastNight.CAVE.z - 37.9
 	update_night_target()
+	if target == CaveRunes.TITLE and not flashlight_out: target = ""
 	if objective_seconds > 0.0:
 		hint.text = "Revisá la estación y los cuadernos." if local.z < -22.0 else "Usá la linterna y saltá entre las tres piedras. R · Mara"
+	elif collect_notice_seconds > 0.0:
+		hint.text = collect_notice
+	elif target == CaveRunes.TITLE:
+		hint.text = "Signos copiados en el cuaderno" if found_collectibles.has(CaveRunes.ID) else "E · copiar los signos"
 	elif not target.is_empty():
 		hint.text = "E · " + target
 	elif local.z > -22.0 and flashlight_out:
@@ -2006,6 +2024,8 @@ func inspect_cave():
 				start_final_dream(false)
 		return
 	match target:
+		CaveRunes.TITLE:
+			if flashlight_out: record_cave_runes()
 		"Receptor":
 			radio.play_knocks()
 			overlay("cave_text", "Hay un receptor, un trípode y un cable que desaparece en una grieta. En el dial está marcada la frecuencia del refugio. Al girarlo oís dos golpes secos. La aguja se queda inmóvil.", "Espacio · soltar")

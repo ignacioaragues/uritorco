@@ -2,6 +2,7 @@ extends RefCounted
 
 const Alien = preload("res://hallazgos_sueno.gd")
 const Kit = preload("res://equipo_campo.gd")
+const CaveRunes = preload("res://piedra_cueva.gd")
 const DREAM_BOUNDS := Rect2(-73.0, -144.0, 146.0, 177.0)
 const DREAM_ARCH_DISTANCES := [17.0, 38.0, 62.0, 92.0]
 
@@ -19,6 +20,7 @@ const RETURN_START := Vector3(0, 0, -48)
 const FORK_Z := -60.0
 const CLEARING := Vector2(14.0, -79.0)
 const RETURN := Vector2(-8.5, -88.0)
+const RUNES_FOOT := Vector3(2.24, 0.71, -32.3)
 
 static func near_stop(position: Vector3) -> bool:
 	return position.distance_squared_to(STOP) < 64.0
@@ -61,6 +63,7 @@ static func build_cave(v):
 		var strut = v.box(foot.lerp(tripod + Vector3.UP * 0.95, 0.5), Vector3(0.04, 0.04, 0.99), "665e51")
 		strut.look_at(tripod + Vector3.UP * 0.95)
 	v.box(tripod + Vector3.UP * 0.99, Vector3(0.28, 0.15, 0.29), "50545a")
+	CaveRunes.build(v, CAVE + RUNES_FOOT)
 	var lamp = v.box(CAVE + Vector3(-2.48, 1.88, -28.35), Vector3(0.085, 0.042, 0.035), "b65734")
 	lamp.material_override.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
 	v.box(CAVE + Vector3(1.05, 1.43, -36.1), Vector3(0.15, 1.44, 0.15), "a19272", true, "Salida de la cueva")

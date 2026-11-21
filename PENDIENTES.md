@@ -33,6 +33,7 @@ Cada pasada avanza un solo punto del juego. Al cerrarla se actualiza el estado d
 - [x] Ampliar la historia comechingona con tres afiches ilustrados en la sala de objetos, el pasillo principal y la sala de relatos.
 - [x] Dar más presencia a la música de las caminatas y sostenerla a menor volumen durante las llamadas de Mara.
 - [x] Aclarar desde dónde llama Mara. Trabaja en el puesto de abajo, pasando la curva camino a Capilla. Su casa queda al final de la huella vecinal de la despedida.
+- [x] Esconder una piedra con signos en la cueva y permitir que Hernán los copie en Coleccionables.
 
 ### Por hacer
 
@@ -55,6 +56,10 @@ Cada pasada avanza un solo punto del juego. Al cerrarla se actualiza el estado d
 ## Ubicación de Mara
 
 - La bienvenida ubica el puesto de abajo. Mara se guía por el plano, los partes de Hernán y lo que conoce de haber caminado por el cerro. Desde su ventana recibe el reflejo del malacate. La despedida explica cómo llegar a su casa por un camino vecinal.
+
+## Hallazgo en la cueva
+
+- La piedra con runas queda al costado del recorrido. Con la linterna encendida, E copia los signos y C abre Coleccionables. El cuaderno reproduce el grabado y deja abierta su procedencia. Se probó la copia, el regreso a la cueva después de leer y la conservación de la página al cargar el autoguardado.
 
 ## Pasada de historia comechingona
 
