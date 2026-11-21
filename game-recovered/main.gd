@@ -10,6 +10,7 @@ const Creek = preload("res://cauce.gd")
 const Cable = preload("res://camino_del_cable.gd")
 const SkyGuide = preload("res://constelacion.gd")
 const LastNight = preload("res://final_night.gd")
+const ReturnTerrain = preload("res://regreso_noche.gd")
 const CaveRunes = preload("res://piedra_cueva.gd")
 const Saves = preload("res://partidas.gd")
 const Mara = preload("res://charlas_mara.gd")
@@ -36,8 +37,8 @@ const DREAM_ARCH_EXCHANGES := [
 	"—¿Me hablás por la radio?\n—Probá apagarla.\n\nTanteás la perilla. Ya está apagada.\n\n—¿Me oís igual?",
 	"Del otro lado suenan dos golpes secos.\n\n—Hay dos discos. ¿Cuál tengo que mirar?\n—El huequito entre las cuatro estrellas. Como en la vereda, cuando tapábamos el farol."
 ]
-enum Sighting { ABRA, QUARRY, CROSSING, SHELTER, CLEARING }
-const STATE = ["page", "stage", "keepsakes", "bedtime", "field_note", "crossing_note", "filo_report_reply", "quarry_reply", "fox_seen", "hiker_met", "route_reported", "observing", "pending_return", "heard", "radio_taken", "bag_left", "read_note", "creek_note", "bed_pose", "bed_pitch", "gate_jumped", "map_read", "awaiting_call", "dream_count", "branch_found", "mapped_distance", "has_piece", "summit_mapped", "camp_read", "arrival_action", "intro_bridge_drawn", "second_sighting", "book_light_notes", "day7_dusk", "archive_read", "trail_replies", "crossing_response", "summit_echo_response", "night_investigation", "last_night", "ending_at_door", "sky_memories", "compass_lost", "last_voice_reply", "found_collectibles"]
+enum Sighting { ABRA, QUARRY, CROSSING, SHELTER }
+const STATE = ["page", "stage", "keepsakes", "bedtime", "field_note", "crossing_note", "filo_report_reply", "quarry_reply", "fox_seen", "hiker_met", "route_reported", "observing", "pending_return", "heard", "radio_taken", "bag_left", "read_note", "creek_note", "bed_pose", "bed_pitch", "gate_jumped", "map_read", "awaiting_call", "dream_count", "branch_found", "mapped_distance", "has_piece", "summit_mapped", "camp_read", "arrival_action", "intro_bridge_drawn", "second_sighting", "book_light_notes", "day7_dusk", "archive_read", "trail_replies", "crossing_response", "summit_echo_response", "night_investigation", "last_night", "night_home", "ending_at_door", "sky_memories", "compass_lost", "last_voice_reply", "found_collectibles"]
 var flashlight_out: = false
 var camp_read: = false
 var summit_mapped: = false
@@ -62,21 +63,33 @@ const CROSSING_NOTES = [
 ]
 var night_investigation: = 0
 var last_night := false
+var night_home := 0 # 1 al llegar, 2 después de hablar por radio.
 var ending_at_door: = false
-var cave_built: = false
+var cave: Node3D
+var return_terrain: Node3D
+var return_light := Vector3.ZERO
+var return_foot := LastNight.RETURN_START
+var cave_static_seconds := 0.0
+var cave_notebook_page := 0
 var valley_view_distance: float
 var cave_checkpoint: = LastNight.ENTRY
 var cave_notebooks_read: = false
 var cave_exit_open: = false
 var tunnel_call_step := 0
-var follow_last_light: = false
 var crux_found: = false
 var cave_outside := false
 var cave_station_called := false
-var clearing_cued := false
+var cave_rope_cut := false
+var cave_rope_in_use := false
 var compass_lost: = false
 var last_voice_reply: = -1
 var sky_memories: Array = []
+const CAVE_NOTEBOOK := [
+	{"title": "14/10/1975", "text": "Puesto de observación · turno noche\n\n01.40. Cortó la niebla. Probamos el receptor hacia el abra. En la planilla dejamos tres columnas: hora, rumbo y respuesta.\n\nEl otro equipo salió con el trípode."},
+	{"title": "09/11/1975", "text": "03.11. Dos luces al sudoeste. La de abajo cruzó la silueta de la sierra y volvió por el mismo lugar. No se oyó motor.\n\nEn la casilla de identificación, alguien escribió «U.F.O.» y encerró el rumbo en un círculo."},
+	{"title": "17/02/1976", "text": "Repetimos la observación desde la cueva y desde el filo. Acordamos anotar las luces antes de hablar para no copiar el rumbo del otro.\n\n02.16. Los dos equipos apuntaron al mismo sector. El receptor dio dos golpes secos."},
+	{"title": "21/09/1976", "text": "02.08. En el canal del refugio se oyó «no cruces todavía». El segundo equipo tenía la radio apagada.\n\nLa última columna quedó en blanco."},
+]
 const SKY_MEMORIES = {
 	2: "Te quedás quieto. Tu papá decía que había que darle tiempo a los ojos. Contás hasta diez. Entre dos estrellas aparece otra, más débil.",
 	7: "En la vereda tu papá te tapaba el farol con la mano. Primero te hacía buscar las dos del eje largo. La primera vez que marcaste el sur te pidió que le explicaras cómo, como si él también estuviera aprendiendo.",
@@ -439,11 +452,14 @@ func _process(delta):
 	hands.modulate = hand_tone
 	var radio_active: bool = radio_panel.visible or radio.interference.playing
 	score.radio_active = radio_active
-	var near_cave: bool = cave_built and player.position.distance_squared_to(ambience.cave_air.position) < 39.0 * 39.0
+	var near_cave: bool = is_instance_valid(cave) and player.position.distance_squared_to(ambience.cave_air.position) < 39.0 * 39.0
 	ambience.mix_cave_air(delta, near_cave, radio_active)
 	if mode in ["walk", "map"]: score_daily_walk(day, delta, in_museum)
 	if mode == "sighting": update_sighting(delta)
 	if mode == "cave":
+		if cave_static_seconds > 0.0:
+			cave_static_seconds = maxf(0.0, cave_static_seconds - delta)
+			if cave_static_seconds == 0.0 and hands.requested_pose == "radio": hands.hold("")
 		update_cave()
 	elif mode == "mara_door":
 		update_night_target()
@@ -523,7 +539,7 @@ func _process(delta):
 		if page == 2: note_intro_bridge(local)
 		if page == 1 and local.z < -10.43 and local.y > 0.29 and absf(local.x) < 1.70:
 			arrival_action = true
-		if page == 5 and not player.rope_climbing and local.y >= 1.40 and local.z < -10.76:
+		if page == 5 and not player.rope_climbing and local.y >= Arrival.LEDGE_TOP - 0.04 and local.z < -10.76:
 			arrival_action = true
 		var walked_out: bool = Arrival.left_fragment(local) and (page > 0 or arrival_action)
 		if walked_out or ((arrival_action or page in [2, 7]) and Arrival.reached_exit(page, local)):
@@ -741,11 +757,12 @@ func objective() -> String:
 		if distance >= valley.route.LAJA_FORK: return "Bajá por la cuerda o rodeá la laja por la vaguada."
 		return "Seguí la huella principal hasta el refugio."
 	if stage == 12 and player.position.z < -20.0: return "Volvé junto al cable y seguí el sendero oeste hasta la tranquera."
-	if stage == 18 and (player.position.z < -14.0 or player.position.z > 9.0 or absf(player.position.x) > 10.0):
+	if stage == 18 and night_home == 1: return "R · Avisale a Mara que llegaste."
+	if stage == 18 and night_home == 0 and (player.position.z < -14.0 or player.position.z > 9.0 or absf(player.position.x) > 10.0):
 		return "Volvé por las pircas. En el cruce podés volver por la loma o bajar al poste para tomar la huella del refugio."
 	if stage == 15 and not (bedtime and player.position.z > -12.0):
 		return "Seguí las pircas de bajada hasta el banco del acceso para cerrar la travesía."
-	if stage == 18 and bedtime: return "R · Llamá a Mara desde el patio del refugio."
+	if stage == 18 and night_home == 0 and bedtime: return "R · Llamá a Mara desde el patio del refugio."
 	if bedtime: return "Cuando quieras terminar el día, acercate a la cama y tocá E."
 	if pending_return: return "Volvé a pie al refugio y usá la radio junto a la entrada."
 	if stage == 10: return "Tomá el sendero oeste al salir de la tranquera. Al encontrar el cable, seguilo hasta el malacate."
@@ -849,7 +866,7 @@ func add_diary_entries():
 	if stage >= 19 and last_voice_reply >= 0:
 		var entry := "Cerré las cortinas. Al abrir los ojos, vi un disco con anillos y otro más chico del otro lado del arco."
 		if night_investigation == 3: entry = "En el claro hubo un destello. Después, el arco. Hay un pedazo que no puedo dibujar."
-		elif night_investigation >= 2: entry = "Tomé la bajada al sur. El tramo hasta mi cama no me sale en el dibujo."
+		elif night_investigation >= 2: entry = "Vi una raya de luz al sur. Me acuerdo de la puerta del refugio, pero no de todo lo que hay en el medio."
 		entry += "\n\nPregunté si era mi viejo." if last_voice_reply == 1 else "\n\nPregunté quién era."
 		entry += " La voz dijo: «Mirá una más»."
 		diary_entry("10 de noviembre · El arco", entry, Diary.ARCH)
@@ -958,7 +975,10 @@ func conversation(lines: Array, next: String):
 func speak():
 	radio.play()
 	var cue := "Espacio · seguir   /   Esc · volver" if after == "last_call" else "Espacio · seguir"
-	overlay("talk", "Mara\n\n" + str(sequence.pop_front()), cue)
+	var line: Variant = sequence.pop_front()
+	var speech := "Mara\n\n" + str(line)
+	if line is Dictionary: speech = str(line.speaker) + "\n\n" + str(line.text)
+	overlay("talk", speech, cue)
 
 func radio_available() -> bool:
 	if stage == 0 and not heard: return radio_taken and first_call_wait <= 0.0
@@ -969,10 +989,10 @@ func at_departure_stop() -> bool:
 
 func night_patio_ready() -> bool:
 	var at: Vector3 = player.position
-	return stage == 18 and bedtime and absf(at.x) < 8.5 and at.z > -11.5 and at.z < -1.15
+	return stage == 18 and night_home == 0 and bedtime and absf(at.x) < 8.5 and at.z > -11.5 and at.z < -1.15
 
 func mission_radio_available() -> bool:
-	return (stage == 0 and not heard) or awaiting_call or stage == 2 or (stage == 5 and not bedtime) or observing or (stage == 9 and not route_reported) or stage in [11, 14, 17]
+	return (stage == 0 and not heard) or awaiting_call or stage == 2 or (stage == 5 and not bedtime) or observing or (stage == 9 and not route_reported) or stage in [11, 14, 17] or (stage == 18 and night_home == 1)
 
 func available_trail_chat() -> String:
 	if mission_radio_available() or not player.climb_points.is_empty(): return ""
@@ -1067,6 +1087,14 @@ func start_patio_call():
 func radio_exchange():
 	if stage == 0 and not heard:
 		welcome_mara()
+		return
+	if stage == 18 and night_home == 1:
+		conversation([
+			{"speaker": "Hernán", "text": "Mara, soy yo. Llegué bien al refugio. Mañana voy a necesitar otra brújula."},
+			"¿Estás en la puerta? Te oigo claro ahora. Estuve esperando que volvieras a llamar.",
+			{"speaker": "Hernán", "text": "Tenemos que hablar de lo que pasó ahí abajo."},
+			"Sí. Dame hasta mañana. Todavía no sé cómo contarte lo que oí. Andá a descansar."
+		], "night_home")
 		return
 	var chat := available_trail_chat()
 	if night_patio_ready() and chat.is_empty():
@@ -1224,11 +1252,12 @@ func refresh_map_goal():
 	map_goal_origin = player.position
 
 func update_flashlight():
-	var active: bool = flashlight_out and (mode in ["walk", "approach", "map", "cave", "dream", "sighting"] or hands.requested_pose == "radio") and mode != "menu"
+	var in_cave_scene := is_instance_valid(cave)
+	var active: bool = flashlight_out and (mode in ["walk", "approach", "map", "dream", "sighting"] or in_cave_scene or hands.requested_pose == "radio") and mode != "menu"
 	player.flashlight.visible = active
 	if active:
 		var dark: float = valley.sky_mat.get_shader_parameter("nightfall")
-		var air := 1.15 if mode == "cave" and not cave_outside else smoothstep(0.37, 0.96, dark)
+		var air := 1.15 if in_cave_scene and not cave_outside else smoothstep(0.37, 0.96, dark)
 		player.flashlight_haze.set_shader_parameter("density", air)
 
 func close_journal():
@@ -1249,6 +1278,13 @@ func _unhandled_key_input(event):
 	if not event.pressed or event.echo: return
 	var key = event.keycode
 	var advance = key in [KEY_SPACE, KEY_ENTER]
+	if mode == "cave_notebook":
+		if key in [KEY_ESCAPE, KEY_TAB, KEY_E] or (advance and cave_notebook_page == CAVE_NOTEBOOK.size() - 1):
+			resume_cave()
+		elif key in [KEY_LEFT, KEY_RIGHT] or advance:
+			cave_notebook_page = clampi(cave_notebook_page + (-1 if key == KEY_LEFT else 1), 0, CAVE_NOTEBOOK.size() - 1)
+			show_cave_notebook()
+		return
 	if mode == "journal":
 		if advance or key in [KEY_ESCAPE, KEY_TAB]:
 			close_journal()
@@ -1318,7 +1354,9 @@ func _unhandled_key_input(event):
 		return
 	if key == KEY_B and mode in ["approach", "walk", "map", "cave"]:
 		if compass_lost:
-			hint.text = "La brújula quedó entre las piedras."
+			collect_notice = "Hernán · La brújula… La perdí en la cueva."
+			collect_notice_seconds = 3.6
+			hint.text = collect_notice
 			return
 		compass_out = not compass_out
 		if mode == "approach" and page == 3 and compass_out: arrival_action = true
@@ -1536,7 +1574,7 @@ func _unhandled_key_input(event):
 					"Dejar la mochila": put_down_arrival_bag()
 					"Cama":
 						if stage == 0 and heard and not bag_left: put_down_arrival_bag()
-						elif stage == 18 and bedtime: overlay("message", "Mara quedó en escucharte desde el patio. Salí y llamala por radio.", "Espacio · seguir")
+						elif stage == 18 and night_home == 0 and bedtime: overlay("message", "Mara quedó en escucharte desde el patio. Salí y llamala por radio.", "Espacio · seguir")
 						elif bedtime: overlay("rest", "¿Querés acostarte y terminar la jornada?", ["Dormir", "Seguir despierto"])
 						else: overlay("message", "Todavía te queda algo por hacer. " + objective(), "Espacio · levantarse")
 					"Observar el Cielo": open_book()
@@ -1612,6 +1650,13 @@ func _unhandled_key_input(event):
 			walk()
 		elif after == "last_call":
 			show_departure_choice()
+		elif after == "cave_rope":
+			resume_cave()
+		elif after == "night_home":
+			night_home = 2
+			bedtime = true
+			walk()
+			save_game(true, "walk")
 		elif after == "trail_chat_done":
 			trail_replies[trail_topic] = trail_answer
 			if trail_topic == "cauce":
@@ -1689,12 +1734,15 @@ func select_option(index: int):
 	elif mode == "last_night_choice":
 		if index == 0:
 			night_investigation = 1
-			score.cue("misterio", -16.0)
+			score.silence()
 			day_card("La última noche", "Seguís la luz entre los molles. Hay un tramo que después no vas a poder ubicar. Cuando volvés a oír la radio, estás frente a la boca de una cueva.", "Espacio · seguir")
 			mode = "night_cut"
 		else:
 			valley.set_curtains(false)
-			start_final_dream(false)
+			player.transform = bed_pose
+			player.velocity = Vector3.ZERO
+			flashlight_out = false
+			begin_dream(true)
 	elif mode == "last_voice":
 		last_voice_reply = index
 		var answer: = "La voz tarda. «Mirá una más. Después nos vamos». Viene de atrás del arco, o de muy cerca de tu oído."
@@ -1741,8 +1789,8 @@ func select_option(index: int):
 			return
 		if stage == 0 and not valley.book_unpacked: valley.unpack_book(book_has_ribbon())
 		bedtime = false
-		if stage in [7, 9]:
-			begin_dream()
+		if stage in [7, 9, 18]:
+			begin_dream(stage == 18)
 		else:
 			score.silence(2.5)
 			valley.morning()
@@ -1795,7 +1843,7 @@ func select_option(index: int):
 			creek_note += " Le contaste a Mara lo que viste."
 			conversation(["Mi viejo volvía de ahí con los bolsillos llenos de esas piedritas.", "Cuando lavábamos los pantalones, brillaba todo el patio."], "sleep")
 
-func begin_dream(preserve_bed: bool = false, fade_from_black: bool = false):
+func begin_dream(preserve_bed: bool = false):
 	dream_seconds_left = DREAM_SECONDS
 	dream_arches = 0
 	score.cue("otromundo", -14.0, 2.5)
@@ -1806,16 +1854,18 @@ func begin_dream(preserve_bed: bool = false, fade_from_black: bool = false):
 	var last := stage == 18
 	dream_count += 1
 	overlay("sleeping", "", "")
-	shade.color = Color.BLACK if fade_from_black else Color(0, 0, 0, 0)
+	shade.color = Color(0, 0, 0, 0)
 	var fade: = create_tween()
-	fade.tween_property(shade, "color:a", 1.0, 0.15 if fade_from_black else 1.8)
+	fade.tween_property(shade, "color:a", 1.0, 1.8)
 	fade.tween_callback( func():
 		words.text = "Te dormís de costado. Por un momento te parece que seguís afuera." if first else "Te acostás con el pelo todavía húmedo. Cerrás los ojos. Esta vez reconocés la curva antes de verla."
 		if night_investigation == 3:
 			words.text = "El blanco se vuelve tela. Oís a tu papá pasar una hoja. Del otro lado del arco alguien gira la perilla de una radio. El papel y la estática hacen el mismo ruido."
 		elif stage == 18:
 			words.text = "Apoyás la radio en el piso. Todavía caen gotas del alero. Las contás hasta perder la cuenta."
-			if night_investigation > 0:
+			if night_home == 2:
+				words.text = "Dejás la radio en el piso. Durante un rato mirás el techo, todavía con las botas puestas."
+			elif night_investigation > 0:
 				words.text = "Agarrás la bajada. Después hay un tramo que no podés ubicar. En el sueño, la radio sigue abierta."
 		valley.strange_sky(dream_variant())
 		player.walking = false
@@ -1926,7 +1976,9 @@ func finish_dream():
 			valley.morning()
 			stage = 19
 			save_game(true, "walk")
-			var waking: = "Abrís los ojos en tu cama. No sabés si volviste caminando. Buscás el cuaderno de la estación entre tus cosas. Solo está el tuyo.\n\n" if night_investigation > 0 else ""
+			var waking := ""
+			if night_investigation > 0:
+				waking = "Abrís los ojos en tu cama. Sobre la mesa, la radio sigue en el canal de anoche. Buscás entre tus cosas. El único cuaderno que encontrás es el tuyo.\n\n"
 			day_card("Día 41 · El dibujo", waking + "Intentás dibujar el arco en el reverso de un parte. Cuando enderezás el dintel, deja de parecerse al del sueño. Hoy termina tu relevo. Podés pasar por el museo antes de bajar a la curva. Mara te espera en la radio para despedirse.", "Espacio · levantarse")
 		elif stage == 7:
 			show_first_dream_wake()
@@ -1995,28 +2047,34 @@ func turn_book(step: int):
 
 func enter_cave():
 	hands.show_map(false)
-	if not cave_built:
-		LastNight.build_cave(valley)
-		cave_built = true
-	valley.cave_darkness()
-	valley.cave_moonlight()
+	if not is_instance_valid(cave):
+		cave = LastNight.build_cave(valley)
+		return_terrain = ReturnTerrain.new()
+		cave.add_child(return_terrain)
+		return_terrain.position.z = LastNight.EXIT_Z
+	valley.begin_cave_light()
+	valley.cave_light(1.0)
 	ambience.cave_air.position = LastNight.cave_point(Vector3(0.0, -2.0, -30.0))
 	player.camera.far = NIGHT_SCENE_VIEW
 	cave_outside = false
 	cave_station_called = false
+	cave_rope_cut = false
+	cave_rope_in_use = false
 	cave_notebooks_read = false
 	cave_exit_open = false
 	tunnel_call_step = 0
 	crux_found = false
-	clearing_cued = false
+	compass_lost = false
+	night_home = 0
 	cave_checkpoint = LastNight.ENTRY
-	radio.play()
+	return_foot = LastNight.RETURN_START
+	cave_static_seconds = 0.0
 	player.intro_center = LastNight.CAVE
 	player.scene_bounds = LastNight.BOUNDS
 	player.intro_heading = LastNight.HEADING
 	player.position = LastNight.cave_point(LastNight.ENTRY)
 	player.rotation.y = LastNight.HEADING
-	player.camera.rotation.x = 0.0
+	player.camera.rotation = Vector3.ZERO
 	player.velocity = Vector3.ZERO
 	flashlight_out = false
 	resume_cave()
@@ -2032,42 +2090,66 @@ func update_night_target():
 	target = str(hit.get_meta("item", "")) if hit else ""
 
 func update_cave():
+	if cave_rope_in_use and not player.rope_climbing:
+		player.remove_collision_exception_with(cave.get_node("BordeDelPozo"))
+		cave_rope_in_use = false
 	var local: Vector3 = LastNight.cave_local(player.position)
 	if local.y < LastNight.LOWER_FLOOR - 4.0:
-		player.position = LastNight.cave_point(cave_checkpoint)
+		player.position = LastNight.cave_point(return_foot if cave_outside else cave_checkpoint)
 		player.velocity = Vector3.ZERO
 		return
+	if cave_exit_open and local.z < LastNight.EXIT_Z + 21.0:
+		return_terrain.follow(local - Vector3(0, 0, LastNight.EXIT_Z))
 	if cave_exit_open and local.z < LastNight.EXIT_Z:
 		if not cave_outside:
+			if score.playing_cue == "misterio": score.silence(3.4)
 			cave_outside = true
-			valley.cave_moonlight()
 			compass_lost = true
 			compass_out = false
-			follow_last_light = true
-			overlay("cave_text", "Afuera solo oís tu respiración. Buscás la brújula y encontrás el cordón cortado. Entre los árboles se ve un pedazo de cielo.", "Espacio · buscar el sur")
-		else:
-			update_night_return(local)
+			hands.hold("")
+			player.scene_bounds = Rect2()
+		valley.cave_light(0.50)
+		update_night_return(local)
 		return
 	if cave_outside:
+		# El paredón deja volver por la boca del túnel.
+		if absf(local.x) > 2.65:
+			local.z = LastNight.EXIT_Z - 0.5
+			player.position = LastNight.cave_point(local)
+			player.velocity.z = 0.0
+			return
 		cave_outside = false
-		valley.cave_darkness()
-	var inside := local.z < LastNight.MOUTH_Z
-	if inside and valley.env.fog_enabled: valley.cave_darkness()
-	if not inside and not valley.env.fog_enabled: valley.cave_moonlight()
-	if local.z < -12.0 and player.is_on_floor() and local.y < -3.5:
+		var bounds := LastNight.BOUNDS
+		if absf(local.x) < bounds.size.x * 0.5: player.scene_bounds = bounds
+	var mouth_light := smoothstep(-12.4, 3.0, local.z)
+	var exit_light := 0.50 * (1.0 - smoothstep(0.0, 14.0, local.z - LastNight.EXIT_Z))
+	valley.cave_light(maxf(mouth_light, exit_light))
+	if local.z < LastNight.MOUTH_Z and not crux_found and (score.playing_cue != "misterio" or not score.is_playing()):
+		score.cue("misterio", -19.0, 4.0)
+	if not player.rope_climbing and local.z < LastNight.DROP_Z and player.is_on_floor() and local.y < -5.0:
 		cave_checkpoint = LastNight.CHECKPOINT
+		if not cave_rope_cut:
+			cave_rope_cut = true
+			LastNight.cut_descent(cave)
+			ambience.play_rope_snap(LastNight.cave_point(Vector3(0, 0, LastNight.DROP_Z)))
+			conversation([
+				{"speaker": "Hernán", "text": "Mara, ya estoy abajo. Se cortó la cuerda cuando la solté. Por acá no puedo volver."},
+				"¿Estás bien? Alumbrá al costado. Si ves algún cable, fijate adónde va. Capaz hay otra salida."
+			], "cave_rope")
+			hands.press_button()
+			return
 	if local.z < LastNight.TUNNEL_Z and not cave_exit_open:
 		local.z = LastNight.TUNNEL_Z
 		player.position = LastNight.cave_point(local)
 		player.velocity.z = 0.0
 	if cave_exit_open and tunnel_call_step < 2:
-		var threshold := -40.5 if tunnel_call_step == 0 else -48.0
+		var threshold := -95.0 if tunnel_call_step == 0 else -126.0
 		if local.z < threshold:
 			tunnel_call_step += 1
 			radio.play_interference()
 			var line := "Hernán · El cable sigue por el túnel. ¿Me copiás?\n\nMara · Te oigo de a ratos. Seguí por donde entra aire."
-			if tunnel_call_step == 2: line = "Mara · …si llegás a ver el cielo, buscá…\n\nSoltás el botón. Esta vez no vuelve ninguna voz."
-			overlay("cave_text", line, "Espacio · seguir por el túnel", "radio")
+			if tunnel_call_step == 2: line = "Mara · …Hernán, si me escuchás…"
+			overlay("cave_text", line, "Espacio · guardar la radio", "radio")
 			return
 	update_night_target()
 	if target == CaveRunes.TITLE and not flashlight_out: target = ""
@@ -2077,60 +2159,91 @@ func update_cave():
 		hint.text = "Signos copiados en el cuaderno" if found_collectibles.has(CaveRunes.ID) else "E · copiar los signos"
 	elif not target.is_empty():
 		hint.text = "E · " + target
-	elif local.z < LastNight.TUNNEL_Z + 2.0 and not cave_exit_open:
-		hint.text = "R · Contale a Mara lo de los cuadernos" if cave_notebooks_read else "Revisá los cuadernos en la mesa."
+	elif local.z < LastNight.TUNNEL_Z + 3.0 and not cave_exit_open:
+		hint.text = "R · Contale a Mara lo de los cuadernos" if cave_notebooks_read else "Revisá el cuaderno en la mesa."
 	elif objective_seconds > 0.0:
-		if cave_exit_open: hint.text = "Seguí el cable por el túnel, al fondo de la estación."
+		if cave_exit_open: hint.text = "Seguí el cable por el túnel."
 		elif cave_notebooks_read: hint.text = "R · Contale a Mara lo que encontraste."
-		elif local.y < -3.5: hint.text = "Rodeá el derrumbe por la galería y buscá los cuadernos." if local.z > -23.0 else "Revisá la estación y los cuadernos."
+		elif local.y < -5.0: hint.text = "Buscá los cuadernos de la estación."
 		elif local.z < -5.0: hint.text = "Buscá el anclaje de la cuerda junto al borde."
-		else: hint.text = "Entrá por la boca de la cueva. L · linterna"
+		else: hint.text = "L · linterna"
 	else:
-		hint.text = "L · encender la linterna     R · Mara" if not flashlight_out else "R · llamar a Mara"
+		hint.text = "L · encender la linterna" if not flashlight_out else ""
 
 func update_night_return(local: Vector3):
-	if local.y < -6.0:
-		player.position = LastNight.cave_point(LastNight.RETURN_START + Vector3.UP * 0.08)
-		player.velocity = Vector3.ZERO
-		return
-	if not crux_found:
-		if local.z < LastNight.RETURN_START.z - 6.0:
-			local.z = LastNight.RETURN_START.z - 6.0
-			player.position = LastNight.cave_point(local)
-		hint.text = "Buscá la Cruz del Sur entre las copas."
-		if looking_at_crux():
-			hint.text = "E · reconocer la Cruz del Sur"
-		elif objective_seconds > 0.0:
-			var sideways: float = crux_axis().dot(player.camera.global_basis.x)
-			var direction := "izquierda" if sideways < 0.0 else "derecha"
-			hint.text = "Buscá las dos estrellas del eje largo." if absf(sideways) < 0.18 else "Mirá arriba hacia la %s." % direction
-		return
-	var position := Vector2(local.x, local.z)
-	var clearing_distance := position.distance_to(LastNight.CLEARING)
-	if not clearing_cued and clearing_distance < 12.0:
-		clearing_cued = true
-		cue_clearing()
-	if clearing_distance < 2.5:
-		show_sighting(Sighting.CLEARING)
-		return
-	if position.distance_to(LastNight.RETURN) < 3.4:
-		hint.text = "E · seguir la bajada"
-	elif looking_at_crux():
-		hint.text = "Cruz del Sur · sur"
-	elif objective_seconds > 0.0 or absf(local.z - LastNight.FORK_Z) < 4.5:
-		hint.text = "En la bifurcación, la bajada sigue al sur. El claro queda hacia el otro ramal."
+	if player.is_on_floor():
+		return_foot = local + Vector3.UP * 0.03
+	target = ""
+	if collect_notice_seconds > 0.0:
+		hint.text = collect_notice
 	else:
-		hint.text = ""
+		hint.text = "Cruz del Sur · E · reconocer" if not crux_found and can_recognize_crux() else ""
+	if crux_found:
+		var remaining := Vector2(local.x - return_light.x, local.z - return_light.z).length()
+		valley.return_beacon.modulate.a = 0.71 + 0.14 * sin(Time.get_ticks_msec() * 0.0021)
+		if remaining < 13.0: reach_refuge()
+
+func can_recognize_crux() -> bool:
+	if not looking_at_crux(): return false
+	var eye: Vector3 = player.camera.global_position
+	return player.raycast_surface(eye, eye + crux_axis() * NIGHT_SCENE_VIEW).is_empty()
+
+func recognize_crux():
+	crux_found = true
+	collect_notice = "Sur"
+	collect_notice_seconds = 2.0
+	return_light = LastNight.cave_local(player.position) + Vector3(0, 0, -132.0)
+	return_light.y = ReturnTerrain.ground_height(return_light.x, return_light.z - LastNight.EXIT_Z) + 9.0
+	var flare := LastNight.cave_point(return_light)
+	place_sighting_light(valley.return_beacon, flare)
+	valley.return_beacon.modulate = Color(0.77, 0.88, 1.0, 0.71)
+	player.glance_toward(flare)
+	score.cue("cosmic", -14.0, 4.2)
+
+func reach_refuge():
+	overlay("cave_home", "", "")
+	shade.color = Color(0, 0, 0, 0)
+	var fade := create_tween().set_trans(Tween.TRANS_SINE)
+	fade.tween_property(shade, "color:a", 1.0, 3.6)
+	await fade.finished
+	valley.return_beacon.hide()
+	cave.queue_free()
+	cave = null
+	return_terrain = null
+	cave_outside = false
+	player.intro_center = Vector3.ZERO
+	player.intro_heading = 0.0
+	player.scene_bounds = player.DEFAULT_SCENE_BOUNDS
+	player.camera.far = valley_view_distance
+	player.position = Vector3(-0.48, 0.08, -1.78)
+	player.rotation.y = PI
+	player.camera.rotation = Vector3.ZERO
+	player.velocity = Vector3.ZERO
+	flashlight_out = false
+	valley.end_cave_light()
+	collect_notice_seconds = 0.0
+	night_home = 1
+	bedtime = false
+	save_game(true, "walk")
+	var reveal := create_tween().set_trans(Tween.TRANS_SINE)
+	reveal.tween_property(shade, "color:a", 0.0, 2.25)
+	await reveal.finished
+	walk()
 
 func call_from_cave():
 	var local: Vector3 = LastNight.cave_local(player.position)
-	if cave_outside or tunnel_call_step == 2: return
-	var line := "Mara · El arroyo pasa por abajo. Cerca del borde tendría que haber una cuerda. Alumbrá el suelo."
+	if cave_outside or tunnel_call_step == 2:
+		hands.hold("radio")
+		hands.press_button()
+		radio.play_interference()
+		cave_static_seconds = 1.5
+		return
+	var line := "Mara · Alumbrá el suelo. Cerca del borde tendría que haber una cuerda."
 	if local.z > LastNight.MOUTH_Z:
-		line = "Mara · ¿Me copiás? Si tenés la entrada enfrente, avanzá por el medio. Adentro el piso se corta. Llevá la linterna en la mano."
-	elif local.y < -3.5:
-		line = "Mara · Si la piedra te cierra el paso, buscá el hueco de la derecha. Más allá hay una sala. Fijate qué dejaron."
-		if cave_notebooks_read and not cave_station_called and local.z < -20.0:
+		line = "Mara · ¿Me copiás? Avanzá por el medio. Adentro el piso se corta. Llevá la linterna a mano."
+	elif local.y < -5.0:
+		line = "Mara · ¿Ves el cable? Creo que pasa por el salón grande. Fijate si hay algo en la mesa."
+		if cave_notebooks_read and not cave_station_called and local.z < -58.0:
 			cave_station_called = true
 			hear_station_cut()
 			return
@@ -2139,77 +2252,41 @@ func call_from_cave():
 	overlay("cave_text", line, "Espacio · guardar la radio", "radio")
 
 func hear_station_cut():
-	hands.press_button()
 	radio.play()
-	overlay("station_cut", "Hernán · Encontré un puesto de observación. Hay cuadernos fechados en los setenta. Alguien anotó este mismo canal.", "", "radio")
+	overlay("station_cut", "Hernán · Encontré un puesto de observación. Anotaban avistamientos en el 75 y el 76. Alguien usaba nuestro canal.", "", "radio")
+	hands.press_button()
 	await get_tree().create_timer(6.0).timeout
 	radio.play_interference()
 	overlay("station_cut", "Mara · ¿El mismo canal? Hernán, ¿vos estás…?", "", "radio")
 	await get_tree().create_timer(2.2).timeout
 	radio.play()
 	cave_exit_open = true
-	overlay("cave_text", "Mara · …el cable. Seguilo por el fondo, donde entra el aire. Si me dejás de oír, seguí igual.", "Espacio · buscar el túnel", "radio")
+	overlay("cave_text", "Mara · …el cable. Seguilo por el fondo, donde entra el aire.", "Espacio · guardar la radio", "radio")
 
 func inspect_cave():
 	if cave_outside:
-		if not crux_found and looking_at_crux():
-			crux_found = true
-			score.cue("cosmic", -14.0, 2.3)
-			var reading := "Encontrás las dos del eje largo. Lo prolongás hacia el sur, como te enseñó tu papá."
-			if 25 in sky_memories or 32 in sky_memories:
-				reading = "Hacés lo mismo que en la ladera. Primero las dos del eje largo. Después seguís la línea con la vista hasta el sur. Esta vez ni se te ocurre buscar la brújula."
-			var trail := "Al pie de la ladera se juntan dos huellas. La que baja al refugio sigue al sur."
-			if follow_last_light: trail += " Del otro lado de la bifurcación queda el claro."
-			overlay("cave_text", reading + "\n\n" + trail, "Espacio · seguir el rumbo")
-		elif crux_found:
-			var local: Vector3 = LastNight.cave_local(player.position)
-			if Vector2(local.x, local.z).distance_to(LastNight.RETURN) < 3.4:
-				start_final_dream(false)
+		if not crux_found and can_recognize_crux(): recognize_crux()
 		return
 	match target:
 		CaveRunes.TITLE:
 			if flashlight_out: record_cave_runes()
 		"Cuerda de descenso":
+			cave_rope_in_use = true
+			player.add_collision_exception_with(cave.get_node("BordeDelPozo"))
 			player.climb_rope(LastNight.descent_route(), LastNight.HEADING)
 		"Receptor":
 			radio.play_knocks()
-			overlay("cave_text", "Hay un receptor, un trípode y un cable que desaparece en una grieta. En el dial está marcada la frecuencia del refugio. Al girarlo oís dos golpes secos. La aguja se queda inmóvil.", "Espacio · soltar")
-		"Cuadernos de observación":
-			if not cave_notebooks_read: score.cue("misterio", -22.0, 3.0)
-			cave_notebooks_read = true
-			night_investigation = 2
-			var notebook := "14/10/1974 · «03.11. Dos destellos. El segundo bajó al claro».\n\n09/11/1978 · «Dos golpes. Una voz pidió que no cruzáramos todavía. La frecuencia del puesto estaba libre»."
-			var entries := "Hay columnas de hora, rumbo y respuesta. En la última siempre hay una raya."
-			if camp_read: entries = "Reconocés las columnas del cuaderno de la cumbre. Hora, rumbo y respuesta. La última también tiene una raya."
-			overlay("cave_text", notebook + "\n\n" + entries, "Espacio · dejar los cuadernos")
+			overlay("cave_text", "En el dial está marcada la frecuencia del refugio. Lo girás y oís dos golpes secos. La aguja se queda inmóvil.", "Espacio · soltar")
+		"Cuaderno de observación":
+			cave_notebook_page = 0
+			show_cave_notebook()
 
-func cue_clearing():
-	score.cue("tension", -10.5, 0.7, 25.0)
-
-func start_final_dream(blinded: bool):
-	if blinded:
-		cue_clearing()
-		night_investigation = 3
-		overlay("cave_flash", "", "")
-		shade.color = Color(1, 1, 0.96, 0)
-		var flash: = create_tween()
-		flash.tween_property(shade, "color:a", 1.0, 0.14)
-		flash.tween_callback(radio.play_interference)
-		flash.tween_interval(0.22)
-		flash.tween_property(shade, "color", Color.BLACK, 0.9)
-		await flash.finished
-	else:
-		overlay("cave_home", "", "")
-		shade.color = Color(0, 0, 0, 0)
-		var fade := create_tween()
-		fade.tween_property(shade, "color:a", 1.0, 0.8).set_trans(Tween.TRANS_SINE)
-		await fade.finished
-	player.intro_center = Vector3.ZERO
-	player.scene_bounds = player.DEFAULT_SCENE_BOUNDS
-	player.position = bed_pose.origin
-	player.velocity = Vector3.ZERO
-	flashlight_out = false
-	begin_dream(true, true)
+func show_cave_notebook():
+	if cave_notebook_page >= 1:
+		cave_notebooks_read = true
+		night_investigation = 2
+	overlay("cave_notebook", "", "")
+	journal_view.display(CAVE_NOTEBOOK[cave_notebook_page], cave_notebook_page, CAVE_NOTEBOOK.size(), false, false)
 
 func show_departure_choice():
 	var caption := "La radio queda en silencio. Desde la banquina ves el ómnibus doblar en la curva."
@@ -2499,7 +2576,7 @@ func show_sighting(kind: Sighting = Sighting.ABRA):
 	sighting_focus = 0.0
 	sighting_resolving = false
 	mode = "sighting"
-	player.walking = kind in [Sighting.ABRA, Sighting.QUARRY, Sighting.CROSSING, Sighting.SHELTER, Sighting.CLEARING]
+	player.walking = true
 	player.looking_only = true
 	Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
 	hands.show_map(false)
@@ -2523,9 +2600,6 @@ func show_sighting(kind: Sighting = Sighting.ABRA):
 		Sighting.SHELTER:
 			center = Vector3(48.0, 19.0, -26.0)
 			place_sighting_light(valley.second_beacon, center + Vector3(5, 3.2, 10))
-		Sighting.CLEARING:
-			var point := LastNight.CLEARING + Vector2(0, -5.0)
-			center = LastNight.cave_point(Vector3(point.x, LastNight.return_height(point.x, point.y) + 4.6, point.y))
 	place_sighting_light(valley.beacon, center)
 	update_sighting(0.0)
 
@@ -2552,20 +2626,13 @@ func looking_at_sighting() -> bool:
 
 func update_sighting(delta: float):
 	if sighting_resolving: return
-	if sighting == Sighting.CLEARING:
-		var local: Vector3 = LastNight.cave_local(player.position)
-		if Vector2(local.x, local.z).distance_to(LastNight.CLEARING) > 6.0 or local.y < -6.0:
-			valley.beacon.hide()
-			resume_cave()
-			return
 	sighting_time += delta
 	valley.beacon.modulate.a = 0.48 + 0.52 * pow(0.5 + 0.5 * sin(sighting_time * 3.3 + 0.8), 2.4)
 	valley.second_beacon.modulate.a = 0.38 + 0.62 * pow(0.5 + 0.5 * sin(sighting_time * 3.3 - 1.15), 2.4)
 	if looking_at_sighting():
 		sighting_focus += delta
 		var label := "?????" if sighting == Sighting.ABRA else "Luces extrañas"
-		var verb := " · E · quedarte mirando" if sighting == Sighting.CLEARING else " · E · observar"
-		hint.text = label + (verb if sighting_focus >= SIGHTING_FOCUS_SECONDS else "")
+		hint.text = label + (" · E · observar" if sighting_focus >= SIGHTING_FOCUS_SECONDS else "")
 		return
 	sighting_focus = 0.0
 	var camera: Camera3D = player.camera
@@ -2576,24 +2643,17 @@ func update_sighting(delta: float):
 	elif absf(sideways) > 0.23 or direction.dot(-camera.global_basis.z) < 0.0:
 		hint.text = "Mirá el cielo hacia la %s." % ("izquierda" if sideways < 0.0 else "derecha")
 	else:
-		if sighting == Sighting.CLEARING:
-			hint.text = "Algo brilla por encima de los árboles."
-		else:
-			hint.text = "Buscá el destello sobre la ladera."
+		hint.text = "Buscá el destello sobre la ladera."
 
 func observe_lights():
 	sighting_resolving = true
 	hint.text = ""
 	cross.hide()
 	var fade := create_tween()
-	if sighting == Sighting.CLEARING:
-		player.walking = false
-		fade.tween_property(valley.beacon, "modulate:a", 1.0, 0.85)
-	else:
-		fade.tween_property(valley.beacon, "modulate:a", 0.0, 0.45)
-		if valley.second_beacon.visible:
-			fade.parallel().tween_property(valley.second_beacon, "modulate:a", 0.0, 0.5).set_delay(0.35)
-		fade.tween_interval(0.28)
+	fade.tween_property(valley.beacon, "modulate:a", 0.0, 0.45)
+	if valley.second_beacon.visible:
+		fade.parallel().tween_property(valley.second_beacon, "modulate:a", 0.0, 0.5).set_delay(0.35)
+	fade.tween_interval(0.28)
 	await fade.finished
 	valley.beacon.hide()
 	valley.second_beacon.hide()
@@ -2614,8 +2674,6 @@ func observe_lights():
 			overlay("crossing_response", "La estática cede. «¿Ya llegaste? Recién prendo la radio». La luz titila por encima de la quebrada. Entre un destello y otro no se oye el agua.", ["Retrocedés con Mara en línea.", "Apagás la linterna y esperás.", "Alumbrás el cauce."], "radio")
 		Sighting.SHELTER:
 			overlay("last_night_choice", "Un punto queda quieto sobre los molles. El otro se pierde entre las ramas. Por la radio, Mara te pregunta si seguís despierto.", ["Seguís las luces en el monte.", "Entrás y te acostás."])
-		Sighting.CLEARING:
-			start_final_dream(true)
 
 func day_card(title: String, caption: String, cue: String):
 	overlay("message", title.to_upper() + "\n\n" + caption, cue)

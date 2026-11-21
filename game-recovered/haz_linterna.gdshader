@@ -13,6 +13,10 @@ void vertex() {
 void fragment() {
 	vec2 ndc = SCREEN_UV * 2.0 - 1.0;
 	float depth = texture(opaque_depth, SCREEN_UV).r;
+	// La profundidad despejada corresponde al cielo.
+	if (depth <= 0.00001) {
+		discard;
+	}
 #if CURRENT_RENDERER == RENDERER_COMPATIBILITY
 	depth = depth * 2.0 - 1.0;
 #endif
@@ -32,6 +36,10 @@ void fragment() {
 			scatter += core * envelope * step_size / (0.92 + 0.25 * travel * travel);
 		}
 	}
-	ALBEDO = vec3(0.87, 0.82, 0.68);
-	ALPHA = 1.0 - exp(-0.17 * density * scatter);
+	float glow = 0.13 * (1.0 - exp(-0.38 * density * scatter));
+	if (glow < 0.001) {
+		discard;
+	}
+	ALBEDO = vec3(0.87, 0.82, 0.68) * glow;
+	ALPHA = 1.0;
 }

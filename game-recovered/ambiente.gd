@@ -19,6 +19,7 @@ var rain_air := AudioStreamPlayer.new()
 var rain_roof := AudioStreamPlayer.new()
 var thunder := AudioStreamPlayer.new()
 var cave_air := AudioStreamPlayer3D.new()
+var rope_snap := AudioStreamPlayer3D.new()
 var cave_air_gain := 0.0
 var rain_gain := 0.0
 var roof_mix := 0.0
@@ -52,6 +53,7 @@ func _ready():
 	add_child(rain_roof)
 	add_child(thunder)
 	add_child(cave_air)
+	add_child(rope_snap)
 	rain_air.stream = open_rain
 	rain_roof.stream = covered_rain
 	thunder.stream = distant_thunder
@@ -59,6 +61,35 @@ func _ready():
 	cave_air.unit_size = 9.0
 	cave_air.max_distance = 39.0
 	cave_air.panning_strength = 0.48
+	rope_snap.stream = rope_snap_sound()
+	rope_snap.unit_size = 8.0
+	rope_snap.volume_db = -18.0
+
+func play_rope_snap(at: Vector3):
+	rope_snap.position = at
+	rope_snap.play()
+
+static func rope_snap_sound() -> AudioStreamWAV:
+	const RATE := 22050
+	var count := int(RATE * 0.38)
+	var samples := PackedByteArray()
+	samples.resize(count * 2)
+	var noise := RandomNumberGenerator.new()
+	noise.seed = 7564
+	var grain := 0.0
+	for i in count:
+		var t := float(i) / RATE
+		grain = lerpf(grain, noise.randf_range(-1.0, 1.0), 0.28)
+		var snap := maxf(t - 0.056, 0.0)
+		var strain := (1.0 - smoothstep(0.041, 0.056, t)) * smoothstep(0.0, 0.037, t)
+		var crack := smoothstep(0.0, 0.003, snap) * exp(-snap * 35.0)
+		var sound := grain * (0.23 * strain + 0.72 * crack) + 0.26 * sin(TAU * 218.0 * snap) * crack
+		samples.encode_s16(2 * i, int(sound * 27000.0))
+	var wave := AudioStreamWAV.new()
+	wave.format = AudioStreamWAV.FORMAT_16_BITS
+	wave.mix_rate = RATE
+	wave.data = samples
+	return wave
 
 func bird_call() -> AudioStreamWAV:
 	const RATE := 22050

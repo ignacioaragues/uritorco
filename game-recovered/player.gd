@@ -34,6 +34,7 @@ var rope_descending := false
 var ledge_elapsed := 0.0
 var look_speed: = 0.002
 var step_distance := 0.0
+var gaze_shift: Tween
 
 func _ready():
 	var hit: = CollisionShape3D.new()
@@ -76,8 +77,16 @@ func _ready():
 
 func _unhandled_input(event):
 	if (walking or looking_only) and climb_points.is_empty() and event is InputEventMouseMotion:
+		if gaze_shift and gaze_shift.is_running(): gaze_shift.kill()
 		rotate_y( - event.relative.x * look_speed)
 		camera.rotation.x = clampf(camera.rotation.x - event.relative.y * look_speed, -1.45, 1.45)
+
+func glance_toward(point: Vector3):
+	var direction := (point - camera.global_position).normalized()
+	var heading := atan2(-direction.x, -direction.z)
+	gaze_shift = create_tween().set_parallel().set_trans(Tween.TRANS_SINE)
+	gaze_shift.tween_property(self, "rotation:y", lerp_angle(rotation.y, heading, 1.0), 1.0)
+	gaze_shift.tween_property(camera, "rotation:x", asin(direction.y), 1.0)
 
 func climb_ledge() -> bool:
 	var points := ledge_route()
@@ -200,9 +209,10 @@ func _physics_process(delta):
 	if intro_center != Vector3.ZERO:
 		var local: = (position - intro_center).rotated(Vector3.UP, - intro_heading)
 		var bounds := dream_bounds if low_gravity else scene_bounds
-		local.x = clampf(local.x, bounds.position.x, bounds.end.x)
-		local.z = clampf(local.z, bounds.position.y, bounds.end.y)
-		position = intro_center + local.rotated(Vector3.UP, intro_heading)
+		if bounds.has_area():
+			local.x = clampf(local.x, bounds.position.x, bounds.end.x)
+			local.z = clampf(local.z, bounds.position.y, bounds.end.y)
+			position = intro_center + local.rotated(Vector3.UP, intro_heading)
 	else:
 		var lateral: = lerpf(46, 354, smoothstep(0, 55, -76 - position.z))
 		position.x = clampf(position.x, -maxf(lateral, Creek.west_limit(position.z)), lateral)

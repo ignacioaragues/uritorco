@@ -4,6 +4,7 @@ const Alien = preload("res://hallazgos_sueno.gd")
 const Kit = preload("res://equipo_campo.gd")
 const CaveRunes = preload("res://piedra_cueva.gd")
 const Structures = preload("res://estructuras.gd")
+const Stone = preload("res://piedra_serrana.gd")
 const DREAM_BOUNDS := Rect2(-73.0, -144.0, 146.0, 177.0)
 const DREAM_ARCH_DISTANCES := [17.0, 38.0, 62.0, 92.0]
 
@@ -26,20 +27,46 @@ const MINERAL_PROFILES = [
 		Vector4(0.54, 0.78, 0.68, 0.34), Vector4(0.81, 0.56, 0.52, 0.61),
 		Vector4(0.99, 0.16, 0.33, 0.87)],
 ]
-const ENTRY := Vector3(0, 0.08, 11)
-const MOUTH_Z := -1.0
-const LIP := Vector3(0, 0.08, -9.1)
-const LOWER_FLOOR := -4.4
-const CHECKPOINT := Vector3(0, LOWER_FLOOR + 0.08, -17)
-const TUNNEL_Z := -34.0
-const EXIT_Z := -56.4
-const RETURN_START := Vector3(0, 0.7, -57)
+const ENTRY := Vector3(0, 0.08, 15)
+const MOUTH_Z := 0.0
+const DROP_Z := -14.4
+const LIP := Vector3(0, 0.09, -13.45)
+const LOWER_FLOOR := -6.1
+const CHECKPOINT := Vector3(0, LOWER_FLOOR + 0.08, -17.0)
+const STATION := Vector3(-4.6, -6.0, -69.0)
+const TUNNEL_Z := -77.0
+const EXIT_Z := -148.0
+const RETURN_START := Vector3(0, 0.08, EXIT_Z - 1.0)
 const HEADING := PI
-const BOUNDS := Rect2(-42, -150, 84, 197)
-const FORK_Z := -85.0
-const CLEARING := Vector2(24.0, -121.0)
-const RETURN := Vector2(-21.5, -137.0)
-const RUNES_FOOT := Vector3(12.45, LOWER_FLOOR + 0.01, -29.7)
+const BOUNDS := Rect2(-31, EXIT_Z - 6, 62, 192)
+const RUNES_FOOT := Vector3(12.5, -6.27, -46.4)
+# Cada sección define distancia, eje, piso, semiancho y altura.
+const CAVE_SECTIONS := [
+	[0.0, -0.15, 0.0, 3.15, 4.12], [-2.5, -0.35, -0.06, 3.0, 3.68],
+	[-5.4, 0.10, -0.11, 3.4, 3.90], [-8.8, 0.65, 0.08, 4.0, 4.15],
+	[-12.0, 0.32, 0.04, 4.45, 4.50], [DROP_Z, 0.0, 0.0, 4.6, 4.65],
+	[DROP_Z - 0.04, 0.0, LOWER_FLOOR, 4.6, 10.75],
+	[-18.5, -0.48, LOWER_FLOOR, 5.15, 10.5], [-22.5, -1.12, -6.38, 6.15, 8.65],
+	[-27.0, -1.9, -6.55, 7.65, 7.8], [-30.6, -1.8, -6.49, 9.1, 8.5],
+	[-35.0, -0.3, -6.35, 11.2, 9.75], [-39.5, 1.5, -6.31, 13.40, 10.8],
+	[-44.0, 3.2, -6.29, 14.05, 12.45], [-49.5, 3.9, -6.20, 13.60, 11.12],
+	[-54.5, 2.5, -6.00, 12.0, 8.4], [-59.0, 0.8, -6.12, 9.30, 7.5],
+	[-64.0, -1.4, -6.01, 7.4, 7.15], [-68.5, -1.1, STATION.y, 7.6, 6.6],
+	[-72.3, -1.8, STATION.y, 7.45, 6.0], [-76.5, -2.1, -5.94, 5.20, 5.25],
+	[-80.2, -2.0, -5.80, 3.2, 3.7], [-84.0, -2.85, -5.60, 2.75, 3.5],
+	[-88.0, -5.02, -5.22, 2.8, 3.38], [-92.0, -8.15, -5.05, 2.68, 3.23],
+	[-96.5, -9.65, -4.68, 3.35, 3.45], [-101.0, -9.37, -3.85, 3.30, 3.45],
+	[-105.0, -7.72, -3.25, 2.6, 3.30], [-109.0, -4.85, -2.53, 2.52, 3.15],
+	[-113.0, -1.8, -2.20, 2.47, 3.12], [-117.0, 0.5, -1.65, 2.55, 3.4],
+	[-121.0, 2.1, -1.45, 2.62, 3.4], [-125.0, 1.95, -1.19, 2.67, 3.33],
+	[-129.0, 0.55, -0.95, 2.65, 3.12], [-133.0, -0.32, -0.67, 2.62, 3.00],
+	[-137.5, -0.70, -0.46, 2.54, 3.08], [-142.0, -0.45, -0.20, 2.65, 3.28],
+	[-145.0, -0.24, -0.08, 2.82, 3.47], [EXIT_Z, 0.0, 0.0, 3.10, 3.82],
+]
+const CAVE_ARCH := [Vector2(-0.86, 0.0), Vector2(-1.01, 0.16), Vector2(-1.04, 0.39),
+	Vector2(-0.91, 0.60), Vector2(-0.71, 0.82), Vector2(-0.47, 0.96), Vector2(-0.13, 1.0),
+	Vector2(0.23, 0.95), Vector2(0.57, 0.88), Vector2(0.82, 0.73),
+	Vector2(0.96, 0.50), Vector2(1.02, 0.25), Vector2(0.88, 0.0)]
 
 static func near_stop(position: Vector3) -> bool:
 	return position.distance_squared_to(STOP) < 64.0
@@ -61,260 +88,218 @@ static func cave_point(local: Vector3) -> Vector3:
 static func cave_local(position: Vector3) -> Vector3:
 	return (position - CAVE).rotated(Vector3.UP, -HEADING)
 
-static func build_cave(v):
+static func build_cave(v) -> Node3D:
 	var first: int = v.get_child_count()
-	var stone = preload("res://piedra_serrana.gd")
-	for piece in [
-		[Vector3(0, -0.5, -6), Vector3(8.4, 1.0, 8.0), "5f554a"],
-		[Vector3(0, LOWER_FLOOR - 0.6, -21.5), Vector3(9.2, 1.2, 27.0), "4f493f"],
-	]:
-		var floor_mesh: MeshInstance3D = v.box(CAVE + piece[0], piece[1], piece[2], true)
-		floor_mesh.material_override = stone.paint(piece[2])
-		floor_mesh.get_child(0).set_meta("footstep", &"stone")
-	var rise := Vector3(0, LOWER_FLOOR, -34.6)
-	var out := Vector3(0, RETURN_START.y, -56.0)
-	var ramp: MeshInstance3D = v.box(CAVE + rise.lerp(out, 0.5) - Vector3.UP * 0.37,
-		Vector3(8.8, 0.72, rise.distance_to(out) + 0.35), "514d40", true)
-	ramp.look_at(CAVE + out - Vector3.UP * 0.37)
-	ramp.material_override = stone.paint("514d40")
-	for side in [-1.0, 1.0]:
-		if side < 0:
-			rock_wall(v, Vector3(-4.75, -0.64, -17.75), Vector3(1.4, 10.4, 36), "514b43")
-		else:
-			rock_wall(v, Vector3(4.75, -0.64, -6), Vector3(1.4, 10.4, 12), "514b43")
-			rock_wall(v, Vector3(4.75, -0.64, -19.6), Vector3(1.4, 10.4, 5.3), "514b43")
-			rock_wall(v, Vector3(4.75, -0.64, -32.2), Vector3(1.4, 10.4, 7.0), "514b43")
-		rock_wall(v, Vector3(side * 3.65, 1.05, -44.5), Vector3(1.55, 12.0, 22.5), "504a41")
-		for i in 13:
-			var z := -1.8 - i * 2.62
-			if side > 0 and ((z < -11.5 and z > -17.5) or (z < -21.8 and z > -28.8)): continue
-			var edge := Vector3(side * (3.98 + 0.32 * sin(i * 2.8)), -0.35, z)
-			var crag: MeshInstance3D = v.stone(CAVE + edge, Vector3(1.75, 10.0, 4.05), "65594c", true)
-			crag.material_override = stone.paint("65594c")
-		for i in 11:
-			var z := -34.0 - i * 2.0
-			var y := lerpf(LOWER_FLOOR, RETURN_START.y, (z + 34.0) / -22.0)
-			var crag: MeshInstance3D = v.stone(CAVE + Vector3(side * (3.17 + 0.22 * sin(i)), y + 0.65, z),
-				Vector3(1.75, 4.15, 3.25), "5d564a", true)
-			crag.material_override = stone.paint("5d564a")
-	rock_wall(v, Vector3(0, 4.15, -18), Vector3(10.4, 1.8, 36.0), "554b42")
-	for opening in [Vector2(-14.46, 5.6), Vector2(-25.05, 6.5)]:
-		rock_wall(v, Vector3(4.75, 1.96, opening.x), Vector3(1.5, 5.2, opening.y), "514b43")
-	build_gallery(v)
-	var tunnel_roof: MeshInstance3D = rock_wall(v,
-		Vector3(0, rise.lerp(out, 0.5).y + 3.05, -44.7), Vector3(8.1, 1.5, 22.0), "4c463d")
-	tunnel_roof.rotation.x = atan2(out.y - rise.y, rise.z - out.z)
-	for i in 7:
-		var overhang: MeshInstance3D = v.stone(CAVE + Vector3((i - 3) * 1.52, 3.38 - 0.69 * absf(i - 3) + 0.25 * sin(i), -0.90),
-			Vector3(2.65, 2.12 + 0.55 * cos(i), 4.1), "746959", true)
-		overhang.material_override = stone.paint("746959")
+	var shell := Stone.surface()
+	var rings: Array[PackedVector3Array] = []
+	for row in CAVE_SECTIONS.size():
+		rings.append(cave_ring(CAVE_SECTIONS[row], row))
+	for row in rings.size() - 1:
+		var upper := rings[row]
+		var lower := rings[row + 1]
+		for i in upper.size():
+			var j := (i + 1) % upper.size()
+			var tone := Color("#625a50").lerp(Color("#83776a"), 0.43 + 0.18 * sin(row * 2.03 + i * 1.34))
+			if j == 0: tone = Color("#5d5448").lightened(0.04 + 0.025 * cos(row))
+			Stone.triangle(shell, upper[i], upper[j], lower[i], tone)
+			Stone.triangle(shell, upper[j], lower[j], lower[i], tone)
+	var cavern := Stone.finish(v, shell, "Galerías de la cueva")
+	cavern.position = CAVE
+	cavern.create_trimesh_collision()
+	cavern.get_child(0).set_meta("footstep", &"cave")
 	build_cave_approach(v)
-	build_cave_cover(v)
-	var anchor := Vector3(0, 0.3, -8.7)
-	var rope := PackedVector3Array([anchor + CAVE, CAVE + Vector3(0, 0.11, -9.76), CAVE + Vector3(0, 0.02, -10.26)])
-	for step in 12:
-		var t := (step + 1) / 12.0
-		rope.append(CAVE + Vector3(0.045 * sin(t * 9.2), lerpf(-0.32, LOWER_FLOOR + 0.07, t), -10.29 - 0.12 * t))
-	Kit.cord(v, rope, 0.042, Kit.material("b59a70"))
-	Kit.item(v, CAVE + Vector3(0, 0.25, -9.35), "Cuerda de descenso", Vector3.ZERO,
-		Vector3(0.38, 0.38, 1.82)).collision_layer = 2
-	var pin: MeshInstance3D = v.stone(CAVE + anchor - Vector3.UP * 0.10, Vector3(0.76, 0.43, 0.52), "a79b86")
-	pin.material_override = stone.paint("a79b86")
-	var base := CAVE + Vector3(0, LOWER_FLOOR - 0.7, 0)
-	v.timber(v.box(base + Vector3(-2.55, 1.15, -28), Vector3(1.1, 0.9, 3), "63503f", true))
-	v.box(base + Vector3(-2.48, 1.79, -28), Vector3(0.75, 0.38, 0.76), "414948", true, "Receptor")
-	for i in range(3):
-		v.box(base + Vector3(-2.075, 1.79, -28.28 + i * 0.21), Vector3(0.04, 0.075, 0.1), "9c8567")
-	v.box(base + Vector3(-2.48, 1.63, -26.85), Vector3(0.48, 0.055, 0.64), "a09273", true, "Cuadernos de observación")
-	var tripod: = base + Vector3(2.4, 0.7, -30.3)
-	for leg in [Vector3(-0.25, 0, 0.17), Vector3(0.25, 0, 0.17), Vector3(0, 0, -0.28)]:
-		var foot: Vector3 = tripod + leg
-		var strut = v.box(foot.lerp(tripod + Vector3.UP * 0.95, 0.5), Vector3(0.04, 0.04, 0.99), "665e51")
-		strut.look_at(tripod + Vector3.UP * 0.95)
-	v.box(tripod + Vector3.UP * 0.99, Vector3(0.28, 0.15, 0.29), "50545a")
-	var lamp = v.box(base + Vector3(-2.48, 1.88, -28.35), Vector3(0.085, 0.042, 0.035), "b65734")
-	lamp.material_override.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
-	Kit.cord(v, PackedVector3Array([
-		CAVE + Vector3(-2.78, -3.5, -28.1), CAVE + Vector3(-2.89, -4.34, -29.2),
-		CAVE + Vector3(-2.10, -4.35, -32.5), CAVE + Vector3(-1.55, -4.35, -34.8),
-		CAVE + Vector3(-1.47, -3.07, -40.2), CAVE + Vector3(-1.30, -1.85, -45.5),
-		CAVE + Vector3(-1.60, -0.49, -51.1), CAVE + Vector3(-1.65, 0.55, -55.5),
-	]), 0.030, Kit.material("675540"))
-	build_return(v)
+	build_portal(v, rings[0], 1.0)
+	build_portal(v, rings[-1], -1.0)
+	for light_data in [[Vector3(0.6, 3.5, 1.8), 0.83, 17.0], [Vector3(0.2, 1.93, EXIT_Z - 1.0), 0.51, 17.0]]:
+		var light := OmniLight3D.new()
+		light.light_color = Color("#a5b4d1")
+		light.light_energy = light_data[1]
+		light.omni_range = light_data[2]
+		light.shadow_enabled = true
+		v.add_child(light)
+		light.position = CAVE + light_data[0]
+	dress_cave(v)
 	var cave := Node3D.new()
-	cave.name = "Cueva y regreso"
+	cave.name = "Cueva"
 	v.add_child(cave)
 	cave.position = CAVE
 	while v.get_child(first) != cave:
 		v.get_child(first).reparent(cave)
+	var edge := StaticBody3D.new()
+	edge.name = "BordeDelPozo"
+	var wall := BoxShape3D.new()
+	wall.size = Vector3(10.0, 4.8, 0.14)
+	var collision := CollisionShape3D.new()
+	collision.shape = wall
+	edge.add_child(collision)
+	cave.add_child(edge)
+	edge.position = Vector3(0.0, 2.30, DROP_Z)
 	cave.rotation.y = HEADING
+	return cave
 
-static func build_gallery(v):
-	rock_wall(v, Vector3(9.6, LOWER_FLOOR - 0.58, -21.5), Vector3(13.6, 1.16, 21.0), "4e473c")
-	rock_wall(v, Vector3(9.8, 0.28, -21.5), Vector3(13.6, 1.55, 21.0), "514638")
-	rock_wall(v, Vector3(16.1, -1.8, -21.5), Vector3(1.5, 6.2, 21.8), "50473c")
-	rock_wall(v, Vector3(9.8, -1.8, -11.5), Vector3(13.1, 6.2, 1.45), "564a3e")
-	rock_wall(v, Vector3(9.8, -1.8, -31.6), Vector3(13.1, 6.2, 1.45), "52493f")
-	rock_wall(v, Vector3(0.25, -1.35, -19.75), Vector3(8.4, 6.3, 2.3), "625445")
-	var finish := preload("res://piedra_serrana.gd").paint("68594a")
-	for detail in [
-		[Vector3(-2.12, -1.65, -18.53), Vector3(4.1, 6.20, 2.40)],
-		[Vector3(1.28, -1.55, -19.05), Vector3(4.2, 6.2, 2.3)],
-		[Vector3(3.95, -2.50, -19.18), Vector3(1.35, 4.45, 2.2)],
-		[Vector3(9.9, -2.08, -19.6), Vector3(2.9, 6.1, 5.65)],
-		[Vector3(10.1, -2.5, -25.0), Vector3(3.1, 4.1, 4.3)],
-		[Vector3(14.93, -3.1, -13.7), Vector3(2.8, 3.0, 4.4)],
-		[Vector3(14.66, -2.94, -27.4), Vector3(2.5, 3.4, 3.4)],
-		[Vector3(7.3, -3.73, -30.5), Vector3(3.45, 1.7, 2.0)],
-		[Vector3(6.1, -0.9, -13.0), Vector3(6.2, 2.40, 3.0)],
-	]:
-		var rock: MeshInstance3D = v.stone(CAVE + detail[0], detail[1], "68594a", true)
-		rock.material_override = finish
-	CaveRunes.build(v, CAVE + RUNES_FOOT)
+static func cave_ring(section: Array, row: int) -> PackedVector3Array:
+	var ring := PackedVector3Array()
+	for i in CAVE_ARCH.size():
+		var arch: Vector2 = CAVE_ARCH[i]
+		var overhead := sin(PI * arch.y * 0.5)
+		# Mantener iguales los dos perfiles del pozo por encima del borde.
+		var shape := mini(row, 5) if row in [5, 6] else row
+		var pulse := sin(shape * 1.84 + i * 2.3)
+		var x: float = section[1] + section[3] * (arch.x + 0.045 * pulse)
+		var y: float = section[2] + section[4] * arch.y + overhead * pulse * 0.22
+		ring.append(Vector3(x, y, section[0]))
+	return ring
 
-static func rock_wall(v, at: Vector3, size: Vector3, tint: String) -> MeshInstance3D:
-	var stone = preload("res://piedra_serrana.gd")
-	var wall: MeshInstance3D = v.box(CAVE + at, size, tint, true)
-	wall.material_override = stone.paint(tint)
-	return wall
+static func gallery_center(z: float) -> Vector3:
+	for i in CAVE_SECTIONS.size() - 1:
+		var a: Array = CAVE_SECTIONS[i]
+		var b: Array = CAVE_SECTIONS[i + 1]
+		if z <= a[0] and z >= b[0]:
+			var t := inverse_lerp(a[0], b[0], z)
+			return Vector3(lerpf(a[1], b[1], t), lerpf(a[2], b[2], t), z)
+	return Vector3.ZERO
+
+static func build_portal(v, opening: PackedVector3Array, outward: float):
+	var face := Stone.surface()
+	var rim := PackedVector3Array()
+	for i in opening.size():
+		var at := opening[i]
+		var arch: Vector2 = CAVE_ARCH[i]
+		var width := 20.0 if outward > 0.0 else 15.0
+		var rise := 12.5 if outward > 0.0 else 10.0
+		rim.append(Vector3(arch.x * width, lerpf(-0.64, rise + 2.6 * sin(i * 1.35), arch.y),
+			at.z + outward * (0.8 + 1.6 * absf(arch.x) + 0.48 * sin(i * 0.9))))
+	for i in opening.size() - 1:
+		var shade := Color("#756d5f").lerp(Color("#4e4941"), 0.28 + 0.17 * sin(i * 1.23))
+		if outward > 0.0:
+			Stone.triangle(face, opening[i], rim[i], opening[i + 1], shade)
+			Stone.triangle(face, opening[i + 1], rim[i], rim[i + 1], shade)
+		else:
+			Stone.triangle(face, opening[i], opening[i + 1], rim[i], shade)
+			Stone.triangle(face, opening[i + 1], rim[i + 1], rim[i], shade)
+	var portal := Stone.finish(v, face, "Boca" if outward > 0 else "Paredón del túnel")
+	portal.position = CAVE
+	portal.create_trimesh_collision()
 
 static func descent_route() -> Array[Vector3]:
-	var points: Array[Vector3] = [LIP, Vector3(0, 0.10, -10.56)]
-	for step in 6:
-		points.append(Vector3(0, lerpf(0.10, LOWER_FLOOR + 0.08, (step + 1) / 6.0), -10.60))
-	points.append(Vector3(0, LOWER_FLOOR + 0.08, -11.45))
+	var points: Array[Vector3] = [LIP, Vector3(0, 0.12, DROP_Z - 0.57)]
+	for step in 8:
+		points.append(Vector3(0, lerpf(0.12, LOWER_FLOOR + 0.09, (step + 1) / 8.0), DROP_Z - 0.62))
+	points.append(CHECKPOINT)
 	for i in points.size(): points[i] = cave_point(points[i])
 	return points
 
+static func dress_cave(v):
+	var anchor := Vector3(-0.04, 0.24, -13.1)
+	var rim := Vector3(0, 0.05, DROP_Z - 0.19)
+	var hemp := Kit.material("b59a70")
+	Kit.cord(v, PackedVector3Array([CAVE + anchor, CAVE + rim]), 0.042, hemp)
+	var hanging := Node3D.new()
+	hanging.name = "CuerdaDesplegada"
+	v.add_child(hanging)
+	hanging.position = CAVE + Vector3(0, LOWER_FLOOR + 0.06, DROP_Z - 0.36)
+	var rope := PackedVector3Array([CAVE + rim - hanging.position])
+	for i in 14:
+		var t := (i + 1) / 14.0
+		rope.append(CAVE + Vector3(0.038 * sin(t * 9.2), lerpf(-0.23, LOWER_FLOOR + 0.12, t),
+			DROP_Z - 0.21 - 0.19 * t) - hanging.position)
+	Kit.cord(hanging, rope, 0.042, hemp)
+	var grip := Kit.item(v, CAVE + Vector3(0, 0.28, -13.65), "Cuerda de descenso", Vector3.ZERO,
+		Vector3(0.45, 0.44, 1.52))
+	grip.name = "AgarreDelPozo"
+	grip.collision_layer = 2
+	var pin: MeshInstance3D = v.stone(CAVE + anchor - Vector3.UP * 0.09, Vector3(0.84, 0.44, 0.67), "a79b86")
+	pin.material_override = Stone.paint("a79b86")
+	var faces := Stone.surface()
+	var rng := RandomNumberGenerator.new()
+	rng.seed = 1976
+	for form in [
+		[Vector3(4.8, -6.51, -26.8), Vector3(2.1, 4.2, 4.3)],
+		[Vector3(-6.8, -6.43, -32.8), Vector3(2.9, 3.75, 4.6)],
+		[Vector3(0.1, -6.32, -42.2), Vector3(6.6, 10.3, 11.0)],
+		[Vector3(6.1, -6.25, -50.1), Vector3(2.8, 5.16, 5.0)],
+		[Vector3(-5.8, -6.12, -57.4), Vector3(4.2, 5.2, 4.6)],
+		[Vector3(4.0, -6.04, -62.2), Vector3(2.39, 3.8, 3.5)],
+	]:
+		var foot: Vector3 = CAVE + form[0]
+		var geometry := Stone.fragment(faces, foot, form[1], rng.randf_range(-0.30, 0.30), rng)
+		Stone.solid(v, foot, geometry, "Roca de la galería")
+	Stone.finish(v, faces, "Afloramientos del interior")
+	CaveRunes.build(v, CAVE + RUNES_FOOT)
+	build_station(v)
+
+static func cut_descent(cave: Node3D):
+	var grip: StaticBody3D = cave.get_node("AgarreDelPozo")
+	var hanging: Node3D = cave.get_node("CuerdaDesplegada")
+	grip.collision_layer = 0
+	var fall := cave.create_tween().set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
+	fall.tween_property(hanging, "scale:y", 0.035, 0.62)
+	fall.parallel().tween_property(hanging, "rotation:z", -0.22, 0.62)
+	fall.tween_callback(func():
+		hanging.hide()
+		var coil := PackedVector3Array()
+		for i in 42:
+			var a := i * 0.27
+			var radius := 0.29 + i * 0.004
+			coil.append(hanging.position + Vector3(radius * cos(a), 0.012 + i * 0.001,
+				-0.48 + radius * sin(a) * 0.57))
+		Kit.cord(cave, coil, 0.035, Kit.material("a08964")))
+
+static func build_station(v):
+	var base := CAVE + STATION
+	v.timber(v.box(base + Vector3(0, 0.45, 0), Vector3(1.17, 0.90, 3.27), "63503f", true))
+	v.box(base + Vector3(-0.02, 1.10, -0.56), Vector3(0.76, 0.38, 0.78), "414948", true, "Receptor")
+	for i in 3:
+		v.box(base + Vector3(0.373, 1.10, -0.82 + i * 0.21), Vector3(0.04, 0.075, 0.1), "9c8567")
+	var notebook: MeshInstance3D = v.box(base + Vector3(0.08, 0.93, 0.95),
+		Vector3(0.53, 0.061, 0.68), "9d876a", true, "Cuaderno de observación")
+	notebook.rotation.y = -0.13
+	v.box(base + Vector3(0.08, 0.956, 0.95), Vector3(0.49, 0.011, 0.62), "c6b599").rotation.y = -0.13
+	var tripod := base + Vector3(7.05, 0.02, -3.6)
+	var head := tripod + Vector3.UP * 1.12
+	for leg in [Vector3(-0.33, 0, 0.23), Vector3(0.33, 0, 0.23), Vector3(0, 0, -0.31)]:
+		var foot: Vector3 = tripod + leg
+		var strut: MeshInstance3D = v.box(foot.lerp(head, 0.5), Vector3(0.052, 0.052, foot.distance_to(head)), "665e51")
+		strut.look_at(head)
+	v.box(head, Vector3(0.31, 0.19, 0.40), "50545a", true)
+	var lamp: MeshInstance3D = v.box(base + Vector3(0.37, 1.20, -0.58), Vector3(0.018, 0.039, 0.069), "a65634")
+	lamp.material_override.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	var wire := PackedVector3Array([base + Vector3(-0.10, 1.06, -0.92), base + Vector3(-0.56, 0.14, -1.73)])
+	for z in range(-74, int(EXIT_Z) + 1, -2):
+		wire.append(CAVE + gallery_center(z) + Vector3(-1.17, 0.064, 0))
+	Kit.cord(v, wire, 0.032, Kit.material("77614b"))
+
 static func build_cave_approach(v):
-	var surface := SurfaceTool.new()
-	surface.begin(Mesh.PRIMITIVE_TRIANGLES)
+	var levels := Stone.surface()
 	var ground_at := func(x: float, z: float) -> Vector3:
-		var banks := smoothstep(4.1, 21.0, absf(x))
-		var rise := (9.0 + 4.0 * sin(z * 0.14 + x * 0.03)) * banks
-		rise += 16.0 * smoothstep(14.0, 58.0, z)
+		var banks := smoothstep(4.5, 23.0, absf(x))
+		var rise := (7.7 + 3.3 * sin(z * 0.094 + x * 0.13)) * banks * smoothstep(0.0, 8.0, z)
+		rise += 13.0 * smoothstep(22.0, 61.0, z)
 		return Vector3(x, rise, z)
-	for row in 24:
-		var z := -2.0 + row * 4.0
-		for column in 42:
-			var x := -84.0 + column * 4.0
-			for offset in [Vector2.ZERO, Vector2.RIGHT * 4, Vector2.DOWN * 4, Vector2.RIGHT * 4,
-					Vector2.ONE * 4, Vector2.DOWN * 4]:
-				surface.add_vertex(ground_at.call(x + offset.x, z + offset.y))
-	surface.generate_normals()
-	var hill := MeshInstance3D.new()
-	hill.mesh = surface.commit()
-	hill.material_override = preload("res://piedra_serrana.gd").paint("69614d")
-	v.add_child(hill)
-	hill.position = CAVE
-	hill.create_trimesh_collision()
-	for side in [-1.0, 1.0]:
-		for i in 8:
-			var x: float = side * (7.4 + i * 1.2)
-			var z := 2.0 + i * 3.2
-			var foot: Vector3 = ground_at.call(x, z)
-			var stone: MeshInstance3D = v.stone(CAVE + foot + Vector3.DOWN * 0.48,
-				Vector3(4.0 + 1.1 * cos(i), 3.7, 4.9), "706851", true)
-			stone.material_override = preload("res://piedra_serrana.gd").paint("706851")
-
-static func build_cave_cover(v):
-	var shell := SurfaceTool.new()
-	shell.begin(Mesh.PRIMITIVE_TRIANGLES)
-	var rim := PackedVector3Array()
-	const COLS := 19
-	const ROWS := 15
-	for row in ROWS:
-		var z := -0.85 - row * 3.4
-		for column in COLS:
-			var x := (column - 9) * 4.0
-			var flank := smoothstep(3.0, 25.0, absf(x))
-			var depth := smoothstep(-0.75, -13.0, z)
-			var height := 4.65 - 4.0 * flank
-			height += depth * (10.8 + 4.6 * sin(x * 0.14 + z * 0.088))
-			height += (0.35 + 1.9 * depth) * sin(x * 0.5 + z * 0.2)
-			height *= 1.0 - 0.77 * smoothstep(-37.0, -48.5, z)
-			var vertex := Vector3(x, height, z)
-			if row == 0: rim.append(vertex)
-			shell.add_vertex(vertex)
-	for row in ROWS - 1:
-		for column in COLS - 1:
-			var a := row * COLS + column
-			for index in [a, a + COLS, a + 1, a + 1, a + COLS, a + COLS + 1]:
-				shell.add_index(index)
-	var start := COLS * ROWS
-	for col in COLS - 1:
-		var left := rim[col]
-		var right := rim[col + 1]
-		if absf((left.x + right.x) * 0.5) < 6.0: continue
-		var foot_left := Vector3(left.x, -1.1, left.z)
-		var foot_right := Vector3(right.x, -1.1, right.z)
-		for vertex in [left, right, foot_left, foot_right]: shell.add_vertex(vertex)
-		for index in [start, start + 1, start + 2, start + 1, start + 3, start + 2]: shell.add_index(index)
-		start += 4
-	shell.generate_normals()
-	var cover := MeshInstance3D.new()
-	cover.mesh = shell.commit()
-	cover.material_override = preload("res://piedra_serrana.gd").paint("665c4e")
-	v.add_child(cover)
-	cover.position = CAVE
-	cover.create_trimesh_collision()
-
-static func trail_x(z: float, clearing: bool) -> float:
-	if clearing:
-		return CLEARING.x * smoothstep(FORK_Z, CLEARING.y, z)
-	return RETURN.x * smoothstep(FORK_Z, RETURN.y, z) + 4.5 * sin(PI * smoothstep(-57.0, RETURN.y, z))
-
-static func return_height(x: float, z: float) -> float:
-	var relief := 0.5 * sin(z * 0.19 + x * 0.15) + 0.46 * cos(x * 0.27 - z * 0.11)
-	var bank := 3.2 * smoothstep(13.0, 33.0, absf(x))
-	return 0.7 + smoothstep(-56.0, -65.0, z) * (relief + bank - 0.065 * (-z - 65.0))
-
-static func build_return(v):
-	const COLUMNS := 43
-	const ROWS := 65
-	var surface := SurfaceTool.new()
-	surface.begin(Mesh.PRIMITIVE_TRIANGLES)
-	for row in ROWS:
-		var z := -55.85 - row * 2.0
-		for column in COLUMNS:
-			var x := -42.0 + column * 2.0
-			var distance := absf(x - trail_x(z, false))
-			if z < FORK_Z:
-				var clearing_distance := absf(x - trail_x(z, true))
-				distance = minf(distance, clearing_distance + 4.0 * smoothstep(CLEARING.y - 4.0, CLEARING.y - 9.0, z))
-			var trail := 1.0 - smoothstep(1.45, 3.6, distance)
-			var grass := Color("#3f4a38").lightened(0.09 * sin(x * 0.61 + z * 0.48))
-			surface.set_color(grass.lerp(Color("#827757"), trail))
-			surface.add_vertex(Vector3(x, return_height(x, z), z))
-	for row in ROWS - 1:
-		for column in COLUMNS - 1:
-			var a := row * COLUMNS + column
-			for index in [a, a + COLUMNS, a + 1, a + 1, a + COLUMNS, a + COLUMNS + 1]:
-				surface.add_index(index)
-	surface.generate_normals()
-	var ground := MeshInstance3D.new()
-	ground.mesh = surface.commit()
-	var material := preload("res://piedra_serrana.gd").paint()
-	ground.material_override = material
-	v.add_child(ground)
+	for row in 27:
+		var z := row * 3.0
+		for column in 50:
+			var x := -75.0 + column * 3.0
+			for offset in [Vector2.ZERO, Vector2.RIGHT * 3, Vector2.DOWN * 3, Vector2.RIGHT * 3,
+					Vector2.ONE * 3, Vector2.DOWN * 3]:
+				levels.set_color(Color("#716854").lightened(0.034 * sin(x * 0.31 + z * 0.35)))
+				levels.add_vertex(ground_at.call(x + offset.x, z + offset.y))
+	var ground := Stone.finish(v, levels, "Quebrada de la entrada")
 	ground.position = CAVE
 	ground.create_trimesh_collision()
+	var scree := Stone.surface()
 	var rng := RandomNumberGenerator.new()
-	rng.seed = 441
-	for i in 300:
-		var x := rng.randf_range(-40.0, 40.0)
-		var z := rng.randf_range(-171.0, -57.0)
-		if absf(x - trail_x(z, false)) < 3.7 or absf(x - trail_x(z, true)) < 3.8: continue
-		if Vector2(x, z).distance_to(CLEARING) < 7.4: continue
-		var foot := CAVE + Vector3(x, return_height(x, z), z)
-		if i % 3 == 0:
-			v.box(foot + Vector3.UP * 1.3, Vector3(0.23, 2.75, 0.23), "4d4335")
-			v.stone(foot + Vector3.UP * 2.95, Vector3(3.2, 2.4, 3.8), "424b39")
-		else:
-			v.stone(foot + Vector3.DOWN * 0.05, Vector3(2.4, rng.randf_range(0.55, 1.7), 1.8), "585849", true)
-	var marker := CAVE + Vector3(RETURN.x + 1.0, return_height(RETURN.x + 1.0, RETURN.y), RETURN.y)
-	for level in 4:
-		v.stone(marker + Vector3.UP * (0.16 + level * 0.2), Vector3(0.9 - level * 0.15, 0.28, 0.66 - level * 0.11), "98907c", true)
+	rng.seed = 40114
+	for side in [-1.0, 1.0]:
+		for i in 13:
+			var x: float = side * rng.randf_range(5.3, 21.8)
+			var z := rng.randf_range(3.9, 29.0)
+			var foot: Vector3 = ground_at.call(x, z)
+			var size_m := rng.randf_range(1.2, 3.55)
+			var shape := Stone.fragment(scree, CAVE + foot - Vector3.UP * 0.12,
+				Vector3(1.5, 0.80, 1.08) * size_m, rng.randf() * TAU, rng)
+			Stone.solid(v, CAVE + foot, shape, "Piedra de la quebrada")
+	Stone.finish(v, scree, "Piedras al pie de la boca")
 
 static func build_door(v):
 	for side in [-1, 1]:

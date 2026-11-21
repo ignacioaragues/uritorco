@@ -38,9 +38,13 @@ func _ready():
 	hide()
 
 func display(kind: String, caption: String, footer: Variant):
-	speaker.text = "MARA   /   RADIO" if kind == "talk" else "RADIO"
+	speaker.text = "RADIO"
 	if reveal: reveal.kill()
-	line.text = caption.trim_prefix("Mara\n\n")
+	line.text = caption
+	if kind == "talk":
+		var parts := caption.split("\n\n", true, 1)
+		speaker.text = parts[0].to_upper() + "   /   RADIO"
+		line.text = parts[1]
 	line.visible_characters = -1
 	if kind == "talk":
 		line.visible_characters = 0

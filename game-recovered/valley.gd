@@ -32,6 +32,7 @@ var flag_material: ShaderMaterial
 var sun: = DirectionalLight3D.new()
 var beacon := Sprite3D.new()
 var second_beacon := Sprite3D.new()
+var return_beacon := Sprite3D.new()
 var sky_mat: = ShaderMaterial.new()
 var window_glass := ShaderMaterial.new()
 var curtains_open := true
@@ -299,11 +300,15 @@ func build_sighting_lights():
 	texture.fill = GradientTexture2D.FILL_RADIAL
 	texture.fill_from = Vector2(0.5, 0.5)
 	texture.fill_to = Vector2(1.0, 0.5)
-	for light in [beacon, second_beacon]:
+	var line: GradientTexture2D = texture.duplicate()
+	line.width = 152
+	line.height = 22
+	for light in [beacon, second_beacon, return_beacon]:
 		light.texture = texture
 		light.billboard = BaseMaterial3D.BILLBOARD_ENABLED
 		add_child(light)
 		light.hide()
+	return_beacon.texture = line
 
 func transition() -> Tween:
 	if lighting and lighting.is_valid():
@@ -406,21 +411,21 @@ func shape_daylight(profile: Dictionary, rain: float, local_mist: float, dusk: f
 	env.fog_light_color = air.lerp(Color("#30374c"), dark)
 	env.fog_density = lerpf(float(profile.mist) + local_mist, 0.0105, drizzle * 0.87)
 
-func cave_darkness():
+func begin_cave_light():
 	exterior_light = false
-	if lighting and lighting.is_valid(): lighting.kill()
-	light_target = ""
-	sky_mat.set_shader_parameter("nightfall", 1.0)
+	restore_light(1.0, 1.0)
 	sun.light_energy = 0.0
-	env.fog_enabled = false
-	env.ambient_light_energy = 0.018
-
-func cave_moonlight():
 	env.fog_enabled = true
-	env.fog_density = 0.0027
-	var tween := transition()
-	tween.tween_property(env, "ambient_light_color", Color("#aab6d1"), 1.3)
-	tween.tween_property(env, "ambient_light_energy", 0.14, 1.3)
+	env.ambient_light_color = Color("#9aa6bb")
+	env.fog_light_color = Color("#181e2e")
+
+func cave_light(exposure: float):
+	env.ambient_light_energy = lerpf(0.003, 0.093, exposure)
+	env.fog_density = lerpf(0.002, 0.013, exposure)
+
+func end_cave_light():
+	exterior_light = true
+	restore_light(1.0, 1.0)
 
 func dress_shelter():
 	var finishes := [Refuge.wood("82674d", true), Refuge.wood("8d7053", true), Refuge.wood("877057", true)]

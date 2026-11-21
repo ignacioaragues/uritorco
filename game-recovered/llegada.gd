@@ -17,6 +17,10 @@ const ACTIONS = ["Recoger la mochila", "Saltar el tronco", "", "Probar la brúju
 const HEADINGS = [0.0, -0.52, 0.72, 1.05, -0.8, 0.26, -1.19, 0.5]
 const DUSK = [0.0, 0.0, 0.0, 0.25, 0.45, 0.63, 0.91, 1.0]
 const DARK = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.64, 0.90]
+const LEDGE_TOP := 2.62
+const LEDGE_RISE := LEDGE_TOP / 1.43
+const LEDGE_BACK := -12.53
+const LEDGE_TOE := -16.10
 const LEDGE_ROPE = [
 	Vector3(0.16, 0.073, -10.18), Vector3(0.10, 0.69, -10.29),
 	Vector3(0.10, 1.30, -10.56), Vector3(0.12, 1.44, -10.63),
@@ -96,8 +100,9 @@ static func safe_saved_position(index: int, position: Vector3, action_done: bool
 	var floor_y := ground_height(index, local.x, -local.z)
 	if index == 2 and absf(local.x) < 1.38 and local.z < -6.94 and local.z > -14.47:
 		floor_y = 0.008
-	elif index == 5 and absf(local.x) < 1.76 and local.z < -10.72 and local.z > -12.54:
-		floor_y = 1.43
+	elif index == 5 and absf(local.x) < 1.76 and local.z < -10.72 and local.z > LEDGE_TOE:
+		var descent := clampf(inverse_lerp(LEDGE_BACK, LEDGE_TOE, local.z), 0.0, 1.0)
+		floor_y = maxf(floor_y, lerpf(LEDGE_TOP, -0.12 * LEDGE_RISE, descent))
 	local.y = maxf(local.y, floor_y + 0.045)
 	return world_position(index, local)
 
@@ -105,12 +110,17 @@ static func rope_route() -> Array[Vector3]:
 	var points: Array[Vector3] = []
 	for offset in [
 		Vector3(0.04, 0.02, -9.87), Vector3(0.06, 0.37, -9.94),
-		Vector3(0.08, 0.78, -10.04), Vector3(0.10, 1.18, -10.16),
+		Vector3(0.072, 0.57, -9.99), Vector3(0.08, 0.78, -10.04),
+		Vector3(0.09, 0.99, -10.10), Vector3(0.10, 1.18, -10.16),
+		Vector3(0.11, 1.38, -10.21),
 		Vector3(0.12, 1.52, -10.25), Vector3(0.14, 1.52, -11.05),
 		Vector3(0.14, 1.45, -11.38)
 	]:
-		points.append(world_position(5, offset))
+		points.append(world_position(5, raised_ledge(offset)))
 	return points
+
+static func raised_ledge(point: Vector3) -> Vector3:
+	return Vector3(point.x, point.y * LEDGE_RISE, point.z)
 
 static func show_fragment(v, active: int):
 	for index in v.arrival_fragments.size():
@@ -343,9 +353,12 @@ static func build_laja(v, center: Vector3):
 		[Vector3(-1.83, -0.12, -10.32), Vector3(1.83, -0.12, -10.32)],
 		[Vector3(-1.68, 0.74, -10.43), Vector3(1.66, 0.75, -10.47)],
 		[Vector3(-1.75, 1.43, -10.72), Vector3(1.75, 1.43, -10.72)],
-		[Vector3(-1.88, 1.42, -12.53), Vector3(1.88, 1.42, -12.53)],
-		[Vector3(-1.83, -0.12, -16.10), Vector3(1.83, -0.12, -16.10)]
+		[Vector3(-1.88, 1.42, LEDGE_BACK), Vector3(1.88, 1.42, LEDGE_BACK)],
+		[Vector3(-1.83, -0.12, LEDGE_TOE), Vector3(1.83, -0.12, LEDGE_TOE)]
 	]
+	for row in rows:
+		row[0] = raised_ledge(row[0])
+		row[1] = raised_ledge(row[1])
 	for row in range(rows.size() - 1):
 		for p in [rows[row][0], rows[row + 1][0], rows[row][1], rows[row][1], rows[row + 1][0], rows[row + 1][1]]:
 			surface.set_smooth_group(-1)
@@ -365,11 +378,11 @@ static func build_laja(v, center: Vector3):
 		Stone.fragment(pieces, center + Vector3(offset * 0.91, 0.12, -10.32), Vector3(0.68, 0.39, 0.74), -offset, rng)
 	Stone.finish(v, pieces, "Piedras junto a la laja")
 	var points := PackedVector3Array()
-	for point: Vector3 in LEDGE_ROPE: points.append(center + point)
+	for point: Vector3 in LEDGE_ROPE: points.append(center + raised_ledge(point))
 	var hemp := Refuge.cloth("bbaa83", "a4906e", 0.19)
 	FieldKit.cord(v, points, 0.023, hemp)
 	var peg := FieldKit.material("655345", false, 0.64)
-	var anchor: Vector3 = center + LEDGE_ROPE.back()
+	var anchor: Vector3 = center + raised_ledge(LEDGE_ROPE.back())
 	FieldKit.cylinder(v, anchor + Vector3.DOWN * 0.07, 0.018, 0.018, 0.13, peg)
 	var knot := TorusMesh.new()
 	knot.inner_radius = 0.030
