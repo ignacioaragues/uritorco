@@ -24,6 +24,40 @@ static func cloth(base: String, dye: String, period: float) -> ShaderMaterial:
 	finish.set_shader_parameter("period", period)
 	return finish
 
+static func curtain_rail(parent: Node3D, center: Vector3, width: float):
+	var metal := Kit.material("6a5140", false, 0.55)
+	var rod := Kit.cylinder(parent, center, 0.018, 0.018, width, metal)
+	rod.rotation.x = PI * 0.5
+	for side: float in [-1.0, 1.0]:
+		var end := center + Vector3.BACK * side * width * 0.5
+		Kit.cylinder(parent, end, 0.031, 0.031, 0.035, metal).rotation.x = PI * 0.5
+		Kit.block(parent, end + Vector3(0.083, -0.006, -side * 0.14), Vector3(0.168, 0.026, 0.038), metal)
+
+static func curtain_panel(parent: Node3D, width: float, height: float) -> MeshInstance3D:
+	const COLUMNS := 49
+	const ROWS := 11
+	var surface := SurfaceTool.new()
+	surface.begin(Mesh.PRIMITIVE_TRIANGLES)
+	for row in ROWS:
+		var drop := float(row) / (ROWS - 1)
+		for column in COLUMNS:
+			var across := float(column) / (COLUMNS - 1)
+			var wave := across * TAU * 6.0 + drop * across * 0.36
+			var fold := sin(wave) * (0.026 + 0.012 * drop)
+			var hem := sin(wave + 0.7) * 0.014 * drop * drop
+			surface.add_vertex(Vector3(fold, -height * drop + hem, width * across))
+			if row > 0 and column > 0:
+				var a := (row - 1) * COLUMNS + column - 1
+				for index in [a, a + 1, a + COLUMNS, a + 1, a + COLUMNS + 1, a + COLUMNS]:
+					surface.add_index(index)
+	surface.generate_normals()
+	var panel := Kit.mesh_part(parent, surface.commit(), Vector3.ZERO, cloth("cbb796", "ada080", 0.61))
+	panel.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_DOUBLE_SIDED
+	var edging := Kit.material("aa9675", true)
+	for tab in range(7):
+		Kit.block(panel, Vector3(0.0, 0.016, width * (0.036 + 0.155 * tab)), Vector3(0.049, 0.054, 0.041), edging)
+	return panel
+
 static func brace(parent: Node3D, foot: Vector3, joint: Vector3, thickness: float, finish: Material):
 	var leg := Kit.block(parent, (foot + joint) * 0.5, Vector3(thickness, foot.distance_to(joint), thickness), finish)
 	leg.quaternion = Quaternion(Vector3.UP, foot.direction_to(joint))

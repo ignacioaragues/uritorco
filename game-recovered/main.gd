@@ -534,6 +534,8 @@ func _process(delta):
 	elif mode == "walk":
 		var hit = player.ray.get_collider()
 		target = str(hit.get_meta("item", "")) if hit else ""
+		if target == "Cortinas" and not in_refuge:
+			target = ""
 		if stage == -1 and player.position.z < 0 and target == "":
 			hint.text = "E · interactuar al mirar la puerta"
 			return
@@ -551,6 +553,9 @@ func _process(delta):
 			return
 		if objective_seconds > 0.0:
 			hint.text = objective()
+			return
+		if target == "Cortinas":
+			hint.text = curtain_hint()
 			return
 		if stage == 0 and target == "Radio" and not radio_taken:
 			hint.text = "E · levantar la radio"
@@ -806,7 +811,7 @@ func add_diary_entries():
 	if crossing_response >= 0:
 		diary_entry("5 de noviembre · La pasarela", "El agua dejó pasto en el travesaño de abajo. Marqué la altura con carbón.\n\n" + CROSSING_NOTES[crossing_response], Diary.BRIDGE)
 	if stage >= 19 and last_voice_reply >= 0:
-		var entry := "Cerré la cortina. Cuando abrí los ojos había dos lunas del otro lado del arco."
+		var entry := "Cerré las cortinas. Cuando abrí los ojos había dos lunas del otro lado del arco."
 		if night_investigation == 3: entry = "En el claro hubo un destello. Después, el arco. Hay un pedazo que no puedo dibujar."
 		elif night_investigation >= 2: entry = "Tomé la bajada al sur. El tramo hasta mi cama no me sale en el dibujo."
 		entry += "\n\nPregunté si era mi viejo." if last_voice_reply == 1 else "\n\nPregunté quién era."
@@ -1291,8 +1296,11 @@ func _unhandled_key_input(event):
 		player.velocity.y = lerpf(5.7, 3.1, smoothstep(0.03, 1.60, player.water_depth))
 		return
 	if mode == "sighting":
-		if key == KEY_E and not sighting_resolving and sighting_focus >= SIGHTING_FOCUS_SECONDS and looking_at_sighting():
-			observe_lights()
+		if key == KEY_E and not sighting_resolving:
+			if sighting == Sighting.SHELTER and valley.curtain_hits.has(player.ray.get_collider()):
+				valley.set_curtains(not valley.curtains_open)
+			elif sighting_focus >= SIGHTING_FOCUS_SECONDS and looking_at_sighting():
+				observe_lights()
 	elif mode == "last_dream_prelude" and advance:
 		mode = "sleeping"
 		hint.text = ""
@@ -1463,6 +1471,7 @@ func _unhandled_key_input(event):
 							valley.unpack_book(book_has_ribbon())
 							open_book()
 					"Puerta": valley.toggle_door()
+					"Cortinas": valley.set_curtains(not valley.curtains_open)
 					"Puerta del baño": valley.swing_side_door(valley.privy_hinge)
 					"Puerta del museo": valley.swing_side_door(valley.museum_hinge)
 					"Puerta de Mara":
@@ -1621,6 +1630,7 @@ func select_option(index: int):
 			score.cue("misterio", 22, -16.0)
 			overlay("night_cut", "La luz se mete entre los molles. Salís. Después hay una zanja que no recordás haber cruzado. La radio te golpea contra el pecho.\n\n«¿Me escuchás? Buscá la piedra blanca. Voy a dejar el canal abierto». Suena a Mara.", "Espacio · seguir la voz")
 		else:
+			valley.set_curtains(false)
 			begin_dream(true)
 	elif mode == "cave_exit_choice":
 		follow_last_light = index == 0
@@ -2219,6 +2229,7 @@ func save_game(automatic: bool, resume_mode: String) -> bool:
 	elif stage >= 13: title = "Día 32"
 	elif stage >= 10: title = "Día 27"
 	var data = {"version": 1, "slot": slot, "title": title, "state": state, "mode": resume_mode, "pose": player.transform, "pitch": player.camera.rotation.x, "paragraph": recall.paragraph, "chapter": valley.sky_chapter, "museum_offset": Museum.SITE_OFFSET, "south_crossing": true, "stop_verge": true, "rain": rain_strength, "light_target": valley.light_target, "light_left": valley.remaining_light_transition(), "door": valley.door_open, "book": valley.book_unpacked, "night": valley.sky_mat.get_shader_parameter("nightfall"), "dusk": valley.sky_mat.get_shader_parameter("dusk"), "music": music.get_playback_position() if music.playing else 0.0}
+	data["curtains_open"] = valley.curtains_open
 	return Saves.write(slot, automatic, data)
 
 func restore(data: Dictionary):
@@ -2273,6 +2284,7 @@ func restore(data: Dictionary):
 		music.begin()
 		music.seek(data.music)
 	if data.door: valley.toggle_door()
+	valley.set_curtains(bool(data.get("curtains_open", true)), false)
 	var dusk_value: Variant = data.get("dusk")
 	var night_value: Variant = data.get("night")
 	var saved_dusk := clampf(float(dusk_value) if dusk_value != null else 0.0, 0.0, 1.0)
@@ -2424,7 +2436,11 @@ func place_sighting_light(light: Sprite3D, center: Vector3):
 	light.pixel_size = clampf(distance * 0.051, 1.2, 16.0) / 64.0
 	light.show()
 
+func curtain_hint() -> String:
+	return "E · cerrar las cortinas" if valley.curtains_open else "E · abrir las cortinas"
+
 func looking_at_sighting() -> bool:
+	if sighting == Sighting.SHELTER and not valley.curtains_open: return false
 	var camera: Camera3D = player.camera
 	var eye: Vector3 = camera.global_position
 	for light in [valley.beacon, valley.second_beacon]:
@@ -2458,7 +2474,10 @@ func update_sighting(delta: float):
 	var direction: Vector3 = (valley.beacon.global_position - camera.global_position).normalized()
 	var sideways: float = direction.dot(camera.global_basis.x)
 	if sighting == Sighting.SHELTER:
-		hint.text = "Un reflejo barre la ventana. Mirá por el vidrio."
+		if valley.curtain_hits.has(player.ray.get_collider()):
+			hint.text = curtain_hint()
+		else:
+			hint.text = "Un reflejo barre la ventana. Mirá por el vidrio." if valley.curtains_open else "Algo brilla del otro lado de las cortinas. Abrilas para mirar."
 	elif absf(sideways) > 0.23 or direction.dot(-camera.global_basis.z) < 0.0:
 		hint.text = "Mirá el cielo hacia la %s." % ("izquierda" if sideways < 0.0 else "derecha")
 	else:
@@ -2499,7 +2518,7 @@ func observe_lights():
 		Sighting.CROSSING:
 			overlay("crossing_response", "La estática cede. «¿Ya llegaste? Recién prendo la radio». La luz titila por encima de la quebrada. Entre un destello y otro no se oye el agua.", ["Retrocedés con Mara en línea.", "Apagás la linterna y esperás.", "Alumbrás el cauce."], "radio")
 		Sighting.SHELTER:
-			overlay("last_night_choice", "Un punto queda quieto sobre los molles. El otro se pierde entre las ramas. Por la radio, Mara te pregunta si seguís despierto.", ["Salís y seguís las luces en el monte.", "Cerrás la cortina y te acostás."])
+			overlay("last_night_choice", "Un punto queda quieto sobre los molles. El otro se pierde entre las ramas. Por la radio, Mara te pregunta si seguís despierto.", ["Salís y seguís las luces en el monte.", "Cerrás las cortinas y te acostás."])
 		Sighting.CAVE:
 			overlay("cave_exit_choice", "La luz titila encima de un claro entre los árboles. Más abajo distinguís la huella de regreso.", ["Seguís el destello hasta el claro.", "Tomás la huella de regreso."])
 		Sighting.CLEARING:

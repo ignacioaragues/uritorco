@@ -14,6 +14,10 @@ const Stone = preload("res://piedra_serrana.gd")
 const Exploration = preload("res://exploracion.gd")
 const Flora = preload("res://flora.gd")
 const Trail = preload("res://travesia.gd")
+const CURTAIN_RAIL := Vector3(3.27, 2.405, 2.8)
+const CURTAIN_WIDTH := 1.82
+const CURTAIN_HEIGHT := 1.32
+const CURTAIN_OPEN_WIDTH_RATIO := 0.18
 
 var rng: = RandomNumberGenerator.new()
 var route = Trail.new()
@@ -29,6 +33,11 @@ var beacon := Sprite3D.new()
 var second_beacon := Sprite3D.new()
 var sky_mat: = ShaderMaterial.new()
 var window_glass := ShaderMaterial.new()
+var curtains_open := true
+var curtain_panels: Array[MeshInstance3D] = []
+var curtain_hits: Array[StaticBody3D] = []
+var curtain_width_fraction := CURTAIN_OPEN_WIDTH_RATIO
+var curtain_motion: Tween
 var lighting: Tween
 var hinge: = Node3D.new()
 var door_open: = false
@@ -152,6 +161,7 @@ func _ready():
 	glass.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	window_glass.shader = preload("res://vidrio_lluvia.gdshader")
 	glass.material_override = window_glass
+	build_curtains()
 	for x in [-2.35, 2.35]:
 		plaster(box(Vector3(x, 1.4, -0.4), Vector3(2.35, 2.8, 0.22), "a89b87", true))
 	box(Vector3(0, 2.93, 2.65), Vector3(8, 0.23, 8), "5c5148", true).rotation.z = 0.025
@@ -415,6 +425,41 @@ func dress_shelter():
 	for i in range(6):
 		box(Vector3(0, 2.63, i * 1.15 - 0.25), Vector3(7.1, 0.16, 0.15), "5d4a39")
 	Refuge.pendant(self, Vector3(-1, 2.02, 1))
+
+func build_curtains():
+	Refuge.curtain_rail(self, CURTAIN_RAIL, 3.83)
+	for side in [1.0, -1.0]:
+		var panel := Refuge.curtain_panel(self, CURTAIN_WIDTH, CURTAIN_HEIGHT)
+		panel.position = CURTAIN_RAIL - Vector3.BACK * side * 1.77
+		panel.rotation.y = 0.0 if side > 0.0 else PI
+		curtain_panels.append(panel)
+		var hit := FieldKit.item(self, panel.position, "Cortinas", Vector3.ZERO, Vector3(0.095, CURTAIN_HEIGHT, CURTAIN_WIDTH))
+		hit.collision_layer = 2
+		hit.collision_mask = 0
+		curtain_hits.append(hit)
+	set_curtain_width(curtain_width_fraction)
+
+func set_curtain_width(fraction: float):
+	curtain_width_fraction = fraction
+	var width := CURTAIN_WIDTH * fraction
+	for i in curtain_panels.size():
+		var panel := curtain_panels[i]
+		panel.scale.z = fraction
+		var seam := -1.0 if i == 1 else 1.0
+		var hit := curtain_hits[i]
+		hit.position = panel.position + Vector3(0.0, -CURTAIN_HEIGHT * 0.5, seam * width * 0.5)
+		var collision := hit.get_child(0) as CollisionShape3D
+		(collision.shape as BoxShape3D).size.z = width
+
+func set_curtains(opened: bool, animate := true):
+	if curtain_motion and curtain_motion.is_running(): curtain_motion.kill()
+	curtains_open = opened
+	var width := CURTAIN_OPEN_WIDTH_RATIO if opened else 1.0
+	if animate:
+		curtain_motion = create_tween().set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+		curtain_motion.tween_method(set_curtain_width, curtain_width_fraction, width, 0.65)
+	else:
+		set_curtain_width(width)
 
 func dress_path_verges():
 	for sample in 39 * 2: rng.randf()
