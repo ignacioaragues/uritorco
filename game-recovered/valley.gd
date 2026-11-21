@@ -5,6 +5,7 @@ const Signage = preload("res://carteleria.gd")
 const FieldKit = preload("res://equipo_campo.gd")
 const Refuge = preload("res://refugio.gd")
 const Creek = preload("res://cauce.gd")
+const Cable = preload("res://camino_del_cable.gd")
 const LastNight = preload("res://final_night.gd")
 const Birds = preload("res://aves.gd")
 const South = preload("res://quebrada_sur.gd")
@@ -677,6 +678,7 @@ func dress_day27():
 		ground_support(end + Vector3(side, 1.2, -1), 0.23, 0.4, "68594c")
 	box(end + Vector3(0, 0.82, -1), Vector3(2.3, 0.22, 0.23), "57534a", true)
 	quarry_plate = box(end + Vector3(0, 1.38, -1), Vector3(1.1, 0.76, 0.06), "b6aa8a", true, "Chapa del malacate")
+	Cable.build(self)
 	Refuge.cutting(self)
 
 var arrival_bag: StaticBody3D

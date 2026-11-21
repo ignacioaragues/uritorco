@@ -36,10 +36,10 @@ Cada pasada avanza un solo punto del juego. Al cerrarla se actualiza el estado d
 - [x] Esconder una piedra con signos en la cueva y permitir que Hernán los copie en Coleccionables.
 - [x] Revisar el ruido cerca del museo y suavizar la llovizna, la tormenta y el canto de las aves.
 - [x] Revisar el apoyo de carteles, postes, piedras y objetos de las laderas. Se corrigieron el desvío de la cantera, los postes del cable, el malacate, el banco del acceso, el campamento y las piedras junto a la pasarela.
+- [x] Agregar tres paradas opcionales al camino del cable del Día 27. Hernán puede examinar con E el carrete, la casilla de empalme y el frente de granito antes del malacate.
 
 ### Por hacer
 
-- [ ] Agregar puntos de interés al camino del cable.
 - [ ] Disimular mejor los hallazgos que todavía están demasiado a la vista.
 - [ ] Distribuir las conversaciones de Mara a lo largo de cada caminata.
 - [ ] Hacer que las charlas recojan el avistamiento anterior y den lugar a una reacción más escéptica de Mara.
@@ -162,5 +162,5 @@ Esta lista reconstruye el estado informado del proyecto editable. La exportació
 - **Pasada narrativa.** Separar mejor las charlas de Mara durante cada caminata. Retomar lo que Hernán acaba de ver y darle espacio al escepticismo de Mara. Evaluar objetos ligados a decisiones, como una botella que pueda mandar Mara.
 - **Ambiente.** Volver a escuchar la mezcla de la última noche y comparar los sonidos de pisadas por superficie.
 - **Arte.** Afinar las texturas del prólogo y la lectura de objetos de cerca. Revisar en conjunto las estrellas, la integración del planeta y las transiciones de fase lunar.
-- **Mundo y recorridos.** Darle más puntos de interés a la caminata del cable. Revisar la distribución de destinos alrededor del refugio, ocultar mejor otros hallazgos y seguir afinando la cartografía. Revisar a velocidad normal el ritmo de las ocho microescenas, la tormenta desde las ventanas y el tiempo que llevan las idas y vueltas a la pasarela.
+- **Mundo y recorridos.** Revisar la distribución de destinos alrededor del refugio, ocultar mejor otros hallazgos y seguir afinando la cartografía. Revisar a velocidad normal el ritmo de las ocho microescenas, la tormenta desde las ventanas y el tiempo que llevan las idas y vueltas a la pasarela.
 - **Windows.** Validar la próxima exportación cuando se solicite.

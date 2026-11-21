@@ -7,6 +7,7 @@ const Alien = preload("res://hallazgos_sueno.gd")
 const Trail = preload("res://travesia.gd")
 const South = preload("res://quebrada_sur.gd")
 const Creek = preload("res://cauce.gd")
+const Cable = preload("res://camino_del_cable.gd")
 const SkyGuide = preload("res://constelacion.gd")
 const LastNight = preload("res://final_night.gd")
 const CaveRunes = preload("res://piedra_cueva.gd")
@@ -1329,6 +1330,9 @@ func _unhandled_key_input(event):
 						show_archive()
 						return
 					overlay("message", exhibits[target], "Espacio · cerrar")
+					return
+				if Cable.NOTES.has(target):
+					overlay("message", Cable.NOTES[target], "Espacio · seguir")
 					return
 				match target:
 					"Sendero del cauce":
