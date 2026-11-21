@@ -395,8 +395,9 @@ func _process(delta):
 	intro_controls_seconds = maxf(0.0, intro_controls_seconds - delta)
 	collect_notice_seconds = maxf(0.0, collect_notice_seconds - delta)
 	var day: = calendar_day()
+	var in_museum := Museum.under_roof(valley, player.position)
 	valley.update_calendar(day)
-	update_weather(day, delta)
+	update_weather(day, delta, in_museum)
 	update_water(delta)
 	valley.shade_ridges()
 	var in_refuge: bool = absf(player.position.x) < 3.45 and player.position.z > -0.35 and player.position.z < 5.9
@@ -413,7 +414,7 @@ func _process(delta):
 	if mode == "cave" and not cave_outside: hand_tone = Color("#6c6b69") if flashlight_out else Color("#45444c")
 	hands.modulate = hand_tone
 	score.radio_active = radio_panel.visible
-	if mode in ["walk", "map"]: score_daily_walk(day, delta)
+	if mode in ["walk", "map"]: score_daily_walk(day, delta, in_museum)
 	if mode == "sighting": update_sighting(delta)
 	if mode == "cave":
 		update_cave()
@@ -455,7 +456,7 @@ func _process(delta):
 			branch_found = true
 	if mode in ["approach", "walk", "dream", "map", "sighting", "cave", "mara_door"]:
 		var velocity: = Vector2(player.velocity.x, player.velocity.z).length() if player.is_on_floor() else 0.0
-		var outdoors: bool = player.position.z < 0 or absf(player.position.x) > 3.5
+		var outdoors: bool = not in_museum and (player.position.z < 0 or absf(player.position.x) > 3.5)
 		if hands.requested_pose == "compass":
 			var look: Vector3 = -player.camera.global_basis.z
 			hands.set_bearing(atan2(look.x, -look.z))
@@ -466,7 +467,7 @@ func _process(delta):
 					refresh_map_goal()
 			map.track(player.position)
 		var daytime: bool = mode != "dream" and outdoors and rain_strength < 0.44 and float(valley.sky_mat.get_shader_parameter("nightfall")) < 0.5
-		ambience.update(delta, velocity, daytime and immersion < 0.05, mode == "cave" and not cave_outside, player.water_depth)
+		ambience.update(delta, player.position, velocity, daytime and immersion < 0.05, mode == "cave" and not cave_outside, player.water_depth)
 		if stage == 7 and not second_sighting and mode in ["walk", "map"]:
 			var here := Vector2(player.position.x, player.position.z)
 			var overlook_distance := here.distance_to(Exploration.MOLLAR)
@@ -587,7 +588,7 @@ func setup_rain():
 	rain_view.material_override = rain_material
 	add_child(rain_view)
 
-func update_weather(day: int, delta: float):
+func update_weather(day: int, delta: float, in_museum: bool):
 	var position: Vector3 = player.position
 	var target_rain := Climate.rain(stage, position)
 	var target_mist := Climate.local_mist(day, position)
@@ -606,7 +607,7 @@ func update_weather(day: int, delta: float):
 		rain_view.position = position + Vector3.UP * 8.8
 		rain_view.direction = Vector3(wind * 0.12, -1.0, 0.07).normalized()
 		rain_material.set_shader_parameter("intensity", rain_strength)
-	ambience.weather(delta, rain_strength if shows_world else 0.0, shows_world and not outside, radio_panel.visible)
+	ambience.weather(delta, rain_strength if shows_world else 0.0, shows_world and (not outside or in_museum), radio_panel.visible)
 
 func update_water(delta: float):
 	var depth := 0.0
@@ -644,18 +645,14 @@ func intro_objective() -> String:
 		return "Seguí la curva del sendero." if page >= 6 else "Caminá un poco más por la senda."
 	return ["", "Espacio · saltá el tronco.", "Cruzá el puente y seguí la huella.", "B · probá la brújula.", "M · consultá el mapa.", "E · agarrá la cuerda. Mantené W para trepar.", "L · encendé la linterna."][page]
 
-func score_daily_walk(day: int, delta: float):
+func score_daily_walk(day: int, delta: float, in_museum: bool):
 	if day != walk_score_day:
 		walk_score_day = day
 		walk_score_wait = WALK_SCORE_DELAY
 		walk_score_turn = 0
-	if awaiting_call or stage < 1 or score.is_playing(): return
+	if awaiting_call or stage < 1 or in_museum or score.is_playing(): return
 	var here: Vector3 = player.position
 	if absf(here.x) < 12.0 and here.z > -15.0 and here.z < 12.0: return
-	var museum_z: float = valley.route.ORIGIN_Z - Museum.DISTANCE
-	var museum_x: float = valley.route.trail(Museum.DISTANCE) + Museum.SITE_OFFSET
-	if absf(here.z - museum_z) < Museum.HALF_DEPTH and absf(here.x - museum_x) < Museum.HALF_WIDTH:
-		return
 	if not player.is_on_floor() or Vector2(player.velocity.x, player.velocity.z).length_squared() < 0.36:
 		return
 	walk_score_wait -= delta

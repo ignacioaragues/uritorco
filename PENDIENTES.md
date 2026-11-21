@@ -34,10 +34,10 @@ Cada pasada avanza un solo punto del juego. Al cerrarla se actualiza el estado d
 - [x] Dar más presencia a la música de las caminatas y sostenerla a menor volumen durante las llamadas de Mara.
 - [x] Aclarar desde dónde llama Mara. Trabaja en el puesto de abajo, pasando la curva camino a Capilla. Su casa queda al final de la huella vecinal de la despedida.
 - [x] Esconder una piedra con signos en la cueva y permitir que Hernán los copie en Coleccionables.
+- [x] Identificar y corregir el ruido fuerte cerca del museo.
 
 ### Por hacer
 
-- [ ] Identificar el ruido fuerte cerca del museo.
 - [ ] Buscar otros carteles y objetos de ladera que hayan quedado flotando.
 - [ ] Agregar puntos de interés al camino del cable.
 - [ ] Disimular mejor los hallazgos que todavía están demasiado a la vista.
@@ -47,6 +47,11 @@ Cada pasada avanza un solo punto del juego. Al cerrarla se actualiza el estado d
 - [ ] Recorrer con el mapa abierto la ida del Día 36 para comprobar que las pircas guían desde el acceso hasta la pasarela.
 - [ ] Volver a mirar la tormenta desde las ventanas del refugio y evaluar cómo se lee su intensidad.
 - [ ] Hacer aparecer objetos en el refugio según lo que pasó con Mara. Queda anotada la botella de vino como posibilidad.
+
+## Sonido ambiente del museo
+
+- El canto sintético del pájaro alcanzaba un pico 13 dB por encima de los pasos y sonaba igual en el acceso y en el vestíbulo. Ahora tiene un timbre más suave, sale de un punto del paisaje y se apaga gradualmente al entrar. El techo también amortigua la lluvia.
+- Se compararon grabaciones de la rampa, la entrada y el vestíbulo con tiempo seco y lluvia. El pico del canto exterior bajó 19 dB y el vestíbulo quedó sin llamados nuevos. Al salir se recupera el sonido abierto de la lluvia.
 
 ## Pasada de continuidad musical
 
@@ -155,7 +160,7 @@ Esta lista reconstruye el estado informado del proyecto editable. La exportació
 ## Todavía pendiente
 
 - **Pasada narrativa.** Separar mejor las charlas de Mara durante cada caminata. Retomar lo que Hernán acaba de ver y darle espacio al escepticismo de Mara. Evaluar objetos ligados a decisiones, como una botella que pueda mandar Mara.
-- **Ambiente.** Identificar el ruido fuerte cerca del museo. Volver a escuchar la mezcla de la última noche y comparar los sonidos de pisadas por superficie.
+- **Ambiente.** Volver a escuchar la mezcla de la última noche y comparar los sonidos de pisadas por superficie.
 - **Arte.** Afinar las texturas del prólogo y la lectura de objetos de cerca. Revisar en conjunto las estrellas, la integración del planeta y las transiciones de fase lunar.
 - **Mundo y recorridos.** Darle más puntos de interés a la caminata del cable. Revisar la distribución de destinos alrededor del refugio, ocultar mejor otros hallazgos y seguir afinando la cartografía. Revisar a velocidad normal el ritmo de las ocho microescenas, la tormenta desde las ventanas y el tiempo que llevan las idas y vueltas a la pasarela.
 - **Windows.** Validar la próxima exportación cuando se solicite.

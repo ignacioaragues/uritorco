@@ -36,6 +36,12 @@ static func center(valley, offset: float = SITE_OFFSET) -> Vector3:
 			floor_height = maxf(floor_height, route.at(x + dx, DISTANCE + dz).y)
 	return Vector3(x, floor_height + 0.23, route.ORIGIN_Z - DISTANCE)
 
+static func under_roof(valley, at: Vector3) -> bool:
+	var center_z: float = valley.route.ORIGIN_Z - DISTANCE
+	if absf(at.z - center_z) > HALF_DEPTH - 0.12: return false
+	var local := at - center(valley)
+	return absf(local.x) < HALF_WIDTH - 0.10 and local.y >= -0.16 and local.y < HEIGHT
+
 static func restore_legacy_position(valley, position: Vector3) -> Vector3:
 	var previous := center(valley, LEGACY_SITE_OFFSET)
 	var local := position - previous

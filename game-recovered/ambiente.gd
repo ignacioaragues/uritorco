@@ -1,9 +1,11 @@
 extends Node
 
+const BIRD_LEVEL_DB := -25.0
+
 var step: = AudioStreamPlayer.new()
 var dry_step: AudioStreamWAV
 var water_step: AudioStreamWAV
-var bird: = AudioStreamPlayer.new()
+var bird := AudioStreamPlayer3D.new()
 var travel: = 0.0
 var silence: = 3.0
 var rain_air := AudioStreamPlayer.new()
@@ -22,7 +24,9 @@ func _ready():
 	bird.stream = sound(true)
 	water_step = sound(false, true)
 	step.volume_db = -24
-	bird.volume_db = -22
+	bird.volume_db = BIRD_LEVEL_DB
+	bird.unit_size = 10.0
+	bird.max_distance = 38.0
 	if not open_rain:
 		open_rain = rain_sound(false)
 		covered_rain = rain_sound(true)
@@ -33,7 +37,7 @@ func _ready():
 
 func sound(song: bool, splash := false) -> AudioStreamWAV:
 	var rate: = 22050
-	var count: = int(rate * (0.54 if song else (0.32 if splash else 0.18)))
+	var count: = int(rate * (0.42 if song else (0.32 if splash else 0.18)))
 	var samples: = PackedByteArray()
 	samples.resize(count * 2)
 	var filter: = 0.0
@@ -42,9 +46,10 @@ func sound(song: bool, splash := false) -> AudioStreamWAV:
 		var t: = float(i) / rate
 		var value: float
 		if song:
-			var local: = fmod(t, 0.19)
-			phase += TAU * (2100 + 950 * sin(PI * local / 0.19)) / rate
-			value = sin(phase) * pow(sin(PI * local / 0.19), 3) * exp( - t * 1.9)
+			var pulse := sin(PI * fmod(t, 0.21) / 0.21)
+			var pitch := 1740.0 + 565.0 * pulse - t * 510.0
+			phase += TAU * pitch / rate
+			value = (sin(phase) + 0.13 * sin(phase * 2.0)) * pow(pulse, 3) * exp(-t * 2.9) * 0.72
 		elif splash:
 			var noise := rng.randf_range(-1.0, 1.0)
 			filter = lerpf(filter, noise, 0.31)
@@ -60,7 +65,7 @@ func sound(song: bool, splash := false) -> AudioStreamWAV:
 	wave.data = samples
 	return wave
 
-func update(delta: float, speed: float, daytime: bool, cave_interior: bool = false, depth := 0.0):
+func update(delta: float, listener: Vector3, speed: float, daytime: bool, cave_interior: bool = false, depth := 0.0):
 	travel += speed * delta
 	if travel >= 1.72:
 		travel = 0
@@ -73,8 +78,14 @@ func update(delta: float, speed: float, daytime: bool, cave_interior: bool = fal
 		if silence <= 0:
 			silence = rng.randf_range(8, 18)
 			bird.pitch_scale = rng.randf_range(0.83, 1.14)
+			var angle := rng.randf() * TAU
+			var distance := rng.randf_range(10.0, 14.0)
+			bird.global_position = listener + Vector3(cos(angle) * distance, 4.2, sin(angle) * distance)
+			bird.volume_db = BIRD_LEVEL_DB
 			bird.play()
-	elif bird.playing: bird.stop()
+	elif bird.playing:
+		bird.volume_db = move_toward(bird.volume_db, -50.0, delta * 110.0)
+		if bird.volume_db <= -50.0: bird.stop()
 
 func weather(delta: float, rain: float, sheltered: bool, radio_active: bool):
 	var target := pow(rain, 0.78) * (0.52 if radio_active else 1.0)
