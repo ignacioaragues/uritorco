@@ -287,6 +287,7 @@ func start_game(n: int):
 func approach(reset_position: bool = false):
 	walk()
 	mode = "approach"
+	valley.restore_light(Arrival.DUSK[page], Arrival.DARK[page])
 	Arrival.show_fragment(valley, page)
 	var center: = Arrival.origin(page)
 	if reset_position or player.position.distance_to(center) > 80:
@@ -375,7 +376,6 @@ func memory(paragraph: int = 0):
 func next_memory():
 	page += 1
 	if page < memories.size():
-		valley.restore_light(Arrival.DUSK[page], Arrival.DARK[page])
 		approach(true)
 	else:
 		music.close(1.25)

@@ -49,6 +49,7 @@ Al cierre de cada pasada se actualizan los puntos resueltos y se conserva lo que
 - [x] Hacer que dos charlas de Mara puedan dejar objetos en el refugio. El pisapapeles llega con las pilas a partir del Día 7 y la botella de tinto, envuelta en papel de diario, aparece en la repisa a partir del Día 36. Se pueden inspeccionar con E. Se probaron las dos respuestas de cada charla y la carga de partida.
 - [x] Poner cortinas corredizas de tela en el refugio. Se abren y cierran con E desde dentro y conservan su posición al guardar. En la última noche se pueden abrir para mirar las luces y se cierran al elegir acostarse.
 - [x] Darles pisadas distintas a la tierra, el barro, la madera, la piedra y el agua. En la cueva se oye una reverberación corta, y la radio baja el fondo de música y viento mientras suena la interferencia.
+- [x] Afinar el arte del prólogo. La huella tiene distintos tonos de tierra y ripio, con piedras y pastos agrupados en los márgenes. La parada tiene chapas remachadas y el puente, tablones separados con clavos visibles. La cuerda pasa por delante de la laja y por encima del borde hasta el anclaje. La trepada queda al atardecer y la noche entra en el tramo de la linterna.
 
 ## Ritmo de las charlas de Mara
 
@@ -166,6 +167,6 @@ Esta lista reconstruye el estado informado del proyecto editable. La exportació
 
 ## Todavía pendiente
 
-- **Arte.** Afinar las texturas del prólogo, la lectura de objetos de cerca y la integración visual del terreno de los sueños.
+- **Arte.** Afinar la lectura de objetos de cerca y la integración visual del terreno de los sueños.
 - **Mundo y recorridos.** Revisar la distribución de destinos alrededor del refugio, seguir afinando la cartografía y revisar a velocidad normal el ritmo de las ocho microescenas.
 - **Windows.** Probar el ejecutable en Windows. El paquete exportado se verificó en Godot sobre Linux.

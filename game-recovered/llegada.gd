@@ -3,6 +3,8 @@ extends RefCounted
 const Signage = preload("res://carteleria.gd")
 const FieldKit = preload("res://equipo_campo.gd")
 const Refuge = preload("res://refugio.gd")
+const Flora = preload("res://flora.gd")
+const Stone = preload("res://piedra_serrana.gd")
 const STOP_START := Vector3(-2.82, 0.12, -6.43)
 const STOP_CENTER := Vector3(-0.57, 0.0, -9.55)
 const BRIDGE_WATER_Y := -0.71
@@ -11,8 +13,14 @@ const BRIDGE_WATER_WIDTH := 15.8
 
 const ACTIONS = ["Recoger la mochila", "Saltar el tronco", "", "Probar la brújula", "Consultar el mapa", "Trepar con la cuerda", "Encender la linterna", "Seguir el sendero"]
 const HEADINGS = [0.0, -0.52, 0.72, 1.05, -0.8, 0.26, -1.19, 0.5]
-const DUSK = [0.0, 0.0, 0.0, 0.25, 0.51, 0.76, 0.95, 1.0]
-const DARK = [0.0, 0.0, 0.0, 0.02, 0.14, 0.44, 0.76, 0.90]
+const DUSK = [0.0, 0.0, 0.0, 0.25, 0.45, 0.63, 0.91, 1.0]
+const DARK = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.64, 0.90]
+const LEDGE_ROPE = [
+	Vector3(0.16, 0.073, -10.18), Vector3(0.10, 0.69, -10.29),
+	Vector3(0.10, 1.30, -10.56), Vector3(0.12, 1.44, -10.63),
+	Vector3(0.14, 1.49, -10.73), Vector3(0.19, 1.50, -11.04),
+	Vector3(0.32, 1.55, -11.57),
+]
 const SOIL = ["77765d", "786e50", "697353", "7d7958", "83724f", "777260", "666754", "6f7259"]
 const TRACK = ["9c815c", "aa866a", "98836a", "a88c65", "be9b71", "987457", "937a62", "988571"]
 
@@ -168,19 +176,35 @@ static func build_ground(v, center: Vector3, index: int):
 static func dress_landscape(v, center: Vector3, index: int):
 	var rng := RandomNumberGenerator.new()
 	rng.seed = 263 + 117 * index
+	var stones := Stone.surface()
 	for side in [-1, 1]:
 		for slot in 14:
 			var d := rng.randf_range(-24.0, 84.0)
 			var x: float = side * rng.randf_range(5.3, 27.0) + track_x(index, d)
-			if index == 0 and (absf(d - 3.0) < 6.0 or (x > 0 and absf(-d - branch_z(x)) < 3.8)): continue
-			if index == 2 and absf(d - 10.45) < 4.7: continue
+			if not clear_verge(index, x, d, 3.9): continue
 			var foot := center + Vector3(x, ground_height(index, x, d), -d)
-			var size_m := rng.randf_range(0.64, 1.8)
-			v.stone(foot, Vector3(2.7, 1.0, 2.4) * size_m, ["827b64", "787858", "666950", "89795d"][slot % 4])
-			if slot % 3 == index % 3:
-				v.box(foot + Vector3.UP * size_m, Vector3(0.14, 2.05, 0.16) * size_m, "6b5745")
-				v.stone(foot + Vector3.UP * 2.2 * size_m, Vector3(2.4, 1.42, 2.2) * size_m, ["657551", "58644e", "777856"][slot % 3])
-	dress_verges(v, center, index, rng)
+			if slot % 4 == 1:
+				var species: Flora.Kind = [Flora.Kind.MOLLE, Flora.Kind.TALA, Flora.Kind.ESPINILLO][(floori(slot * 0.25) + index) % 3]
+				Flora.tree(v, foot, species, rng.randf_range(0.82, 1.42), rng.randf() * TAU)
+			else:
+				var size_m := rng.randf_range(0.65, 1.68)
+				var rock := Stone.fragment(stones, foot, Vector3(2.3, 0.66, 1.88) * size_m, rng.randf() * TAU, rng)
+				if absf(x) < 22.0 and d > -10.0 and d < 31.0:
+					Stone.solid(v, foot, rock, "Piedra de la ladera")
+	var roots := dress_verges(center, index, rng, stones)
+	Stone.finish(v, stones, "Piedras de la huella")
+	Flora.grass_batch(v, roots)
+
+static func clear_verge(index: int, x: float, distance: float, shoulder: float) -> bool:
+	if index == 0:
+		var z := -distance
+		var road := -3.0 + 3.1 * sin(x * 0.055) * smoothstep(13.0, 55.0, absf(x))
+		if absf(z - road) < 3.28 + shoulder * 0.21: return false
+		if x > 0.0 and absf(z - branch_z(x)) < shoulder: return false
+		return absf(x - STOP_CENTER.x) > 2.80 or absf(z - STOP_CENTER.z) > 3.9
+	if index == 2 and absf(distance - 10.45) < 5.10: return false
+	if index in [1, 5] and distance > 6.9 and distance < 15.1 and absf(x) < 5.4: return false
+	return absf(x - track_x(index, distance)) > shoulder
 
 static func ridge_materials(v) -> Array[ShaderMaterial]:
 	var materials: Array[ShaderMaterial] = []
@@ -234,38 +258,26 @@ static func build_ridges(v, center: Vector3, index: int, materials: Array[Shader
 		v.add_child(ridge)
 		ridge.position = center
 
-static func dress_verges(v, center: Vector3, index: int, rng: RandomNumberGenerator):
-	var grass := SurfaceTool.new()
-	grass.begin(Mesh.PRIMITIVE_TRIANGLES)
-	var material := StandardMaterial3D.new()
-	material.vertex_color_use_as_albedo = true
-	material.cull_mode = BaseMaterial3D.CULL_DISABLED
-	grass.set_material(material)
-	for tuft in 65:
-		var d := rng.randf_range(-12.0, 36.0)
-		var side := -1.0 if tuft % 2 == 0 else 1.0
-		var x := track_x(index, d) + side * rng.randf_range(1.92, 4.8)
-		if index == 0:
-			x = rng.randf_range(-14.0, 20.0)
-			if absf(d - 3.0) < 3.6 or (x > 0 and absf(-d - branch_z(x)) < 2.8): continue
-			if absf(x) < 2.1 and d > 5.6 and d < 9.1: continue
-		elif d > 6.9 and d < 14.8 and index in [1, 2, 5]:
-			continue
-		var root := Vector3(x, ground_height(index, x, d) - 0.022, -d)
-		for blade in 4:
-			var angle := rng.randf() * TAU
-			var lean := Vector3(cos(angle), 0, sin(angle))
-			var offset := lean * rng.randf_range(0.05, 0.14)
-			var width := Vector3(-offset.z, 0, offset.x) * 0.19
-			var tip := root + offset * 1.34 + Vector3.UP * rng.randf_range(0.105, 0.43)
-			for vertex in [root + width, root - width, tip]:
-				grass.set_color(Color("#a9a075") if vertex == tip else Color("#656345"))
-				grass.set_normal(Vector3.UP)
-				grass.add_vertex(vertex)
-	var verge := MeshInstance3D.new()
-	verge.mesh = grass.commit()
-	v.add_child(verge)
-	verge.position = center
+static func dress_verges(center: Vector3, index: int, rng: RandomNumberGenerator, stones: SurfaceTool) -> Array[Vector4]:
+	var roots: Array[Vector4] = []
+	for clump in 100:
+		var distance := rng.randf_range(-10.0, 47.0)
+		var side := -1.0 if clump % 2 == 0 else 1.0
+		var x := track_x(index, distance) + side * rng.randf_range(2.1, 11.5)
+		if index == 0: x = rng.randf_range(-24.0, 28.0)
+		if not clear_verge(index, x, distance, 2.2): continue
+		for tuft in rng.randi_range(2, 5):
+			var t_x := x + rng.randf_range(-0.85, 0.85)
+			var t_d := distance + rng.randf_range(-0.65, 0.65)
+			if not clear_verge(index, t_x, t_d, 1.94): continue
+			var foot := center + Vector3(t_x, ground_height(index, t_x, t_d) - 0.047, -t_d)
+			roots.append(Vector4(foot.x, foot.y, foot.z, rng.randf_range(0.41, 0.97)))
+		if clump % 3 == 0:
+			var foot := center + Vector3(x, ground_height(index, x, distance) - 0.026, -distance)
+			var width := rng.randf_range(0.12, 0.56)
+			Stone.fragment(stones, foot, Vector3(width, width * rng.randf_range(0.27, 0.67), width * 0.73),
+				rng.randf() * TAU, rng)
+	return roots
 
 static func build_stop(v, center: Vector3):
 	Signage.shelter(v, center + STOP_CENTER)
@@ -297,12 +309,18 @@ static func build_bridge(v, center: Vector3):
 	flow.shader = preload("res://arroyo.gdshader")
 	water.material_override = flow
 	water.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	var nail := FieldKit.material("786b5b", false, 0.62)
 	for index in 16:
 		var plank := center + Vector3(0, -0.067, -7.18 - index * 0.47)
-		var tone: String = ["987954", "8d775e", "9c7c58"][index % 3]
+		var tone: String = ["8c775d", "81725d", "927e64", "877561"][index % 4]
 		var board: MeshInstance3D = v.box(plank, Vector3(2.76, 0.15, 0.47), tone, true)
 		board.get_child(0).set_meta("footstep", &"wood")
-		board.material_override = Refuge.wood(tone, true)
+		(board.mesh as BoxMesh).size.z = 0.459
+		var finish := Refuge.wood(tone, true)
+		finish.set_shader_parameter("grain_strength", 0.125)
+		board.material_override = finish
+		for x in [-1.15, 1.15]:
+			FieldKit.cylinder(board, Vector3(x, 0.076, 0.13), 0.018, 0.016, 0.006, nail)
 	var railing := Refuge.wood("735944")
 	for side in [-1, 1]:
 		var rail: MeshInstance3D = v.box(center + Vector3(side * 1.38, 0.81, -10.45), Vector3(0.13, 0.11, 5.55), "735944", true)
@@ -332,24 +350,57 @@ static func build_laja(v, center: Vector3):
 			surface.add_vertex(p)
 	surface.generate_normals()
 	var slab: MeshInstance3D = v.prop(surface.commit(), center, "887a6d", true, ACTIONS[5])
-	(slab.material_override as StandardMaterial3D).cull_mode = BaseMaterial3D.CULL_DISABLED
-	for offset in [-1.45, 1.3]:
-		v.stone(center + Vector3(offset, 0.4, -11.0), Vector3(1.05, 1.39, 1.22), "7a7064")
-	var points := [
-		Vector3(0.17, 0.13, -10.14), Vector3(0.075, 0.66, -10.30),
-		Vector3(0.11, 1.19, -10.55), Vector3(0.11, 1.46, -10.82),
-		Vector3(0.20, 1.47, -11.16), Vector3(0.32, 1.58, -11.55)
-	]
-	for i in range(points.size() - 1):
-		var from: Vector3 = center + points[i]
-		var to: Vector3 = center + points[i + 1]
-		var sway: MeshInstance3D = v.box(from.lerp(to, 0.5), Vector3(0.033, 0.033, from.distance_to(to) + 0.035), "c7a278")
-		sway.look_at(to)
+	slab.get_child(0).set_meta("footstep", &"stone")
+	slab.mesh = ledge_face(rows)
+	var rock := Stone.paint("#948371")
+	rock.set_shader_parameter("bedding", 0.72)
+	slab.material_override = rock
+	var pieces := Stone.surface()
+	var rng := RandomNumberGenerator.new()
+	rng.seed = 53091
+	for offset in [-1.54, 1.47]:
+		Stone.fragment(pieces, center + Vector3(offset, 0.37, -11.02), Vector3(0.98, 0.93, 1.44), offset * 0.48, rng)
+		Stone.fragment(pieces, center + Vector3(offset * 0.91, 0.12, -10.32), Vector3(0.68, 0.39, 0.74), -offset, rng)
+	Stone.finish(v, pieces, "Piedras junto a la laja")
+	var points := PackedVector3Array()
+	for point: Vector3 in LEDGE_ROPE: points.append(center + point)
+	var hemp := Refuge.cloth("bbaa83", "a4906e", 0.19)
+	FieldKit.cord(v, points, 0.023, hemp)
+	var peg := FieldKit.material("655345", false, 0.64)
+	var anchor: Vector3 = center + LEDGE_ROPE.back()
+	FieldKit.cylinder(v, anchor + Vector3.DOWN * 0.07, 0.018, 0.018, 0.13, peg)
 	var knot := TorusMesh.new()
-	knot.inner_radius = 0.037
-	knot.outer_radius = 0.082
-	var loop: MeshInstance3D = v.prop(knot, center + Vector3(0.32, 1.55, -11.55), "b9956a")
-	loop.rotation.z = 0.4
+	knot.inner_radius = 0.030
+	knot.outer_radius = 0.058
+	var loop := FieldKit.mesh_part(v, knot, anchor, peg)
+	loop.rotation.x = 0.68
+
+static func ledge_face(rows: Array) -> ArrayMesh:
+	const COLUMNS := 15
+	const STEPS_PER_ROW := 4
+	var surface := SurfaceTool.new()
+	surface.begin(Mesh.PRIMITIVE_TRIANGLES)
+	var last_row := rows.size() - 1
+	for row in range(last_row * STEPS_PER_ROW + 1):
+		var level := float(row) / STEPS_PER_ROW
+		var segment := mini(floori(level), last_row - 1)
+		var step := level - segment
+		for column in COLUMNS:
+			var across := float(column) / (COLUMNS - 1)
+			var lower: Vector3 = rows[segment][0].lerp(rows[segment][1], across)
+			var upper: Vector3 = rows[segment + 1][0].lerp(rows[segment + 1][1], across)
+			var point := lower.lerp(upper, step)
+			var shoulder := smoothstep(0.22, 1.55, absf(point.x))
+			point.z += sin(point.x * 5.8 + level * 3.7) * 0.11 * shoulder
+			point.y += sin(point.x * 3.28 - level * 1.5) * shoulder * 0.064
+			surface.add_vertex(point)
+			if row > 0 and column > 0:
+				var a := (row - 1) * COLUMNS + column - 1
+				for vertex in [a, a + COLUMNS, a + 1, a + 1, a + COLUMNS, a + COLUMNS + 1]:
+					surface.add_index(vertex)
+	surface.generate_normals()
+	return surface.commit()
+
 static func sign_at(v, point: Vector3, caption: String):
 	v.box(point + Vector3(0, 0.85, 0), Vector3(0.1, 1.7, 0.1), "5e5042")
 	v.box(point + Vector3.UP * 1.55, Vector3(1.55, 0.48, 0.09), "514d40")

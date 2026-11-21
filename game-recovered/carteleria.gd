@@ -1,6 +1,7 @@
 extends RefCounted
 
 const Kit = preload("res://equipo_campo.gd")
+const Refuge = preload("res://refugio.gd")
 const STATION := "Puesto de Observación Serrana"
 const DESTINATION := "Capilla del Monte"
 
@@ -110,11 +111,14 @@ static func shelter(parent: Node3D, at: Vector3, playable: bool = false):
 	stop.name = "Abrigo de ómnibus"
 	parent.add_child(stop)
 	stop.position = at
-	var steel := Kit.material("485b55", false, 0.72)
-	var galvanized := Kit.material("7d887e", false, 0.64)
-	var stone := Kit.material("91836a")
-	var seated := Kit.material("8a6c4f", true)
+	var steel := Kit.material("52665c", false, 0.84)
+	var galvanized := Kit.material("777e73", false, 0.79)
+	var stone := Kit.material("9c8b70")
+	var seated := Refuge.wood("907456", true)
+	var edge := Kit.material("415047")
+	var fastener := Kit.material("a39879", false, 0.61)
 	Kit.block(stop, Vector3(0, 0.014, 0.02), Vector3(3.69, 0.034, 1.58), stone)
+	Kit.block(stop, Vector3(0.0, 0.009, 0.823), Vector3(3.68, 0.027, 0.065), Kit.material("85765f"))
 	for sign_x in [-1.68, 1.68]:
 		solid(stop, Vector3(sign_x, 1.10, 0.71), Vector3(0.10, 2.20, 0.105), steel)
 		solid(stop, Vector3(sign_x, 1.01, -0.68), Vector3(0.10, 2.03, 0.105), steel)
@@ -124,8 +128,12 @@ static func shelter(parent: Node3D, at: Vector3, playable: bool = false):
 	for i in 6:
 		var x := -1.38 + i * 0.55
 		Kit.block(stop, Vector3(x, 0.69, -0.70), Vector3(0.528, 1.33, 0.10), galvanized if i % 3 == 2 else steel)
+		for y in [0.11, 1.268]:
+			var bolt := Kit.cylinder(stop, Vector3(x + 0.202, y, -0.644), 0.011, 0.011, 0.009, fastener)
+			bolt.rotation.x = PI * 0.5
 	solid(stop, Vector3(0, 0.69, -0.735), Vector3(3.35, 1.34, 0.09), steel)
 	solid(stop, Vector3(-1.68, 0.62, -0.30), Vector3(0.108, 1.24, 0.71), galvanized)
+	Kit.block(stop, Vector3(0.0, 1.356, -0.69), Vector3(3.35, 0.044, 0.113), edge)
 	Kit.block(stop, Vector3(0, 2.285, 0.869), Vector3(3.98, 0.103, 0.072), steel)
 	Kit.block(stop, Vector3(0, 2.085, -0.888), Vector3(3.98, 0.073, 0.068), galvanized)
 	roof(stop, galvanized)
@@ -137,3 +145,6 @@ static func shelter(parent: Node3D, at: Vector3, playable: bool = false):
 	for x in [-1.0, 1.0]:
 		solid(stop, Vector3(x, 0.25, -0.30), Vector3(0.071, 0.47, 0.35), steel, bench_tag)
 	solid(stop, Vector3(0, 0.773, -0.51), Vector3(2.68, 0.142, 0.064), seated, bench_tag)
+	for x in [-1.08, 1.08]:
+		var bolt := Kit.cylinder(stop, Vector3(x, 0.773, -0.474), 0.013, 0.013, 0.008, fastener)
+		bolt.rotation.x = PI * 0.5
