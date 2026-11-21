@@ -88,11 +88,11 @@ func update(delta: float, listener: Vector3, speed: float, daytime: bool, cave_i
 		if bird.volume_db <= -50.0: bird.stop()
 
 func weather(delta: float, rain: float, sheltered: bool, radio_active: bool):
-	var target := pow(rain, 0.78) * (0.52 if radio_active else 1.0)
+	var target := pow(rain, 1.2) * (0.52 if radio_active else 1.0)
 	rain_gain = move_toward(rain_gain, target, delta * 0.9)
 	roof_mix = move_toward(roof_mix, 1.0 if sheltered else 0.0, delta * 2.5)
-	weather_volume(rain_air, rain_gain * (1.0 - roof_mix), -28.0)
-	weather_volume(rain_roof, rain_gain * roof_mix, -32.0)
+	weather_volume(rain_air, rain_gain * (1.0 - roof_mix), -32.0)
+	weather_volume(rain_roof, rain_gain * roof_mix, -36.0)
 
 func weather_volume(channel: AudioStreamPlayer, gain: float, peak: float):
 	if gain < 0.0015:
@@ -103,24 +103,25 @@ func weather_volume(channel: AudioStreamPlayer, gain: float, peak: float):
 
 static func rain_sound(muffled: bool) -> AudioStreamWAV:
 	const RATE := 22050
-	const LOOP := 44100
-	const CROSSFADE := 2208
+	const LOOP := RATE * 8
+	const CROSSFADE := 4410
 	var noise := RandomNumberGenerator.new()
 	noise.seed = 32197
 	var values := PackedFloat32Array()
+	var patter := 0.0
 	var rumble := 0.0
 	var drops := 0.0
 	var filtered := 0.0
 	for i in LOOP + CROSSFADE:
 		var sample := noise.randf_range(-1.0, 1.0)
-		filtered = lerpf(filtered, sample, 0.24)
+		patter = lerpf(patter, sample, 0.40)
+		filtered = lerpf(filtered, patter, 0.19)
 		rumble = lerpf(rumble, filtered, 0.058)
-		if noise.randf() < 0.0039: drops = noise.randf_range(0.14, 0.61)
+		if noise.randf() < 0.0039: drops = noise.randf_range(0.14, 0.40)
 		drops *= 0.991 if muffled else 0.979
-		var swell := 0.83 + 0.15 * sin(i * 0.00063) * cos(i * 0.00081)
-		var value := (rumble * 0.54 + filtered * 0.74) * swell
-		if not muffled: value += (sample - filtered) * 0.24
-		value += drops * (filtered * 0.66 + rumble * 0.85)
+		var value := rumble * 0.58 + filtered * 0.60
+		if not muffled: value += (patter - filtered) * 0.24
+		value += drops * (filtered * 0.54 + rumble * 0.85)
 		values.append(value)
 	var data := PackedByteArray()
 	data.resize(LOOP * 2)

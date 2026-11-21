@@ -34,7 +34,7 @@ Cada pasada avanza un solo punto del juego. Al cerrarla se actualiza el estado d
 - [x] Dar más presencia a la música de las caminatas y sostenerla a menor volumen durante las llamadas de Mara.
 - [x] Aclarar desde dónde llama Mara. Trabaja en el puesto de abajo, pasando la curva camino a Capilla. Su casa queda al final de la huella vecinal de la despedida.
 - [x] Esconder una piedra con signos en la cueva y permitir que Hernán los copie en Coleccionables.
-- [x] Identificar y corregir el ruido fuerte cerca del museo.
+- [x] Revisar el ruido cerca del museo y suavizar la llovizna, la tormenta y el canto de las aves.
 
 ### Por hacer
 
@@ -51,7 +51,7 @@ Cada pasada avanza un solo punto del juego. Al cerrarla se actualiza el estado d
 ## Sonido ambiente del museo
 
 - El canto sintético del pájaro alcanzaba un pico 13 dB por encima de los pasos y sonaba igual en el acceso y en el vestíbulo. Ahora tiene un timbre más suave, sale de un punto del paisaje y se apaga gradualmente al entrar. El techo también amortigua la lluvia.
-- Se compararon grabaciones de la rampa, la entrada y el vestíbulo con tiempo seco y lluvia. El pico del canto exterior bajó 19 dB y el vestíbulo quedó sin llamados nuevos. Al salir se recupera el sonido abierto de la lluvia.
+- En la primera revisión se midió el canto exterior y su pico bajó 19 dB. La segunda aisló la lluvia. El Día 27 ya hay llovizna al pie de la rampa y el Día 36 se oye la tormenta. La lluvia tenía un bucle de dos segundos con mucho siseo. El nuevo bucle dura ocho segundos y tiene menos agudos. En las grabaciones del acceso, la llovizna bajó 14 dB y la tormenta bajó 8 dB de nivel medio. Se comprobó que la tormenta se amortigua al entrar al museo y recupera su volumen al salir.
 
 ## Pasada de continuidad musical
 
