@@ -192,6 +192,7 @@ func _ready():
 	add_child(music)
 	add_child(score)
 	add_child(ambience)
+	player.footfall.connect(play_footfall)
 	player.position = Vector3(valley.path_x(-26), 0.04, -26)
 	player.rotation.y = PI
 	setup_rain()
@@ -425,7 +426,10 @@ func _process(delta):
 	var hand_tone := Color.WHITE.lerp(Color("#7d869e") if not in_refuge else Color("#b4a392"), darkness)
 	if mode == "cave" and not cave_outside: hand_tone = Color("#6c6b69") if flashlight_out else Color("#45444c")
 	hands.modulate = hand_tone
-	score.radio_active = radio_panel.visible
+	var radio_active: bool = radio_panel.visible or radio.interference.playing
+	score.radio_active = radio_active
+	var near_cave: bool = cave_built and player.position.distance_squared_to(ambience.cave_air.position) < 39.0 * 39.0
+	ambience.mix_cave_air(delta, near_cave, radio_active)
 	if mode in ["walk", "map"]: score_daily_walk(day, delta, in_museum)
 	if mode == "sighting": update_sighting(delta)
 	if mode == "cave":
@@ -479,7 +483,7 @@ func _process(delta):
 					refresh_map_goal()
 			map.track(player.position)
 		var daytime: bool = mode != "dream" and outdoors and rain_strength < 0.44 and float(valley.sky_mat.get_shader_parameter("nightfall")) < 0.5
-		ambience.update(delta, player.position, velocity, daytime and immersion < 0.05, mode == "cave" and not cave_outside, player.water_depth)
+		ambience.update_birds(delta, player.position, daytime and immersion < 0.05)
 		if stage == 7 and not second_sighting and mode in ["walk", "map"]:
 			var here := Vector2(player.position.x, player.position.z)
 			var overlook_distance := here.distance_to(Exploration.MOLLAR)
@@ -633,6 +637,22 @@ func update_weather(day: int, delta: float, in_museum: bool):
 		rain_view.direction = Vector3(wind * gust * 0.28, -1.0, 0.04 + wind * 0.12).normalized()
 		rain_material.set_shader_parameter("intensity", rain_strength)
 	ambience.weather(delta, rain_strength if shows_world else 0.0, shows_world and (not outside or in_museum), radio_panel.visible, day == 36)
+
+func play_footfall(surface: StringName, impact: float):
+	if mode not in ["approach", "walk", "map", "cave", "sighting", "dream", "mara_door"]: return
+	var foot: Vector3 = player.position
+	if player.water_depth > 0.07:
+		surface = &"water"
+	elif player.intro_center == LastNight.CAVE and not cave_outside:
+		surface = &"cave"
+	elif surface == &"":
+		surface = &"soil"
+		if player.intro_center == Vector3.ZERO:
+			if absf(foot.x) < 3.38 and foot.z > -0.32 and foot.z < 5.88 and foot.y < 0.15:
+				surface = &"wood"
+			elif rain_strength > 0.15 or stage in [16, 17, 18]:
+				surface = &"mud"
+	ambience.play_footstep(surface, impact)
 
 func update_water(delta: float):
 	var depth := 0.0
@@ -1952,6 +1972,7 @@ func enter_cave():
 		LastNight.build_cave(valley)
 		cave_built = true
 	valley.cave_darkness()
+	ambience.cave_air.position = LastNight.CAVE + Vector3(0.0, 1.75, -35.0)
 	player.camera.far = NIGHT_SCENE_VIEW
 	cave_outside = false
 	cave_station_called = false
@@ -2108,7 +2129,7 @@ func inspect_cave():
 				show_sighting(Sighting.CAVE)
 
 func cue_clearing():
-	score.cue("tension", 14, -9.0, 0.35, 25.0)
+	score.cue("tension", 23, -10.5, 0.7, 25.0)
 
 func start_final_dream(blinded: bool):
 	if blinded:

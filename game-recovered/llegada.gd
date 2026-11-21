@@ -281,6 +281,7 @@ static func build_log(v, center: Vector3):
 	log.height = 3.5
 	log.radial_segments = 12
 	var wood: MeshInstance3D = v.prop(log, center + Vector3(0.0, 0.22, -10.0), "69523b", true)
+	wood.get_child(0).set_meta("footstep", &"wood")
 	wood.rotation.z = PI / 2.0
 	for offset in [-0.08, 0.07, 0.18]:
 		var bark: MeshInstance3D = v.box(center + Vector3(0.0, 0.40 - offset * 0.25, -10 + offset), Vector3(3.26, 0.026, 0.038), "7a6247")
@@ -300,6 +301,7 @@ static func build_bridge(v, center: Vector3):
 		var plank := center + Vector3(0, -0.067, -7.18 - index * 0.47)
 		var tone: String = ["987954", "8d775e", "9c7c58"][index % 3]
 		var board: MeshInstance3D = v.box(plank, Vector3(2.76, 0.15, 0.47), tone, true)
+		board.get_child(0).set_meta("footstep", &"wood")
 		board.material_override = Refuge.wood(tone, true)
 	var railing := Refuge.wood("735944")
 	for side in [-1, 1]:

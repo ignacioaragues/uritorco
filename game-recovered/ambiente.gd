@@ -1,32 +1,40 @@
 extends Node
 
 const BIRD_LEVEL_DB := -25.0
+const FOOTSTEPS := {
+	&"soil": {"pitch": 92.0, "ring": 0.17, "grit": 0.40, "decay": 31.0, "level": -30.0},
+	&"mud": {"pitch": 110.0, "ring": 0.18, "grit": 0.34, "decay": 22.0, "level": -30.0},
+	&"wood": {"pitch": 137.0, "ring": 0.48, "grit": 0.15, "decay": 29.0, "level": -30.0},
+	&"stone": {"pitch": 175.0, "ring": 0.26, "grit": 0.36, "decay": 39.0, "level": -31.0},
+	&"cave": {"pitch": 175.0, "ring": 0.26, "grit": 0.36, "decay": 39.0, "level": -25.0},
+	&"water": {"pitch": 262.0, "ring": 0.08, "grit": 0.48, "decay": 17.0, "level": -28.0},
+}
+const STEP_VARIANTS := 3
 
 var step: = AudioStreamPlayer.new()
-var dry_step: AudioStreamWAV
-var water_step: AudioStreamWAV
+var step_variant := 0
 var bird := AudioStreamPlayer3D.new()
-var travel: = 0.0
 var silence: = 3.0
 var rain_air := AudioStreamPlayer.new()
 var rain_roof := AudioStreamPlayer.new()
 var thunder := AudioStreamPlayer.new()
+var cave_air := AudioStreamPlayer3D.new()
+var cave_air_gain := 0.0
 var rain_gain := 0.0
 var roof_mix := 0.0
 var thunder_wait := 11.0
 static var open_rain: AudioStreamWAV
 static var covered_rain: AudioStreamWAV
 static var distant_thunder: AudioStreamWAV
+static var cave_wind: AudioStreamWAV
+static var footstep_samples := {}
 var rng: = RandomNumberGenerator.new()
 
 func _ready():
 	rng.seed = 1871
 	add_child(step)
 	add_child(bird)
-	dry_step = sound(false)
-	bird.stream = sound(true)
-	water_step = sound(false, true)
-	step.volume_db = -24
+	bird.stream = bird_call()
 	bird.volume_db = BIRD_LEVEL_DB
 	bird.unit_size = 10.0
 	bird.max_distance = 38.0
@@ -34,51 +42,96 @@ func _ready():
 		open_rain = rain_sound(false)
 		covered_rain = rain_sound(true)
 		distant_thunder = thunder_sound()
+		cave_wind = cave_wind_sound()
+		for surface: StringName in FOOTSTEPS:
+			var variants: Array[AudioStreamWAV] = []
+			for variant in STEP_VARIANTS:
+				variants.append(footstep_sample(surface, variant))
+			footstep_samples[surface] = variants
 	add_child(rain_air)
 	add_child(rain_roof)
 	add_child(thunder)
+	add_child(cave_air)
 	rain_air.stream = open_rain
 	rain_roof.stream = covered_rain
 	thunder.stream = distant_thunder
+	cave_air.stream = cave_wind
+	cave_air.unit_size = 9.0
+	cave_air.max_distance = 39.0
+	cave_air.panning_strength = 0.48
 
-func sound(song: bool, splash := false) -> AudioStreamWAV:
-	var rate: = 22050
-	var count: = int(rate * (0.42 if song else (0.32 if splash else 0.18)))
-	var samples: = PackedByteArray()
+func bird_call() -> AudioStreamWAV:
+	const RATE := 22050
+	var count := int(RATE * 0.42)
+	var samples := PackedByteArray()
 	samples.resize(count * 2)
-	var filter: = 0.0
-	var phase: = 0.0
+	var phase := 0.0
 	for i in count:
-		var t: = float(i) / rate
-		var value: float
-		if song:
-			var pulse := sin(PI * fmod(t, 0.21) / 0.21)
-			var pitch := 1740.0 + 565.0 * pulse - t * 510.0
-			phase += TAU * pitch / rate
-			value = (sin(phase) + 0.13 * sin(phase * 2.0)) * pow(pulse, 3) * exp(-t * 2.9) * 0.72
-		elif splash:
-			var noise := rng.randf_range(-1.0, 1.0)
-			filter = lerpf(filter, noise, 0.31)
-			phase += TAU * lerpf(275.0, 120.0, minf(t * 4.0, 1.0)) / rate
-			value = (filter * 0.86 + sin(phase) * 0.16) * (exp(-t * 17.0) - exp(-t * 115.0))
-		else:
-			filter = lerpf(filter, rng.randf_range(-1, 1), 0.27)
-			value = (filter * 0.85 + sin(t * TAU * 64) * 0.12) * exp( - t * 24) * minf(1, t * 120)
+		var t := float(i) / RATE
+		var pulse := sin(PI * fmod(t, 0.21) / 0.21)
+		var pitch := 1740.0 + 565.0 * pulse - t * 510.0
+		phase += TAU * pitch / RATE
+		var value := (sin(phase) + 0.13 * sin(phase * 2.0)) * pow(pulse, 3) * exp(-t * 2.9) * 0.72
 		samples.encode_s16(i * 2, int(value * 18000))
 	var wave: = AudioStreamWAV.new()
 	wave.format = AudioStreamWAV.FORMAT_16_BITS
-	wave.mix_rate = rate
+	wave.mix_rate = RATE
 	wave.data = samples
 	return wave
 
-func update(delta: float, listener: Vector3, speed: float, daytime: bool, cave_interior: bool = false, depth := 0.0):
-	travel += speed * delta
-	if travel >= 1.72:
-		travel = 0
-		step.pitch_scale = rng.randf_range(0.86, 1.12)
-		step.stream = water_step if depth > 0.07 else dry_step
-		step.volume_db = -20.0 if cave_interior else (-24.0 if depth > 0.07 else -28.0)
-		step.play()
+func play_footstep(surface: StringName, impact: float):
+	step.stream = footstep_samples[surface][step_variant]
+	step_variant = (step_variant + 1) % STEP_VARIANTS
+	step.pitch_scale = rng.randf_range(0.93, 1.07) - impact * 0.07
+	step.volume_db = float(FOOTSTEPS[surface].level) + rng.randf_range(-1.4, 0.6) + impact * 3.6
+	step.play()
+
+static func footstep_sample(surface: StringName, variant: int) -> AudioStreamWAV:
+	const RATE := 22050
+	const COUNT := 6615
+	var profile: Dictionary = FOOTSTEPS[surface]
+	var random := RandomNumberGenerator.new()
+	random.seed = 690 + variant * 127
+	var wet := surface in [&"mud", &"water"]
+	var frequency := float(profile.pitch) * random.randf_range(0.89, 1.11)
+	var second_contact := random.randf_range(0.028, 0.049)
+	var filtered := 0.0
+	var phase := 0.0
+	var direct := PackedFloat32Array()
+	direct.resize(COUNT)
+	for i in COUNT:
+		var t := float(i) / RATE
+		var white := random.randf_range(-1.0, 1.0)
+		filtered = lerpf(filtered, white, 0.09 if wet else 0.22)
+		var heel := minf(t * 290.0, 1.0) * exp(-t * float(profile.decay))
+		var toe_time := maxf(0.0, t - second_contact)
+		var toe := minf(toe_time * 170.0, 1.0) * exp(-toe_time * 54.0)
+		var grit := (white * 0.26 + filtered * 0.84) * (heel + toe * 0.54)
+		phase += TAU * frequency * (1.0 + 0.24 * exp(-t * 28.0)) / RATE
+		var knock := (sin(phase) * 0.63 + sin(phase * 1.51) * 0.20) * heel
+		var value := grit * float(profile.grit) + knock * float(profile.ring)
+		if wet:
+			var spray := pow(0.5 + 0.5 * sin(t * TAU * (34.0 + 10.0 * variant)), 2.6)
+			value += (filtered + sin(phase * 2.91) * 0.12) * spray * toe * 0.31
+		direct[i] = value
+	var data := PackedByteArray()
+	data.resize(COUNT * 2)
+	var reflection := 0.0
+	for i in COUNT:
+		var value := direct[i]
+		if surface == &"cave":
+			var bounce := direct[i - 950] * 0.31 if i >= 950 else 0.0
+			if i >= 2095: bounce += direct[i - 2095] * 0.13
+			reflection = lerpf(reflection, bounce, 0.28)
+			value += reflection
+		data.encode_s16(i * 2, roundi(clampf(value, -1.0, 1.0) * 29490.0))
+	var wave := AudioStreamWAV.new()
+	wave.format = AudioStreamWAV.FORMAT_16_BITS
+	wave.mix_rate = RATE
+	wave.data = data
+	return wave
+
+func update_birds(delta: float, listener: Vector3, daytime: bool):
 	if daytime:
 		silence -= delta
 		if silence <= 0:
@@ -92,6 +145,43 @@ func update(delta: float, listener: Vector3, speed: float, daytime: bool, cave_i
 	elif bird.playing:
 		bird.volume_db = move_toward(bird.volume_db, -50.0, delta * 110.0)
 		if bird.volume_db <= -50.0: bird.stop()
+
+func mix_cave_air(delta: float, near_cave: bool, radio_active: bool):
+	var target := (0.38 if radio_active else 1.0) if near_cave else 0.0
+	cave_air_gain = move_toward(cave_air_gain, target, delta * (1.9 if radio_active else 0.76))
+	if cave_air_gain < 0.0015:
+		if cave_air.playing: cave_air.stop()
+		return
+	cave_air.volume_db = -28.0 + linear_to_db(cave_air_gain)
+	if not cave_air.playing: cave_air.play()
+
+static func cave_wind_sound() -> AudioStreamWAV:
+	const RATE := 22050
+	const COUNT := RATE * 8
+	const FADE := 8820
+	var random := RandomNumberGenerator.new()
+	random.seed = 5779
+	var values := PackedFloat32Array()
+	var soft := 0.0
+	var bass := 0.0
+	for i in COUNT + FADE:
+		var t := float(i) / RATE
+		soft = lerpf(soft, random.randf_range(-1.0, 1.0), 0.030)
+		bass = lerpf(bass, soft, 0.007)
+		var breath := 0.61 + 0.22 * sin(t * 1.53) + 0.12 * sin(t * 3.31 + 1.2)
+		values.append((soft * 0.48 + bass * 0.52) * breath * 2.3)
+	var data := PackedByteArray()
+	data.resize(COUNT * 2)
+	for i in COUNT:
+		var sample := values[i] if i >= FADE else lerpf(values[COUNT + i], values[i], float(i) / FADE)
+		data.encode_s16(i * 2, roundi(clampf(sample, -1.0, 1.0) * 30000.0))
+	var stream := AudioStreamWAV.new()
+	stream.format = AudioStreamWAV.FORMAT_16_BITS
+	stream.mix_rate = RATE
+	stream.loop_mode = AudioStreamWAV.LOOP_FORWARD
+	stream.loop_end = COUNT
+	stream.data = data
+	return stream
 
 func weather(delta: float, rain: float, sheltered: bool, radio_active: bool, storm: bool):
 	var target := pow(rain, 1.2) * (0.52 if radio_active else 1.0)

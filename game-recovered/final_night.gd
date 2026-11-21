@@ -42,7 +42,8 @@ static func build_cave(v):
 	for ledge in [[-0.65, 0.13, -13.1], [0.65, 0.38, -16.6], [-0.45, 0.62, -20.1]]:
 		v.box(CAVE + Vector3(ledge[0], ledge[1] - 0.45, ledge[2]), Vector3(2.5, 0.9, 2.35), "5c5349", true)
 	v.box(CAVE + Vector3(0, 0.25, -29), Vector3(8, 0.9, 15.5), "47443d", true)
-	v.box(CAVE + Vector3(0, 0.25, -43), Vector3(10, 0.9, 15), "484b37", true)
+	var mouth: MeshInstance3D = v.box(CAVE + Vector3(0, 0.25, -43), Vector3(10, 0.9, 15), "484b37", true)
+	mouth.get_child(0).set_meta("footstep", &"stone")
 	for side in [-1, 1]:
 		v.box(CAVE + Vector3(side * 4.2, 1.2, -18), Vector3(0.65, 8, 37), "383632", true)
 		for i in range(13):

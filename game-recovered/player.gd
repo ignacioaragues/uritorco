@@ -1,10 +1,13 @@
 extends CharacterBody3D
 
+signal footfall(surface: StringName, impact: float)
+
 const Creek = preload("res://cauce.gd")
 const CAPSULE_CENTER := 0.86
 const LEDGE_MIN_HEIGHT := 0.52
 const LEDGE_MAX_HEIGHT := 1.58
 const LEDGE_REACH := 1.02
+const STEP_LENGTH := 1.51
 
 var camera: = Camera3D.new()
 var flashlight: = SpotLight3D.new()
@@ -28,6 +31,7 @@ var rope_entry_pitch := 0.0
 var rope_descending := false
 var ledge_elapsed := 0.0
 var look_speed: = 0.002
+var step_distance := 0.0
 
 func _ready():
 	var hit: = CollisionShape3D.new()
@@ -146,6 +150,7 @@ func finish_climb():
 
 func _physics_process(delta):
 	if not climb_points.is_empty():
+		step_distance = 0.0
 		if not walking: return
 		var speed := 2.2
 		if rope_climbing:
@@ -186,6 +191,9 @@ func _physics_process(delta):
 	velocity.x = direction.x * speed
 	velocity.z = direction.z * speed
 	velocity.y -= (3.8 if low_gravity else lerpf(16.0, 10.0, resistance)) * delta
+	var previous := position
+	var was_grounded := is_on_floor()
+	var fall_speed := -velocity.y
 	move_and_slide()
 	if intro_center != Vector3.ZERO:
 		var local: = (position - intro_center).rotated(Vector3.UP, - intro_heading)
@@ -193,7 +201,30 @@ func _physics_process(delta):
 		local.x = clampf(local.x, bounds.position.x, bounds.end.x)
 		local.z = clampf(local.z, bounds.position.y, bounds.end.y)
 		position = intro_center + local.rotated(Vector3.UP, intro_heading)
+	else:
+		var lateral: = lerpf(46, 354, smoothstep(0, 55, -76 - position.z))
+		position.x = clampf(position.x, -maxf(lateral, Creek.west_limit(position.z)), lateral)
+		position.z = clampf(position.z, -1049, Creek.LIMIT_Z)
+	update_footfalls(position - previous, was_grounded, fall_speed)
+
+func update_footfalls(motion: Vector3, was_grounded: bool, fall_speed: float):
+	if not walking or not is_on_floor(): return
+	if not was_grounded and fall_speed > 2.7:
+		step_distance = 0.0
+		footfall.emit(floor_sound(), smoothstep(2.7, 9.0, fall_speed))
 		return
-	var lateral: = lerpf(46, 354, smoothstep(0, 55, -76 - position.z))
-	position.x = clampf(position.x, -maxf(lateral, Creek.west_limit(position.z)), lateral)
-	position.z = clampf(position.z, -1049, Creek.LIMIT_Z)
+	step_distance += Vector2(motion.x, motion.z).length()
+	if step_distance < STEP_LENGTH: return
+	step_distance = fmod(step_distance, STEP_LENGTH)
+	footfall.emit(floor_sound(), 0.0)
+
+func floor_sound() -> StringName:
+	for i in range(get_slide_collision_count() - 1, -1, -1):
+		var slide := get_slide_collision(i)
+		if slide.get_normal().y < 0.65: continue
+		var body := slide.get_collider()
+		if not is_instance_valid(body): continue
+		var surface: StringName = body.get_meta("footstep", &"")
+		if surface != &"": return surface
+	var below := raycast_surface(global_position + Vector3.UP * 0.10, global_position + Vector3.DOWN * 0.19)
+	return below.collider.get_meta("footstep", &"") if not below.is_empty() else &""

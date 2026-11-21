@@ -69,6 +69,7 @@ static func dress_log(valley):
 	trunk.bottom_radius = 0.28
 	trunk.top_radius = 0.19
 	var log: MeshInstance3D = valley.prop(trunk, (a + b) * 0.5, "685447", true, "Tronco caído")
+	log.get_child(0).set_meta("footstep", &"wood")
 	log.quaternion = Quaternion(Vector3.UP, (b - a).normalized())
 	valley.timber(log)
 	for i in 3:
@@ -79,6 +80,7 @@ static func dress_ledge(valley):
 	var foot := ground(Creek.crossing_point(LEDGE))
 	var heading := forward(LEDGE)
 	var slab: MeshInstance3D = valley.box(foot + heading * 0.4 + Vector3.UP * 0.39, Vector3(3.6, 1.0, 1.8), "82756a", true, "Subir al escalón")
+	slab.get_child(0).set_meta("footstep", &"stone")
 	slab.rotation.y = atan2(heading.x, heading.z)
 	slab.material_override = Stone.paint("82756a")
 	var rocks := Stone.surface()
@@ -103,6 +105,7 @@ static func dress_bridge(valley, rng: RandomNumberGenerator):
 		var width := 2.19 - (maxi(0, i - 16) * 0.27)
 		var x := 0.0 if i < 17 else -0.15 * (i - 16)
 		var board: MeshInstance3D = valley.box(deck + Vector3(x, 0, z), Vector3(width, 0.15, rng.randf_range(0.365, 0.40)), tint, true)
+		board.get_child(0).set_meta("footstep", &"wood")
 		board.rotation.y = rng.randf_range(-0.033, 0.033)
 		valley.timber(board, true)
 	for x in [-0.79, 0.79]:

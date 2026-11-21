@@ -48,6 +48,7 @@ Al cierre de cada pasada se actualizan los puntos resueltos y se conserva lo que
 - [x] Ajustar el tamaño aparente de la Luna a plena luz. El disco gana tamaño progresivamente durante el crepúsculo.
 - [x] Hacer que dos charlas de Mara puedan dejar objetos en el refugio. El pisapapeles llega con las pilas a partir del Día 7 y la botella de tinto, envuelta en papel de diario, aparece en la repisa a partir del Día 36. Se pueden inspeccionar con E. Se probaron las dos respuestas de cada charla y la carga de partida.
 - [x] Poner cortinas corredizas de tela en el refugio. Se abren y cierran con E desde dentro y conservan su posición al guardar. En la última noche se pueden abrir para mirar las luces y se cierran al elegir acostarse.
+- [x] Darles pisadas distintas a la tierra, el barro, la madera, la piedra y el agua. En la cueva se oye una reverberación corta, y la radio baja el fondo de música y viento mientras suena la interferencia.
 
 ## Ritmo de las charlas de Mara
 
@@ -117,7 +118,7 @@ Al cierre de cada pasada se actualizan los puntos resueltos y se conserva lo que
 - **Días 25 a 36.** El parte del filo reconoce la vaguada o la laja y la respuesta vuelve en el encargo del malacate. El rumbo anotado en la cantera se compara desde la cumbre. Los cuadernos del campamento y de la cueva comparten las columnas de hora, rumbo y respuesta, y el aviso de la pasarela vuelve en la bitácora. El museo se corrió para liberar la huella, con un ajuste al cargar partidas guardadas dentro. Se caminó la ida y vuelta del Día 25 y se comprobó el ascenso y la bajada de la cumbre.
 - **Diario de Hernán.** Tab abre un cuaderno con papel y dibujos generados. Las flechas recorren las entradas fechadas según lo que vivió Hernán. El filo distingue el rodeo y la cuerda. El malacate, la pasarela y el último sueño recuperan sus decisiones. Los apuntes sueltos siguen disponibles en páginas separadas.
 - **Ritmo y despedida.** Se despejaron la salida oeste hacia el cable y el desvío de la quebrada. La charla de la bajada de la cumbre aparece durante el descenso. La despedida del Día 41 ocurre en la parada, marcada en el mapa. La segunda charla de ese día también se puede tener ahí. Desde la parada se puede caminar hasta la puerta de Mara cuando se alcanza el umbral de cercanía. Una prueba de corrido del Día 25 al 41 recorrió los senderos con colisiones, completó las diez charlas de esas jornadas y llegó a la puerta. Se probó también el epílogo del colectivo desde la parada.
-- **Mezcla de la última noche.** Se grabó la secuencia continua desde el refugio hasta el despertar. Se levantaron 8 dB los pasos dentro de la cueva. La toma final de 54 segundos alcanzó un pico de −12.4 dBFS. La pregunta junto a la estación, la interferencia y la frase que vuelve quedan separadas en el audio.
+- **Mezcla de la última noche.** El viento se oye más cerca de la boca de la cueva y baja durante las llamadas. La pregunta junto a la estación, la interferencia y la frase que vuelve tienen sus propias pausas. Cosmic acompaña el regreso y Tension sostiene la llegada al claro. Las pisadas varían según el suelo y se disparan al avanzar o aterrizar.
 - **Suelo del refugio.** El acceso, el cauce y el corredor principal comparten material. Las huellas de la cantera, la cumbre y el puesto de Mara se dibujan sobre el terreno. La malla baja se extiende bajo las sierras que rodean el valle. Se comparó la unión a pie y desde arriba, y se repitieron la ida y vuelta del Día 2, la pasada del Día 25 al 41 y el recorrido a la puerta.
 - **Prueba de arte.** Los carteles del cruce y la parada tienen estacas afinadas, tablones con bordes irregulares, vetas suaves, remaches y letras más grandes. En la parada hay una indicación en la huella hacia el puesto de abajo. La tapa de Observar el Cielo y el diario sirven de referencia para la paleta, el desgaste y el trazo.
 - **Cumbre.** El sendero este sale desde la tranquera y lleva al banco del acceso. Las pircas se apoyan en la malla de colisión y los carteles de bajada miran hacia quien viene de la cumbre. Con E cerca del banco se cierra la travesía y el Día 36 retoma en el refugio. Se probó el recorrido a pie en ambos sentidos.
@@ -165,7 +166,6 @@ Esta lista reconstruye el estado informado del proyecto editable. La exportació
 
 ## Todavía pendiente
 
-- **Ambiente.** Volver a escuchar la mezcla de la última noche y comparar los sonidos de pisadas por superficie.
 - **Arte.** Afinar las texturas del prólogo, la lectura de objetos de cerca y la integración visual del terreno de los sueños.
 - **Mundo y recorridos.** Revisar la distribución de destinos alrededor del refugio, seguir afinando la cartografía y revisar a velocidad normal el ritmo de las ocho microescenas.
-- **Windows.** Validar la próxima exportación cuando se solicite.
+- **Windows.** Probar el ejecutable en Windows. El paquete exportado se verificó en Godot sobre Linux.
