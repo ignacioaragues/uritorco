@@ -16,5 +16,5 @@ void fragment() {
 	float ray = exp(-abs(p.x) * 48.0 - abs(p.y) * 4.8) + exp(-abs(p.y) * 48.0 - abs(p.x) * 4.8);
 	float pulse = pow(0.5 + 0.5 * sin(TIME * 2.7 + phase), 4.0);
 	ALBEDO = glint.rgb;
-	ALPHA = (center * 0.36 + ray * 0.24) * (0.12 + pulse * 0.88) * (1.0 - smoothstep(8.0, 17.0, distance_to_eye));
+	ALPHA = (center * 0.30 + ray * 0.18) * (0.08 + pulse * 0.92) * (1.0 - smoothstep(2.2, 5.0, distance_to_eye));
 }

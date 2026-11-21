@@ -306,7 +306,7 @@ func draw_finds(limits: Rect2):
 		var world := Vector3(at.x, 0, at.y)
 		if not contains(limits, world): continue
 		var seen := found.has(id)
-		if not seen and here.distance_to(at) > 13.5: continue
+		if not seen and here.distance_to(at) > 2.8: continue
 		var mark := point(limits, world)
 		var picture := Vector2(34, 34) if seen else Vector2(29, 29)
 		var radius := picture * 0.5

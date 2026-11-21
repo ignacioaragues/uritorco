@@ -2,8 +2,9 @@ extends RefCounted
 
 static func glint(parent: Node3D, at: Vector3, tone: Color):
 	var plane := QuadMesh.new()
-	plane.size = Vector2(0.31, 0.31)
+	plane.size = Vector2(0.20, 0.20)
 	var flare := MeshInstance3D.new()
+	flare.name = "Destello"
 	flare.mesh = plane
 	var shine := ShaderMaterial.new()
 	shine.shader = preload("res://destello_hallazgo.gdshader")
