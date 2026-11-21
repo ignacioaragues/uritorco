@@ -208,7 +208,7 @@ func draw_local(limits: Rect2):
 
 func add_refuge_pin(limits: Rect2):
 	if contains(limits, Vector3.ZERO):
-		pin(limits, Vector3.ZERO, "Refugio", Vector2(12, -13), true)
+		pin(limits, Vector3.ZERO, "Puesto", Vector2(12, -13), true)
 	else:
 		var paper := PAPER_FIELD.grow(-17.0)
 		var refuge := point(limits, Vector3.ZERO)
@@ -219,7 +219,7 @@ func add_refuge_pin(limits: Rect2):
 		var back := arrow - direction * 10.0
 		var side := direction.orthogonal() * 4.5
 		draw_colored_polygon(PackedVector2Array([arrow, back + side, back - side]), LABEL_INK)
-		pins.append({"mark": back - direction * 10.0, "text": "Refugio", "offset": Vector2(12, -13), "refuge": true})
+		pins.append({"mark": back - direction * 10.0, "text": "Puesto", "offset": Vector2(12, -13), "refuge": true})
 
 func draw_south(limits: Rect2):
 	draw_route(limits, 81, access_road, INK)

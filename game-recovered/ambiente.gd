@@ -20,6 +20,7 @@ var rain_roof := AudioStreamPlayer.new()
 var thunder := AudioStreamPlayer.new()
 var cave_air := AudioStreamPlayer3D.new()
 var rope_snap := AudioStreamPlayer3D.new()
+var piece_pulse := AudioStreamPlayer.new()
 var cave_air_gain := 0.0
 var rain_gain := 0.0
 var roof_mix := 0.0
@@ -54,6 +55,7 @@ func _ready():
 	add_child(thunder)
 	add_child(cave_air)
 	add_child(rope_snap)
+	add_child(piece_pulse)
 	rain_air.stream = open_rain
 	rain_roof.stream = covered_rain
 	thunder.stream = distant_thunder
@@ -64,6 +66,28 @@ func _ready():
 	rope_snap.stream = rope_snap_sound()
 	rope_snap.unit_size = 8.0
 	rope_snap.volume_db = -18.0
+	piece_pulse.stream = piece_pulse_sound()
+
+func play_piece_pulse(intensity: float):
+	piece_pulse.volume_db = lerpf(-32.0, -21.0, intensity)
+	piece_pulse.play()
+
+static func piece_pulse_sound() -> AudioStreamWAV:
+	const RATE := 22050
+	var count := int(RATE * 0.20)
+	var samples := PackedByteArray()
+	samples.resize(count * 2)
+	for i in count:
+		var t := float(i) / RATE
+		var phase := TAU * t * (205.0 + 230.0 * t)
+		var envelope := smoothstep(0.0, 0.022, t) * (1.0 - smoothstep(0.08, 0.20, t))
+		var tone := sin(phase) * 0.59 + sin(phase * 1.51) * 0.18 + sin(phase * 2.02) * 0.13
+		samples.encode_s16(2 * i, int(tone * envelope * 17000.0))
+	var wave := AudioStreamWAV.new()
+	wave.format = AudioStreamWAV.FORMAT_16_BITS
+	wave.mix_rate = RATE
+	wave.data = samples
+	return wave
 
 func play_rope_snap(at: Vector3):
 	rope_snap.position = at

@@ -149,7 +149,7 @@ func _ready():
 	signpost(at(trail(292) - 1.7, 292), "Museo de sitio →")
 	signpost(Vector3(western_x_at(-27.0) - 1.8, 0.0, -27.0), "Cantera ↖", 0.0, true)
 	var west_sign := western_approach(1.0) + Vector3(2.0, 0.0, 0.0)
-	signpost(west_sign, "Refugio · senda del oeste")
+	signpost(west_sign, "Puesto · senda del oeste")
 
 func laja_rope_route() -> Array[Vector3]:
 	var x := trail(170.0) - 0.64

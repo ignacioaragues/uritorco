@@ -7,13 +7,13 @@ func _ready():
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
 	hide()
 
-func present(captions: Array):
+func present(captions: Array, numbered := false):
 	for child in get_children():
 		remove_child(child)
 		child.queue_free()
 	for index in captions.size():
 		var button: = Button.new()
-		button.text = captions[index]
+		button.text = "%d · %s" % [index + 1, captions[index]] if numbered else captions[index]
 		button.alignment = HORIZONTAL_ALIGNMENT_LEFT
 		button.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 		button.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND

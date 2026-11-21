@@ -294,7 +294,7 @@ static func dress_verges(center: Vector3, index: int, rng: RandomNumberGenerator
 static func build_stop(v, center: Vector3):
 	Signage.shelter(v, center + STOP_CENTER)
 	Signage.flag(v, center + Vector3(-4.07, 0, -7.14))
-	Signage.trail_post(v, center + Vector3(4.7, 0.0, branch_z(4.7) - 1.52), "Refugio →", -0.72, true)
+	Signage.trail_post(v, center + Vector3(4.7, 0.0, branch_z(4.7) - 1.52), "Puesto →", -0.72, true)
 	v.arrival_bag = FieldKit.backpack(v, center + STOP_PACK, ACTIONS[0])
 	v.arrival_bag.rotation.y = -0.14
 

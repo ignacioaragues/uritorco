@@ -6,6 +6,51 @@ const CLOTH = preload("res://tejido_refugio.gdshader")
 const BOOK_COVER = preload("res://libro_portada.webp")
 const POSTCARD = preload("res://postal_munich.webp")
 const Stone = preload("res://piedra_serrana.gd")
+const ROOF_PITCH := 0.022
+const ROOF_CENTER := Vector3(0, 3.002, 2.65)
+const ROOF_WAVE := 0.148
+
+static func masonry(wall: MeshInstance3D, inner_face: Vector3):
+	var finish := ShaderMaterial.new()
+	finish.shader = preload("res://mamposteria_puesto.gdshader")
+	finish.set_shader_parameter("inner_face", inner_face)
+	finish.set_shader_parameter("lime", wall.material_override.albedo_color)
+	wall.material_override = finish
+	wall.name = "Muro del puesto"
+
+static func roof(parent: Node3D):
+	const WIDTH := 7.85
+	const DEPTH := 7.82
+	const COLUMNS := 424
+	const AMPLITUDE := 0.017
+	var rafters := Node3D.new()
+	rafters.name = "Cubierta del puesto"
+	parent.add_child(rafters)
+	rafters.position = ROOF_CENTER
+	rafters.rotation.x = -ROOF_PITCH
+	Kit.block(rafters, Vector3(0, -0.076, 0), Vector3(WIDTH - 0.22, 0.118, DEPTH - 0.24), wood("625349", true))
+	var surface := SurfaceTool.new()
+	surface.begin(Mesh.PRIMITIVE_TRIANGLES)
+	for side in range(2):
+		var along := side * DEPTH
+		for column in range(COLUMNS + 1):
+			var across := WIDTH * column / COLUMNS
+			var phase := TAU * across / ROOF_WAVE
+			var slope := TAU * AMPLITUDE / ROOF_WAVE * cos(phase)
+			surface.set_normal(Vector3(-slope, 1.0, 0.0).normalized())
+			surface.set_uv(Vector2(across, along))
+			surface.add_vertex(Vector3(across - WIDTH * 0.5, AMPLITUDE * sin(phase), along - DEPTH * 0.5))
+	for column in COLUMNS:
+		var back := column + COLUMNS + 1
+		for index in [column, column + 1, back, column + 1, back + 1, back]:
+			surface.add_index(index)
+	var zinc := ShaderMaterial.new()
+	zinc.shader = preload("res://chapa_puesto.gdshader")
+	zinc.set_shader_parameter("wave_width", ROOF_WAVE)
+	var sheet := Kit.mesh_part(rafters, surface.commit(), Vector3.ZERO, zinc)
+	sheet.name = "Chapa acanalada"
+	sheet.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_DOUBLE_SIDED
+	sheet.create_trimesh_collision()
 
 static func wood(color: String, across := false) -> ShaderMaterial:
 	var finish := ShaderMaterial.new()
@@ -417,8 +462,8 @@ static func exterior_equipment(parent: Node3D, flag_foot: Vector3, cylinder_foot
 
 	var solar := Node3D.new()
 	parent.add_child(solar)
-	solar.position = Vector3(-2.65, 3.13, 1.02)
-	solar.rotation.z = 0.025
+	solar.position = Vector3(-2.65, ROOF_CENTER.y + 0.15 + (1.02 - ROOF_CENTER.z) * sin(ROOF_PITCH), 1.02)
+	solar.rotation.x = -ROOF_PITCH
 	for x in [-0.42, 0.42]:
 		Kit.block(solar, Vector3(x, -0.091, 0), Vector3(0.06, 0.13, 0.61), steel)
 	Kit.block(solar, Vector3.ZERO, Vector3(1.16, 0.076, 0.79), steel)

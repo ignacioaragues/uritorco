@@ -76,7 +76,7 @@ func _ready():
 	ray.add_exception(self)
 
 func _unhandled_input(event):
-	if (walking or looking_only) and climb_points.is_empty() and event is InputEventMouseMotion:
+	if Input.mouse_mode == Input.MOUSE_MODE_CAPTURED and (walking or looking_only) and climb_points.is_empty() and event is InputEventMouseMotion:
 		if gaze_shift and gaze_shift.is_running(): gaze_shift.kill()
 		rotate_y( - event.relative.x * look_speed)
 		camera.rotation.x = clampf(camera.rotation.x - event.relative.y * look_speed, -1.45, 1.45)

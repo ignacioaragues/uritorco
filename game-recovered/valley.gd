@@ -153,10 +153,10 @@ func _ready():
 	Flora.grass_batch(self, tufts)
 	for sample in 24: rng.randf()
 
-	plaster(box(Vector3(0, 1.4, 6), Vector3(7, 2.8, 0.22), "a79679", true))
-	plaster(box(Vector3(-3.5, 1.4, 2.8), Vector3(0.22, 2.8, 6.5), "998975", true))
+	Refuge.masonry(box(Vector3(0, 1.4, 6), Vector3(7, 2.8, 0.22), "a79679", true), Vector3.FORWARD)
+	Refuge.masonry(box(Vector3(-3.5, 1.4, 2.8), Vector3(0.22, 2.8, 6.5), "998975", true), Vector3.RIGHT)
 	for piece in [[2.8, 0.5, 6.5, 1.0], [2.8, 2.56, 6.5, 0.48], [0.4, 1.66, 1.6, 1.32], [5.2, 1.66, 1.6, 1.32]]:
-		plaster(box(Vector3(3.5, piece[1], piece[0]), Vector3(0.22, piece[3], piece[2]), "998975", true))
+		Refuge.masonry(box(Vector3(3.5, piece[1], piece[0]), Vector3(0.22, piece[3], piece[2]), "998975", true), Vector3.LEFT)
 	box(Vector3(3.5, 1.02, 2.8), Vector3(0.4, 0.12, 3.4), "65503f")
 	box(Vector3(3.5, 1.65, 2.8), Vector3(0.12, 1.32, 0.09), "755c48")
 	var pane := QuadMesh.new()
@@ -168,8 +168,8 @@ func _ready():
 	glass.material_override = window_glass
 	build_curtains()
 	for x in [-2.35, 2.35]:
-		plaster(box(Vector3(x, 1.4, -0.4), Vector3(2.35, 2.8, 0.22), "a89b87", true))
-	box(Vector3(0, 2.93, 2.65), Vector3(8, 0.23, 8), "5c5148", true).rotation.z = 0.025
+		Refuge.masonry(box(Vector3(x, 1.4, -0.4), Vector3(2.35, 2.8, 0.22), "a89b87", true), Vector3.BACK)
+	Refuge.roof(self)
 	box(Vector3(0, 2.795, 2.76), Vector3(7.19, 0.16, 6.66), "73614d", true)
 	var fascia := box(Vector3(0, 2.825, -0.52), Vector3(7.27, 0.20, 0.092), "665648")
 	fascia.material_override = Refuge.wood("665648", true)
@@ -639,8 +639,8 @@ func furnish():
 	add_child(hinge)
 	hinge.position = Vector3(-1.16, 0, -0.4)
 
-	plaster(box(Vector3(0.65, 1.40, -0.4), Vector3(1.05, 2.80, 0.22), "a89b87", true))
-	plaster(box(Vector3(-0.52, 2.53, -0.4), Vector3(1.30, 0.55, 0.22), "a89b87", true))
+	Refuge.masonry(box(Vector3(0.65, 1.40, -0.4), Vector3(1.05, 2.80, 0.22), "a89b87", true), Vector3.BACK)
+	Refuge.masonry(box(Vector3(-0.52, 2.53, -0.4), Vector3(1.30, 0.55, 0.22), "a89b87", true), Vector3.BACK)
 	var trim := Refuge.wood("735f4d")
 	FieldKit.block(self, Vector3(-0.51, 2.265, -0.43), Vector3(1.39, 0.078, 0.24), trim)
 	for x in [-1.168, 0.153]:
@@ -694,6 +694,12 @@ func arrival_light(amount: float):
 var sky_chapter: = 0
 var sun_direction := Vector3.UP
 var moon_direction := Vector3.DOWN
+var dream_view := Vector3.FORWARD
+
+func update_dream_view(direction: Vector3):
+	if dream_view.is_equal_approx(direction): return
+	dream_view = direction
+	sky_mat.set_shader_parameter("dream_view", direction)
 
 func configure_sky(chapter: int):
 	sky_chapter = chapter

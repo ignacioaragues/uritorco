@@ -37,7 +37,7 @@ func _ready():
 	options.add_theme_color_override("font_color", Color("#d5dcd3"))
 	hide()
 
-func display(kind: String, caption: String, footer: Variant):
+func display(kind: String, caption: String, footer: Variant, mobile := false):
 	speaker.text = "RADIO"
 	if reveal: reveal.kill()
 	line.text = caption
@@ -51,9 +51,10 @@ func display(kind: String, caption: String, footer: Variant):
 		reveal = create_tween()
 		reveal.tween_property(line, "visible_characters", line.text.length(), maxf(0.32, line.text.length() / 34.0))
 		reveal.tween_callback(func(): line.visible_characters = -1)
-	choices.present(footer if footer is Array else [])
-	options.visible = footer is String
-	options.text = footer if footer is String else ""
+	choices.present(footer if footer is Array else [], mobile)
+	var show_cursor_help: bool = mobile and footer is Array
+	options.visible = footer is String or show_cursor_help
+	options.text = "Alt · cursor" if show_cursor_help else (footer if footer is String else "")
 	show()
 	offset_left = 0
 	offset_right = 0

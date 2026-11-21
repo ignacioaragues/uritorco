@@ -6,7 +6,8 @@ const CaveRunes = preload("res://piedra_cueva.gd")
 const Structures = preload("res://estructuras.gd")
 const Stone = preload("res://piedra_serrana.gd")
 const DREAM_BOUNDS := Rect2(-73.0, -144.0, 146.0, 177.0)
-const DREAM_ARCH_DISTANCES := [17.0, 38.0, 62.0, 92.0]
+const DREAM_ARCH_SITES := [Vector2(-44, -24), Vector2(44, -52), Vector2(-32, -108), Vector2(40, -128)]
+const DREAM_ARCH_ENTRIES := [Vector2(-35, -9), Vector2(38, -36), Vector2(-41, -89), Vector2(53, -112)]
 
 const CAVE: = Vector3(0, 80, 1900)
 const DOOR := Vector3(39.5, 0, -57)
@@ -67,6 +68,13 @@ const CAVE_ARCH := [Vector2(-0.86, 0.0), Vector2(-1.01, 0.16), Vector2(-1.04, 0.
 	Vector2(-0.91, 0.60), Vector2(-0.71, 0.82), Vector2(-0.47, 0.96), Vector2(-0.13, 1.0),
 	Vector2(0.23, 0.95), Vector2(0.57, 0.88), Vector2(0.82, 0.73),
 	Vector2(0.96, 0.50), Vector2(1.02, 0.25), Vector2(0.88, 0.0)]
+const MOUTH_PROFILE := [
+	Vector3(-2.72, 0.0, 1.82), Vector3(-2.98, 0.65, 2.02), Vector3(-2.62, 1.43, 2.11),
+	Vector3(-2.12, 1.96, 2.58), Vector3(-1.87, 2.53, 2.76), Vector3(-1.15, 2.84, 2.45),
+	Vector3(-0.48, 2.66, 2.93), Vector3(0.34, 2.77, 2.60), Vector3(1.00, 2.57, 2.46),
+	Vector3(1.78, 2.48, 2.18), Vector3(2.41, 1.78, 2.70), Vector3(2.28, 0.86, 2.66),
+	Vector3(2.67, 0.0, 2.21)
+]
 
 static func near_stop(position: Vector3) -> bool:
 	return position.distance_squared_to(STOP) < 64.0
@@ -110,7 +118,7 @@ static func build_cave(v) -> Node3D:
 	build_cave_approach(v)
 	build_portal(v, rings[0], 1.0)
 	build_portal(v, rings[-1], -1.0)
-	for light_data in [[Vector3(0.6, 3.5, 1.8), 0.83, 17.0], [Vector3(0.2, 1.93, EXIT_Z - 1.0), 0.51, 17.0]]:
+	for light_data in [[Vector3(-3.1, 5.3, 8.7), 1.16, 20.0], [Vector3(0.2, 1.93, EXIT_Z - 1.0), 0.51, 17.0]]:
 		var light := OmniLight3D.new()
 		light.light_color = Color("#a5b4d1")
 		light.light_energy = light_data[1]
@@ -161,6 +169,17 @@ static func gallery_center(z: float) -> Vector3:
 
 static func build_portal(v, opening: PackedVector3Array, outward: float):
 	var face := Stone.surface()
+	var bands: Array[PackedVector3Array] = [opening]
+	if outward > 0.0:
+		var apron := PackedVector3Array()
+		for i in MOUTH_PROFILE.size():
+			var point: Vector3 = MOUTH_PROFILE[i]
+			var slope: Vector2 = CAVE_ARCH[i]
+			apron.append(Vector3(point.x * 1.63 + 0.15 * sin(i * 2.71),
+				point.y * 1.57 + 0.49 * slope.y * sin(i * 1.92),
+				1.82 + 1.05 * sin(i * 0.91) + absf(point.x) * 0.25))
+		bands.append(PackedVector3Array(MOUTH_PROFILE))
+		bands.append(apron)
 	var rim := PackedVector3Array()
 	for i in opening.size():
 		var at := opening[i]
@@ -169,17 +188,51 @@ static func build_portal(v, opening: PackedVector3Array, outward: float):
 		var rise := 12.5 if outward > 0.0 else 10.0
 		rim.append(Vector3(arch.x * width, lerpf(-0.64, rise + 2.6 * sin(i * 1.35), arch.y),
 			at.z + outward * (0.8 + 1.6 * absf(arch.x) + 0.48 * sin(i * 0.9))))
-	for i in opening.size() - 1:
-		var shade := Color("#756d5f").lerp(Color("#4e4941"), 0.28 + 0.17 * sin(i * 1.23))
-		if outward > 0.0:
-			Stone.triangle(face, opening[i], rim[i], opening[i + 1], shade)
-			Stone.triangle(face, opening[i + 1], rim[i], rim[i + 1], shade)
-		else:
-			Stone.triangle(face, opening[i], opening[i + 1], rim[i], shade)
-			Stone.triangle(face, opening[i + 1], rim[i + 1], rim[i], shade)
+	bands.append(rim)
+	for row in bands.size() - 1:
+		var inner := bands[row]
+		var outer := bands[row + 1]
+		for i in inner.size() - 1:
+			var tone := 0.32 + 0.22 * sin(i * 1.53 + row * 2.1)
+			var shade := Color("#8d8071").lerp(Color("#554e48"), tone)
+			if outward > 0.0 and row == bands.size() - 2:
+				face.set_smooth_group(0)
+				for vertex in [inner[i], outer[i], inner[i + 1], inner[i + 1], outer[i], outer[i + 1]]:
+					face.set_color(Color("#756d64").lightened(0.08 * sin(vertex.x * 0.62 + vertex.y * 0.80)))
+					face.add_vertex(vertex)
+			elif outward > 0.0:
+				Stone.triangle(face, inner[i], outer[i], inner[i + 1], shade)
+				Stone.triangle(face, inner[i + 1], outer[i], outer[i + 1], shade.lightened(0.05))
+			else:
+				Stone.triangle(face, inner[i], inner[i + 1], outer[i], shade)
+				Stone.triangle(face, inner[i + 1], outer[i + 1], outer[i], shade)
 	var portal := Stone.finish(v, face, "Boca" if outward > 0 else "Paredón del túnel")
 	portal.position = CAVE
 	portal.create_trimesh_collision()
+	if outward > 0.0: dress_entrance(v)
+
+static func dress_entrance(v):
+	var faces := Stone.surface()
+	var rng := RandomNumberGenerator.new()
+	rng.seed = 7149
+	for ledge in [
+		[Vector3(-4.37, -0.25, 2.40), Vector3(3.1, 2.68, 2.78), -0.39],
+		[Vector3(4.29, -0.19, 2.66), Vector3(3.39, 2.44, 2.59), 0.28],
+		[Vector3(-3.41, 1.56, 2.43), Vector3(2.17, 1.18, 1.92), -0.44],
+		[Vector3(2.98, 2.05, 2.41), Vector3(2.37, 0.96, 2.84), 0.31],
+		[Vector3(-0.89, 2.91, 2.15), Vector3(3.84, 0.76, 2.72), -0.17],
+		[Vector3(1.88, 2.81, 1.80), Vector3(3.36, 0.94, 2.23), 0.19],
+		[Vector3(-1.22, 3.64, 1.87), Vector3(4.17, 0.76, 2.30), -0.31],
+	]:
+		var foot: Vector3 = CAVE + ledge[0]
+		var fragment := Stone.fragment(faces, foot, ledge[1], ledge[2], rng)
+		Stone.solid(v, foot, fragment, "Laja de la boca")
+	for side in [-1.0, 1.0]:
+		for i in 19:
+			var foot := CAVE + Vector3(side * rng.randf_range(1.55, 4.8), -0.035, rng.randf_range(0.55, 5.9))
+			var size_m := rng.randf_range(0.12, 0.69)
+			Stone.fragment(faces, foot, Vector3(1.26, 0.52, 0.89) * size_m, rng.randf() * TAU, rng)
+	Stone.finish(v, faces, "Lajas y derrubios de la boca")
 
 static func descent_route() -> Array[Vector3]:
 	var points: Array[Vector3] = [LIP, Vector3(0, 0.12, DROP_Z - 0.57)]
@@ -323,7 +376,22 @@ static func dream_x(variant: int, distance: float) -> float:
 		2: return -8.0 * sin(distance * 0.055)
 		_: return 5.0 * sin(distance * 0.10)
 
+static func dream_fold(x: float, distance: float) -> float:
+	var edge := absf(x - dream_x(3, distance))
+	var bank := (6.0 + 4.0 * sin(distance * 0.12 + x * 0.09 + 3.0)) * smoothstep(6.0, 36.0, edge)
+	var fold := 5.3 * smoothstep(16.0, 30.0, edge) * sin(distance * 0.048 + 0.07 * x) * exp(-pow((distance - 110.0) / 52.0, 2.0))
+	return bank * 1.30 + 0.9 * sin(distance * 0.16) + fold
+
 static func planet_height(variant: int, x: float, distance: float) -> float:
+	if variant == 3:
+		var height := dream_fold(x, distance)
+		var here := Vector2(x, -distance)
+		for site: Vector2 in DREAM_ARCH_SITES:
+			var away := here.distance_to(site)
+			if away < 16.0:
+				var floor := dream_fold(site.x, -site.y) - 1.85
+				return lerpf(floor, height, smoothstep(6.1, 16.0, away))
+		return height
 	var edge := absf(x - dream_x(variant, distance))
 	var banks := smoothstep(6.0, 36.0, edge)
 	var relief := (6.0 + 4.0 * sin(distance * 0.12 + x * 0.09 + variant)) * banks
@@ -336,9 +404,7 @@ static func planet_height(variant: int, x: float, distance: float) -> float:
 			var terrace := smoothstep(16.0, 32.0, edge) * 2.1 * sin(x * 0.14 + 0.038 * distance)
 			var bowl := -5.1 * exp(-pow((x - 43.0) / 19.0, 2.0) - pow((distance - 115.0) / 20.0, 2.0))
 			return relief * 0.55 + 1.8 * sin(distance * 0.069) + terrace + bowl
-		_:
-			var fold := 5.3 * smoothstep(16.0, 30.0, edge) * sin(distance * 0.048 + 0.07 * x) * exp(-pow((distance - 110.0) / 52.0, 2.0))
-			return relief * 1.30 + 0.9 * sin(distance * 0.16) + fold
+	return relief
 
 static func dream_surface(variant: int, local: Vector2) -> Vector3:
 	var x := floorf(local.x / 4.0) * 4.0
@@ -356,11 +422,8 @@ static func dream_point(variant: int, distance: float) -> Vector3:
 	var x := dream_x(variant, distance)
 	return PLANET + Vector3(x, planet_height(variant, x, distance), -distance)
 
-static func final_arch() -> Vector3:
-	return dream_arch(DREAM_ARCH_DISTANCES.size() - 1)
-
 static func dream_arch(index: int) -> Vector3:
-	return dream_point(3, DREAM_ARCH_DISTANCES[index])
+	return dream_surface(3, DREAM_ARCH_SITES[index])
 
 static func build_planet(valley, variant: int) -> Node3D:
 	var root := Node3D.new()
@@ -393,8 +456,13 @@ static func build_planet(valley, variant: int) -> Node3D:
 	dress_minerals(valley, variant, crag, rng)
 	if variant == 3:
 		var arch_stone := dream_rock(variant, Color("#827286"), true)
-		for i in DREAM_ARCH_DISTANCES.size():
-			Structures.arch(valley, dream_arch(i), 1.12 + i * 0.22, true, i * 0.11, arch_stone)
+		for i in DREAM_ARCH_SITES.size():
+			var site: Vector2 = DREAM_ARCH_SITES[i]
+			Structures.arch(valley, dream_arch(i), 1.14 + 0.14 * sin(i * 1.25), true, 0.19 * sin(i * 2.5), arch_stone)
+			var screen := site + Vector2(-signf(site.x) * 8.4, -2.25)
+			mineral(valley, dream_surface(3, screen), Vector3(10.1, 8.6, 11.7), 3, crag, rng, true)
+			var ledge := site + Vector2(signf(site.x) * 7.65, -5.5)
+			mineral(valley, dream_surface(3, ledge), Vector3(6.4, 4.1, 6.3), 3, crag, rng, true)
 	var props: Array[Node] = []
 	for i in range(first_prop, valley.get_child_count()):
 		props.append(valley.get_child(i))
@@ -445,6 +513,10 @@ static func near_dream_access(variant: int, position: Vector2, clearance: float)
 		var end: Vector2 = site[1]
 		var at := Geometry2D.get_closest_point_to_segment(position, dream_access(variant, end), end)
 		if position.distance_to(at) < clearance: return true
+	if variant == 3:
+		for i in DREAM_ARCH_SITES.size():
+			var at := Geometry2D.get_closest_point_to_segment(position, DREAM_ARCH_ENTRIES[i], DREAM_ARCH_SITES[i])
+			if position.distance_to(at) < clearance: return true
 	return false
 
 static func mineral(parent: Node3D, foot: Vector3, size: Vector3, variant: int, material: Material, rng: RandomNumberGenerator, solid := false):

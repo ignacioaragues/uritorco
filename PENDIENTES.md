@@ -77,6 +77,15 @@ Al cierre de cada pasada se actualizan los puntos resueltos y se conserva lo que
 - **Mapa, manos y agua.** El Día 36 usa la misma hoja desde el refugio hasta la pasarela y durante la vuelta. Todas las hojas del cerro indican el refugio, o su rumbo cuando queda fuera del papel. El Día 41 marca la curva del ómnibus. El pulgar y la brújula toman el tono de la hora. La quebrada tiene una poza donde se puede sumergir la cámara a pie.
 - **Audio y paisaje.** Los cambios de tema se cruzan con fundido y las entradas se atenúan antes del fin del archivo. La charla de regreso retoma la interferencia de la pasarela. El sol tiene un halo más visible, la luna queda fuera de la primera tarde y se redujo su tamaño aparente durante las otras tardes. Valla, lomadas próximas y rocas cercanas tienen veta o textura mineral. Se reasentaron las piedras sueltas y las pircas de las lajas y el mollar.
 
+## Pasada del puesto, los arcos y la música
+
+- **Puesto.** La foto de referencia guio los muros exteriores de piedra gris y parda, las juntas de mortero y la cubierta de chapa galvanizada. Las ondas de la cubierta tienen relieve y los muros interiores conservan la cal. El lugar figura como «Puesto» en el diario, los carteles, los diálogos y las cuatro láminas del cerro. Mara sigue llamando desde el puesto de abajo.
+- **Boca de la cueva.** El acceso tiene una abertura baja y asimétrica, lajas partidas que sobresalen y piedras al pie. Se ve desde la quebrada y conserva un paso ancho hasta la galería.
+- **Último sueño.** Cuatro arcos quedan separados en rincones detrás de las crestas. El teseracto acompaña a Hernán y cambia su brillo y su pulso sonoro según el rumbo y la distancia al arco pendiente más cercano. El orden de los diálogos depende de cuántos arcos encontró. Se recorrieron los cuatro en un orden alternativo y se recargó el guardado entre encuentros.
+- **Saturno.** El disco tiene bandas, una fase y anillos con divisiones y sombras. Mantiene su posición celeste al caminar. La proyección del sueño compensa el aumento aparente hacia los bordes al girar la cámara.
+- **Continuidad musical.** Las caminatas retoman con una pausa de seis segundos, también cuando Hernán se queda quieto fuera del puesto. La radio atenúa la música y el atardecer elige el tema siguiente al terminar el actual. El prólogo, los sueños y los tramos largos de la última noche repiten sus pistas con fundidos. Se comprobó audio continuo pasado el minuto en el prólogo, una caminata y el sueño, y se midió la transición entre repeticiones.
+- **Radio y mate.** Hernán puede caminar y mirar durante las llamadas. Las respuestas se eligen con números o con clic al mantener Alt. La mañana del Día 32 conserva el mate en la mano derecha. E baja la mano con el mate y después la vuelve a subir con la radio.
+
 ## Ritmo de las charlas de Mara
 
 - El Día 2, una charla se ofrece más abajo del poste y la otra en el regreso. El Día 7, quedan separadas la visita al museo y la vuelta desde la antena. La última mañana, una charla se ofrece al bajar por la huella y la otra cerca de la banquina.
@@ -89,8 +98,8 @@ Al cierre de cada pasada se actualizan los puntos resueltos y se conserva lo que
 
 ## Pasada de continuidad musical
 
-- Las jornadas de exploración tienen temas de caminata. El primero entra después de unos pasos. Los temas se reproducen completos, con pausas que se cuentan mientras Hernán camina. Al oscurecer entra el tema nocturno cuando empieza una nueva pista. La llegada conserva su pausa antes de la radio.
-- Durante una llamada, la música baja 7 dB y sigue avanzando. Al guardar la radio recupera su volumen con un fundido. Se grabó una charla en la vaguada para comprobar la continuidad y se verificaron las entradas de las siete jornadas, la vuelta con el mapa abierto y las transiciones del malacate, la cumbre y la última noche.
+- Las jornadas de exploración tienen temas de caminata. El primero entra después de unos pasos. Los temas se reproducen completos, con pausas breves al terminar. Al oscurecer entra el tema nocturno cuando empieza una nueva pista. La llegada conserva su pausa antes de la radio.
+- Durante una llamada, la música baja 5 dB de forma gradual y sigue avanzando. Al guardar la radio recupera su volumen con un fundido. Se grabó una charla en la vaguada para comprobar la continuidad y se verificaron las entradas de las siete jornadas, la vuelta con el mapa abierto y las transiciones del malacate, la cumbre y la última noche.
 
 ## Ubicación de Mara
 
