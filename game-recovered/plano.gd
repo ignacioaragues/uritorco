@@ -1,5 +1,6 @@
 extends Control
 
+const LastNight = preload("res://final_night.gd")
 const Arrival = preload("res://llegada.gd")
 const ROUTE = preload("res://travesia.gd")
 const Exploration = preload("res://exploracion.gd")
@@ -27,8 +28,10 @@ const LIMITS = [
 	Rect2(-133, -173, 266, 184),
 	Rect2(-347, -8, 695, 542),
 	Rect2(-354, 464, 708, 526),
-	Rect2(-177, -203, 173, 151),
+	Rect2(-177, -184, 224, 144),
 ]
+var fixed_south := false
+var departure_sheet := false
 var dream_sheet := 0
 var arrival_sheet := -1
 var active_zone := -1
@@ -55,9 +58,11 @@ static func zone_at(pos: Vector3, previous := -1) -> int:
 	if distance < (23.0 if previous == 0 else (7.0 if previous == 1 else 15.0)): return 0
 	return 1 if distance < (516.0 if previous == 1 else (484.0 if previous == 2 else 500.0)) else 2
 
-func open_at(pos: Vector3, dream: int, arrival: int, goal: Variant):
-	if dream_sheet != dream or arrival_sheet != arrival:
+func open_at(pos: Vector3, dream: int, arrival: int, goal: Variant, south := false, departure := false):
+	if dream_sheet != dream or arrival_sheet != arrival or fixed_south != south or departure_sheet != departure:
 		active_zone = -1
+	fixed_south = south
+	departure_sheet = departure
 	dream_sheet = dream
 	arrival_sheet = arrival
 	objective_mark = goal
@@ -68,6 +73,7 @@ func track(pos: Vector3):
 	var zone := zone_at(pos, active_zone)
 	if arrival_sheet >= 0: zone = ARRIVAL_ZONE
 	elif dream_sheet > 0: zone = 3 + dream_sheet
+	elif fixed_south: zone = 3
 	if active_zone != zone:
 		active_zone = zone
 		queue_redraw()
@@ -93,7 +99,7 @@ func _draw():
 	if zone < 0: return
 	pins.clear()
 	used_labels.clear()
-	draw_texture_rect_region(PAPER, PAPER_FIELD, Rect2(78, 67, 924, 640), Color(0.92, 0.93, 0.89, 0.52))
+	draw_texture_rect_region(PAPER, PAPER_FIELD, Rect2(78, 67, 924, 640), Color(0.92, 0.93, 0.89))
 	if dream_sheet > 0:
 		draw_dream_symbols()
 		return
@@ -116,6 +122,8 @@ func _draw():
 			0: draw_local(limits)
 			3: draw_south(limits)
 			_: draw_ridge(limits)
+		add_refuge_pin(limits)
+		if departure_sheet: pin(limits, LastNight.STOP, "Curva · Ómnibus", Vector2(-20, -18))
 	for crease in [173.0, 384.0]:
 		draw_line(Vector2(crease, 0), Vector2(crease, 330), Color("#6d514821"), 2.0, true)
 		draw_line(Vector2(crease + 1.3, 0), Vector2(crease + 1.3, 330), Color("#fff6db54"), 0.8, true)
@@ -130,8 +138,6 @@ func draw_markers():
 	if zone != ARRIVAL_ZONE: draw_finds(limits)
 	if objective_mark is Vector3:
 		var destination: Vector3 = objective_mark
-		if zone == 3 and Vector2(destination.x, destination.z).length() < 1.0:
-			destination = Creek.return_point(1.0)
 		var goal := point(limits, destination)
 		if inside.has_point(goal):
 			markers.draw_circle(goal, 7.0, Color("#f1d9a7"), true, -1, true)
@@ -188,7 +194,6 @@ func draw_local(limits: Rect2):
 			return Vector3(at.x, 0, at.y), ink)
 	draw_south_paths(limits)
 	draw_channel(limits, -66.0)
-	pin(limits, Vector3.ZERO, "Puesto Uritorco", Vector2(12, -12), true)
 	pin(limits, Vector3(Exploration.MOLLAR.x, 0, Exploration.MOLLAR.y), "Mollar", Vector2(-54, 13))
 	pin(limits, Creek.crossing_point(0.0), "Lajas", Vector2(-48, -8))
 	pin(limits, Creek.crossing_point(0.28), "Quebrada sur", Vector2(8, -5))
@@ -197,11 +202,27 @@ func draw_local(limits: Rect2):
 	pin(limits, Creek.post(), "Poste")
 	pin(limits, Creek.marker(), "Regla del cauce", Vector2(11, 18))
 
+func add_refuge_pin(limits: Rect2):
+	if contains(limits, Vector3.ZERO):
+		pin(limits, Vector3.ZERO, "Refugio", Vector2(12, -13), true)
+	else:
+		var paper := PAPER_FIELD.grow(-17.0)
+		var refuge := point(limits, Vector3.ZERO)
+		var direction := (refuge - paper.get_center()).normalized()
+		var reach := minf(paper.size.x * 0.5 / maxf(absf(direction.x), 0.001),
+			paper.size.y * 0.5 / maxf(absf(direction.y), 0.001))
+		var arrow := paper.get_center() + direction * reach
+		var back := arrow - direction * 10.0
+		var side := direction.orthogonal() * 4.5
+		draw_colored_polygon(PackedVector2Array([arrow, back + side, back - side]), LABEL_INK)
+		pins.append({"mark": back - direction * 10.0, "text": "Refugio", "offset": Vector2(12, -13), "refuge": true})
+
 func draw_south(limits: Rect2):
+	draw_route(limits, 81, access_road, INK)
 	draw_channel(limits, -177.0)
 	draw_route(limits, 101, Creek.trail_point, ROUTE_COLOR)
 	draw_south_paths(limits)
-	pin(limits, Creek.crossing_point(0), "Lajas · refugio", Vector2(-7, -10))
+	pin(limits, Creek.crossing_point(0), "Lajas", Vector2(-7, -10))
 	pin(limits, Creek.post(), "Poste", Vector2(-9, 18))
 	pin(limits, Creek.marker(), "Regla", Vector2(-2, 19))
 	pin(limits, Creek.crossing_point(1), "Pasarela", Vector2(-41, 28))

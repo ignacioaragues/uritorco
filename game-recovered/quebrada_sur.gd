@@ -159,10 +159,11 @@ static func water(valley) -> MeshInstance3D:
 	return stream
 
 static func water_width(x: float) -> float:
-	return 2.4 + 0.95 * sin(x * 0.14) + 0.37 * sin(x * 0.33)
+	return lerpf(5.2, 8.1, Creek.creek_extension(x)) + 0.65 * sin(x * 0.14)
 
 static func water_level(x: float) -> float:
-	return Creek.outer_height(x, Creek.channel_z(x)) + 0.78
+	var depth := 0.78 * smoothstep(-163.0, -155.0, x) * (1.0 - smoothstep(41.0, 49.0, x))
+	return Creek.height(x, Creek.channel_z(x), false) + depth - 0.22 * (1.0 - smoothstep(0.0, 0.12, depth))
 
 static func water_depth(pos: Vector3) -> float:
 	if pos.x < -163.0 or pos.x > 49.0: return 0.0

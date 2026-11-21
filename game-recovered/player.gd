@@ -14,6 +14,8 @@ var flashlight: = SpotLight3D.new()
 var flashlight_haze := ShaderMaterial.new()
 var ray: = RayCast3D.new()
 var capsule := CapsuleShape3D.new()
+const DEFAULT_SCENE_BOUNDS := Rect2(-32, -55, 64, 67)
+var scene_bounds := DEFAULT_SCENE_BOUNDS
 var intro_center: = Vector3.ZERO
 var intro_heading: = 0.0
 var low_gravity: = false
@@ -197,7 +199,7 @@ func _physics_process(delta):
 	move_and_slide()
 	if intro_center != Vector3.ZERO:
 		var local: = (position - intro_center).rotated(Vector3.UP, - intro_heading)
-		var bounds := dream_bounds if low_gravity else Rect2(-32, -55, 64, 67)
+		var bounds := dream_bounds if low_gravity else scene_bounds
 		local.x = clampf(local.x, bounds.position.x, bounds.end.x)
 		local.z = clampf(local.z, bounds.position.y, bounds.end.y)
 		position = intro_center + local.rotated(Vector3.UP, intro_heading)

@@ -21,7 +21,7 @@ Al cierre de cada pasada se actualizan los puntos resueltos y se conserva lo que
 - [x] Hacer que los modelos de los hallazgos desaparezcan al recogerlos y mostrar unos segundos «C para ver Coleccionables».
 - [x] Corregir las estrellas estiradas en el cenit. El cielo ya tiene un planeta y una luna más grande, con fases y visibilidad a la tarde.
 - [x] Reducir el volumen de los pasos y oscurecer las manos y los objetos sostenidos según la hora y la luz del refugio.
-- [x] Marcar la pasarela en el mapa cuando es el objetivo del Día 36. La hoja local marca el acceso al quedar la pasarela fuera de sus bordes.
+- [x] Marcar la pasarela en el mapa cuando es el objetivo del Día 36. La lámina de la quebrada muestra la pasarela y el refugio juntos.
 - [x] Reservar el color de selección de «Nuevo juego» para el mouse o la navegación con teclado.
 - [x] Abrir el horizonte de la ruta en ambos sentidos y el del arroyo del prólogo. La corriente se desplaza en el eje X local del cauce.
 - [x] Fundir la imagen y las manos juntas al entrar a un recuerdo, también cuando el jugador se aleja fuera de la huella.
@@ -42,16 +42,25 @@ Al cierre de cada pasada se actualizan los puntos resueltos y se conserva lo que
 - [x] Enlazar las reacciones de Mara con los avistamientos anteriores y con lo que Hernán decide contarle. Mara propone hipótesis sobre los faros, el reflejo del malacate y la interferencia de radio.
 - [x] Afinar la carta del cielo con 32 estrellas identificables, Júpiter, Saturno y la Vía Láctea. La Cruz del Sur coincide con el rumbo del mapa.
 - [x] Quitar la cruz que indicaba la posición del jugador en el mapa de mano. Las láminas muestran los puntos cardinales, los objetivos y las siluetas de hallazgos.
-- [x] Recorrer la ida del Día 36 con el mapa de mano y las doce pircas. Se comprobó el cambio de lámina y se llegó desde la tranquera hasta la marca en la pasarela, guardando el mapa para saltar el tronco y trepar la laja.
+- [x] Recorrer la ida del Día 36 con el mapa de mano y las doce pircas. Se comprobó el trayecto y se llegó desde la tranquera hasta la marca en la pasarela, guardando el mapa para saltar el tronco y trepar la laja.
 - [x] Revisar la tormenta completa del Día 36. Se ve desde la ventana, la lluvia aumenta al bajar al cauce y el sonido baja bajo techo y durante la radio. Se despeja de a poco al regresar, con el arroyo todavía crecido y el suelo mojado.
 - [x] Darle al Sol un ocaso hacia el oeste y a la Luna un disco más grande y luminoso, con fases según la fecha y visibilidad algunas tardes. Las nubes pasan delante de los dos.
 - [x] Ajustar el tamaño aparente de la Luna a plena luz. El disco gana tamaño progresivamente durante el crepúsculo.
 - [x] Hacer que dos charlas de Mara puedan dejar objetos en el refugio. El pisapapeles llega con las pilas a partir del Día 7 y la botella de tinto, envuelta en papel de diario, aparece en la repisa a partir del Día 36. Se pueden inspeccionar con E. Se probaron las dos respuestas de cada charla y la carga de partida.
-- [x] Poner cortinas corredizas de tela en el refugio. Se abren y cierran con E desde dentro y conservan su posición al guardar. En la última noche se pueden abrir para mirar las luces y se cierran al elegir acostarse.
+- [x] Poner cortinas corredizas de tela en el refugio. Se abren y cierran con E desde dentro y conservan su posición al guardar. Se cierran al elegir volver al refugio para acostarse la última noche.
 - [x] Darles pisadas distintas a la tierra, el barro, la madera, la piedra y el agua. En la cueva se oye una reverberación corta, y la radio baja el fondo de música y viento mientras suena la interferencia.
 - [x] Afinar el arte del prólogo. La huella tiene distintos tonos de tierra y ripio, con piedras y pastos agrupados en los márgenes. La parada tiene chapas remachadas y el puente, tablones separados con clavos visibles. La cuerda pasa por delante de la laja y por encima del borde hasta el anclaje. La trepada queda al atardecer y la noche entra en el tramo de la linterna.
 - [x] Darles materiales y siluetas distintas a los tres sueños. El primero tiene placas azules fracturadas, el segundo terrazas cobrizas y el tercero crestas de obsidiana y arcos erosionados. Las formaciones cercanas son sólidas y dejan pasos abiertos hacia los seis hallazgos.
 - [x] Conectar las lajas con la bajada al cauce y abrir un atajo del este a la vuelta del mollar. Las dos huellas están señalizadas y se dibujan en la hoja local, centrada en el refugio. Se recorrieron los enlaces con el mapa de mano abierto.
+
+## Pasada de la última noche y el refugio
+
+- **Última noche.** La vuelta de la pasarela sigue en el Día 36. Una cartela sitúa la última noche en el Día 40. La radio empieza en el patio y dos luces aparecen sobre los molles durante la charla. Seguirlas lleva a la entrada exterior de la cueva. Desde «Elegir escena» se puede entrar en «Última noche · Luces» o directamente en «Última noche · Cueva».
+- **Cueva.** La linterna revela el anclaje de descenso. La galería lateral rodea un derrumbe y conecta con la estación. Un recodo guarda la piedra con runas. Se abre el túnel al contarle a Mara lo de los cuadernos de los setenta. Dentro del túnel se pierde su voz. Al salir, la Cruz del Sur orienta una bajada de unos 80 metros hasta el punto de regreso, con un ramal separado hacia el claro. Se recorrieron la bajada con cuerda, una caída al piso inferior y ambas salidas hacia el último sueño.
+- **Prólogo y llegada.** El fundido empieza en negro transparente. Tab se enseña en la microescena que sigue al puente. Hernán ve Saturno por primera vez con su padre, que menciona Titán como posibilidad. Los sueños muestran un planeta con anillos. La música del prólogo baja al abrir la puerta y queda una pausa antes del primer llamado de Mara. Se levanta la radio, se responde y después se deja la mochila. La lámpara queda más adentro y los croquis empiezan a colgarse a partir de la jornada siguiente.
+- **Refugio y objetos.** Almanaque ilustrado de Alpargatas sobre las fechas tachadas, bandera caída, heladera con puerta que abre con E y equipo de campamento. El mate sigue al comienzo del Día 32.
+- **Mapa, manos y agua.** El Día 36 usa la misma hoja desde el refugio hasta la pasarela y durante la vuelta. Todas las hojas del cerro indican el refugio, o su rumbo cuando queda fuera del papel. El Día 41 marca la curva del ómnibus. El pulgar y la brújula toman el tono de la hora. La quebrada tiene una poza donde se puede sumergir la cámara a pie.
+- **Audio y paisaje.** Los cambios de tema se cruzan con fundido y las entradas se atenúan antes del fin del archivo. La charla de regreso retoma la interferencia de la pasarela. El sol tiene un halo más visible, la luna queda fuera de la primera tarde y se redujo su tamaño aparente durante las otras tardes. Valla, lomadas próximas y rocas cercanas tienen veta o textura mineral. Se reasentaron las piedras sueltas y las pircas de las lajas y el mollar.
 
 ## Ritmo de las charlas de Mara
 
@@ -169,6 +178,6 @@ Esta lista reconstruye el estado informado del proyecto editable. La exportació
 
 ## Todavía pendiente
 
-- **Arte.** Afinar la lectura de algunos objetos de cerca.
+- **Arte.** Revisar a pie las laderas lejanas, en especial entre la cantera y la cumbre. Queda ubicar los siguientes casos de piedras suspendidas, lomadas con acabado plano y objetos que pierden detalle a distancia. Afinar la lectura de los objetos de cerca en las otras salas y recorridos.
 - **Mundo y recorridos.** Extender la pasada de cartografía a las hojas de la cantera y la cumbre. Revisar a velocidad normal el ritmo de las ocho microescenas del prólogo.
 - **Windows.** Probar el ejecutable en Windows. El paquete exportado se verificó en Godot sobre Linux.

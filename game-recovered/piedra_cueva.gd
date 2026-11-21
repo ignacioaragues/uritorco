@@ -4,7 +4,7 @@ const Kit = preload("res://equipo_campo.gd")
 const Stone = preload("res://piedra_serrana.gd")
 const ID := "piedra_runas"
 const TITLE := "Piedra con runas"
-const NOTE := "Copié las marcas de una piedra al costado de la estación. Algunas parecen runas. En dos surcos había polvo claro. A saber cuánto tiempo llevaba ahí."
+const NOTE := "Copié las marcas de una piedra en un recodo de la galería. Algunas parecen runas. En dos surcos había polvo claro. A saber cuánto tiempo llevaba ahí."
 const OUTLINE := [
 	Vector2(-0.45, -0.13), Vector2(-0.32, -0.26), Vector2(0.12, -0.25),
 	Vector2(0.40, -0.18), Vector2(0.45, 0.06), Vector2(0.31, 0.22),

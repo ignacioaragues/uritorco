@@ -1,5 +1,11 @@
 shader_type canvas_item;
 
+varying vec4 tint;
+
+void vertex() {
+	tint = COLOR;
+}
+
 void fragment() {
 	vec4 paint = texture(TEXTURE, UV);
 	vec2 pixel = UV / TEXTURE_PIXEL_SIZE;
@@ -10,5 +16,5 @@ void fragment() {
 	paint.rgb *= mix(vec3(1.0), vec3(0.94, 0.88, 0.76), paper);
 	vec3 brass = mix(vec3(0.45, 0.31, 0.16), vec3(0.64, 0.46, 0.25), smoothstep(-0.8, 0.8, (pixel.y - 146.0) / 76.0));
 	paint.rgb = mix(paint.rgb, brass, ivory * lip * 0.90);
-	COLOR = paint;
+	COLOR = paint * tint;
 }

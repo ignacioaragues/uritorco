@@ -10,11 +10,11 @@ const VISIT_PERCENT := 60
 # Respuesta que genera cercanía, pregunta, opciones de Hernán y réplicas de Mara.
 const TOPICS = {
 	"alero": [
-		0, "¿Escuchás un golpecito arriba de la ventana? En ese alero hizo nido un benteveo. Hace años que vuelve al mismo rincón.",
-		["«Lo escuché al entrar».", "«Por ahora escucho más la heladera»."],
+		0, "Cuando me tocó mi primer turno, tardé un rato en acostumbrarme a lo lejos que quedaba todo. ¿Desde acá te llega ruido del camino?",
+		["«Por ahora oigo más tu radio».", "«Me acostumbraré mañana»."],
 		[
-			["Cuando se levanta viento mueve una chapita. La primera vez salí tres veces a ver quién golpeaba."],
-			["Esa sí que no descansa. Si se queda callada de golpe, fijate si todavía hay luz en la cocina."]
+			["Si necesitás ubicarte, llamá. Yo termino de escribir el parte y sigo en el puesto un rato."],
+			["Con luz se entiende mejor el terreno. La primera mañana me sorprendió lo cerca que se veía la sierra."]
 		]
 	],
 	"primera_noche": [
@@ -114,11 +114,11 @@ const TOPICS = {
 		]
 	],
 	"ventana": [
-		0, "Ya se escucha mejor tu radio. ¿Estás llegando al refugio? Si querés, dejo el canal abierto hasta que entres.",
-		["«Sí. Quedate un rato».", "«Por hoy me alcanza con llegar»."],
+		0, "Probé el otro equipo. Hay una frecuencia cerca que se mete en la nuestra cuando llueve. Lo que oíste diciendo «no cruces» todavía no sé de dónde salió. ¿Ya ves la tranquera?",
+		["«Sí. ¿Me dejás el canal abierto hasta que entre?»", "«Ya la veo. Te aviso desde el patio»."],
 		[
-			["Bueno. Voy a poner agua. Si escuchás la pava, soy yo."],
-			["Dale. Cerrá bien la ventana de la cocina. Con este viento vuelve a abrirse."]
+			["Sí. Por acá ya paró. Me quedo hasta que me digas que llegaste."],
+			["Dale. Si vuelve a entrar esa voz, decime la hora. La voy a anotar de este lado."]
 		]
 	],
 	"regreso": [

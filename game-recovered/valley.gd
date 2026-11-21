@@ -127,7 +127,8 @@ func _ready():
 			# Se conserva el sorteo de orientación para las piedras siguientes.
 			rng.randf()
 			continue
-		stone(Vector3(x, -1, z), size_m, "837f65", true)
+		var knoll := stone(Creek.surface_point(Vector3(x, 0, z)) - Vector3.UP * 1.0, size_m, "837f65", true)
+		knoll.material_override = Stone.paint("837f65")
 	var tufts: Array[Vector4] = []
 	for i in range(160):
 		var z: = rng.randf_range(-84, 10)
@@ -142,7 +143,9 @@ func _ready():
 			if LastNight.door_path_distance(x, z) < 5.5 or Exploration.clearance(Vector2(x, z)) < 1.8 * k + 1.6:
 				rng.randf()
 			else:
-				stone(Creek.point(x, z), Vector3(2.2, 1.4, 1.8) * k, "928678", true)
+				var grounded := Creek.surface_point(Vector3(x, 0, z)) - Vector3.UP * 0.02
+				var rock := stone(grounded, Vector3(2.2, 1.4, 1.8) * k, "928678", true)
+				rock.material_override = preload("res://piedra_serrana.gd").paint("928678")
 		elif Exploration.clearance(Vector2(x, z)) >= 1.0:
 			tufts.append(Vector4(x, Creek.height(x, z) - 0.05, z, k))
 	Flora.grass_batch(self, tufts)
@@ -178,7 +181,7 @@ func _ready():
 	bag_drop.collision_layer = 0
 	var lamp: = OmniLight3D.new()
 	add_child(lamp)
-	lamp.position = Vector3(-1, 1.95, 1)
+	lamp.position = Vector3(-0.52, 1.95, 3.08)
 	lamp.light_color = Color("#ffbe77")
 	lamp.omni_range = 8
 	lamp.light_energy = 1.5
@@ -424,7 +427,7 @@ func dress_shelter():
 		FieldKit.block(self, Vector3(0, 0.012, z), Vector3(6.8, 0.02, 0.42), finishes[i % 3])
 	for i in range(6):
 		box(Vector3(0, 2.63, i * 1.15 - 0.25), Vector3(7.1, 0.16, 0.15), "5d4a39")
-	Refuge.pendant(self, Vector3(-1, 2.02, 1))
+	Refuge.pendant(self, Vector3(-0.52, 2.02, 3.08))
 
 func build_curtains():
 	Refuge.curtain_rail(self, CURTAIN_RAIL, 3.83)
@@ -593,8 +596,10 @@ func hang_sketch(index: int, image: Texture2D, motif := -1):
 
 func hang_calendar():
 	var calendar := Vector3(2.7, 1.62, -0.27)
-	var backing := box(calendar, Vector3(0.447, 0.523, 0.025), "9c886d", true, "Calendario")
+	var backing := box(calendar + Vector3.UP * 0.175, Vector3(0.447, 0.873, 0.025), "9c886d", true, "Calendario")
 	backing.material_override = FieldKit.material("9c886d")
+	Refuge.print_surface(self, calendar + Vector3(0, 0.421, 0.015), Vector2(0.429, 0.328),
+		preload("res://almanaque_alpargatas.webp"))
 	var page := FieldKit.material("dfcea7")
 	FieldKit.block(self, calendar + Vector3(0, 0, 0.013), Vector3(0.429, 0.506, 0.010), page)
 	var last_page := FieldKit.block(self, calendar + Vector3(0.122, -0.232, 0.021), Vector3(0.172, 0.033, 0.009), page)
@@ -697,6 +702,7 @@ func update_celestial_light(day: int, dusk: float, dark: float):
 	moon_direction = pair[1]
 	sky_mat.set_shader_parameter("daylight_dir", sun_direction)
 	sky_mat.set_shader_parameter("moon_dir", moon_direction)
+	sky_mat.set_shader_parameter("daylight_moon", 0.0 if day == 1 else 1.0)
 
 func update_night_catalog(day: int):
 	var sidereal := SkyGuide.sidereal_at(sky_chapter, day)
@@ -732,7 +738,7 @@ func strange_sky(variant: int):
 
 func kitchen_and_privy():
 	Refuge.kitchenette(self)
-	Refuge.refrigerator(self)
+	fridge_hinge = Refuge.refrigerator(self)
 	var center := Vector3(8.0, 0.0, 7.35)
 	for side in [-1, 1]:
 		timber(box(center + Vector3(side * 0.82, 1.12, 0), Vector3(0.09, 2.24, 1.75), "897660", true))
@@ -843,7 +849,19 @@ func dress_camp():
 	ground_support(camp + Vector3.UP * 0.48, 0.87, 0.64, "6c6455")
 	camp_log = box(camp + Vector3.UP * 0.51, Vector3(0.4, 0.058, 0.32), "b2a383", true, "Cuaderno del campamento")
 	camp_log.rotation.y = 0.19
-	box(camp + Vector3(0.54, 0.31, - 0.08), Vector3(0.14, 0.24, 0.14), "658078")
+	var stop := Vector3(0.54, 0, -0.08)
+	var thermos: Vector3 = route.terrain_point(camp + stop)
+	var jar := FieldKit.item(self, thermos, "", Vector3.UP * 0.19, Vector3(0.145, 0.38, 0.145))
+	var bottle := FieldKit.material("57706a", false, 0.63)
+	var collar := FieldKit.material("aba794", false, 0.55)
+	FieldKit.cylinder(jar, Vector3.UP * 0.16, 0.069, 0.074, 0.30, bottle)
+	FieldKit.cylinder(jar, Vector3.UP * 0.32, 0.050, 0.068, 0.034, bottle)
+	FieldKit.cylinder(jar, Vector3.UP * 0.36, 0.054, 0.054, 0.051, collar)
+	FieldKit.cord(jar, PackedVector3Array([Vector3(0.045, 0.278, 0), Vector3(0.094, 0.258, 0),
+		Vector3(0.105, 0.194, 0), Vector3(0.070, 0.161, 0)]), 0.012, collar)
+	var bag_foot: Vector3 = route.terrain_point(tarp + Vector3(-0.58, 0, 0.4))
+	FieldKit.backpack(self, bag_foot, "").rotation.y = -0.85
+
 
 var storm_water: MeshInstance3D
 var archive_dressed := false
@@ -855,27 +873,36 @@ func dress_day36():
 	if not storm_water: storm_water = South.water(self)
 	storm_water.visible = weather_day == 36
 
+var fridge_hinge: Node3D
 var yard_hinge: Node3D
 var privy_hinge: Node3D
 var museum_hinge: Node3D
 
 func build_yard_fence():
 	var gate_x: = path_x(-13.0)
+	var posts := Refuge.wood("7c6b51")
+	var rails := Refuge.wood("94836a")
+	var gate_wood := Refuge.wood("78674e", true)
 	for segment in [[Vector3(-10, 0, -13), Vector3(gate_x - 2, 0, -13)], [Vector3(gate_x + 2, 0, -13), Vector3(10, 0, -13)], [Vector3(-10, 0, 10), Vector3(10, 0, 10)], [Vector3(-10, 0, -13), Vector3(-10, 0, 10)], [Vector3(10, 0, -13), Vector3(10, 0, 10)]]:
 		var from: Vector3 = segment[0]
 		var to: Vector3 = segment[1]
 		for i in range(6):
-			box(from.lerp(to, i / 5.0) + Vector3.UP * 0.64, Vector3(0.11, 1.28, 0.11), "7c6b51", true)
+			box(from.lerp(to, i / 5.0) + Vector3.UP * 0.64, Vector3(0.11, 1.28, 0.11), "7c6b51", true).material_override = posts
 		for height in [0.4, 0.86]:
 			var rail: = box((from + to) * 0.5 + Vector3.UP * height, Vector3(0.06, 0.09, from.distance_to(to)), "94836a", true)
+			rail.material_override = rails
 			rail.look_at(to + Vector3.UP * height)
 	yard_hinge = Node3D.new()
 	add_child(yard_hinge)
 	yard_hinge.position = Vector3(gate_x - 2, 0, -13)
 	for h in [0.33, 0.71]:
-		box(Vector3(gate_x, h, -13), Vector3(3.97, 0.18, 0.1), "78674e", true, "Tranquera").reparent(yard_hinge)
+		var rail := box(Vector3(gate_x, h, -13), Vector3(3.97, 0.18, 0.1), "78674e", true, "Tranquera")
+		rail.material_override = gate_wood
+		rail.reparent(yard_hinge)
 	for x in [-1.85, 1.85]:
-		box(Vector3(gate_x + x, 0.53, -13), Vector3(0.11, 0.96, 0.12), "78674e", true, "Tranquera").reparent(yard_hinge)
+		var stile := box(Vector3(gate_x + x, 0.53, -13), Vector3(0.11, 0.96, 0.12), "78674e", true, "Tranquera")
+		stile.material_override = posts
+		stile.reparent(yard_hinge)
 
 func swing_side_door(node: Node3D):
 	if not node or node.has_meta("swinging"): return

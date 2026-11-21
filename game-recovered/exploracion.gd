@@ -86,12 +86,17 @@ static func build(valley):
 		var at: Vector2 = junction[0] + junction[1]
 		var foot := Creek.surface_point(Vector3(at.x, 0.0, at.y))
 		route.signpost(foot, junction[2], junction[3], junction[4], true)
+	var stone = preload("res://piedra_serrana.gd")
+	var rock_faces: SurfaceTool = stone.surface()
+	var rock_rng := RandomNumberGenerator.new()
+	rock_rng.seed = 57126
 	for site in [MOLLAR, LAJAS]:
-		var point := ground(site, route)
-		valley.stone(point + Vector3(0.0, 0.22, -1.1), Vector3(1.67, 0.52, 0.78), "857363", true)
-		for i in 3:
-			valley.stone(point + Vector3(1.2, 0.14 + i * 0.17, -0.94),
-				Vector3(0.64 - i * 0.13, 0.27, 0.41 - i * 0.08), "998d75")
+		var foot: Vector3 = Creek.surface_point(Vector3(site.x, 0, site.y - 1.1))
+		var boulder: MeshInstance3D = valley.stone(foot + Vector3.UP * 0.15, Vector3(1.67, 0.64, 0.78), "857363", true)
+		boulder.material_override = stone.paint("857363")
+		var base := Creek.surface_point(foot + Vector3(1.2, 0, 0.16))
+		stone.cairn(valley, rock_faces, base, Creek.surface_point, rock_rng)
+	stone.finish(valley, rock_faces, "Pircas de las lajas y el mollar")
 	for id in FINDS:
 		dress_find(valley, id)
 	var vegetation := [

@@ -13,6 +13,7 @@ uniform vec3 galactic_pole;
 uniform vec3 moon_dir;
 uniform vec3 daylight_dir = vec3(0.69, 0.41, 0.59);
 uniform float moon_radius = 0.083;
+uniform float daylight_moon = 1.0;
 uniform float other_world = 0.0;
 uniform int dream_style = 1;
 uniform float cloud_cover = 0.0;
@@ -100,6 +101,24 @@ vec3 disc(vec3 sight, vec3 center, vec3 light, float radius, vec3 tint, vec3 bac
 	return mix(backdrop, tint * (0.065 + lit * maria), edge * opacity * mix(lit, 1.0, shadow));
 }
 
+vec3 ringed_world(vec3 sight, vec3 backdrop) {
+	vec3 center = normalize(vec3(0.35, 0.48, -1.0));
+	const float RADIUS = 0.044;
+	vec3 offset = (sight - center) / RADIUS;
+	if (length(offset) > 2.25) return backdrop;
+	vec3 east = normalize(cross(center, vec3(0.0, 1.0, 0.0)));
+	vec2 plane = vec2(dot(offset, east), dot(offset, cross(east, center)));
+	plane = mat2(vec2(0.89, 0.46), vec2(-0.46, 0.89)) * plane;
+	float orbit = length(vec2(plane.x, plane.y / 0.37));
+	float ring = smoothstep(1.22, 1.33, orbit) * (1.0 - smoothstep(1.98, 2.10, orbit));
+	float division = 1.0 - 0.59 * (1.0 - smoothstep(0.013, 0.068, abs(orbit - 1.77)));
+	vec3 dust = vec3(0.68, 0.57, 0.47) * (0.77 + 0.18 * sin(orbit * 56.0));
+	float front = smoothstep(-0.024, 0.024, plane.y);
+	backdrop = mix(backdrop, dust, ring * division * 0.77 * (1.0 - front));
+	backdrop = disc(sight, center, normalize(vec3(-1.0, 0.6, 0.4)), RADIUS, vec3(0.96, 0.75, 0.52), backdrop, 1.0, 1.0);
+	return mix(backdrop, dust, ring * division * 0.87 * front);
+}
+
 void sky(){
 	float height = max(EYEDIR.y,0.0);
 	float blend = smoothstep(0.0,0.79,height);
@@ -110,15 +129,17 @@ void sky(){
 	vec3 earth = dark;
 	if (nightfall > 0.0 && other_world < 1.0) earth += night_stars(EYEDIR);
 	float from_sun = length(EYEDIR - daylight_dir);
-	float solar_glow = exp(-from_sun * from_sun * 42.0) * smoothstep(-0.18, 0.20, daylight_dir.y);
+	float above_skyline = smoothstep(-0.18, 0.20, daylight_dir.y);
+	float solar_glow = (exp(-from_sun * from_sun * 39.0) * 0.24 + exp(-from_sun * from_sun * 194.0) * 0.24) * above_skyline;
 	float sun_edge = (1.0 - smoothstep(0.017, 0.021, from_sun)) * smoothstep(-0.019, 0.008, EYEDIR.y);
-	daytime += mix(vec3(1.0,0.91,0.76), vec3(1.0,0.49,0.24), dusk) * (solar_glow * 0.26 + sun_edge * 1.12);
+	float center_glow = 1.0 - smoothstep(0.003, 0.019, from_sun);
+	daytime += mix(vec3(1.0,0.91,0.72), vec3(1.0,0.58,0.30), dusk) * (solar_glow + sun_edge * (0.84 + 0.67 * center_glow));
 	if (moon_dir.y > -moon_radius && EYEDIR.y > -0.008) {
 		float phase = 0.5 - 0.5 * dot(daylight_dir, moon_dir);
 		float moonlight = smoothstep(0.015, 0.085, phase) * smoothstep(-0.008, 0.048, EYEDIR.y);
-		float apparent_radius = moon_radius * mix(0.58, 1.0, smoothstep(0.36, 0.96, max(dusk * 0.72, nightfall)));
+		float apparent_radius = moon_radius * mix(0.43, 1.0, smoothstep(0.42, 0.96, nightfall));
 		earth = disc(EYEDIR,moon_dir,daylight_dir,apparent_radius,vec3(1.28,1.21,1.10),earth,moonlight,1.0);
-		daytime = disc(EYEDIR,moon_dir,daylight_dir,apparent_radius,vec3(1.03,1.06,1.10),daytime,moonlight * (0.48 + dusk * 0.19),dusk * 0.12);
+		daytime = disc(EYEDIR,moon_dir,daylight_dir,apparent_radius,vec3(1.03,1.06,1.10),daytime,daylight_moon * moonlight * (0.39 + dusk * 0.19),dusk * 0.12);
 	}
 	vec3 alien_rim = vec3(0.21, 0.31, 0.38);
 	vec3 alien_high = vec3(0.035, 0.067, 0.12);
@@ -131,7 +152,7 @@ void sky(){
 	}
 	vec3 alien = mix(alien_rim, alien_high, smoothstep(0.0, 0.62, height));
 	if (other_world > 0.0) alien += vec3(0.66,0.86,0.95)*star_field(EYEDIR.zxy);
-	alien=disc(EYEDIR,normalize(vec3(0.35,0.48,-1.0)),normalize(vec3(-1.0,0.6,0.4)),0.038,vec3(0.95,0.72,0.51),alien,1.0,1.0);
+	if (other_world > 0.0) alien = ringed_world(EYEDIR, alien);
 	alien=disc(EYEDIR,normalize(vec3(0.08,0.66,-1.0)),normalize(vec3(-1.0,0.6,0.4)),0.016,vec3(0.65,0.83,0.91),alien,1.0,1.0);
 	vec2 shift = vec2(cloud_pattern * 0.31, cloud_pattern * 0.59) + cloud_drift;
 	vec2 alto = EYEDIR.xz * vec2(3.5, 7.0) / (height + 0.47) + shift;

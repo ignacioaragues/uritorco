@@ -30,7 +30,7 @@ static func channel_z(x: float) -> float:
 static func creek_extension(x: float) -> float:
 	return smoothstep(54.0, 140.0, -x)
 
-static func height(x: float, z: float) -> float:
+static func height(x: float, z: float, pool := true) -> float:
 	var descent := -11.0 * smoothstep(22.0, 69.0, z)
 	var downstream := creek_extension(x)
 	var bank_width := lerpf(9.2, 18.6, downstream)
@@ -42,7 +42,8 @@ static func height(x: float, z: float) -> float:
 	var lajas := 2.4 * (1.0 - smoothstep(0.08, 1.0, Vector2((x + 41) / 16.0, (z + 15) / 19.0).length()))
 	var side_ridges := (6.5 * exp(-Vector2((x + 91.0) / 38.0, (z - 23.0) / 24.0).length_squared())
 		+ 9.0 * exp(-Vector2((x + 159.0) / 29.0, (z - 75.0) / 26.0).length_squared())) * smoothstep(38.0, 61.0, -x)
-	return descent - (3.1 + downstream * 2.0) * bed + far_bank + ridge * (1.0 - downstream * 0.66) + relief + mollar + lajas + side_ridges
+	var hollow := 1.47 * exp(-Vector2((x + 145.0) / 5.4, (z - channel_z(x)) / 3.15).length_squared()) if pool else 0.0
+	return descent - hollow - (3.1 + downstream * 2.0) * bed + far_bank + ridge * (1.0 - downstream * 0.66) + relief + mollar + lajas + side_ridges
 
 static func point(x: float, z: float) -> Vector3:
 	return Vector3(x, height(x, z), z)

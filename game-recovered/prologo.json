@@ -4,12 +4,12 @@
   "lines": [
    "Tenés 6 años. Tu papá llega con un paquete escondido abajo del pulóver.",
    "Adentro hay un libro para chicos. Se llama Observar el Cielo. Lo apoyás en sus rodillas y pasás las hojas con las dos manos.",
-   "En un dibujo, cuatro puntitos forman una cruz. Tu papá te presta el lápiz."
+   "Tu papá tantea la guarda con el pulgar. Todavía no dice de quién es."
   ],
   "options": [
    {
-    "label": "Calcás la cruz en la guarda.",
-    "keepsake": "En la guarda hay cuatro estrellas de lápiz. Una tiene un agujerito de tanto apretar."
+    "label": "Le pedís que lo deje en tu mesa de luz.",
+    "keepsake": "Esa noche el lomo cruje cuando volvés a abrir el libro en la cama."
    },
    {
     "label": "Le pedís que escriba tu nombre.",
@@ -37,7 +37,7 @@
  {
   "key": "patio",
   "lines": [
-   "Tenés 16 años. Tu papá te ayuda a sacar al patio el telescopio usado que conseguiste. Lo apuntás a la Luna. Cuando por fin encontrás el borde de un cráter, corrés la silla para que mire él.",
+   "Tenés 16 años. Tu papá te ayuda a sacar al patio el telescopio usado. Después de moverlo un rato encontrás Saturno. «El de al lado puede ser Titán», te dice. Corrés la silla para que mire él.",
    "Mañana lo llevás a la feria de la escuela. En el formulario, al lado de tu nombre, queda un renglón para el título."
   ],
   "options": [

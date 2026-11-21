@@ -4,6 +4,7 @@ const RADIO = preload("res://equipo/radio.webp")
 const PIECE = preload("res://equipo/pieza_sueno.webp")
 const COMPASS = preload("res://equipo/brujula.webp")
 const MAP_HAND = preload("res://equipo/mapa_mano.webp")
+const MAP_GRIP = preload("res://pulgar_mapa.gdshader")
 var mate_texture: Texture2D
 var rig: = Node2D.new()
 var sprite: = Sprite2D.new()
@@ -35,6 +36,10 @@ func _ready():
 	paper_rig.add_child(paper_sprite)
 	paper_sprite.texture = MAP_HAND
 	paper_sprite.centered = false
+	var arm := ShaderMaterial.new()
+	arm.shader = MAP_GRIP
+	arm.set_shader_parameter("thumb_only", false)
+	paper_sprite.material = arm
 	paper_rig.hide()
 	add_child(rig)
 	rig.show_behind_parent = true
@@ -57,7 +62,7 @@ func mount_map(sheet: Control):
 	thumb.centered = false
 	thumb.texture = MAP_HAND
 	var cutout := ShaderMaterial.new()
-	cutout.shader = preload("res://pulgar_mapa.gdshader")
+	cutout.shader = MAP_GRIP
 	thumb.material = cutout
 	paper_rig.add_child(thumb)
 
