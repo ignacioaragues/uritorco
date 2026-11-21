@@ -74,18 +74,18 @@ static func clearance(point: Vector2) -> float:
 static func build(valley):
 	var route = valley.route
 	route.signpost(ground(Vector2(12.5, -16.1), route) + Vector3(0.0, 0, 1.1),
-		"Mirador del mollar", "Mollar →", -0.48, true)
+		"Mollar →", -0.48, true)
 	route.signpost(ground(Vector2(-12, -23.2), route) + Vector3(0, 0, 2.4),
-		"Loma de las lajas", "Lajas ←", 0.77, true)
+		"Lajas ←", 0.77, true)
 	for junction in [
-		[WEST_LINK[0], Vector2(4.2, 0.6), "Vuelta de las lajas", "Vuelta al cauce →", 0.30],
-		[WEST_LINK[-1], Vector2(-1.9, -2.1), "Vuelta de las lajas", "← Loma de las lajas", 2.68],
-		[EAST_LINK[0], Vector2(1.81, -0.65), "Atajo del este", "Mollar  /  Cauce →", 0.24],
-		[EAST_LINK[-1], Vector2(-1.0, 2.2), "Atajo del este", "↑ Atajo al puesto", PI],
+		[WEST_LINK[0], Vector2(4.2, 0.6), "Vuelta al cauce →", 0.30],
+		[WEST_LINK[-1], Vector2(-1.9, -2.1), "← Loma de las lajas", 2.68],
+		[EAST_LINK[0], Vector2(1.81, -0.65), "Mollar  /  Cauce →", 0.24],
+		[EAST_LINK[-1], Vector2(-1.0, 2.2), "↑ Atajo al puesto", PI],
 	]:
 		var at: Vector2 = junction[0] + junction[1]
 		var foot := Creek.surface_point(Vector3(at.x, 0.0, at.y))
-		route.signpost(foot, junction[2], junction[3], junction[4], true)
+		route.signpost(foot, junction[2], junction[3], true)
 	var stone = preload("res://piedra_serrana.gd")
 	var rock_faces: SurfaceTool = stone.surface()
 	var rock_rng := RandomNumberGenerator.new()

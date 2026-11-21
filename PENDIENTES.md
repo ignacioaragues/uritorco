@@ -38,7 +38,7 @@ Al cierre de cada pasada se actualizan los puntos resueltos y se conserva lo que
 - [x] Revisar el apoyo de carteles, postes, piedras y objetos de las laderas. Se corrigieron el desvío de la cantera, los postes del cable, el malacate, el banco del acceso, el campamento y las piedras junto a la pasarela.
 - [x] Agregar tres paradas opcionales al camino del cable del Día 27. Hernán puede examinar con E el carrete, la casilla de empalme y el frente de granito antes del malacate.
 - [x] Integrar los ocho coleccionables del cerro en sus alrededores. La vasija quedó semienterrada entre piquillines, el casete entre dos lajas y la chapa debajo del borde de una piedra. El destello se ve de cerca y el plano conserva la silueta al registrar el hallazgo.
-- [x] Espaciar las dieciséis charlas opcionales de Mara por tramos de ida y regreso. Después de una llamada hay que caminar antes de que aparezca otra charla. Los partes y la despedida se pueden abrir cuando corresponden.
+- [x] Espaciar las catorce charlas opcionales de Mara por tramos de ida y regreso. Después de una llamada hay que caminar antes de que aparezca otra charla. Los partes y la despedida se pueden abrir cuando corresponden.
 - [x] Enlazar las reacciones de Mara con los avistamientos anteriores y con lo que Hernán decide contarle. Mara propone hipótesis sobre los faros, el reflejo del malacate y la interferencia de radio.
 - [x] Afinar la carta del cielo con 32 estrellas identificables, Júpiter, Saturno y la Vía Láctea. La Cruz del Sur coincide con el rumbo del mapa.
 - [x] Quitar la cruz que indicaba la posición del jugador en el mapa de mano. Las láminas muestran los puntos cardinales, los objetivos y las siluetas de hallazgos.
@@ -53,6 +53,18 @@ Al cierre de cada pasada se actualizan los puntos resueltos y se conserva lo que
 - [x] Darles materiales y siluetas distintas a los tres sueños. El primero tiene placas azules fracturadas, el segundo terrazas cobrizas y el tercero crestas de obsidiana y arcos erosionados. Las formaciones cercanas son sólidas y dejan pasos abiertos hacia los seis hallazgos.
 - [x] Conectar las lajas con la bajada al cauce y abrir un atajo del este a la vuelta del mollar. Las dos huellas están señalizadas y se dibujan en la hoja local, centrada en el refugio. Se recorrieron los enlaces con el mapa de mano abierto.
 
+## Pasada del prólogo, la cantera y la cumbre
+
+- **Parada.** El abrigo queda junto a la banquina. Hernán arranca mirando la ruta. Puede girar y levantar la mochila con E o clic desde donde está. Después se habilita la caminata hacia la huella lateral. Las partidas viejas guardadas antes de recoger la mochila abren con la posición nueva.
+- **Cartelería.** Los textos, flechas y el pictograma del ómnibus se dibujan en la cara esmaltada. Se revisó el cartel de la parada de costado y de cerca. Los carteles de orientación se leen en el paisaje. Las interacciones del encargo quedan en el banco, la antena y los hitos.
+- **Ritmo y audio del prólogo.** El fundido entre paisaje y recuerdo dura 1,35 segundos. Se recorrieron las ocho microescenas con ese fundido.
+- **Recuerdos.** A los 16 Hernán encuentra Saturno con su papá. Puede preguntarle cómo reconoce Titán o quedarse un rato más mirando con él. Su papá muere en la segunda semana de septiembre y la oferta de trabajo llega un par de semanas después, antes de la llegada del 1 de octubre.
+- **Cantera y cumbre.** La huella del cable está pintada en el suelo. Los postes quedan al costado. Se sumaron afloramientos y vegetación en las orillas. Las piedras tienen grano mineral discreto y tonos grises, ocres y levemente rosados. Se comprobaron los apoyos y las colisiones de 657 rocas de la travesía y se recorrieron el cable y la cumbre en ambos sentidos.
+- **Cartografía.** El Día 27 usa una lámina fija con la Senda del Oeste, el carrete, el empalme y el malacate. La del Día 32 comparte el refugio, el banco del acceso, la senda de las pircas, el campamento y la cumbre. Las dos se mantienen al volver. La bajada de la cumbre actualiza la marca del siguiente tramo dentro de su hoja.
+
+- **Llegada y refugio.** La conversación de bienvenida termina cuando Mara propone descansar. Quedan catorce charlas opcionales después de la primera noche, y el final de la puerta requiere nueve respuestas de cercanía para llegar al 60 %. Los dos temas retirados de la llegada quedan fuera del cálculo de guardados anteriores. La heladera y el freezer abren por separado. La bandera cuelga del mástil y se mueve con la brisa.
+- **Música.** Las pistas quedan completas, con un fundido al terminar la composición o al entrar un cambio de escena. Se comprobó que la música conserva su nivel a los 68 segundos, que la radio reduce el volumen y lo recupera, y que el fundido entra al final del archivo.
+
 ## Pasada de la última noche y el refugio
 
 - **Última noche.** La vuelta de la pasarela sigue en el Día 36. Una cartela sitúa la última noche en el Día 40. La radio empieza en el patio y dos luces aparecen sobre los molles durante la charla. Seguirlas lleva a la entrada exterior de la cueva. Desde «Elegir escena» se puede entrar en «Última noche · Luces» o directamente en «Última noche · Cueva».
@@ -65,7 +77,7 @@ Al cierre de cada pasada se actualizan los puntos resueltos y se conserva lo que
 ## Ritmo de las charlas de Mara
 
 - El Día 2, una charla se ofrece más abajo del poste y la otra en el regreso. El Día 7, quedan separadas la visita al museo y la vuelta desde la antena. La última mañana, una charla se ofrece al bajar por la huella y la otra cerca de la banquina.
-- Se probaron las dieciséis interacciones, la caminata con el mapa abierto, la prioridad de los partes y la despedida. El guardado conserva el tramo que falta caminar. El umbral para poder visitar a Mara sigue siendo diez respuestas de cercanía.
+- Las charlas se pueden iniciar durante la caminata con el mapa abierto. El guardado conserva el tramo que falta caminar. Para visitar a Mara hacen falta nueve respuestas de cercanía.
 
 ## Sonido ambiente del museo
 
@@ -74,7 +86,7 @@ Al cierre de cada pasada se actualizan los puntos resueltos y se conserva lo que
 
 ## Pasada de continuidad musical
 
-- Las siete jornadas de exploración tienen temas de caminata. El primero entra después de unos pasos. Las entradas duran alrededor de un minuto y medio, con pausas que se cuentan mientras Hernán camina. Al oscurecer entra el tema nocturno. Se mantienen los silencios de la llegada y de la entrada a la cueva.
+- Las jornadas de exploración tienen temas de caminata. El primero entra después de unos pasos. Los temas se reproducen completos, con pausas que se cuentan mientras Hernán camina. Al oscurecer entra el tema nocturno cuando empieza una nueva pista. La llegada conserva su pausa antes de la radio.
 - Durante una llamada, la música baja 7 dB y sigue avanzando. Al guardar la radio recupera su volumen con un fundido. Se grabó una charla en la vaguada para comprobar la continuidad y se verificaron las entradas de las siete jornadas, la vuelta con el mapa abierto y las transiciones del malacate, la cumbre y la última noche.
 
 ## Ubicación de Mara
@@ -125,7 +137,7 @@ Al cierre de cada pasada se actualizan los puntos resueltos y se conserva lo que
 - **Relieves de los sueños.** Los tres tienen terrenos alienígenas distintos y gravedad baja. En los tres aparece «????» al mirar hacia el cielo. El segundo permite recoger la pieza que ayuda a orientarse durante el tercero.
 - **Mate.** Abre el Día 32. E baja la mano y la radio sube después en esa misma mano.
 - **Museo de sitio.** El edificio tiene rampa, puerta, vestíbulo y dos salas recorribles. La sala de los pueblos comechingones tiene vitrinas con réplicas didácticas de un mortero con su mano, un huso con tortero y una vasija. Las fichas explican los usos y el contexto arqueológico, y reconocen a las comunidades actuales. La segunda sala reúne los relatos del cerro. Las seis ilustraciones distinguen las réplicas, las hipótesis y los testimonios. El archivo del 12 de julio es opcional.
-- **Mara y finales.** Dos charlas opcionales por jornada, dieciséis en total. Se ofrecen con R cerca de lugares del recorrido o durante el regreso. Los encargos tienen prioridad en la radio. Las respuestas quedan guardadas y algunas vuelven en la despedida, junto con lo que pasó la última noche. Para poder golpear la puerta hace falta elegir respuestas que generen cercanía en al menos el 60 % de las charlas opcionales (10 de las 16 del juego). Las charlas omitidas no suman. Las partidas en curso usan sus respuestas guardadas y los epílogos ya alcanzados se conservan. Se comprobaron la disponibilidad de las dieciséis charlas, las respuestas de los guardados anteriores y ambos epílogos.
+- **Mara y finales.** Catorce charlas opcionales después de la primera noche. Se ofrecen con R cerca de lugares del recorrido o durante el regreso. Los encargos tienen prioridad en la radio. Las respuestas quedan guardadas y algunas vuelven en la despedida, junto con lo que pasó la última noche. Para poder golpear la puerta hace falta elegir respuestas que generen cercanía en al menos el 60 % de las charlas opcionales (9 de las 14 del juego). Las charlas omitidas no suman. Las partidas en curso usan sus respuestas guardadas y los epílogos ya alcanzados se conservan. Se comprobaron las respuestas de los guardados anteriores y ambos epílogos.
 - **Primeras jornadas.** Mara da la bienvenida por radio al entrar. Esa noche queda la mochila en el suelo. Después de dormir aparecen el libro y el primer encargo. El parte del cauce deja abierto cuándo será el siguiente turno, y la mañana del Día 25 retoma el dibujo que hizo Hernán al despertar del primer sueño. Se probó la secuencia desde la bienvenida, con la caminata completa de ida y vuelta al cauce y la transición del abra al sueño.
 - **Días 25 a 36.** El parte del filo reconoce la vaguada o la laja y la respuesta vuelve en el encargo del malacate. El rumbo anotado en la cantera se compara desde la cumbre. Los cuadernos del campamento y de la cueva comparten las columnas de hora, rumbo y respuesta, y el aviso de la pasarela vuelve en la bitácora. El museo se corrió para liberar la huella, con un ajuste al cargar partidas guardadas dentro. Se caminó la ida y vuelta del Día 25 y se comprobó el ascenso y la bajada de la cumbre.
 - **Diario de Hernán.** Tab abre un cuaderno con papel y dibujos generados. Las flechas recorren las entradas fechadas según lo que vivió Hernán. El filo distingue el rodeo y la cuerda. El malacate, la pasarela y el último sueño recuperan sus decisiones. Los apuntes sueltos siguen disponibles en páginas separadas.
@@ -178,6 +190,6 @@ Esta lista reconstruye el estado informado del proyecto editable. La exportació
 
 ## Todavía pendiente
 
-- **Arte.** Revisar a pie las laderas lejanas, en especial entre la cantera y la cumbre. Queda ubicar los siguientes casos de piedras suspendidas, lomadas con acabado plano y objetos que pierden detalle a distancia. Afinar la lectura de los objetos de cerca en las otras salas y recorridos.
-- **Mundo y recorridos.** Extender la pasada de cartografía a las hojas de la cantera y la cumbre. Revisar a velocidad normal el ritmo de las ocho microescenas del prólogo.
+- **Arte.** Seguir revisando piedras y apoyos fuera de los senderos recorridos. Cotejar el acabado mineral con fotos del cerro, ya que los sitios de referencia no cargaron desde el entorno. Afinar la lectura de los objetos de cerca en las otras salas y recorridos y el acabado de la vegetación y las lomadas de fondo.
+- **Mundo y recorridos.** Revisar la legibilidad de las referencias de las hojas de marcha fuera de los encargos de la cantera, la cumbre y la pasarela.
 - **Windows.** Probar el ejecutable en Windows. El paquete exportado se verificó en Godot sobre Linux.

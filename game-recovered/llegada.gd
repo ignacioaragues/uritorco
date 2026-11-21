@@ -5,8 +5,10 @@ const FieldKit = preload("res://equipo_campo.gd")
 const Refuge = preload("res://refugio.gd")
 const Flora = preload("res://flora.gd")
 const Stone = preload("res://piedra_serrana.gd")
-const STOP_START := Vector3(-2.82, 0.12, -6.43)
-const STOP_CENTER := Vector3(-0.57, 0.0, -9.55)
+const STOP_START := Vector3(-1.18, 0.12, -6.30)
+const STOP_CENTER := Vector3(-1.55, 0.0, -7.92)
+const STOP_PACK := Vector3(-0.34, 0.316, -7.25)
+const STOP_LAYOUT := 2
 const BRIDGE_WATER_Y := -0.71
 const BRIDGE_WATER_Z := -10.45
 const BRIDGE_WATER_WIDTH := 15.8
@@ -37,7 +39,7 @@ static func spawn_point(index: int) -> Vector3:
 	return world_position(index, STOP_START if index == 0 else Vector3.UP * 0.12)
 
 static func spawn_heading(index: int) -> float:
-	return -0.94 if index == 0 else HEADINGS[index]
+	return PI if index == 0 else HEADINGS[index]
 
 static func track_x(index: int, distance: float) -> float:
 	match index:
@@ -281,9 +283,9 @@ static func dress_verges(center: Vector3, index: int, rng: RandomNumberGenerator
 
 static func build_stop(v, center: Vector3):
 	Signage.shelter(v, center + STOP_CENTER)
-	Signage.flag(v, center + Vector3(-3.72, 0, -8.73))
-	Signage.trail_post(v, center + Vector3(4.7, 0.0, branch_z(4.7) - 1.52), "", "Refugio →", -0.72, true)
-	v.arrival_bag = FieldKit.backpack(v, center + Vector3(-1.10, 0.318, -6.95), ACTIONS[0])
+	Signage.flag(v, center + Vector3(-4.07, 0, -7.14))
+	Signage.trail_post(v, center + Vector3(4.7, 0.0, branch_z(4.7) - 1.52), "Refugio →", -0.72, true)
+	v.arrival_bag = FieldKit.backpack(v, center + STOP_PACK, ACTIONS[0])
 	v.arrival_bag.rotation.y = -0.14
 
 static func build_log(v, center: Vector3):

@@ -9,22 +9,6 @@ const VISIT_PERCENT := 60
 
 # Respuesta que genera cercanía, pregunta, opciones de Hernán y réplicas de Mara.
 const TOPICS = {
-	"alero": [
-		0, "Cuando me tocó mi primer turno, tardé un rato en acostumbrarme a lo lejos que quedaba todo. ¿Desde acá te llega ruido del camino?",
-		["«Por ahora oigo más tu radio».", "«Me acostumbraré mañana»."],
-		[
-			["Si necesitás ubicarte, llamá. Yo termino de escribir el parte y sigo en el puesto un rato."],
-			["Con luz se entiende mejor el terreno. La primera mañana me sorprendió lo cerca que se veía la sierra."]
-		]
-	],
-	"primera_noche": [
-		0, "Cuando me toca el turno de noche dejo prendida la luz del puesto. Así el que pasa por el camino sabe que hay alguien despierto.",
-		["«Se agradece tener a alguien del otro lado».", "«¿Te toca seguido el turno de noche?»"],
-		[
-			["Yo la dejaba prendida cuando mi vieja volvía tarde. Después se me hizo costumbre."],
-			["Esta semana me toca hasta tarde. Me traje pan de casa para aguantar. Perdí la cuenta de cuánto llevaba en el horno, pero zafó."]
-		]
-	],
 	"cauce": [
 		1, "¿Cómo te está tratando el camino?",
 		["Se agradece el silencio.", "Me vendría bien un poco de charla."],
@@ -142,10 +126,6 @@ const TOPICS = {
 static func available(stage: int, position: Vector3, bedtime: bool, sighting: bool, answered: Dictionary) -> String:
 	var topic := ""
 	match stage:
-		0:
-			if bedtime and absf(position.x) < 14.0:
-				if position.z > 0.0 and position.z < 5.9: topic = "alero"
-				elif position.z >= -14.0 and position.z <= -5.5: topic = "primera_noche"
 		4:
 			if near(position, Creek.trail_point(0.91), 13.0): topic = "cauce"
 		5:
@@ -183,7 +163,6 @@ static func on_ridge(position: Vector3, distance: float, radius: float) -> bool:
 
 static func distance_between_calls(day: int) -> float:
 	match day:
-		1: return 3.0
 		2: return 12.0
 		41: return 15.0
 		_: return 26.0
@@ -200,6 +179,8 @@ static func can_visit(answered: Dictionary) -> bool:
 
 static func saved_replies(state: Dictionary) -> Dictionary:
 	var replies: Dictionary = state.get("trail_replies", {}).duplicate()
+	replies.erase("alero")
+	replies.erase("primera_noche")
 	var legacy := {7: "museo", 27: "cielo", 32: "bajada"}
 	for day in legacy:
 		if replies.has(day):

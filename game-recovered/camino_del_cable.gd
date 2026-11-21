@@ -4,7 +4,11 @@ const Kit = preload("res://equipo_campo.gd")
 const Refuge = preload("res://refugio.gd")
 const Signage = preload("res://carteleria.gd")
 const Stone = preload("res://piedra_serrana.gd")
+const Flora = preload("res://flora.gd")
 
+const REEL_AT := 0.52
+const SPLICE_AT := 23.0 / 32.0
+const FACE_AT := 0.93
 const REEL := "Carrete de cable"
 const SPLICE := "Casilla de empalme"
 const FACE := "Frente de cantera"
@@ -19,17 +23,46 @@ static func build(valley):
 	var section := Node3D.new()
 	section.name = "Camino del cable"
 	valley.add_child(section)
-	build_reel(roadside(section, route, 0.52, 3.15), route)
-	const SPLICE_POLE := 23.0 / 32.0
-	var splice := roadside(section, route, SPLICE_POLE, -3.85)
-	var pole: Vector3 = route.terrain_point(route.quarry_point(SPLICE_POLE))
+	build_reel(roadside(section, route, REEL_AT, 3.15), route)
+	var splice := roadside(section, route, SPLICE_AT, -3.85)
+	var pole: Vector3 = route.terrain_point(route.cable_pole(SPLICE_AT))
 	build_splice(splice, route, pole)
-	build_face(roadside(section, route, 0.93, 5.4), route)
+	build_face(roadside(section, route, FACE_AT, 5.4), route)
+	dress_verge(section, route)
+
+static func dress_verge(parent: Node3D, route):
+	var rng := RandomNumberGenerator.new()
+	rng.seed = 27031
+	var ground := Callable(route, "terrain_point")
+	var faces := Stone.surface()
+	var tufts: Array[Vector4] = []
+	for i in range(20):
+		var t := 0.07 + i * 0.046
+		if minf(absf(t - route.WEST_JOIN), minf(absf(t - REEL_AT), minf(absf(t - SPLICE_AT), absf(t - FACE_AT)))) < 0.023:
+			continue
+		var at: Vector3 = route.quarry_point(t)
+		var side: Vector3 = route.quarry_side(t)
+		var margin_left := -1.0 if i % 3 == 0 else 1.0
+		var foot: Vector3 = ground.call(at + side * margin_left * rng.randf_range(4.0, 10.8))
+		if i % 3 != 1:
+			var width := rng.randf_range(1.2, 3.0)
+			var size_m := Vector3(width, width * rng.randf_range(0.31, 0.68), width * 0.73)
+			var mass := Stone.fragment(faces, foot, size_m, rng.randf() * TAU, rng, ground)
+			Stone.solid(parent, foot, mass, "Granito de la cantera")
+		for blade in rng.randi_range(6, 14):
+			var jitter := Vector3(rng.randf_range(-1.7, 1.7), 0, rng.randf_range(-2.8, 2.8))
+			var tuft: Vector3 = ground.call(foot + jitter) - Vector3.UP * 0.05
+			tufts.append(Vector4(tuft.x, tuft.y, tuft.z, rng.randf_range(0.48, 1.1)))
+		if i % 5 in [1, 4]:
+			var farther: Vector3 = ground.call(foot + side * margin_left * rng.randf_range(3.8, 6.7))
+			var kind := Flora.Kind.MOLLE if i % 2 == 0 else Flora.Kind.ESPINILLO
+			Flora.tree(parent, farther, kind, rng.randf_range(0.88, 1.35), rng.randf() * TAU)
+	Stone.finish(parent, faces, "Afloramientos junto al cable")
+	Flora.grass_batch(parent, tufts)
 
 static func roadside(parent: Node3D, route, progress: float, offset: float) -> Node3D:
 	var center: Vector3 = route.quarry_point(progress)
-	var tangent: Vector3 = route.quarry_point(progress + 0.005) - route.quarry_point(progress - 0.005)
-	var side := Vector3(tangent.z, 0, -tangent.x).normalized()
+	var side: Vector3 = route.quarry_side(progress)
 	var site := Node3D.new()
 	parent.add_child(site)
 	site.position = route.terrain_point(center + side * offset)
@@ -91,9 +124,9 @@ static func build_splice(site: Node3D, route, pole: Vector3):
 	for x in [-0.92, -0.46, 0.0, 0.46, 0.92]:
 		Kit.block(roof, Vector3(x, 0.073, 0), Vector3(0.044, 0.042, 1.60), metal)
 	var panel := Signage.solid(site, Vector3(-0.16, 1.08, -0.41), Vector3(0.91, 0.74, 0.15), metal, SPLICE)
-	Kit.block(panel, Vector3(0, 0, 0.095), Vector3(0.77, 0.58, 0.036), Kit.material("737769"))
 	Kit.block(panel, Vector3(0.28, -0.12, 0.128), Vector3(0.15, 0.036, 0.043), metal)
-	Signage.lettering(panel, Vector3(0, 0.13, 0.116), "EMPALME 23", 0.077, Color("#ded1ac"))
+	Signage.printed_face(panel, Vector3(0, 0, 0.0755), Vector2(0.77, 0.58), Color("#737769"),
+		[[Vector2(0, 0.108), "EMPALME 23", 0.077, Color("#ded1ac")]])
 	Kit.cord(site, PackedVector3Array([
 		site.to_local(pole + Vector3.UP * 2.72), Vector3(0.98, 2.03, 0.71),
 		Vector3(0.66, 1.75, 0.49), Vector3(0.49, 1.49, 0.04),

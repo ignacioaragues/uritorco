@@ -7,11 +7,15 @@ const Kit = preload("res://equipo_campo.gd")
 const Flora = preload("res://flora.gd")
 const Stone = preload("res://piedra_serrana.gd")
 const SCATTER_CELL_SIZE := 144.0
-const HILLSIDE_STONE_SHAPES := 3
+const HILLSIDE_STONE_SHAPES := 5
 
 const ORIGIN_Z: = -76.0
 const WEST_START_Z := -22.0
 const WEST_JOIN := 0.44
+const QUARRY_START := 300.0
+const QUARRY_END := 610.0
+const QUARRY_SWAY := 12.0
+const CABLE_OFFSET := -2.05
 const HALF_WIDTH: = 360.0
 const FAR: = 980.0
 const CREST: = 922.0
@@ -73,6 +77,8 @@ static func make_ground_material(route_to_creek: PackedVector2Array, mara_start:
 	material.shader = preload("res://monte.gdshader")
 	var west := western_approach(0.0)
 	var cable := western_approach(1.0)
+	var cut_start := quarry_point(0.0)
+	var cut_end := quarry_point(1.0)
 	var east := eastern_access(0.0)
 	var ascent := eastern_access(1.0)
 	var summit_join := summit_point(SUMMIT_JOIN)
@@ -80,6 +86,8 @@ static func make_ground_material(route_to_creek: PackedVector2Array, mara_start:
 	var ridge_end := summit_point(1.0)
 	material.set_shader_parameter("west_start", Vector2(west.x, west.z))
 	material.set_shader_parameter("west_end", Vector2(cable.x, cable.z))
+	material.set_shader_parameter("quarry_curve", Vector4(cut_start.x, QUARRY_START, cut_end.x, QUARRY_END))
+	material.set_shader_parameter("quarry_sway", QUARRY_SWAY)
 	material.set_shader_parameter("east_start", Vector2(east.x, east.z))
 	material.set_shader_parameter("east_end", Vector2(ascent.x, ascent.z))
 	material.set_shader_parameter("ascent_curve", Vector4(ascent.x, ORIGIN_Z - ascent.z, summit_join.x, ORIGIN_Z - summit_join.z))
@@ -119,21 +127,29 @@ func _ready():
 	add_child(land)
 	land.create_trimesh_collision()
 	Ladera.build(self)
-	signpost(at(trail(124) + 2, 124), "Paso de la laja", "Filo por la laja  ↑\nRodeo por la vaguada  →")
+	signpost(at(trail(124) + 2, 124), "Filo por la laja  ↑\nRodeo por la vaguada  →")
 	build_laja_rope()
-	signpost(at(trail(CREST), CREST), "Hito del filo", "Filo del puesto")
+	signpost(at(trail(CREST) + 1.68, CREST), "Filo del puesto", 0.0, false, true)
+	var foot := surface_point(trail(CREST) - 1.50, CREST)
+	var marker := Stone.surface()
+	var marker_rng := RandomNumberGenerator.new()
+	marker_rng.seed = 52681
+	Stone.cairn(self, marker, foot, terrain_point, marker_rng, "Hito del filo")
+	Stone.finish(self, marker, "Hito del filo")
 	plant()
 	make_wildlife()
 	fox.hide()
 	var repeater := surface_point(trail(420) + 1.6, 420)
-	signpost(repeater, "Antena del abra", "Radio · Abra del viento")
+	signpost(repeater + Vector3.RIGHT * 0.80, "Radio · Abra del viento", 0.0, false, true)
 	box(self, Vector3(0.08, 4.12, 0.08), repeater + Vector3(0, 1.94, 0), "655a50").create_trimesh_collision()
+	Signage.solid(self, repeater + Vector3(0, 1.29, 0.055), Vector3(0.23, 0.31, 0.18),
+		Kit.material("696a61"), "Antena del abra")
 	for h in [2.85, 3.45, 3.94]:
 		box(self, Vector3(1.15, 0.04, 0.07), repeater + Vector3(0, h, 0), "737a75")
-	signpost(at(trail(292) - 1.7, 292), "Sala de las sierras", "Museo de sitio →")
-	signpost(Vector3(western_x_at(-27.0) - 1.8, 0.0, -27.0), "Sendero oeste", "Cantera ↖", 0.0, true)
+	signpost(at(trail(292) - 1.7, 292), "Museo de sitio →")
+	signpost(Vector3(western_x_at(-27.0) - 1.8, 0.0, -27.0), "Cantera ↖", 0.0, true)
 	var west_sign := western_approach(1.0) + Vector3(2.0, 0.0, 0.0)
-	signpost(west_sign, "Sendero oeste", "Refugio · senda del oeste")
+	signpost(west_sign, "Refugio · senda del oeste")
 
 func laja_rope_route() -> Array[Vector3]:
 	var x := trail(170.0) - 0.64
@@ -173,8 +189,8 @@ func build_laja_rope():
 		grip.add_child(shape)
 	box(self, Vector3(0.16, 0.14, 0.17), line[-1], "827665")
 
-func signpost(pos: Vector3, tag: String, caption: String, facing: float = 0.0, painted: bool = false):
-	Signage.trail_post(self, terrain_point(pos), tag, caption, facing, painted)
+func signpost(pos: Vector3, caption: String, facing: float = 0.0, painted: bool = false, reverse := false):
+	Signage.trail_post(self, terrain_point(pos), caption, facing, painted, reverse)
 
 func box(parent: Node3D, size_m: Vector3, pos: Vector3, color: String) -> MeshInstance3D:
 	var mesh: = BoxMesh.new()
@@ -217,9 +233,11 @@ func plant():
 	var open_crowns: Array[Transform3D] = []
 	var stems: Array[Transform3D] = []
 	var rocks: Array[Array] = []
-	for _variant in HILLSIDE_STONE_SHAPES:
+	var rock_forms: Array[Dictionary] = []
+	for variant in HILLSIDE_STONE_SHAPES:
 		var stones: Array[Transform3D] = []
 		rocks.append(stones)
+		rock_forms.append(Stone.hillside_form(variant))
 	var join := summit_point(SUMMIT_JOIN)
 	var join_distance := ORIGIN_Z - join.z
 	var peak := summit_point(1.0)
@@ -231,7 +249,7 @@ func plant():
 		var x: = trail(d) + rng.randf_range(-120, 120)
 		var west_t := inverse_lerp(WEST_START_Z, quarry_point(WEST_JOIN).z, ORIGIN_Z - d)
 		if west_t < 1.0 and absf(x - western_approach(west_t).x) < 3.8: continue
-		if d > 300.0 and d < 610.0 and absf(x - quarry_point((d - 300.0) / 310.0).x) < 3.5: continue
+		if d > QUARRY_START and d < QUARRY_END and absf(x - quarry_point(inverse_lerp(QUARRY_START, QUARRY_END, d)).x) < 3.5: continue
 		if absf(d - 292) < 8 and absf(x - trail(292) - 10.5) < 11.5: continue
 		if absf(x - trail(d)) < 2.6 or (d > 124 and d < 218 and absf(x - detour(d)) < 2.6): continue
 		var scale_m: = rng.randf_range(0.7, 1.8)
@@ -264,8 +282,13 @@ func plant():
 				stems.append(Transform3D(limb_turn.scaled_local(Vector3(0.13 * scale_m, limb.length(), 0.12 * scale_m)), (fork + branch_tip) * 0.5))
 		elif i % 8 == 0:
 			var dims := Vector3(2.1, 1.8, 2.4) * scale_m
-			rocks[(i / 8) % HILLSIDE_STONE_SHAPES].append(Transform3D(turn.scaled(dims), pos))
-			Kit.item(solids, pos + Vector3.UP * dims.y * 0.17, "", Vector3.ZERO, dims * Vector3(0.65, 0.52, 0.65)).basis = turn
+			var variant := (i / 8) % HILLSIDE_STONE_SHAPES
+			var form := rock_forms[variant]
+			var pose := bed_rock(pos, turn, dims, form.base)
+			rocks[variant].append(pose)
+			var hull := PackedVector3Array()
+			for vertex: Vector3 in form.vertices: hull.append(pose * vertex)
+			Stone.solid(solids, pose.origin, hull, "Granito")
 		else:
 			var spread := Vector3(1.20, 0.92, 1.20) * scale_m
 			grass.append(Transform3D(turn.scaled_local(spread), pos - Vector3.UP * 0.045))
@@ -281,7 +304,19 @@ func plant():
 	var granite := Stone.paint()
 	for variant in rocks.size():
 		var stones: Array[Transform3D] = rocks[variant]
-		scattered("Granito %d" % (variant + 1), Stone.hillside_mesh(variant), stones, granite)
+		scattered("Granito %d" % (variant + 1), rock_forms[variant].mesh, stones, granite)
+
+func bed_rock(foot: Vector3, turn: Basis, size_m: Vector3, base: PackedVector3Array) -> Transform3D:
+	var east := terrain_point(foot + Vector3.RIGHT * 0.75) - terrain_point(foot - Vector3.RIGHT * 0.75)
+	var south := terrain_point(foot + Vector3.BACK * 0.75) - terrain_point(foot - Vector3.BACK * 0.75)
+	var bedding := Vector3.UP.slerp(south.cross(east).normalized(), 0.68)
+	var pose := Transform3D((Basis(Quaternion(Vector3.UP, bedding)) * turn).scaled_local(size_m), foot)
+	var gap := -INF
+	for vertex in base:
+		var at := pose * vertex
+		gap = maxf(gap, at.y - terrain_point(at).y)
+	pose.origin.y -= gap + 0.065
+	return pose
 
 func animal_form(parent: Node3D, position: Vector3, proportions: Vector3, tint: String) -> MeshInstance3D:
 	var form := SphereMesh.new()
@@ -336,9 +371,16 @@ func _process(delta):
 		legs[i].rotation.x = 0 if fox_waits or (fox_departure >= 0 and time - fox_departure >= 15) else sin(time * 5 + (PI if i in [1, 2] else 0.0)) * 0.42
 
 static func quarry_point(t: float) -> Vector3:
-	var d: = 300 + 310 * t
-	var x: = trail(300) - 220 * t + 12 * sin(TAU * t)
+	var d := lerpf(QUARRY_START, QUARRY_END, t)
+	var x := trail(QUARRY_START) - 220.0 * t + QUARRY_SWAY * sin(TAU * t)
 	return Vector3(x, elevation(x, d), ORIGIN_Z - d)
+
+static func quarry_side(t: float) -> Vector3:
+	var tangent := quarry_point(t + 0.005) - quarry_point(t - 0.005)
+	return Vector3(tangent.z, 0, -tangent.x).normalized()
+
+static func cable_pole(t: float) -> Vector3:
+	return quarry_point(t) + quarry_side(t) * CABLE_OFFSET
 
 static func western_approach(t: float) -> Vector3:
 	var join := quarry_point(WEST_JOIN)

@@ -11,23 +11,35 @@ void vertex() {
 	local_rock = VERTEX;
 }
 
+float mineral_cell(vec3 p) {
+	vec3 key = fract(p * vec3(0.1031, 0.1030, 0.0973));
+	key += dot(key, key.yxz + 33.33);
+	return fract((key.x + key.y) * key.z);
+}
+
+float mineral_noise(vec3 p) {
+	vec3 cell = floor(p);
+	vec3 blend = fract(p);
+	blend = blend * blend * (3.0 - 2.0 * blend);
+	float a = mix(mineral_cell(cell), mineral_cell(cell + vec3(1, 0, 0)), blend.x);
+	float b = mix(mineral_cell(cell + vec3(0, 1, 0)), mineral_cell(cell + vec3(1, 1, 0)), blend.x);
+	float c = mix(mineral_cell(cell + vec3(0, 0, 1)), mineral_cell(cell + vec3(1, 0, 1)), blend.x);
+	float d = mix(mineral_cell(cell + vec3(0, 1, 1)), mineral_cell(cell + vec3(1, 1, 1)), blend.x);
+	return mix(mix(a, b, blend.y), mix(c, d, blend.y), blend.z);
+}
+
 void fragment() {
 	vec3 p = rock_position;
-	float broad = sin(p.x * 4.1 + p.z * 1.8) * cos(p.y * 6.4 - p.z * 2.8);
-	float stain = sin(p.x * 2.8 + p.y * 1.2 + sin(p.z * 3.83)) * cos(p.z * 3.7 - p.y * 3.38);
-	float grit_x = p.x * 37.0 + p.z * 46.2;
-	float grit_y = p.y * 53.1 - p.x * 14.0;
-	float resolved = 1.0 - smoothstep(0.9, 2.8, max(fwidth(grit_x), fwidth(grit_y)));
-	float grit = sin(grit_x) * sin(grit_y) * resolved;
-	float shift = 0.38 * sin(p.z * 1.47 + p.y * 2.2 + sin(p.x * 2.7));
-	float strata = dot(p, vec3(0.59, 1.72, -0.68)) + shift + 0.12 * broad;
-	float grain = 1.0 - smoothstep(0.14, 0.50, fwidth(strata));
-	float veil = 1.0 - smoothstep(0.015, 0.12, abs(fract(strata) - 0.5));
-	float hairline = 1.0 - smoothstep(0.018, 0.060, abs(fract(strata + 0.19) - 0.5));
-	float quartz = (0.10 * veil + 0.12 * hairline) * grain * smoothstep(-0.48, 0.54, broad + stain * 0.29);
+	float resolution = max(length(dFdx(p)), length(dFdy(p)));
+	float weathering = mineral_noise(p * 1.4);
+	float broad = mineral_noise(p * 6.6 + vec3(2.7, 6.1, -1.4));
+	float aggregate = mineral_noise(p * 59.0);
+	float resolved = 1.0 - smoothstep(0.008, 0.041, resolution);
+	float flecks = resolved * (0.16 * smoothstep(0.62, 0.91, aggregate) - 0.20 * (1.0 - smoothstep(0.10, 0.31, aggregate)));
 	vec3 paint = colored_mesh ? COLOR.rgb : stone_tint.rgb;
-	vec3 stone = paint * (0.96 + 0.085 * broad + 0.037 * grit);
-	stone *= mix(vec3(0.74, 0.78, 0.77), vec3(1.08, 1.02, 0.95), smoothstep(-0.68, 0.72, stain));
+	vec3 stone = paint * (0.90 + 0.115 * weathering + 0.105 * broad + flecks);
+	float patina = smoothstep(0.53, 0.86, 0.66 * weathering + 0.34 * broad);
+	stone = mix(stone, paint * vec3(0.87, 0.92, 0.77), patina * 0.62);
 	if (bedding > 0.0) {
 		float x = local_rock.x;
 		float height = local_rock.y + 0.09 * sin(x * 2.1) + 0.025 * sin(x * 7.8 + local_rock.z);
@@ -40,6 +52,6 @@ void fragment() {
 		float grain_break = 0.72 + 0.28 * sin(x * 7.0 + height * 11.9);
 		stone *= 1.0 + bedding * (0.10 * broad - min(1.0, cracks) * 0.35 * grain_break);
 	}
-	ALBEDO = stone + quartz * vec3(0.61, 0.51, 0.39);
+	ALBEDO = stone;
 	ROUGHNESS = 0.94;
 }

@@ -28,6 +28,7 @@ var bag_drop: StaticBody3D
 var mara_path_open := false
 var desk_portable: Node3D
 var env: = Environment.new()
+var flag_material: ShaderMaterial
 var sun: = DirectionalLight3D.new()
 var beacon := Sprite3D.new()
 var second_beacon := Sprite3D.new()
@@ -176,7 +177,7 @@ func _ready():
 	desk_radio.rotation.y = PI + 0.24
 	desk_portable = desk_radio.get_node("Transceptor")
 	Refuge.bed(self)
-	Refuge.exterior_equipment(self, Creek.point(-5.15, -5.65), Creek.point(-4.17, 2.27))
+	flag_material = Refuge.exterior_equipment(self, Creek.point(-5.15, -5.65), Creek.point(-4.17, 2.27))
 	bag_drop = FieldKit.item(self, Vector3(1.52, 0.20, 5.03), "Dejar la mochila", Vector3.ZERO, Vector3(0.51, 0.33, 0.62))
 	bag_drop.collision_layer = 0
 	var lamp: = OmniLight3D.new()
@@ -204,7 +205,7 @@ func open_mara_path():
 	route.ground_material.set_shader_parameter("mara_track", true)
 	LastNight.build_door(self)
 	var fork := LastNight.door_approach(0.22)
-	route.signpost(fork + Vector3(0.0, 0, -2.4), "", "Camino vecinal →", -1.72, true)
+	route.signpost(fork + Vector3(0.0, 0, -2.4), "Camino vecinal →", -1.72, true)
 
 func update_desk_radio(held: bool):
 	if desk_portable.visible != held: return
@@ -373,6 +374,7 @@ func update_weather(day: int, rain: float = 0.0, local_mist: float = 0.0):
 	sky_mat.set_shader_parameter("valley_mist", clampf(local_mist * 160.0, 0.0, 0.94))
 	route.ground_material.set_shader_parameter("wet_ground", 0.49 + rain * 0.42 if day == 36 else rain * 0.46)
 	route.ground_material.set_shader_parameter("surface_rain", rain)
+	flag_material.set_shader_parameter("breeze", clampf(float(profile.wind) + rain * 0.57, 0.0, 1.0))
 	window_glass.set_shader_parameter("rain", rain)
 	window_glass.set_shader_parameter("moisture", clampf(rain * 1.43 + (0.07 if day == 36 else 0.0), 0.0, 1.0))
 	if is_instance_valid(storm_water):
@@ -738,7 +740,7 @@ func strange_sky(variant: int):
 
 func kitchen_and_privy():
 	Refuge.kitchenette(self)
-	fridge_hinge = Refuge.refrigerator(self)
+	fridge_doors = Refuge.refrigerator(self)
 	var center := Vector3(8.0, 0.0, 7.35)
 	for side in [-1, 1]:
 		timber(box(center + Vector3(side * 0.82, 1.12, 0), Vector3(0.09, 2.24, 1.75), "897660", true))
@@ -755,21 +757,21 @@ func kitchen_and_privy():
 
 var quarry_plate: MeshInstance3D
 
-func ground_support(top: Vector3, width: float, depth: float, tint: String):
+func ground_support(top: Vector3, width: float, depth: float, tint: String) -> MeshInstance3D:
 	var bottom: float = route.terrain_point(top).y
 	for x in [-width * 0.5, width * 0.5]:
 		for z in [-depth * 0.5, depth * 0.5]:
 			bottom = minf(bottom, route.terrain_point(top + Vector3(x, 0, z)).y)
 	var height := maxf(0.04, top.y - bottom + 0.055)
-	box(top - Vector3.UP * height * 0.5, Vector3(width, height, depth), tint, true)
+	return box(top - Vector3.UP * height * 0.5, Vector3(width, height, depth), tint, true)
 
 func dress_day27():
 	if quarry_plate: return
-	route.signpost(route.quarry_point(0) + Vector3.RIGHT * 1.4, "Desvío de la cantera", "Cantera · cable viejo ←")
+	route.signpost(route.quarry_point(0) + route.quarry_side(0.0) * 2.2, "Cantera · cable viejo ←")
 	var previous := Vector3.ZERO
 	for i in range(33):
-		var foot: Vector3 = route.terrain_point(route.quarry_point(i / 32.0))
-		ground_support(foot + Vector3.UP * 3.0, 0.18, 0.18, "715e49")
+		var foot: Vector3 = route.terrain_point(route.cable_pole(i / 32.0))
+		timber(ground_support(foot + Vector3.UP * 3.0, 0.18, 0.18, "715e49"))
 		var eye := foot + Vector3.UP * 2.8
 		if i > 0:
 			var cable := box((eye + previous) * 0.5, Vector3(0.04, 0.04, eye.distance_to(previous)), "4f524b")
@@ -790,10 +792,10 @@ var summit_dressed: = false
 func dress_day32():
 	if summit_dressed: return
 	summit_dressed = true
-	route.signpost(route.eastern_access(0.54) + Vector3(2.0, 0, 0), "Camino al acceso", "Acceso a la cumbre")
+	route.signpost(route.eastern_access(0.54) + Vector3(2.0, 0, 0), "Acceso a la cumbre")
 	var access: Vector3 = route.terrain_point(route.ascent_point(0))
-	route.signpost(access + Vector3.RIGHT * 2.0, "Acceso a la cumbre", "Uritorco · Inicio del ascenso")
-	box(access + Vector3(-2.4, 0.42, 1.1), Vector3(1.8, 0.14, 0.42), "7a634c", true)
+	route.signpost(access + Vector3.RIGHT * 2.0, "Uritorco · Inicio del ascenso")
+	box(access + Vector3(-2.4, 0.42, 1.1), Vector3(1.8, 0.14, 0.42), "7a634c", true, "Banco del acceso")
 	for offset in [-2.94, -1.86]:
 		ground_support(access + Vector3(offset, 0.38, 1.1), 0.15, 0.37, "665342")
 	for progress in [0.31, 0.64, 0.92]:
@@ -803,7 +805,7 @@ func dress_day32():
 	var summit: Vector3 = route.summit_point(1)
 	var descent: Vector3 = route.summit_point(0.94)
 	place_descent_sign(descent, summit - descent, "Bajada · acceso")
-	route.signpost(summit, "Hito de la cumbre", "Uritorco · Cumbre")
+	route.signpost(summit + Vector3.RIGHT * 1.3, "Uritorco · Cumbre", 0.0, false, true)
 	var ground := func(at: Vector3) -> Vector3:
 		return route.surface_point(at.x, route.ORIGIN_Z - at.z)
 	var base: Vector3 = ground.call(summit + Vector3(0.0, 0.0, -0.25))
@@ -817,7 +819,7 @@ func dress_day32():
 
 func place_descent_sign(foot: Vector3, uphill: Vector3, caption: String):
 	var beside := foot + Vector3(uphill.z, 0.0, -uphill.x).normalized() * 2.1
-	route.signpost(beside, "Bajada al acceso", caption, atan2(uphill.x, uphill.z))
+	route.signpost(beside, caption, atan2(uphill.x, uphill.z))
 
 var camp_log: MeshInstance3D
 
@@ -873,7 +875,7 @@ func dress_day36():
 	if not storm_water: storm_water = South.water(self)
 	storm_water.visible = weather_day == 36
 
-var fridge_hinge: Node3D
+var fridge_doors: Dictionary = {}
 var yard_hinge: Node3D
 var privy_hinge: Node3D
 var museum_hinge: Node3D

@@ -2,6 +2,8 @@ shader_type spatial;
 
 uniform vec2 west_start;
 uniform vec2 west_end;
+uniform vec4 quarry_curve;
+uniform float quarry_sway;
 uniform vec2 east_start;
 uniform vec2 east_end;
 uniform vec4 ascent_curve; // X y distancia de cada punta del sendero este.
@@ -18,10 +20,10 @@ uniform vec2 south_paths[62];
 uniform float wet_ground = 0.0;
 uniform float surface_rain = 0.0;
 uniform sampler2D soil_detail : filter_linear_mipmap, repeat_enable;
-varying vec2 ground_position;
+varying vec3 ground_position;
 
 void vertex() {
-	ground_position = (MODEL_MATRIX * vec4(VERTEX, 1.0)).xz;
+	ground_position = (MODEL_MATRIX * vec4(VERTEX, 1.0)).xyz;
 }
 
 float grain_at(vec2 p) {
@@ -38,7 +40,7 @@ float track(float distance, float width, float grain) {
 }
 
 void fragment() {
-	vec2 p = ground_position;
+	vec2 p = ground_position.xz;
 	float d = -76.0 - p.y;
 	float grain = grain_at(p);
 	float ridge_path = -1.9 + 54.0 * sin(d / 83.0) + 18.0 * sin(d / 27.0);
@@ -57,6 +59,16 @@ void fragment() {
 	if (west_t >= 0.0 && west_t <= 1.0) {
 		float western_x = mix(west_start.x, west_end.x, west_t) - 39.0 * sin(PI * west_t);
 		west = track(abs(p.x - western_x), 2.3, grain) * (1.0 - smoothstep(0.99, 1.0, west_t));
+	}
+	float cable_t = (d - quarry_curve.y) / (quarry_curve.w - quarry_curve.y);
+	float cable_trail = 0.0;
+	float quarry_verge = 0.0;
+	if (cable_t >= 0.0 && cable_t <= 1.0) {
+		float cable_x = mix(quarry_curve.x, quarry_curve.z, cable_t) + quarry_sway * sin(TAU * cable_t);
+		float offset = abs(p.x - cable_x);
+		float width = 1.62 + 0.25 * sin(cable_t * 57.0);
+		cable_trail = track(offset, width, grain);
+		quarry_verge = 1.0 - smoothstep(2.3, 22.0, offset);
 	}
 	float east_t = (p.y - east_start.y) / (east_end.y - east_start.y);
 	float east = 0.0;
@@ -126,11 +138,24 @@ void fragment() {
 	soil *= 1.0 + 0.055 * stipple;
 	vec3 ground = mix(soil, clay, exposed);
 	float stony = smoothstep(0.25, 0.78, sin(d * 0.14 + p.x * 0.64) * 0.24 + band * 0.34 + 0.45);
-	float highland = smoothstep(400.0, 900.0, d);
+	float highland = smoothstep(370.0, 900.0, d);
+	vec3 up = (INV_VIEW_MATRIX * vec4(NORMAL, 0.0)).xyz;
+	float grade = length(up.xz);
+	vec2 drift = vec2(p.y, -p.x);
+	float outcrop = texture(soil_detail, drift * 0.055 + vec2(0.13, 0.44)).g;
+	float rubble = texture(soil_detail, vec2(p.x * 0.68 + ground_position.y * 0.17, p.y * 0.58)).g;
+	float layers = sin(ground_position.y * 1.9 + p.x * 0.065 + p.y * 0.031 + outcrop * 5.0);
+	float ledges = smoothstep(0.18, 0.60, grade + (outcrop - 0.47) * 0.60);
+	float high_flank = smoothstep(185.0, 450.0, d) * max(ascent_shoulder, smoothstep(0.13, 0.42, grade));
+	float broken_stone = max(quarry_verge * 0.70, high_flank) * ledges;
+	vec3 schist = mix(vec3(0.24, 0.22, 0.17), vec3(0.39, 0.35, 0.282),
+		smoothstep(0.13, 0.78, outcrop + layers * 0.11 + (rubble - 0.5) * 0.42));
+	ground = mix(ground, schist, broken_stone * 0.82 * (1.0 - exposed) * (1.0 - ascent));
 	vec3 shale = mix(vec3(0.302, 0.287, 0.217), vec3(0.381, 0.347, 0.287), highland);
 	ground = mix(ground, shale, (0.25 + highland * 0.32) * stony * ascent_shoulder * (1.0 - exposed));
 	vec3 ascent_soil = mix(vec3(0.392, 0.303, 0.199), vec3(0.43, 0.375, 0.295), highland);
 	ground = mix(ground, ascent_soil, ascent * 0.88);
+	ground = mix(ground, mix(vec3(0.42, 0.32, 0.22), vec3(0.50, 0.40, 0.29), rubble), cable_trail * 0.91);
 	float low_channel = 82.0 + 4.6 * sin(p.x * 0.082) + 1.4 * sin(p.x * 0.17) + 24.0 * smoothstep(54.0, 140.0, -p.x);
 	float channel = (1.0 - smoothstep(2.2, 7.5, abs(p.y - low_channel)));
 	float low_water = channel * (1.0 - max(smoothstep(49.0, 71.0, p.x), smoothstep(156.0, 207.0, -p.x)));

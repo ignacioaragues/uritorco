@@ -148,7 +148,7 @@ static func build_ground(valley, material: ShaderMaterial):
 
 static func dress(valley, field_trail_clearance: Callable):
 	var route = valley.route
-	route.signpost(point(-23.3, 18), "Sendero del cauce", "Cauce · bajada")
+	route.signpost(point(-23.3, 18), "Cauce · bajada")
 	var date_post := post()
 	valley.box(date_post + Vector3.UP * 0.88, Vector3(0.24, 1.8, 0.23), "675747", true, "Poste")
 	valley.box(date_post + Vector3(0.14, 1.31, -0.02), Vector3(0.047, 0.23, 0.23), "998567", true, "Poste")

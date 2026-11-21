@@ -15,12 +15,14 @@ const TRACKS: = {
 const FLOOR_GAIN := 0.001
 const RADIO_DUCK_DB := -7.0
 const CROSSFADE_SECONDS := 2.8
+const END_RELEASE_SECONDS := 4.0
 
 var voices: Array[AudioStreamPlayer] = [AudioStreamPlayer.new(), AudioStreamPlayer.new(), AudioStreamPlayer.new()]
 var envelopes: Array[Tween] = [null, null, null]
 var gains: Array[float] = [FLOOR_GAIN, FLOOR_GAIN, FLOOR_GAIN]
 var playing_cue: = ""
 var current: = 0
+var releasing := false
 var radio_active := false
 var radio_db := 0.0
 
@@ -31,16 +33,21 @@ func _ready():
 func _process(delta: float):
 	var target := RADIO_DUCK_DB if radio_active else 0.0
 	var mixed := move_toward(radio_db, target, delta * (26.0 if radio_active else 9.0))
-	if mixed == radio_db: return
-	radio_db = mixed
-	for index in voices.size():
-		set_gain(gains[index], index)
+	if mixed != radio_db:
+		radio_db = mixed
+		for index in voices.size():
+			set_gain(gains[index], index)
+	if not releasing and is_playing():
+		var voice := voices[current]
+		if voice.stream.get_length() - voice.get_playback_position() <= END_RELEASE_SECONDS:
+			releasing = true
+			fade_out(current, END_RELEASE_SECONDS)
 
 func set_gain(gain: float, index: int):
 	gains[index] = gain
 	voices[index].volume_db = linear_to_db(gain) + radio_db
 
-func cue(key: String, seconds: float, level: float = -15.0, fade_in: float = 2.0, from_position: float = 0.0):
+func cue(key: String, level: float = -15.0, fade_in: float = 2.0, from_position: float = 0.0):
 	if key == playing_cue and is_playing(): return
 	fade_out(current, CROSSFADE_SECONDS)
 	var next := (current + 1) % voices.size()
@@ -58,17 +65,10 @@ func cue(key: String, seconds: float, level: float = -15.0, fade_in: float = 2.0
 	set_gain(FLOOR_GAIN, current)
 	voice.play(from_position)
 	playing_cue = key
+	releasing = false
 	var envelope: = create_tween().set_trans(Tween.TRANS_SINE)
 	envelopes[current] = envelope
-	var apply := set_gain.bind(current)
-	var full := db_to_linear(level)
-	var available := maxf(0.1, voice.stream.get_length() - from_position - 0.08)
-	var attack := minf(fade_in, available * 0.40)
-	var release := minf(4.0, available * 0.55)
-	envelope.tween_method(apply, FLOOR_GAIN, full, attack)
-	envelope.tween_interval(minf(seconds, available - attack - release))
-	envelope.tween_method(apply, full, FLOOR_GAIN, release)
-	envelope.tween_callback(voice.stop)
+	envelope.tween_method(set_gain.bind(current), FLOOR_GAIN, db_to_linear(level), fade_in)
 
 func is_playing() -> bool:
 	return voices[current].playing
@@ -77,6 +77,7 @@ func silence(seconds: float = 2.0):
 	for index in voices.size():
 		fade_out(index, maxf(seconds, CROSSFADE_SECONDS))
 	playing_cue = ""
+	releasing = true
 
 func fade_out(index: int, seconds: float):
 	var voice: = voices[index]

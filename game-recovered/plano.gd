@@ -5,6 +5,7 @@ const Arrival = preload("res://llegada.gd")
 const ROUTE = preload("res://travesia.gd")
 const Exploration = preload("res://exploracion.gd")
 const Creek = preload("res://cauce.gd")
+const Cable = preload("res://camino_del_cable.gd")
 const Museum = preload("res://museo.gd")
 const INK = Color("#384235")
 const ROUTE_COLOR = Color("#875d41")
@@ -15,8 +16,11 @@ const PAPER_FIELD := Rect2(0, 0, 560, 330)
 const PAGE_ASPECT := 1.33 / 1.14
 const COFFEE = preload("res://equipo/mancha_cafe.webp")
 const ATLAS_EARTH = preload("res://diario_hallazgos.webp")
-const GRID_STEPS := [25, 100, 100, 50, 40, 40, 40, 10]
-const INTERVALS := [2, 10, 10, 2, 2, 2, 2, 2]
+const QUARRY_ZONE := 1
+const SUMMIT_ZONE := 2
+const CREEK_ZONE := 3
+const GRID_STEPS := [25, 100, 150, 50, 40, 40, 40, 10]
+const INTERVALS := [2, 10, 15, 2, 2, 2, 2, 2]
 const ARRIVAL_ZONE := 7
 const LABEL_INK := Color("#30382d")
 const LABEL_HALO := Color("#eadcb9")
@@ -26,11 +30,11 @@ const CARDINAL_AREA := Rect2(471, 5, 84, 76)
 const THUMB_AREA := Rect2(0, 88, 55, 147)
 const LIMITS = [
 	Rect2(-133, -173, 266, 184),
-	Rect2(-347, -8, 695, 542),
-	Rect2(-354, 464, 708, 526),
+	Rect2(-438, -98, 672, 752),
+	Rect2(-360, -106, 720, 1096),
 	Rect2(-177, -184, 224, 144),
 ]
-var fixed_south := false
+var itinerary_sheet := -1
 var departure_sheet := false
 var dream_sheet := 0
 var arrival_sheet := -1
@@ -53,15 +57,15 @@ func _ready():
 static func zone_at(pos: Vector3, previous := -1) -> int:
 	# Keep the current sheet until the player walks through the shared stretch.
 	var south_margin := -6.0 if previous == 3 else (0.0 if previous == -1 else 6.0)
-	if pos.x < -49.0 - south_margin and pos.z > 15.0 + south_margin: return 3
+	if pos.x < -49.0 - south_margin and pos.z > 15.0 + south_margin: return CREEK_ZONE
 	var distance := ROUTE.ORIGIN_Z - pos.z
 	if distance < (23.0 if previous == 0 else (7.0 if previous == 1 else 15.0)): return 0
-	return 1 if distance < (516.0 if previous == 1 else (484.0 if previous == 2 else 500.0)) else 2
+	return QUARRY_ZONE if distance < (642.0 if previous == QUARRY_ZONE else (601.0 if previous == SUMMIT_ZONE else 622.0)) else SUMMIT_ZONE
 
-func open_at(pos: Vector3, dream: int, arrival: int, goal: Variant, south := false, departure := false):
-	if dream_sheet != dream or arrival_sheet != arrival or fixed_south != south or departure_sheet != departure:
+func open_at(pos: Vector3, dream: int, arrival: int, goal: Variant, sheet := -1, departure := false):
+	if dream_sheet != dream or arrival_sheet != arrival or itinerary_sheet != sheet or departure_sheet != departure:
 		active_zone = -1
-	fixed_south = south
+	itinerary_sheet = sheet
 	departure_sheet = departure
 	dream_sheet = dream
 	arrival_sheet = arrival
@@ -73,7 +77,7 @@ func track(pos: Vector3):
 	var zone := zone_at(pos, active_zone)
 	if arrival_sheet >= 0: zone = ARRIVAL_ZONE
 	elif dream_sheet > 0: zone = 3 + dream_sheet
-	elif fixed_south: zone = 3
+	elif itinerary_sheet >= 0: zone = itinerary_sheet
 	if active_zone != zone:
 		active_zone = zone
 		queue_redraw()
@@ -237,23 +241,33 @@ func draw_channel(limits: Rect2, west: float):
 		return Creek.point(x, Creek.channel_z(x)), WATER)
 
 func draw_ridge(limits: Rect2):
-	if active_zone == 1:
-		draw_route(limits, 81, access_road, INK)
-		draw_route(limits, 54, ROUTE.eastern_access, ROUTE_COLOR)
-	draw_route(limits, 301, func(t): return Vector3(ROUTE.trail(t * ROUTE.CREST), 0, ROUTE.ORIGIN_Z - t * ROUTE.CREST), INK)
+	var quarry := active_zone == QUARRY_ZONE
+	draw_route(limits, 81, access_road, INK)
+	draw_route(limits, 54, ROUTE.eastern_access, LINK_COLOR if quarry else INK)
+	draw_route(limits, 301, func(t): return Vector3(ROUTE.trail(t * ROUTE.CREST), 0, ROUTE.ORIGIN_Z - t * ROUTE.CREST), LINK_COLOR)
 	draw_route(limits, 49, func(t):
 		var d := lerpf(ROUTE.LAJA_FORK, ROUTE.LAJA_JOIN, t)
-		return Vector3(ROUTE.detour(d), 0, ROUTE.ORIGIN_Z - d), ROUTE_COLOR)
-	draw_route(limits, 91, ROUTE.quarry_point, ROUTE_COLOR)
-	draw_route(limits, 141, ROUTE.western_approach, ROUTE_COLOR)
-	draw_route(limits, 201, ROUTE.ascent_point, INK)
-	draw_route(limits, 31, func(t): return ROUTE.summit_point(lerpf(ROUTE.SUMMIT_JOIN, 1, t)), INK)
+		return Vector3(ROUTE.detour(d), 0, ROUTE.ORIGIN_Z - d), LINK_COLOR)
+	var cable_ink := INK if quarry else ROUTE_COLOR
+	draw_route(limits, 91, ROUTE.quarry_point, cable_ink)
+	draw_route(limits, 141, ROUTE.western_approach, cable_ink)
+	var summit_ink := ROUTE_COLOR if quarry else INK
+	draw_route(limits, 201, ROUTE.ascent_point, summit_ink)
+	draw_route(limits, 49, func(t): return ROUTE.summit_point(lerpf(ROUTE.SUMMIT_JOIN, 1, t)), summit_ink)
 	pin(limits, Vector3(ROUTE.trail(Museum.DISTANCE) + Museum.SITE_OFFSET, 0, ROUTE.ORIGIN_Z - Museum.DISTANCE), "Museo")
-	pin(limits, Vector3(ROUTE.trail(420), 0, ROUTE.ORIGIN_Z - 420), "Abra")
-	pin(limits, ROUTE.quarry_point(1), "Cantera", Vector2(-15, 15))
-	pin(limits, ROUTE.summit_point(1), "Cumbre", Vector2(8, -4))
-	pin(limits, ROUTE.camp_point(), "Campamento", Vector2(9, 24))
-	pin(limits, Vector3(ROUTE.trail(ROUTE.CREST), 0, ROUTE.ORIGIN_Z - ROUTE.CREST), "Filo", Vector2(-24, -13))
+	pin(limits, Vector3(ROUTE.trail(420) + 1.6, 0, ROUTE.ORIGIN_Z - 420), "Abra del viento", Vector2(14, -8))
+	if quarry:
+		pin(limits, ROUTE.western_approach(0.24), "Senda del oeste", Vector2(-24, 17))
+		pin(limits, ROUTE.quarry_point(Cable.REEL_AT), "Carrete", Vector2(-17, 25))
+		pin(limits, ROUTE.quarry_point(Cable.SPLICE_AT), "Empalme", Vector2(12, -6))
+		pin(limits, ROUTE.quarry_point(1.0), "Malacate", Vector2(-23, -13))
+	else:
+		pin(limits, ROUTE.quarry_point(1.0), "Cantera", Vector2(-15, 15))
+		pin(limits, ROUTE.ascent_point(0.0), "Banco del acceso", Vector2(13, -8))
+		pin(limits, ROUTE.ascent_point(0.58), "Senda de las pircas", Vector2(13, 12))
+		pin(limits, ROUTE.summit_point(1), "Cumbre", Vector2(14, -11))
+		pin(limits, ROUTE.camp_point(), "Campamento", Vector2(14, 26))
+		pin(limits, Vector3(ROUTE.trail(ROUTE.CREST), 0, ROUTE.ORIGIN_Z - ROUTE.CREST), "Hito del filo", Vector2(-24, -13))
 
 func access_road(t: float) -> Vector3:
 	var z := lerpf(6.0, ROUTE.ORIGIN_Z, t)
@@ -458,30 +472,34 @@ func make_relief(zone: int, limits: Rect2) -> ImageTexture:
 		var d := limits.end.y - (row - 1) * limits.size.y / (ROWS - 1.0)
 		for col in COLUMNS + 2:
 			var x := limits.position.x + (col - 1) * limits.size.x / (COLUMNS - 1.0)
-			heights.append(ground_height(x,d))
+			heights.append(ground_height(x, d))
 	var stride := COLUMNS + 2
-	var tex := Image.create_empty(COLUMNS, ROWS, false, Image.FORMAT_RGB8)
-	var lowland := zone != 1 and zone != 2
+	var tex := Image.create_empty(COLUMNS, ROWS, false, Image.FORMAT_RGBA8)
+	var lowland := zone != QUARRY_ZONE and zone != SUMMIT_ZONE
 	for row in ROWS:
 		for col in COLUMNS:
 			var i := (row + 1) * stride + col + 1
 			var dx := (heights[i + 1] - heights[i - 1]) * (COLUMNS - 1.0) / limits.size.x
 			var dz := (heights[i + stride] - heights[i - stride]) * (ROWS - 1.0) / limits.size.y
 			var weathered := clampf((dx - dz) * 0.20, -0.19, 0.14)
-			var band := smoothstep(-10.0, 15.0, heights[i]) if lowland else smoothstep(0.0, 168.0, heights[i])
+			var band := smoothstep(-10.0, 15.0, heights[i]) if lowland else smoothstep(0.0, 167.0, heights[i])
 			var soil := Color("#c2c4a6").lerp(Color("#d7cca8"), band)
 			var detail := 0.008 * sin(col * 0.73 + row * 1.91) + 0.006 * sin(row * 4.11 - col * 3.17)
-			tex.set_pixel(col, row, soil.lightened(maxf(0, weathered + detail)).darkened(maxf(0, -weathered - detail)))
+			var hue := soil.lightened(maxf(0.0, weathered + detail)).darkened(maxf(0.0, -weathered - detail))
+			if not lowland:
+				var x := lerpf(limits.position.x, limits.end.x, col / float(COLUMNS - 1))
+				hue.a = 1.0 - smoothstep(ROUTE.HALF_WIDTH - 38.0, ROUTE.HALF_WIDTH, absf(x))
+			tex.set_pixel(col, row, hue)
 	return ImageTexture.create_from_image(tex)
 
 func make_contours(zone: int, limits: Rect2) -> Dictionary:
 	var minor := PackedVector2Array()
 	var major := PackedVector2Array()
-	var lowland := zone != 1 and zone != 2
-	var steps := 54 if lowland else 49
+	var lowland := zone != QUARRY_ZONE and zone != SUMMIT_ZONE
+	var steps := 54 if lowland else 82
 	var interval: int = INTERVALS[zone]
-	var first_level := -14 if lowland else 10
-	var last_level := 16 if lowland else 180
+	var first_level := -14 if lowland else 0
+	var last_level := 16 if lowland else 195
 	var previous: Array[Vector3] = []
 	for row in steps + 1:
 		var current: Array[Vector3] = []
@@ -493,6 +511,8 @@ func make_contours(zone: int, limits: Rect2) -> Dictionary:
 		if row > 0:
 			for col in steps:
 				for corners in [[previous[col], previous[col + 1], current[col]], [previous[col + 1], current[col + 1], current[col]]]:
+					if not lowland and (absf(corners[0].x) > ROUTE.HALF_WIDTH or absf(corners[1].x) > ROUTE.HALF_WIDTH):
+						continue
 					var low := minf(corners[0].y, minf(corners[1].y, corners[2].y))
 					var high := maxf(corners[0].y, maxf(corners[1].y, corners[2].y))
 					var next_level := first_level + (floori((low - first_level) / interval) + 1) * interval

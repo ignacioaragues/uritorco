@@ -2,7 +2,7 @@ extends RefCounted
 
 const FINISH = preload("res://piedra_serrana.gdshader")
 const SIDES := 8
-const PALETTE := ["#8b8173", "#867c70", "#8b7d6e", "#9b8977", "#82796d"]
+const PALETTE := ["#978f86", "#a09a90", "#9b9288", "#ac9c91", "#8a857c"]
 
 static func surface() -> SurfaceTool:
 	var stone := SurfaceTool.new()
@@ -26,14 +26,20 @@ static func finish(parent: Node3D, faces: SurfaceTool, name: String) -> MeshInst
 	parent.add_child(mesh)
 	return mesh
 
-static func hillside_mesh(variant: int) -> ArrayMesh:
+static func hillside_form(variant: int) -> Dictionary:
 	var rng := RandomNumberGenerator.new()
 	rng.seed = 1549 + variant * 29
 	var faces := surface()
-	var proportions := Vector3(1.0, 0.72 + variant * 0.08, 1.0 - variant * 0.054)
-	fragment(faces, Vector3(0, -0.19, 0), proportions, 0.0, rng)
+	var proportions := [
+		Vector3(1.00, 0.72, 1.00),
+		Vector3(0.90, 0.91, 0.84),
+		Vector3(1.06, 0.62, 0.94),
+		Vector3(1.23, 0.40, 0.69),
+		Vector3(0.75, 0.88, 1.16),
+	]
+	var vertices := fragment(faces, Vector3.ZERO, proportions[variant], 0.0, rng)
 	faces.generate_normals()
-	return faces.commit()
+	return {"mesh": faces.commit(), "vertices": vertices, "base": vertices.slice(0, SIDES)}
 
 static func fragment(faces: SurfaceTool, at: Vector3, size: Vector3, turn: float, rng: RandomNumberGenerator, ground := Callable()) -> PackedVector3Array:
 	var vertices := PackedVector3Array()
@@ -41,8 +47,8 @@ static func fragment(faces: SurfaceTool, at: Vector3, size: Vector3, turn: float
 	var heights := PackedFloat32Array()
 	for side in SIDES:
 		radii.append(rng.randf_range(0.82, 1.07))
-		heights.append(rng.randf_range(-0.08, 0.07))
-	var profile := [Vector2(-0.12, 0.86), Vector2(0.23, 1.0), Vector2(0.77, 0.76), Vector2(0.94, 0.52)]
+		heights.append(rng.randf_range(-0.12, 0.09))
+	var profile := [Vector2(-0.12, 0.86), Vector2(0.23, 1.0), Vector2(0.70, 0.80), Vector2(0.94, 0.49)]
 	for ring in profile.size():
 		for side in SIDES:
 			var angle := TAU * side / SIDES
@@ -59,7 +65,7 @@ static func fragment(faces: SurfaceTool, at: Vector3, size: Vector3, turn: float
 		for side in SIDES:
 			var a := ring * SIDES + side
 			var b := ring * SIDES + (side + 1) % SIDES
-			var color := tint.darkened(0.10 - ring * 0.035).lerp(Color("#665b50"), 0.085 * float(side % 3))
+			var color := tint.darkened(0.10 - ring * 0.035).lerp(Color("#665b50"), 0.045 * float(side % 3))
 			triangle(faces, vertices[a], vertices[b], vertices[a + SIDES], color)
 			triangle(faces, vertices[b], vertices[b + SIDES], vertices[a + SIDES], color)
 	var top := (profile.size() - 1) * SIDES
@@ -87,7 +93,7 @@ static func solid(parent: Node3D, at: Vector3, vertices: PackedVector3Array, nam
 	parent.add_child(body, true)
 	body.position = at
 
-static func cairn(parent: Node3D, faces: SurfaceTool, base: Vector3, ground: Callable, rng: RandomNumberGenerator):
+static func cairn(parent: Node3D, faces: SurfaceTool, base: Vector3, ground: Callable, rng: RandomNumberGenerator, tag := ""):
 	var stack := PackedVector3Array()
 	var foot := base
 	var scale_m := rng.randf_range(0.85, 1.28)
@@ -99,4 +105,4 @@ static func cairn(parent: Node3D, faces: SurfaceTool, base: Vector3, ground: Cal
 			rng.randf() * TAU, rng, ground if level == 0 else Callable())
 		stack.append_array(stones)
 		foot += Vector3(rng.randf_range(-0.061, 0.061), height * 0.80, rng.randf_range(-0.061, 0.061))
-	solid(parent, base, stack, "Pirca")
+	solid(parent, base, stack, "Pirca", tag)

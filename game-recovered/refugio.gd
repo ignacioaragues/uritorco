@@ -380,7 +380,7 @@ static func wall_sketch(parent: Node3D, pos: Vector3, drawing: Texture2D, motif:
 	Kit.cylinder(sheet, Vector3(0, 0.142, 0.006), 0.006, 0.006, 0.010, Kit.material("8d7959")).rotation.x = PI / 2.0
 	return sheet
 
-static func exterior_equipment(parent: Node3D, flag_foot: Vector3, cylinder_foot: Vector3):
+static func exterior_equipment(parent: Node3D, flag_foot: Vector3, cylinder_foot: Vector3) -> ShaderMaterial:
 	var flag_pole := Kit.item(parent, flag_foot, "", Vector3.UP * 1.68, Vector3(0.10, 3.36, 0.10))
 	var steel := Kit.material("847f72", false, 0.58)
 	Kit.cylinder(flag_pole, Vector3.UP * 1.65, 0.026, 0.041, 3.30, steel)
@@ -392,20 +392,20 @@ static func exterior_equipment(parent: Node3D, flag_foot: Vector3, cylinder_foot
 			for vertex in [Vector2.ZERO, Vector2.DOWN, Vector2.RIGHT, Vector2.RIGHT, Vector2.DOWN, Vector2.ONE]:
 				var u: float = (column + vertex.x) / 18.0
 				var v: float = (row + vertex.y) / 24.0
-				var point := Vector3(0.035 + 0.52 * u * (1.0 - v * 0.61),
-					2.98 - 0.59 * v - 0.41 * u * u - 0.11 * u * v,
-					(0.017 + u * 0.037) * sin(u * 14.5 + v * 4.2))
 				var tone := Color("e4ded0") if row >= 8 and row < 16 else Color("73a6c3")
-				if row >= 8 and row < 16 and Vector2((u - 0.49) * 0.43, (v - 0.5) * 0.59).length() < 0.043:
+				if row >= 8 and row < 16 and Vector2((u - 0.49) * 0.48, (v - 0.5) * 0.59).length() < 0.043:
 					tone = Color("c9994f")
 				fabric.set_color(tone)
-				fabric.add_vertex(point)
-	fabric.generate_normals()
-	var weave := StandardMaterial3D.new()
-	weave.vertex_color_use_as_albedo = true
-	weave.cull_mode = BaseMaterial3D.CULL_DISABLED
-	weave.roughness = 0.95
-	Kit.mesh_part(flag_pole, fabric.commit(), Vector3.ZERO, weave)
+				fabric.set_uv(Vector2(u, v))
+				fabric.set_normal(Vector3.FORWARD)
+				fabric.add_vertex(Vector3(0.033 + u * 0.95, 3.02 - v * 0.83, 0))
+	var weave := ShaderMaterial.new()
+	weave.shader = preload("res://bandera_refugio.gdshader")
+	var flag := Kit.mesh_part(flag_pole, fabric.commit(), Vector3.ZERO, weave)
+	flag.name = "Bandera argentina"
+	flag.extra_cull_margin = 0.6
+	for height in [3.015, 2.418]:
+		Kit.cylinder(flag_pole, Vector3.UP * height, 0.038, 0.038, 0.019, steel)
 	var gold := Kit.material("c9994f")
 
 	var tank := Kit.item(parent, cylinder_foot, "", Vector3.UP * 0.34, Vector3(0.36, 0.68, 0.36))
@@ -426,6 +426,7 @@ static func exterior_equipment(parent: Node3D, flag_foot: Vector3, cylinder_foot
 	for column in 5:
 		for row in 4:
 			Kit.block(solar, Vector3((column - 2) * 0.22, 0.044, (row - 1.5) * 0.177), Vector3(0.211, 0.016, 0.166), cell)
+	return weave
 
 static func cutting(parent: Node3D):
 	var clipping := Kit.item(parent, Vector3(3.165, 0.905, 2.505), "Recorte de astronomía", Vector3.UP * 0.014, Vector3(0.33, 0.030, 0.24))
@@ -496,8 +497,8 @@ static func kitchenette(parent: Node3D):
 	Kit.cylinder(cabinet, Vector3(-0.024, 1.093, -0.251), 0.079, 0.131, 0.036, Kit.material("42423a"))
 	Kit.block(cabinet, Vector3(0.181, 1.097, -0.23), Vector3(0.21, 0.023, 0.031), iron).rotation.y = -0.12
 
-static func refrigerator(parent: Node3D) -> Node3D:
-	var fridge := Kit.item(parent, Vector3(-2.96, 0, 1.65), "Heladera", Vector3.UP * 0.69, Vector3(0.52, 1.38, 0.67))
+static func refrigerator(parent: Node3D) -> Dictionary:
+	var fridge := Kit.item(parent, Vector3(-2.96, 0, 1.65), "", Vector3.UP * 0.69, Vector3(0.52, 1.38, 0.67))
 	fridge.name = "Heladera"
 	var enamel := Kit.material("a6aa92", false, 0.66)
 	var door := Kit.material("c3c5a8", false, 0.53)
@@ -509,27 +510,34 @@ static func refrigerator(parent: Node3D) -> Node3D:
 		Kit.block(fridge, Vector3(-0.02, 0.72, z), Vector3(0.53, 1.32, 0.067), enamel)
 	for y in [0.095, 1.37]:
 		Kit.block(fridge, Vector3(-0.02, y, 0), Vector3(0.53, 0.075, 0.64), enamel)
-	for y in [0.31, 0.57, 0.82, 1.065]:
+	for y in [0.31, 0.57, 0.82]:
 		Kit.block(fridge, Vector3(-0.025, y, 0), Vector3(0.46, 0.022, 0.55), liner)
 		Kit.block(fridge, Vector3(0.204, y, 0), Vector3(0.021, 0.032, 0.55), steel)
+	Kit.block(fridge, Vector3(-0.02, 1.069, 0), Vector3(0.51, 0.044, 0.58), liner)
 	var bottle := Kit.material("6b8280", false, 0.31)
 	Kit.cylinder(fridge, Vector3(-0.085, 0.415, 0.13), 0.046, 0.053, 0.20, bottle)
 	Kit.cylinder(fridge, Vector3(-0.085, 0.527, 0.13), 0.024, 0.046, 0.026, bottle)
 	Kit.cylinder(fridge, Vector3(-0.085, 0.548, 0.13), 0.023, 0.023, 0.020, steel)
 	Kit.cylinder(fridge, Vector3(0.028, 0.63, -0.14), 0.047, 0.048, 0.10, Kit.material("9a8b60"))
 
-	var hinge := Node3D.new()
-	fridge.add_child(hinge)
-	hinge.position = Vector3(0.261, 0.0, -0.32)
-	var door_leaf := Kit.item(hinge, Vector3(0.022, 0.71, 0.32), "Heladera", Vector3.ZERO, Vector3(0.10, 1.30, 0.64))
-	Kit.block(door_leaf, Vector3(-0.04, 0.03, 0), Vector3(0.026, 1.27, 0.626), seal)
-	Kit.block(door_leaf, Vector3(0.005, -0.13, 0), Vector3(0.072, 0.98, 0.64), door)
-	Kit.block(door_leaf, Vector3(0.005, 0.515, 0), Vector3(0.071, 0.283, 0.64), door)
-	for y in [0.17, 0.48]:
-		Kit.block(door_leaf, Vector3(0.051, y, 0.137), Vector3(0.051, 0.042, 0.215), steel)
-	for y in [-0.44, -0.14]:
-		Kit.block(door_leaf, Vector3(-0.066, y, 0), Vector3(0.067, 0.035, 0.52), liner)
-		Kit.block(door_leaf, Vector3(-0.097, y + 0.036, 0), Vector3(0.015, 0.070, 0.52), liner)
+	var doors: Dictionary = {}
+	for compartment in [["Heladera", 0.58, 0.98, 0.32], ["Freezer", 1.225, 0.283, -0.035]]:
+		var tag: String = compartment[0]
+		var center: float = compartment[1]
+		var height: float = compartment[2]
+		var hinge := Node3D.new()
+		fridge.add_child(hinge)
+		hinge.position = Vector3(0.261, 0.0, -0.32)
+		doors[tag] = hinge
+		var door_leaf := Kit.item(hinge, Vector3(0.022, center, 0.32), tag, Vector3.ZERO, Vector3(0.101, height, 0.64))
+		Kit.block(door_leaf, Vector3(-0.04, 0, 0), Vector3(0.026, height - 0.030, 0.626), seal)
+		Kit.block(door_leaf, Vector3(0.005, 0, 0), Vector3(0.072, height, 0.64), door)
+		Kit.block(door_leaf, Vector3(0.051, compartment[3], 0.137), Vector3(0.051, 0.042, 0.215), steel)
+		Kit.item(fridge, Vector3(0.247, center, 0), tag, Vector3.ZERO, Vector3(0.052, height - 0.043, 0.55)).collision_layer = 2
+		if tag == "Heladera":
+			for y in [-0.31, -0.014]:
+				Kit.block(door_leaf, Vector3(-0.066, y, 0), Vector3(0.067, 0.035, 0.52), liner)
+				Kit.block(door_leaf, Vector3(-0.097, y + 0.036, 0), Vector3(0.015, 0.070, 0.52), liner)
 	for z in [-0.24, 0.24]:
 		Kit.block(fridge, Vector3(0.17, 0.037, z), Vector3(0.10, 0.074, 0.10), seal)
 	for vent in 5:
@@ -542,7 +550,7 @@ static func refrigerator(parent: Node3D) -> Node3D:
 	fridge.add_child(motor)
 	motor.position.y = 0.43
 	motor.play()
-	return hinge
+	return doors
 
 static func refrigerator_hum() -> AudioStreamWAV:
 	const RATE := 11025

@@ -13,7 +13,7 @@ static func build(valley):
 		[Vector3(-61, 0, 49), "Refugio · por el poste →", 2.7],
 	]:
 		var pos: Vector3 = junction[0]
-		valley.route.signpost(pos, "Desvío de la quebrada", junction[1], junction[2], true)
+		valley.route.signpost(pos, junction[1], junction[2], true)
 	var rng := RandomNumberGenerator.new()
 	rng.seed = 8421
 	var cairn_rng := RandomNumberGenerator.new()
