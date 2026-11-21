@@ -32,6 +32,7 @@ Cada pasada avanza un solo punto del juego. Al cerrarla se actualiza el estado d
 - [x] Recuperar detalle de vegetación y piedras al alejarse del refugio. Los senderos largos tienen pastos curvos, copas irregulares con ramas y tres formas de roca con vetas y manchas.
 - [x] Ampliar la historia comechingona con tres afiches ilustrados en la sala de objetos, el pasillo principal y la sala de relatos.
 - [x] Dar más presencia a la música de las caminatas y sostenerla a menor volumen durante las llamadas de Mara.
+- [x] Aclarar desde dónde llama Mara. Trabaja en el puesto de abajo, pasando la curva camino a Capilla. Su casa queda al final de la huella vecinal de la despedida.
 
 ### Por hacer
 
@@ -50,6 +51,10 @@ Cada pasada avanza un solo punto del juego. Al cerrarla se actualiza el estado d
 
 - Las siete jornadas de exploración tienen temas de caminata. El primero entra después de unos pasos. Las entradas duran alrededor de un minuto y medio, con pausas que se cuentan mientras Hernán camina. Al oscurecer entra el tema nocturno. Se mantienen los silencios de la llegada y de la entrada a la cueva.
 - Durante una llamada, la música baja 7 dB y sigue avanzando. Al guardar la radio recupera su volumen con un fundido. Se grabó una charla en la vaguada para comprobar la continuidad y se verificaron las entradas de las siete jornadas, la vuelta con el mapa abierto y las transiciones del malacate, la cumbre y la última noche.
+
+## Ubicación de Mara
+
+- La bienvenida ubica el puesto de abajo. Mara se guía por el plano, los partes de Hernán y lo que conoce de haber caminado por el cerro. Desde su ventana recibe el reflejo del malacate. La despedida explica cómo llegar a su casa por un camino vecinal.
 
 ## Pasada de historia comechingona
 

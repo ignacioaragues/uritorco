@@ -180,7 +180,7 @@ func open_mara_path():
 	route.ground_material.set_shader_parameter("mara_track", true)
 	LastNight.build_door(self)
 	var fork := LastNight.door_approach(0.22)
-	route.signpost(fork + Vector3(0.0, 0, -2.4), "", "Puesto de abajo →", -1.72, true)
+	route.signpost(fork + Vector3(0.0, 0, -2.4), "", "Camino vecinal →", -1.72, true)
 
 func update_desk_radio(held: bool):
 	if desk_portable.visible != held: return

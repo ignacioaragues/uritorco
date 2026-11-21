@@ -957,7 +957,7 @@ func put_down_arrival_bag():
 
 func welcome_mara():
 	first_call_caption = 0.0
-	conversation(["¿Me copiás? Soy Mara, del puesto de abajo."], "choice")
+	conversation(["¿Me copiás? Soy Mara. Estoy en el puesto de abajo, pasando la curva del camino a Capilla."], "choice")
 
 func radio_exchange():
 	if stage == 0 and not heard:
@@ -984,11 +984,11 @@ func radio_exchange():
 			return
 		var brief: Array
 		match stage:
-			6: brief = ["Buen día. Ayer perdimos una llamada del puesto de arriba.", "¿Te llegás hasta la antena del abra?", "Antes pasá por el mirador del mollar, al este. Desde ahí se ve bien el abra. Después seguí por el museo hasta la antena.", "Si se corta el canal, esperá un poco. Desde acá voy a seguir llamando."]
-			16: brief = ["¿Viste cómo creció el arroyo?", "Salí por la loma de las lajas y seguí las pircas al sur. Es el mismo cauce del poste, pero bastante más abajo.", "Fijate hasta dónde llegó el agua en la pasarela. La marca se ve desde esta orilla."]
+			6: brief = ["Buen día. Ayer se cortó el enlace con el abra.", "¿Te llegás hasta la antena?", "Antes pasá por el mirador del mollar, al este. Desde ahí se ve bien el abra. Después seguí por el museo hasta la antena.", "Si se corta el canal, esperá un poco. Desde el puesto voy a seguir llamando."]
+			16: brief = ["Acá abajo llovió toda la noche. ¿Te fijás hasta dónde subió el arroyo?", "Salí por la loma de las lajas y seguí las pircas al sur. Es el mismo cauce del poste, pero bastante más abajo.", "Fijate hasta dónde llegó el agua en la pasarela. La marca se lee desde la orilla por la que llegás."]
 			13: brief = [
 				"¿Te animás a subir hasta la cumbre?",
-				"Desde mi patio, el cable y el corte parecen tocarse. Quiero ver dónde queda esa luz en el mapa.",
+				"En el plano que tengo en el puesto, el cable y el corte parecen tocarse. Quiero ubicar el rumbo de esa luz.",
 				"Tomá el sendero del este. La subida empieza en el banco.",
 				"En la lona del campamento hay un cuaderno. Fijate desde dónde miraban antes de seguir al hito."
 			]
@@ -998,7 +998,7 @@ func radio_exchange():
 					brief.push_front("Le pasé a los de mantenimiento tu vuelta por la vaguada. Ya llegaron al cable.")
 				elif filo_report_reply == 1:
 					brief.push_front("Les avisé lo del escalón. Dejaron la carga abajo y subieron por turnos.")
-				brief.append_array(["Salí por la tranquera y doblá a la izquierda. Seguí el cable viejo hasta la chapa.", "Cuando la gires, llamame. Desde acá puedo ver si cambia el reflejo."])
+				brief.append_array(["Salí por la tranquera y doblá a la izquierda. Seguí el cable viejo hasta la chapa.", "Cuando la gires, llamame. Desde abajo me llega el reflejo a la ventana del puesto."])
 			8: brief = [
 				"Se desmoronó un pedazo de la laja. Dejaron la cuerda, pero hay gente que mañana tiene que pasar con herramientas.",
 				"Podés probar la cuerda o rodear por la vaguada, a la derecha del cartel. Las dos huellas se juntan.",
@@ -1013,7 +1013,7 @@ func radio_exchange():
 		elif crossing_response == 0:
 			reply = "Oí tu indicativo dos veces. Entre una y otra soltaste el botón."
 		elif crossing_response == 1:
-			reply = "Avisame cuando prendas la linterna. Desde acá solo veo la lluvia."
+			reply = "Avisame cuando prendas la linterna. Te sigo escuchando desde el puesto."
 		elif crossing_response == 2:
 			reply = "Dejá libre la pasarela. Si había algo en el agua, desde la orilla tampoco lo vas a ver bien."
 		conversation([reply, "Ya tengo la marca. Si la loma se embarró, en el cruce podés cortar por el poste.", "¿Sabés qué hice mientras subía el agua? Puse dos tazas en la mesa.", "Siempre me sobra una."], "crossing_home")
@@ -1021,7 +1021,7 @@ func radio_exchange():
 	if stage == 14:
 		var bearing := "Entonces el camino de la camioneta y la muesca quedan a distinta altura."
 		if quarry_reply == 1: bearing = "El rumbo que anotaste en el malacate cae por detrás de la ladera. Marcá también desde dónde lo viste."
-		conversation([bearing, "Desde acá solo veo una raya. Me gusta que me cuentes qué hay del otro lado.", "Por hoy, con que llegues al banco del acceso alcanza."], "summit_home")
+		conversation([bearing, "En el plano me quedaban casi en la misma línea. Me gusta que me cuentes qué hay del otro lado.", "Por hoy, con que llegues al banco del acceso alcanza."], "summit_home")
 		return
 	if stage == 11:
 		conversation(["Ahí bajó el reflejo. La chapa devolvía el sol contra el puesto.", "Pará. Dejá la chapa como está."], "wait_flash")
@@ -1051,7 +1051,7 @@ func radio_exchange():
 		6, 7: overlay("message", "El parte es al anochecer. " + objective(), "Espacio · volver")
 
 func farewell_mara():
-	var reply := "¿Ya tenés la llave? El ómnibus pasa en un rato."
+	var reply := "¿Llegaste a la curva? El ómnibus pasa en un rato."
 	if archive_read:
 		reply = "¿Viste el dibujo? Lo encontraron con los papeles del poste. No sé de quién era."
 	var close_enough := can_visit_mara()
@@ -1062,7 +1062,7 @@ func farewell_mara():
 		farewell = "Había tanto ruido anoche que por un rato pensé que no ibas a volver a contestar. Hoy dejé la radio prendida desde temprano."
 	var memory := ""
 	if trail_replies.has("cielo"):
-		memory = "Anoche busqué la estrella de la pileta. Había nubes. Igual me quedé ahí un rato." if trail_replies["cielo"] == 1 else "Anoche salí a ver si abría el cielo. Me acordé de lo que me contaste de tu viejo."
+		memory = "Anoche busqué esa estrella en el patio de casa. Había nubes. Igual me quedé ahí un rato." if trail_replies["cielo"] == 1 else "Anoche salí a ver si abría el cielo. Me acordé de lo que me contaste de tu viejo."
 	elif trail_replies.get("ventana", -1) == 0:
 		memory = "La pava que puse anoche sigue en la hornalla. Cuando junté las tazas me quedó una limpia."
 	elif trail_replies.get("sueno", -1) == 0:
@@ -1072,17 +1072,18 @@ func farewell_mara():
 	elif trail_replies.get("cauce", -1) == 1:
 		memory = "Ese primer día me pediste que te acompañara un rato. A mí también me hizo bien que hubiera alguien del otro lado."
 	elif trail_replies.get("primera_noche", -1) == 0:
-		memory = "Me acostumbré a ver la luz del refugio cuando cierro la cortina. Hoy voy a extrañar verla prendida."
+		memory = "Me acostumbré a dejar prendida la luz del puesto hasta que me avisabas que habías llegado."
 	elif trail_replies.get("ultima_curva", -1) == 0:
 		memory = "Si conseguís el asiento de la ventanilla, fijate en la última curva. A esta hora le da el sol a la ladera."
-	var departure := "Dejame la llave en el buzón cuando pases. Buen viaje."
-	if close_enough:
-		departure = "Si te queda tiempo antes del ómnibus, ya sabés cuál es mi puerta."
-		if trail_replies.has("bajada"):
-			departure = "Mejor traeme la llave en persona, si te da el tiempo. Golpeá. Todavía me sobran dos tornillos." if trail_replies["bajada"] == 0 else "El día que bajaste de la cumbre hice durar dos platos toda la bajada. Hoy, si querés pasar, te guardo una taza."
 	var lines := [reply, farewell]
 	if not memory.is_empty(): lines.append(memory)
-	lines.append_array([departure, "Bueno. Gracias por contestar."])
+	if close_enough:
+		lines.append("Si te queda tiempo, pasá por casa. De la curva sale una huella. La mía es la de la puerta de madera con el buzón al lado.")
+		if trail_replies.has("bajada"):
+			lines.append("Golpeá. Sigo sin arreglar el timbre." if trail_replies["bajada"] == 0 else "El día que bajaste de la cumbre hice durar dos platos toda la bajada. Hoy te guardo una taza.")
+	else:
+		lines.append("Mañana subo a revisar el refugio. Buen viaje.")
+	lines.append("Bueno. Gracias por contestar.")
 	conversation(lines, "last_call")
 
 func show_map(variant: int = 0):
@@ -1448,7 +1449,7 @@ func _unhandled_key_input(event):
 								show_sighting()
 								return
 							valley.night()
-							overlay("bench", "Al pie de la antena se alcanza a ver el techo del puesto de abajo. Extendés la antena y esperás a que aclare el canal.", "Espacio · escuchar", "radio")
+							overlay("bench", "Extendés la antena al pie del mástil. Mara dijo que iba a seguir llamando desde el puesto de abajo. Te quedás quieto hasta que aclare el canal.", "Espacio · escuchar", "radio")
 						else:
 							overlay("message", "El viento hace vibrar el tensor.", "Espacio · levantarse")
 					"Poste":
@@ -1654,7 +1655,7 @@ func select_option(index: int):
 			walk()
 	elif mode == "quarry_sighting_response":
 		quarry_reply = index
-		var line := "Entonces lo que vi en la chapa era una cosa sola. Esa otra quedó arriba del corte." if index == 0 else "Guardá también la hora. Desde la cumbre vamos a poder comparar mejor el rumbo."
+		var line := "Entonces el reflejo que me llegaba a la ventana era de la chapa. La luz arriba del corte la viste vos." if index == 0 else "Guardá también la hora. Con lo que me cuentes desde la cumbre voy a poder comparar los rumbos."
 		conversation([line, "Entre el ruido oí «todavía». Pensé que habías hablado vos.", "¿Seguís ahí? Me quedo hasta que llegues."], "quarry_home")
 	elif mode == "fox":
 		valley.route.release_fox(index == 0)
@@ -2103,7 +2104,7 @@ func show_ending():
 	]
 	if ending_at_door:
 		ending_paragraphs = [
-			"Golpeás dos veces. Guardás la llave en el bolsillo para tener la mano libre. Del otro lado cruje una tabla.",
+			"Golpeás dos veces. Dejás la mano apoyada en la madera. Del otro lado cruje una tabla.",
 			"Te quedás en el escalón, con Observar el Cielo bajo el brazo. " + memory_of_book
 		]
 	var closing := "Cuando vuelvas a dar clase, querés llevar el libro. Pensás empezar por pedirles que dibujen lo primero que ven."

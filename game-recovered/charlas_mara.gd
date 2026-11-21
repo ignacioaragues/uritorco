@@ -18,11 +18,11 @@ const TOPICS = {
 		]
 	],
 	"primera_noche": [
-		0, "¿Desde ahí se ve una luz amarilla abajo? Es la de mi cocina. Le dejé la cortina abierta.",
-		["«Se agradece ver otra luz».", "«¿Vos también hacés el turno de noche?»"],
+		0, "Cuando me toca el turno de noche dejo prendida la luz del puesto. Así el que pasa por el camino sabe que hay alguien despierto.",
+		["«Se agradece tener a alguien del otro lado».", "«¿Te toca seguido el turno de noche?»"],
 		[
 			["Yo la dejaba prendida cuando mi vieja volvía tarde. Después se me hizo costumbre."],
-			["Hoy ya terminé. Me quedé haciendo pan y perdí la cuenta de cuánto llevaba en el horno."]
+			["Esta semana me toca hasta tarde. Me traje pan de casa para aguantar. Perdí la cuenta de cuánto llevaba en el horno, pero zafó."]
 		]
 	],
 	"cauce": [
@@ -30,7 +30,7 @@ const TOPICS = {
 		["Se agradece el silencio.", "Me vendría bien un poco de charla."],
 		[
 			["Te entiendo. Hay días que bajo por ahí para escuchar los pasos."],
-			["Te acompaño un rato. Desde acá se ve la curva antes del cauce."]
+			["Te acompaño un rato. Cuando doble la huella, fijate en las piedras claras del cauce."]
 		]
 	],
 	"piedras": [
@@ -74,15 +74,15 @@ const TOPICS = {
 		]
 	],
 	"cielo": [
-		0, "Desde acá veo el cable, así que calculo que vas bien. Te iba a preguntar algo. ¿Mirabas el cielo antes de venir acá?",
+		0, "¿Ya encontraste el cable? La última vez que fui se veía bien entre las piedras. Te iba a preguntar algo. ¿Mirabas el cielo antes de venir acá?",
 		["«Lo miraba con mi viejo. Desde que murió me cuesta un poco».", "«Estudié astronomía. Hace rato que miro más papel que cielo»."],
 		[
 			["Podés contarme de él si te dan ganas. A mí me gustaba escuchar a mi vieja reconocer pájaros.", "Ahora reconozco alguno. A veces me encuentro por decirle cuál es."],
-			["Entonces te voy a pedir un favor. Hay una estrella que veo desde la pileta y nunca sé cómo se llama.", "Algún día te la señalo. Por radio terminaría señalándote media sierra."]
+			["Entonces te voy a pedir un favor. Desde el patio de casa siempre veo una estrella y nunca sé cómo se llama.", "Algún día te la señalo. Por radio terminaría señalándote media sierra."]
 		]
 	],
 	"cable": [
-		1, "Cuando el cable se mueve con el viento, desde mi patio parece que alguien hubiera dejado una cuerda de guitarra tirante.",
+		1, "Una vez me tocó subir a revisar el cable con viento. Entre las rocas sonaba como una cuerda de guitarra tirante.",
 		["«Desde acá lo escucho distinto».", "«¿Tocás la guitarra?»"],
 		[
 			["Algún día me gustaría oírlo desde donde estás vos. Siempre me doy vuelta antes de llegar al corte."],
@@ -101,8 +101,8 @@ const TOPICS = {
 		1, "Ya debe darte la sombra. Bajá tranquilo. El primer día que salí de ahí me apuré tanto que llegué con dos piedras adentro de la bota.",
 		["«¿Dónde te dejo la llave el último día?»", "«¿Me dejás la radio abierta un rato?»"],
 		[
-			["En el buzón del puesto. La puerta de madera que te dije, antes de la parada.", "Le iba a poner un timbre. Por ahora tengo dos tornillos y un agujero."],
-			["Sí. Estoy lavando los platos. Si escuchás que se cae algo, seguí caminando.", "Vos avisame cuando veas el banco."]
+			["Podés dejarla en el cajón del escritorio. Acá en el puesto tengo una copia para el próximo relevo."],
+			["Sí. Estoy lavando los platos del puesto. Si escuchás que se cae algo, seguí caminando.", "Vos avisame cuando veas el banco."]
 		]
 	],
 	"lluvia": [
@@ -114,7 +114,7 @@ const TOPICS = {
 		]
 	],
 	"ventana": [
-		0, "Ya se ve la luz del refugio desde acá. Antes de que entres, ¿querés que te deje el canal abierto?",
+		0, "Ya se escucha mejor tu radio. ¿Estás llegando al refugio? Si querés, dejo el canal abierto hasta que entres.",
 		["«Sí. Quedate un rato».", "«Por hoy me alcanza con llegar»."],
 		[
 			["Bueno. Voy a poner agua. Si escuchás la pava, soy yo."],
