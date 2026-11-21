@@ -14,6 +14,11 @@ const SOUTH = [Vector2(39.4, 12.4), Vector2(35, 21), Vector2(25.8, 31),
 	Vector2(15, 39), Vector2(1, 49), Vector2(-11, 56), Vector2(-27, 57)]
 const MOLLAR := Vector2(39.4, 12.4)
 const LAJAS := Vector2(-39, -17)
+const WEST_LINK := [LAJAS, Vector2(-36.2, -12.9), Vector2(-33.7, -7.3),
+	Vector2(-34.8, 1.8), Vector2(-31.7, 12.2), Vector2(-27.2, 18.8), Creek.PATH[6]]
+const EAST_LINK := [EAST[3], Vector2(18.6, 0.5), Vector2(16.9, 10.0),
+	Vector2(18.8, 20.7), Vector2(22.8, 27.5), SOUTH[2]]
+const PATHS := [EAST, WEST, SOUTH, WEST_LINK, EAST_LINK]
 
 # Los índices corresponden a las láminas del cuaderno.
 const FINDS = {
@@ -50,7 +55,7 @@ static func path_point(path: Array, progress: float) -> Vector2:
 
 static func segments() -> PackedVector2Array:
 	var result := PackedVector2Array()
-	for path in [EAST, WEST, SOUTH]:
+	for path in PATHS:
 		for i in range(path.size() - 1):
 			result.append(path[i])
 			result.append(path[i + 1])
@@ -58,7 +63,7 @@ static func segments() -> PackedVector2Array:
 
 static func clearance(point: Vector2) -> float:
 	var distance := INF
-	for path in [EAST, WEST, SOUTH]:
+	for path in PATHS:
 		for i in range(path.size() - 1):
 			var closest := Geometry2D.get_closest_point_to_segment(point, path[i], path[i + 1])
 			distance = minf(distance, point.distance_squared_to(closest))
@@ -72,6 +77,15 @@ static func build(valley):
 		"Mirador del mollar", "Mollar →", -0.48, true)
 	route.signpost(ground(Vector2(-12, -23.2), route) + Vector3(0, 0, 2.4),
 		"Loma de las lajas", "Lajas ←", 0.77, true)
+	for junction in [
+		[WEST_LINK[0], Vector2(4.2, 0.6), "Vuelta de las lajas", "Vuelta al cauce →", 0.30],
+		[WEST_LINK[-1], Vector2(-1.9, -2.1), "Vuelta de las lajas", "← Loma de las lajas", 2.68],
+		[EAST_LINK[0], Vector2(1.81, -0.65), "Atajo del este", "Mollar  /  Cauce →", 0.24],
+		[EAST_LINK[-1], Vector2(-1.0, 2.2), "Atajo del este", "↑ Atajo al puesto", PI],
+	]:
+		var at: Vector2 = junction[0] + junction[1]
+		var foot := Creek.surface_point(Vector3(at.x, 0.0, at.y))
+		route.signpost(foot, junction[2], junction[3], junction[4], true)
 	for site in [MOLLAR, LAJAS]:
 		var point := ground(site, route)
 		valley.stone(point + Vector3(0.0, 0.22, -1.1), Vector3(1.67, 0.52, 0.78), "857363", true)
@@ -102,7 +116,7 @@ static func dress_verges(valley):
 	var rng := RandomNumberGenerator.new()
 	rng.seed = 746
 	var roots: Array[Vector4] = []
-	for path in [EAST, WEST, SOUTH]:
+	for path in PATHS:
 		for leg in range(path.size() - 1):
 			var start: Vector2 = path[leg]
 			var end: Vector2 = path[leg + 1]

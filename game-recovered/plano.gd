@@ -7,13 +7,14 @@ const Creek = preload("res://cauce.gd")
 const Museum = preload("res://museo.gd")
 const INK = Color("#384235")
 const ROUTE_COLOR = Color("#875d41")
+const LINK_COLOR = Color("#9b775b")
 const WATER = Color("#496d72")
 const PAPER = preload("res://diario_papel.webp")
 const PAPER_FIELD := Rect2(0, 0, 560, 330)
 const PAGE_ASPECT := 1.33 / 1.14
 const COFFEE = preload("res://equipo/mancha_cafe.webp")
 const ATLAS_EARTH = preload("res://diario_hallazgos.webp")
-const GRID_STEPS := [50, 100, 100, 50, 40, 40, 40, 10]
+const GRID_STEPS := [25, 100, 100, 50, 40, 40, 40, 10]
 const INTERVALS := [2, 10, 10, 2, 2, 2, 2, 2]
 const ARRIVAL_ZONE := 7
 const LABEL_INK := Color("#30382d")
@@ -23,7 +24,7 @@ const CARDINAL_CENTER := Vector2(515, 44)
 const CARDINAL_AREA := Rect2(471, 5, 84, 76)
 const THUMB_AREA := Rect2(0, 88, 55, 147)
 const LIMITS = [
-	Rect2(-67, -205, 134, 237),
+	Rect2(-133, -173, 266, 184),
 	Rect2(-347, -8, 695, 542),
 	Rect2(-354, 464, 708, 526),
 	Rect2(-177, -203, 173, 151),
@@ -180,13 +181,14 @@ func draw_local(limits: Rect2):
 	draw_route(limits, 33, ROUTE.eastern_access, ROUTE_COLOR)
 	draw_route(limits, 141, ROUTE.western_approach, ROUTE_COLOR)
 	draw_route(limits, 101, Creek.trail_point, ROUTE_COLOR)
-	for path in [Exploration.EAST, Exploration.WEST, Exploration.SOUTH]:
+	for path in Exploration.PATHS:
+		var ink := LINK_COLOR if path in [Exploration.EAST_LINK, Exploration.WEST_LINK] else ROUTE_COLOR
 		draw_route(limits, 54, func(t):
 			var at := Exploration.path_point(path, t)
-			return Vector3(at.x, 0, at.y), ROUTE_COLOR)
+			return Vector3(at.x, 0, at.y), ink)
 	draw_south_paths(limits)
 	draw_channel(limits, -66.0)
-	pin(limits, Vector3.ZERO, "Puesto Uritorco", Vector2(12, -9))
+	pin(limits, Vector3.ZERO, "Puesto Uritorco", Vector2(12, -12), true)
 	pin(limits, Vector3(Exploration.MOLLAR.x, 0, Exploration.MOLLAR.y), "Mollar", Vector2(-54, 13))
 	pin(limits, Creek.crossing_point(0.0), "Lajas", Vector2(-48, -8))
 	pin(limits, Creek.crossing_point(0.28), "Quebrada sur", Vector2(8, -5))
@@ -370,9 +372,9 @@ func stroke_route(line: PackedVector2Array, color: Color):
 					phase = fposmod(phase + advance, 6.4)
 			start = end
 
-func pin(limits: Rect2, pos: Vector3, text: String, offset := Vector2(7, -5)):
+func pin(limits: Rect2, pos: Vector3, text: String, offset := Vector2(7, -5), refuge := false):
 	if contains(limits, pos):
-		pins.append({"mark": point(limits, pos), "text": text, "offset": offset})
+		pins.append({"mark": point(limits, pos), "text": text, "offset": offset, "refuge": refuge})
 
 func clear_of(bounds: Rect2, occupied: Array[Rect2]) -> bool:
 	for item in occupied:
@@ -383,12 +385,20 @@ func draw_pins():
 	used_labels.assign([CARDINAL_AREA, THUMB_AREA])
 	for item in pins:
 		var mark: Vector2 = item.mark
-		used_labels.append(Rect2(mark - Vector2(5, 5), Vector2(10, 10)))
+		var radius := 8.0 if item.refuge else 5.0
+		used_labels.append(Rect2(mark - Vector2.ONE * radius, Vector2.ONE * radius * 2.0))
 	for item in pins:
 		var mark: Vector2 = item.mark
-		var symbol := Rect2(mark - Vector2(2.3, 2.3), Vector2(4.6, 4.6))
-		draw_rect(symbol.grow(1.2), LABEL_HALO)
-		draw_rect(symbol, LABEL_INK)
+		if item.refuge:
+			var roof := PackedVector2Array([mark + Vector2(-7, -1), mark + Vector2(0, -7), mark + Vector2(7, -1)])
+			draw_polyline(roof, LABEL_HALO, 4.2, true)
+			draw_polyline(roof, LABEL_INK, 2.0, true)
+			draw_rect(Rect2(mark + Vector2(-4, -1), Vector2(8, 7)), LABEL_HALO)
+			draw_rect(Rect2(mark + Vector2(-4, -1), Vector2(8, 7)), LABEL_INK, false, 1.8)
+		else:
+			var symbol := Rect2(mark - Vector2(2.3, 2.3), Vector2(4.6, 4.6))
+			draw_rect(symbol.grow(1.2), LABEL_HALO)
+			draw_rect(symbol, LABEL_INK)
 		draw_pin_label(mark, item.text, item.offset)
 
 func draw_pin_label(mark: Vector2, text: String, preferred: Vector2):

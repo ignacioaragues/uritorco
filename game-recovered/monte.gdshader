@@ -12,7 +12,8 @@ uniform bool mara_track = false;
 uniform vec2 mara_start;
 uniform vec2 mara_end;
 uniform vec2 creek_path[12];
-uniform vec2 exploration_segments[36];
+uniform vec2 exploration_segments[64];
+uniform int exploration_segment_count = 0;
 uniform vec2 south_paths[62];
 uniform float wet_ground = 0.0;
 uniform float surface_rain = 0.0;
@@ -97,7 +98,7 @@ void fragment() {
 	float local_trails = 0.0;
 	if (abs(p.x) < 46.0 && p.y > -31.0 && p.y < 63.0) {
 		float trail_distance = 50.0;
-		for (int i = 0; i < 36; i += 2) {
+		for (int i = 0; i < exploration_segment_count; i += 2) {
 			trail_distance = min(trail_distance, edge_distance(p, exploration_segments[i], exploration_segments[i + 1]));
 		}
 		local_trails = track(trail_distance, 1.8, grain);

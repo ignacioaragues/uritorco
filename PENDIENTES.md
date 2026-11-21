@@ -50,6 +50,8 @@ Al cierre de cada pasada se actualizan los puntos resueltos y se conserva lo que
 - [x] Poner cortinas corredizas de tela en el refugio. Se abren y cierran con E desde dentro y conservan su posición al guardar. En la última noche se pueden abrir para mirar las luces y se cierran al elegir acostarse.
 - [x] Darles pisadas distintas a la tierra, el barro, la madera, la piedra y el agua. En la cueva se oye una reverberación corta, y la radio baja el fondo de música y viento mientras suena la interferencia.
 - [x] Afinar el arte del prólogo. La huella tiene distintos tonos de tierra y ripio, con piedras y pastos agrupados en los márgenes. La parada tiene chapas remachadas y el puente, tablones separados con clavos visibles. La cuerda pasa por delante de la laja y por encima del borde hasta el anclaje. La trepada queda al atardecer y la noche entra en el tramo de la linterna.
+- [x] Darles materiales y siluetas distintas a los tres sueños. El primero tiene placas azules fracturadas, el segundo terrazas cobrizas y el tercero crestas de obsidiana y arcos erosionados. Las formaciones cercanas son sólidas y dejan pasos abiertos hacia los seis hallazgos.
+- [x] Conectar las lajas con la bajada al cauce y abrir un atajo del este a la vuelta del mollar. Las dos huellas están señalizadas y se dibujan en la hoja local, centrada en el refugio. Se recorrieron los enlaces con el mapa de mano abierto.
 
 ## Ritmo de las charlas de Mara
 
@@ -167,6 +169,6 @@ Esta lista reconstruye el estado informado del proyecto editable. La exportació
 
 ## Todavía pendiente
 
-- **Arte.** Afinar la lectura de objetos de cerca y la integración visual del terreno de los sueños.
-- **Mundo y recorridos.** Revisar la distribución de destinos alrededor del refugio, seguir afinando la cartografía y revisar a velocidad normal el ritmo de las ocho microescenas.
+- **Arte.** Afinar la lectura de algunos objetos de cerca.
+- **Mundo y recorridos.** Extender la pasada de cartografía a las hojas de la cantera y la cumbre. Revisar a velocidad normal el ritmo de las ocho microescenas del prólogo.
 - **Windows.** Probar el ejecutable en Windows. El paquete exportado se verificó en Godot sobre Linux.

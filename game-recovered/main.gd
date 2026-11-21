@@ -1406,6 +1406,10 @@ func _unhandled_key_input(event):
 						overlay("message", "La huella del este sube al mollar. Desde ahí podés bajar por la vuelta del sur hasta el cauce.", "Espacio · seguir")
 					"Loma de las lajas":
 						overlay("message", "Desde las lajas ves el techo del refugio. Del otro lado, una huella baja al sur, hacia la pasarela.", "Espacio · seguir")
+					"Vuelta de las lajas":
+						overlay("message", "La vuelta cruza el faldeo de las lajas y se une a la bajada del cauce antes del poste.", "Espacio · seguir")
+					"Atajo del este":
+						overlay("message", "La huella corta rodea el mollar por abajo. Podés seguir al cauce o volver a la tranquera por el este.", "Espacio · seguir")
 					"Desvío de la quebrada":
 						overlay("message", "La huella alta sigue el cauce aguas abajo hasta la pasarela. El ramal bajo vuelve por el poste a la tranquera.", "Espacio · seguir")
 					"Tronco caído":
@@ -1790,7 +1794,7 @@ func begin_dream(preserve_bed: bool = false, fade_from_black: bool = false):
 			words.text = "Apoyás la radio en el piso. Todavía caen gotas del alero. Las contás hasta perder la cuenta."
 			if night_investigation > 0:
 				words.text = "Agarrás la bajada. Después hay un tramo que no podés ubicar. En el sueño, la radio sigue abierta."
-		valley.strange_sky(true)
+		valley.strange_sky(dream_variant())
 		player.walking = false
 		player.low_gravity = true
 		position_on_planet()
@@ -2346,9 +2350,27 @@ func restore(data: Dictionary):
 			dream_arches = clampi(int(data.state.get("dream_arches", 0)), 0, LastNight.DREAM_ARCH_DISTANCES.size())
 			score.cue("otromundo", 100, -14.0, 2.5)
 			player.low_gravity = true
-			valley.strange_sky(true)
+			valley.strange_sky(dream_variant())
 			explore_dream()
+			recover_saved_dream_position()
 		_: walk()
+
+func recover_saved_dream_position():
+	await get_tree().physics_frame
+	if mode != "dream" or player.capsule_has_room(player.position + Vector3.UP * 0.08): return
+	var variant := dream_variant()
+	var local := Vector2(player.position.x - LastNight.PLANET.x, player.position.z - LastNight.PLANET.z)
+	for radius: float in [0.85, 1.7, 3.4, 6.8]:
+		for direction in 8:
+			var candidate := local + Vector2.RIGHT.rotated(TAU * direction / 8.0) * radius
+			if not LastNight.DREAM_BOUNDS.has_point(candidate): continue
+			var foot := LastNight.dream_surface(variant, candidate) + Vector3.UP * 0.1
+			if player.capsule_has_room(foot):
+				player.position = foot
+				player.velocity = Vector3.ZERO
+				return
+	player.position = LastNight.dream_point(variant, clampf(-local.y, 0.0, 135.0)) + Vector3.UP * 0.16
+	player.velocity = Vector3.ZERO
 
 func restore_crossing_position(position: Vector3) -> Vector3:
 	var here := Vector2(position.x, position.z)

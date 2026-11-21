@@ -711,20 +711,24 @@ func update_night_catalog(day: int):
 	sky_mat.set_shader_parameter("planet_dirs", planets)
 	sky_mat.set_shader_parameter("galactic_pole", SkyGuide.direction(SkyGuide.GALACTIC_POLE, sidereal))
 
-func strange_sky(active: bool):
+func strange_sky(variant: int):
 	exterior_light = false
 	light_target = ""
-	env.fog_density = 0.0027
+	var palette := variant - 1
+	env.fog_enabled = true
+	env.fog_density = [0.0055, 0.0050, 0.0061][palette]
+	sky_mat.set_shader_parameter("dream_style", variant)
+	sun.rotation_degrees = Vector3(-32.0, -47.0 + variant * 21.0, 0.0)
+	sun.shadow_enabled = true
 	var tween: = transition()
-	var amount: = 1.0 if active else 0.0
 	var previous = sky_mat.get_shader_parameter("other_world")
-	tween.tween_method( func(v): sky_mat.set_shader_parameter("other_world", v), float(previous) if previous != null else 0.0, amount, 2.0)
+	tween.tween_method( func(v): sky_mat.set_shader_parameter("other_world", v), float(previous) if previous != null else 0.0, 1.0, 2.0)
 	tween.tween_method( func(v): sky_mat.set_shader_parameter("nightfall", v), float(sky_mat.get_shader_parameter("nightfall")), 1.0, 2.0)
-	tween.tween_property(env, "fog_light_color", Color("#765484") if active else Color("#424960"), 2.0)
-	tween.tween_property(env, "ambient_light_color", Color("#bba6c8") if active else Color("#9ba5bf"), 2.0)
-	tween.tween_property(env, "ambient_light_energy", 0.58, 2.0)
-	tween.tween_property(sun, "light_energy", 0.18, 2.0)
-	tween.tween_property(sun, "light_color", Color("#ecd0ac") if active else Color("#abc4ed"), 2.0)
+	tween.tween_property(env, "fog_light_color", [Color("#597282"), Color("#8c625e"), Color("#6d547c")][palette], 2.0)
+	tween.tween_property(env, "ambient_light_color", [Color("#bed9e3"), Color("#ded0bd"), Color("#c0b0d3")][palette], 2.0)
+	tween.tween_property(env, "ambient_light_energy", 0.69, 2.0)
+	tween.tween_property(sun, "light_energy", 0.42, 2.0)
+	tween.tween_property(sun, "light_color", [Color("#c0e3ed"), Color("#eabd94"), Color("#dfcbe9")][palette], 2.0)
 
 func kitchen_and_privy():
 	Refuge.kitchenette(self)

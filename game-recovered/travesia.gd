@@ -89,7 +89,10 @@ static func make_ground_material(route_to_creek: PackedVector2Array, mara_start:
 	material.set_shader_parameter("mara_start", Vector2(mara_start.x, mara_start.z))
 	material.set_shader_parameter("mara_end", Vector2(mara_end.x, mara_end.z))
 	material.set_shader_parameter("creek_path", route_to_creek)
-	material.set_shader_parameter("exploration_segments", exploration)
+	material.set_shader_parameter("exploration_segment_count", exploration.size())
+	var links := exploration.duplicate()
+	links.resize(64)
+	material.set_shader_parameter("exploration_segments", links)
 	material.set_shader_parameter("soil_detail", load("res://tierra_serrana.webp"))
 	return material
 

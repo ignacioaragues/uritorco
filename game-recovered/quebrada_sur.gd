@@ -8,7 +8,7 @@ const LEDGE := 0.64
 
 static func build(valley):
 	for junction in [
-		[Creek.crossing_point(0.01) + Vector3(2.1, 0, 0.1), "Pasarela · Quebrada sur →", 0.34],
+		[Creek.crossing_point(0.01) + Vector3(-3.1, 0, -1.2), "Pasarela · Quebrada sur →", 0.34],
 		[Vector3(-35, 0, 43.8), "Pasarela · sendero alto ←", -0.25],
 		[Vector3(-61, 0, 49), "Refugio · por el poste →", 2.7],
 	]:

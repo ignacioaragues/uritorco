@@ -14,6 +14,7 @@ uniform vec3 moon_dir;
 uniform vec3 daylight_dir = vec3(0.69, 0.41, 0.59);
 uniform float moon_radius = 0.083;
 uniform float other_world = 0.0;
+uniform int dream_style = 1;
 uniform float cloud_cover = 0.0;
 uniform float cloud_pattern = 0.0;
 uniform vec2 cloud_drift = vec2(0.0);
@@ -119,7 +120,16 @@ void sky(){
 		earth = disc(EYEDIR,moon_dir,daylight_dir,apparent_radius,vec3(1.28,1.21,1.10),earth,moonlight,1.0);
 		daytime = disc(EYEDIR,moon_dir,daylight_dir,apparent_radius,vec3(1.03,1.06,1.10),daytime,moonlight * (0.48 + dusk * 0.19),dusk * 0.12);
 	}
-	vec3 alien = mix(vec3(0.19,0.095,0.18),vec3(0.024,0.013,0.07),blend);
+	vec3 alien_rim = vec3(0.21, 0.31, 0.38);
+	vec3 alien_high = vec3(0.035, 0.067, 0.12);
+	if (dream_style == 2) {
+		alien_rim = vec3(0.42, 0.24, 0.23);
+		alien_high = vec3(0.085, 0.041, 0.075);
+	} else if (dream_style == 3) {
+		alien_rim = vec3(0.29, 0.18, 0.34);
+		alien_high = vec3(0.048, 0.025, 0.097);
+	}
+	vec3 alien = mix(alien_rim, alien_high, smoothstep(0.0, 0.62, height));
 	if (other_world > 0.0) alien += vec3(0.66,0.86,0.95)*star_field(EYEDIR.zxy);
 	alien=disc(EYEDIR,normalize(vec3(0.35,0.48,-1.0)),normalize(vec3(-1.0,0.6,0.4)),0.038,vec3(0.95,0.72,0.51),alien,1.0,1.0);
 	alien=disc(EYEDIR,normalize(vec3(0.08,0.66,-1.0)),normalize(vec3(-1.0,0.6,0.4)),0.016,vec3(0.65,0.83,0.91),alien,1.0,1.0);
@@ -154,5 +164,6 @@ void sky(){
 		daytime = mix(daytime, low_cloud, overcast);
 		earth = mix(earth, dark * (0.79 + 0.31 * underside), overcast * 0.97);
 	}
-	COLOR=mix(daytime,mix(dark,mix(earth,alien,other_world),smoothstep(0.0,0.065,height)),nightfall);
+	vec3 earthly_night = mix(dark, earth, smoothstep(0.0, 0.065, height));
+	COLOR = mix(daytime, mix(earthly_night, alien, other_world), nightfall);
 }
