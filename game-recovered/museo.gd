@@ -1,5 +1,7 @@
 extends RefCounted
 
+const Stone = preload("res://piedra_serrana.gd")
+const Refuge = preload("res://refugio.gd")
 const DISTANCE := 292.0
 const SITE_OFFSET := 14.0
 const LEGACY_SITE_OFFSET := 9.5
@@ -123,8 +125,10 @@ static func build_entrance(valley, c: Vector3):
 
 static func vitrine(valley, c: Vector3, index: int):
 	var title: String = REPLICAS[index]
-	valley.box(c + Vector3.UP * 0.37, Vector3(1.95, 0.74, 1.08), "74624e", true, title)
-	valley.box(c + Vector3.UP * 0.75, Vector3(1.86, 0.035, 0.99), "afa18b")
+	var plinth: MeshInstance3D = valley.box(c + Vector3.UP * 0.37, Vector3(1.95, 0.74, 1.08), "74624e", true, title)
+	plinth.material_override = Refuge.wood("74624e", true)
+	var liner: MeshInstance3D = valley.box(c + Vector3.UP * 0.75, Vector3(1.86, 0.035, 0.99), "afa18b")
+	liner.material_override = Refuge.cloth("8e8066", "b2a38a", 0.38)
 	var cabinet: MeshInstance3D = valley.box(c + Vector3.UP * 1.03, Vector3(1.94, 0.56, 1.06), "a7bdb4", true, title)
 	var glass := StandardMaterial3D.new()
 	glass.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
@@ -139,13 +143,16 @@ static func vitrine(valley, c: Vector3, index: int):
 	var base := c + Vector3.UP * 0.77
 	match index:
 		0:
-			valley.stone(base + Vector3(-0.17, 0.05, 0.05), Vector3(0.83, 0.20, 0.60), "797166")
-			var rim := TorusMesh.new()
-			rim.inner_radius = 0.13
-			rim.outer_radius = 0.31
-			valley.prop(rim, base + Vector3(-0.17, 0.10, 0.05), "8b8172")
-			var hand: MeshInstance3D = valley.stone(base + Vector3(0.38, 0.08, 0.06), Vector3(0.36, 0.15, 0.18), "a79b8b")
-			hand.rotation.y = -0.40
+			var mortar := shaped_vessel([
+				Vector2(0.29, 0), Vector2(0.40, 0.035), Vector2(0.43, 0.16), Vector2(0.40, 0.195),
+				Vector2(0.27, 0.19), Vector2(0.24, 0.145), Vector2(0.12, 0.048), Vector2(0.0, 0.04)
+			], 0.73, 0.11, Color("#8d8473"))
+			valley.prop(mortar, base + Vector3(-0.21, 0, 0.05), "8d8473").material_override = Stone.paint()
+			var faces := Stone.surface()
+			var rng := RandomNumberGenerator.new()
+			rng.seed = 292
+			Stone.fragment(faces, base + Vector3(0.40, 0, 0.065), Vector3(0.36, 0.125, 0.17), -0.42, rng)
+			Stone.finish(valley, faces, "Mano de la vitrina")
 		1:
 			var spindle: MeshInstance3D = valley.box(base + Vector3(0, 0.15, 0), Vector3(0.021, 0.36, 0.027), "88674b")
 			spindle.rotation.z = -0.16
@@ -155,21 +162,40 @@ static func vitrine(valley, c: Vector3, index: int):
 			valley.prop(whorl, base + Vector3(0, 0.115, 0), "b18059")
 			valley.stone(base + Vector3(0.34, 0.065, 0.11), Vector3(0.34, 0.13, 0.23), "d7c5a0")
 		2:
-			var pot := ceramic_body()
-			valley.prop(pot, base, "b17a55")
-			var sherd: MeshInstance3D = valley.box(base + Vector3(0.49, 0.055, 0.15), Vector3(0.2, 0.05, 0.17), "a26547")
-			sherd.rotation = Vector3(0.18, 0.58, -0.25)
+			var pot := shaped_vessel([
+				Vector2(0.16, 0), Vector2(0.27, 0.08), Vector2(0.30, 0.20), Vector2(0.291, 0.26),
+				Vector2(0.26, 0.32), Vector2(0.20, 0.37), Vector2(0.17, 0.41), Vector2(0.19, 0.46),
+				Vector2(0.15, 0.46), Vector2(0.13, 0.39), Vector2(0.18, 0.31), Vector2(0.017, 0.08)
+			], 0.96, 0.038, Color("#b67d57"), true)
+			valley.prop(pot, base, "b67d57").material_override = Stone.paint()
+			var edges := Stone.surface()
+			var chip := PackedVector3Array([Vector3(-0.10, 0.027, -0.055), Vector3(-0.036, 0.039, -0.096),
+				Vector3(0.085, 0.06, -0.067), Vector3(0.108, 0.052, 0.021), Vector3(0.039, 0.037, 0.085),
+				Vector3(-0.061, 0.025, 0.040)])
+			for i in range(1, chip.size() - 1):
+				Stone.triangle(edges, chip[0], chip[i], chip[i + 1], Color("#a26b4c").lightened(0.025 * i))
+			var sherd := Stone.finish(valley, edges, "Tiesto de la vitrina")
+			sherd.position = base + Vector3(0.49, 0, 0.15)
 
-static func ceramic_body() -> ArrayMesh:
-	const PROFILE := [Vector2(0.16, 0.0), Vector2(0.27, 0.08), Vector2(0.30, 0.22), Vector2(0.24, 0.34), Vector2(0.17, 0.41), Vector2(0.19, 0.46), Vector2(0.15, 0.46), Vector2(0.13, 0.39)]
-	const SIDES := 24
+static func shaped_vessel(profile: Array, depth_ratio: float, irregularity: float, tint: Color, painted := false) -> ArrayMesh:
+	const SIDES := 40
 	var surface := SurfaceTool.new()
 	surface.begin(Mesh.PRIMITIVE_TRIANGLES)
-	for edge in PROFILE:
+	for row in profile.size():
+		var edge: Vector2 = profile[row]
 		for side in SIDES:
 			var angle := TAU * side / SIDES
-			surface.add_vertex(Vector3(edge.x * cos(angle), edge.y, edge.x * sin(angle)))
-	for row in range(PROFILE.size() - 1):
+			var radius := edge.x * (1.0 + irregularity * (0.62 * cos(angle * 3.0) + 0.38 * sin(angle * 7.0)))
+			var rise := edge.y + irregularity * 0.15 * sin(angle * 5.0) * smoothstep(0, 0.11, edge.y)
+			var tone := tint.lightened(0.035 * sin(angle * 7.0 + row * 1.2))
+			if painted and row in [3, 4, 5]:
+				var stroke := float(side % 8) / 8.0
+				var zig := absf(stroke * 2.0 - 1.0)
+				var dye := maxf(0.12 if row == 3 or row == 5 else 0.0, 1.0 - absf(zig - 0.5 * (row - 3)) * 3.3)
+				tone = tone.lerp(Color("#62402f"), dye * 0.79)
+			surface.set_color(tone)
+			surface.add_vertex(Vector3(radius * cos(angle), rise, radius * sin(angle) * depth_ratio))
+	for row in range(profile.size() - 1):
 		for side in SIDES:
 			var a := row * SIDES + side
 			var b := row * SIDES + (side + 1) % SIDES

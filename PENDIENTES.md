@@ -91,6 +91,13 @@ Al cierre de cada pasada se actualizan los puntos resueltos y se conserva lo que
 - El Día 2, una charla se ofrece más abajo del poste y la otra en el regreso. El Día 7, quedan separadas la visita al museo y la vuelta desde la antena. La última mañana, una charla se ofrece al bajar por la huella y la otra cerca de la banquina.
 - Las charlas se pueden iniciar durante la caminata con el mapa abierto. El guardado conserva el tramo que falta caminar. Para visitar a Mara hacen falta nueve respuestas de cercanía.
 
+## Pasada de cartografía, terreno y museo
+
+- **Cartografía.** El poste, la regla y el mirador se leen en la lámina local. El abra, el filo y la partida tienen láminas propias con las bifurcaciones o destinos de cada jornada. Los rótulos indican el museo, la antena, la laja con cuerda, la vaguada, el hito y la curva del ómnibus según corresponda. Se comprobó que los rótulos caben y que las marcas coinciden con sus hitos.
+- **Acceso y quebrada.** El pasto, los guijarros, las piedras y los afloramientos se apoyan en la malla transitable. Las orillas tienen molles y espinillos sobre el terreno. Se midieron 896 puntos de apoyo de rocas contra la colisión del suelo y se recorrió de ida y de vuelta la bajada a la regla. Al repetir el camino a la pasarela se movieron al borde las lajas y las pircas de los miradores para despejar los cruces.
+- **Museo.** Se trabajaron las bases de madera y tela de las vitrinas y el modelado del mortero, la mano de molienda, la vasija con guarda y el tiesto. Se probó a pie la entrada a ambas salas, la lectura de las fichas y la carga de una partida guardada en el museo.
+- **Pruebas.** Se recorrieron las ocho microescenas del prólogo, la cueva hasta el regreso, los cuatro arcos del último sueño y los dos finales. También se comprobó la recarga del epílogo de la puerta.
+
 ## Sonido ambiente del museo
 
 - El canto sintético del pájaro alcanzaba un pico 13 dB por encima de los pasos y sonaba igual en el acceso y en el vestíbulo. Ahora tiene un timbre más suave, sale de un punto del paisaje y se apaga gradualmente al entrar. El techo también amortigua la lluvia.
@@ -202,6 +209,6 @@ Esta lista reconstruye el estado informado del proyecto editable. La exportació
 
 ## Todavía pendiente
 
-- **Arte.** Seguir revisando piedras y apoyos fuera de los senderos recorridos. Cotejar el acabado mineral con fotos del cerro, ya que los sitios de referencia no cargaron desde el entorno. Afinar la lectura de los objetos de cerca en las otras salas y recorridos y el acabado de la vegetación y las lomadas de fondo.
-- **Mundo y recorridos.** Revisar la legibilidad de las referencias de las hojas de marcha fuera de los encargos de la cantera, la cumbre y la pasarela.
-- **Windows.** Probar el ejecutable en Windows. El paquete exportado se verificó en Godot sobre Linux.
+- **Arte.** Cotejar el acabado de las rocas con más fotos del cerro y seguir afinando los objetos de cerca, la vegetación y las lomadas de fondo en los sectores secundarios.
+- **Prueba de campaña.** Cronometrar una primera partida de principio a fin con alguien que esté descubriendo los caminos.
+- **Windows.** Probar la campaña y el audio de la exportación en un equipo con Windows.

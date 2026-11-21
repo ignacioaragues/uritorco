@@ -473,26 +473,14 @@ func set_curtains(opened: bool, animate := true):
 
 func dress_path_verges():
 	for sample in 39 * 2: rng.randf()
-	var tufts: = SurfaceTool.new()
-	tufts.begin(Mesh.PRIMITIVE_TRIANGLES)
-	var mat: = StandardMaterial3D.new()
-	mat.cull_mode = BaseMaterial3D.CULL_DISABLED
-	mat.vertex_color_use_as_albedo = true
-	tufts.set_material(mat)
+	var tufts: Array[Vector4] = []
 	for i in range(850):
 		var z: = rng.randf_range(-78, -3)
 		var x: = path_x(z) + rng.randf_range(1.7, 12) * (-1 if i % 2 else 1)
 		if absf(z + 33 - sin(x) * 0.6) < 1.35: continue
-		for blade in range(7):
-			var root: = Vector3(x + rng.randf_range(-0.3, 0.3), 0.03, z + rng.randf_range(-0.3, 0.3))
-			var tip: = root + Vector3(rng.randf_range(-0.15, 0.15), rng.randf_range(0.14, 0.52), 0.04)
-			for v in [root, root + Vector3(0.045, 0, 0.01), tip]:
-				tufts.set_color(Color("#c7af75") if v == tip else Color("#787751"))
-				tufts.add_vertex(v)
-	tufts.generate_normals()
-	var grass: = MeshInstance3D.new()
-	grass.mesh = tufts.commit()
-	add_child(grass)
+		var foot := Creek.surface_point(Vector3(x, 0.0, z))
+		tufts.append(Vector4(x, foot.y - 0.04, z, rng.randf_range(0.58, 1.14)))
+	Flora.grass_batch(self, tufts)
 	for i in range(12):
 		var z: = -7 - i * 5.9
 		var x: = path_x(z) + (4.0 + i % 4) * (-1 if i % 2 else 1)
@@ -502,7 +490,7 @@ func dress_path_verges():
 			if absf(x - west) < 3.8:
 				x = west + (4.15 if x > path_x(z) else -4.15)
 		if Exploration.clearance(Vector2(x, z)) >= 2.85:
-			Flora.tree(self, Creek.point(x, z), i % 3, 0.9 + i % 4 * 0.13, i * 1.93)
+			Flora.tree(self, Creek.surface_point(Vector3(x, 0, z)), i % 3, 0.9 + i % 4 * 0.13, i * 1.93)
 	for sample in 121 * 5: rng.randf()
 	for sample in 30 * 3: rng.randf()
 
@@ -513,7 +501,7 @@ func morning():
 
 
 func rock_banks():
-	var shades: = ["82634e", "735c50", "946e54", "796458"]
+	var faces := Stone.surface()
 	for cluster in [[-19, 1, 4], [-33, -1, 6], [-42, 1, 5], [-57, -1, 4]]:
 		for i in range(cluster[2]):
 			var z: = float(cluster[0]) + rng.randf_range(-2.8, 2.8)
@@ -523,27 +511,12 @@ func rock_banks():
 			if z < route.WEST_START_Z and absf(x - west) < width + 2.6:
 				var outer := minf(west, path_x(z)) if cluster[1] < 0 else maxf(west, path_x(z))
 				x = outer + float(cluster[1]) * (width + 3.0)
-			var height: = rng.randf_range(1.1, 3.5)
-			var vertices: = PackedVector3Array()
-			for j in range(7):
-				var a: = TAU * j / 7.0 + rng.randf_range(-0.12, 0.12)
-				var radius: = rng.randf_range(0.83, 1.05)
-				vertices.append(Vector3(cos(a) * width * radius, -0.18, sin(a) * width * 0.82))
-			for j in range(7):
-				var base: = vertices[j]
-				var cut: = rng.randf_range(0.53, 0.83)
-				vertices.append(Vector3(base.x * cut + width * 0.12, height * (0.69 + 0.2 * base.x / width) + rng.randf_range(-0.1, 0.1), base.z * cut))
-			var crown: = Vector3(width * 0.17, height * 0.98, 0)
-			var surface: = SurfaceTool.new()
-			surface.begin(Mesh.PRIMITIVE_TRIANGLES)
-			for j in range(7):
-				var k: = (j + 1) % 7
-				for v in [vertices[j], vertices[k + 7], vertices[j + 7], vertices[j], vertices[k], vertices[k + 7], vertices[j + 7], vertices[k + 7], crown]:
-					surface.set_smooth_group(-1)
-					surface.add_vertex(v)
-			surface.generate_normals()
 			if LastNight.door_path_distance(x, z) >= width + 3.6 and Exploration.clearance(Vector2(x, z)) >= width + 2.1:
-				prop(surface.commit(), Vector3(x, 0, z), shades[i % shades.size()], true)
+				var foot := Creek.surface_point(Vector3(x, 0, z))
+				var size_m := Vector3(width * 2.0, rng.randf_range(1.1, 3.5), width * 1.64)
+				var shape := Stone.fragment(faces, foot, size_m, rng.randf() * TAU, rng, Creek.surface_point)
+				Stone.solid(self, foot, shape, "Afloramiento del acceso")
+	Stone.finish(self, faces, "Piedra del acceso")
 
 func plaster(wall: MeshInstance3D):
 	var material: = ShaderMaterial.new()

@@ -19,9 +19,12 @@ const ATLAS_EARTH = preload("res://diario_hallazgos.webp")
 const QUARRY_ZONE := 1
 const SUMMIT_ZONE := 2
 const CREEK_ZONE := 3
-const GRID_STEPS := [25, 100, 150, 50, 40, 40, 40, 10]
-const INTERVALS := [2, 10, 15, 2, 2, 2, 2, 2]
 const ARRIVAL_ZONE := 7
+const ABRA_ZONE := 8
+const FILO_ZONE := 9
+const DEPARTURE_ZONE := 10
+const GRID_STEPS := [25, 100, 150, 50, 40, 40, 40, 10, 75, 125, 50]
+const INTERVALS := [2, 10, 15, 2, 2, 2, 2, 2, 8, 12, 5]
 const LABEL_INK := Color("#30382d")
 const LABEL_HALO := Color("#eadcb9")
 const LABEL_SIZE := 19
@@ -33,6 +36,11 @@ const LIMITS = [
 	Rect2(-438, -98, 672, 752),
 	Rect2(-360, -106, 720, 1096),
 	Rect2(-177, -184, 224, 144),
+]
+const MAIN_TRAIL_LIMITS := [
+	Rect2(-280, -100, 560, 555),
+	Rect2(-350, -103, 730, 1070),
+	Rect2(-245, -104, 490, 457),
 ]
 var itinerary_sheet := -1
 var departure_sheet := false
@@ -87,6 +95,7 @@ func track(pos: Vector3):
 func survey_extent(zone: int) -> Rect2:
 	var coverage: Rect2
 	if zone < 4: coverage = LIMITS[zone]
+	elif zone >= ABRA_ZONE: coverage = MAIN_TRAIL_LIMITS[zone - ABRA_ZONE]
 	elif zone == ARRIVAL_ZONE:
 		var origin := Arrival.origin(arrival_sheet)
 		coverage = Rect2(origin.x - 40.0, -22.0, 80.0, 66.0)
@@ -125,6 +134,7 @@ func _draw():
 		match zone:
 			0: draw_local(limits)
 			3: draw_south(limits)
+			ABRA_ZONE, FILO_ZONE, DEPARTURE_ZONE: draw_main_trail(limits, zone)
 			_: draw_ridge(limits)
 		add_refuge_pin(limits)
 		if departure_sheet: pin(limits, LastNight.STOP, "Curva · Ómnibus", Vector2(-20, -18))
@@ -198,17 +208,17 @@ func draw_local(limits: Rect2):
 			return Vector3(at.x, 0, at.y), ink)
 	draw_south_paths(limits)
 	draw_channel(limits, -66.0)
-	pin(limits, Vector3(Exploration.MOLLAR.x, 0, Exploration.MOLLAR.y), "Mollar", Vector2(-54, 13))
-	pin(limits, Creek.crossing_point(0.0), "Lajas", Vector2(-48, -8))
+	pin(limits, Vector3(Exploration.MOLLAR.x, 0, Exploration.MOLLAR.y), "Mirador del mollar", Vector2(-54, 13))
+	pin(limits, Creek.crossing_point(0.0), "Loma de las lajas", Vector2(-48, -8))
 	pin(limits, Creek.crossing_point(0.28), "Quebrada sur", Vector2(8, -5))
 	pin(limits, Creek.crossing_point(1.0), "Pasarela", Vector2(9, 18))
 	pin(limits, ROUTE.ascent_point(0), "Acceso")
-	pin(limits, Creek.post(), "Poste")
+	pin(limits, Creek.post(), "Poste del cauce", Vector2(11, -15))
 	pin(limits, Creek.marker(), "Regla del cauce", Vector2(11, 18))
 
 func add_refuge_pin(limits: Rect2):
 	if contains(limits, Vector3.ZERO):
-		pin(limits, Vector3.ZERO, "Puesto", Vector2(12, -13), true)
+		pins.push_front({"mark": point(limits, Vector3.ZERO), "text": "Puesto", "offset": Vector2(12, -13), "refuge": true})
 	else:
 		var paper := PAPER_FIELD.grow(-17.0)
 		var refuge := point(limits, Vector3.ZERO)
@@ -219,7 +229,7 @@ func add_refuge_pin(limits: Rect2):
 		var back := arrow - direction * 10.0
 		var side := direction.orthogonal() * 4.5
 		draw_colored_polygon(PackedVector2Array([arrow, back + side, back - side]), LABEL_INK)
-		pins.append({"mark": back - direction * 10.0, "text": "Puesto", "offset": Vector2(12, -13), "refuge": true})
+		pins.push_front({"mark": back - direction * 10.0, "text": "Puesto", "offset": Vector2(12, -13), "refuge": true})
 
 func draw_south(limits: Rect2):
 	draw_route(limits, 81, access_road, INK)
@@ -239,6 +249,31 @@ func draw_channel(limits: Rect2, west: float):
 	draw_route(limits, 101, func(t):
 		var x := lerpf(west, 48.0, t)
 		return Creek.point(x, Creek.channel_z(x)), WATER)
+
+func draw_main_trail(limits: Rect2, zone: int):
+	var end: float = {ABRA_ZONE: 451.0, FILO_ZONE: ROUTE.CREST, DEPARTURE_ZONE: 332.0}[zone]
+	draw_route(limits, 81, access_road, INK)
+	draw_route(limits, 82, ROUTE.western_approach, LINK_COLOR)
+	draw_route(limits, 48, ROUTE.eastern_access, LINK_COLOR)
+	draw_route(limits, 97, Creek.trail_point, LINK_COLOR)
+	draw_route(limits, 241, func(t):
+		var d: float = t * end
+		return Vector3(ROUTE.trail(d), 0, ROUTE.ORIGIN_Z - d), INK)
+	draw_route(limits, 49, func(t):
+		var d := lerpf(ROUTE.LAJA_FORK, ROUTE.LAJA_JOIN, t)
+		return Vector3(ROUTE.detour(d), 0, ROUTE.ORIGIN_Z - d), ROUTE_COLOR)
+	var museum := trail_landmark(Museum.DISTANCE, Museum.SITE_OFFSET)
+	draw_route(limits, 14, func(t): return trail_landmark(Museum.DISTANCE).lerp(museum, t), ROUTE_COLOR)
+	pin(limits, museum, "Museo de sitio", Vector2(9, -15))
+	if zone == DEPARTURE_ZONE: return
+	pin(limits, trail_landmark(170.0), "Laja con cuerda", Vector2(-10, 18))
+	pin(limits, trail_landmark(171.0, ROUTE.detour(171.0) - ROUTE.trail(171.0)), "Vaguada", Vector2(9, -9))
+	pin(limits, trail_landmark(420.0, 1.6), "Antena del abra", Vector2(9, -12))
+	if zone == FILO_ZONE:
+		pin(limits, trail_landmark(ROUTE.CREST, -1.50), "Hito del filo", Vector2(-9, -10))
+
+func trail_landmark(distance: float, side: float = 0.0) -> Vector3:
+	return Vector3(ROUTE.trail(distance) + side, 0, ROUTE.ORIGIN_Z - distance)
 
 func draw_ridge(limits: Rect2):
 	var quarry := active_zone == QUARRY_ZONE
@@ -438,24 +473,25 @@ func draw_pins():
 
 func draw_pin_label(mark: Vector2, text: String, preferred: Vector2):
 	var font := ThemeDB.fallback_font
-	var width := font.get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1, LABEL_SIZE).x
-	var ascent := font.get_ascent(LABEL_SIZE)
-	var label_size := Vector2(width, font.get_height(LABEL_SIZE))
-	var near_side := 11.0 if preferred.x > 0.0 else -width - 11.0
-	var sides := [near_side, -width - near_side, -width * 0.5]
-	for y in [preferred.y, 24.0, -14.0, 42.0, -30.0, 60.0, -48.0, 78.0, -66.0]:
-		for x in sides:
-			var baseline := mark + Vector2(x, y)
-			var bounds := Rect2(baseline - Vector2(0, ascent), label_size)
-			var padding := bounds.grow(3.0)
-			if not PAPER_FIELD.grow(-7.0).encloses(padding) or not clear_of(padding, used_labels): continue
-			used_labels.append(padding)
-			var end := mark.clamp(bounds.position, bounds.end)
-			if end.distance_to(mark) > 6.0:
-				draw_line(mark, end, Color("#514a3ba8"), 0.9, true)
-			draw_string_outline(font, baseline, text, HORIZONTAL_ALIGNMENT_LEFT, -1, LABEL_SIZE, 4, LABEL_HALO)
-			draw_string(font, baseline, text, HORIZONTAL_ALIGNMENT_LEFT, -1, LABEL_SIZE, LABEL_INK)
-			return
+	for font_size: int in [LABEL_SIZE, 16]:
+		var width := font.get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1, font_size).x
+		var ascent := font.get_ascent(font_size)
+		var label_size := Vector2(width, font.get_height(font_size))
+		var near_side := 11.0 if preferred.x > 0.0 else -width - 11.0
+		var sides := [near_side, -width - near_side, -width * 0.5]
+		for y in [preferred.y, 24.0, -14.0, 42.0, -30.0, 60.0, -48.0, 78.0, -66.0]:
+			for x in sides:
+				var baseline := mark + Vector2(x, y)
+				var bounds := Rect2(baseline - Vector2(0, ascent), label_size)
+				var padding := bounds.grow(3.0)
+				if not PAPER_FIELD.grow(-7.0).encloses(padding) or not clear_of(padding, used_labels): continue
+				used_labels.append(padding)
+				var end := mark.clamp(bounds.position, bounds.end)
+				if end.distance_to(mark) > 6.0:
+					draw_line(mark, end, Color("#514a3ba8"), 0.9, true)
+				draw_string_outline(font, baseline, text, HORIZONTAL_ALIGNMENT_LEFT, -1, font_size, 4, LABEL_HALO)
+				draw_string(font, baseline, text, HORIZONTAL_ALIGNMENT_LEFT, -1, font_size, LABEL_INK)
+				return
 
 func ground_height(x: float, d: float) -> float:
 	if arrival_sheet >= 0:

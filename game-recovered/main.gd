@@ -1245,9 +1245,13 @@ func show_map(variant: int = 0):
 		goal = map_destination()
 		map_goal_origin = player.position
 	var sheet := -1
-	if stage in [10, 11, 12]: sheet = map.QUARRY_ZONE
+	if stage in [1, 2, 4, 5, 6]: sheet = 0
+	elif stage == 7: sheet = map.ABRA_ZONE if second_sighting or day7_dusk else 0
+	elif stage in [8, 9]: sheet = map.FILO_ZONE
+	elif stage in [10, 11, 12]: sheet = map.QUARRY_ZONE
 	elif stage in [13, 14, 15]: sheet = map.SUMMIT_ZONE
 	elif stage in [16, 17, 18]: sheet = map.CREEK_ZONE
+	elif stage == 19: sheet = map.DEPARTURE_ZONE
 	map.open_at(player.position, variant, arrival, goal, sheet, stage == 19)
 	hands.show_map(true)
 	update_flashlight()
@@ -2783,8 +2787,8 @@ func map_destination() -> Variant:
 		1, 2: return Creek.post()
 		4: return Creek.marker()
 		5: return Vector3.ZERO
-		7: return Exploration.ground(Exploration.MOLLAR, route) if not second_sighting and not day7_dusk else route.at(route.trail(420), 420)
-		8: return route.at(route.trail(922), 922)
+		7: return Exploration.ground(Exploration.MOLLAR, route) if not second_sighting and not day7_dusk else route.at(route.trail(420) + 1.6, 420)
+		8: return route.at(route.trail(route.CREST) - 1.50, route.CREST)
 		10: return route.quarry_point(1.0)
 		13:
 			if not summit_mapped: return route.ascent_point(0)

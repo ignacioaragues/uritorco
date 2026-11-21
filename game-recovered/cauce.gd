@@ -1,5 +1,7 @@
 extends RefCounted
 
+const Stone = preload("res://piedra_serrana.gd")
+const Flora = preload("res://flora.gd")
 const LIMIT_Z := 122.0
 const CROSSING_X := -139.0
 const TURN_COUNT := 48
@@ -158,12 +160,17 @@ static func dress(valley, field_trail_clearance: Callable):
 		valley.box(stake + Vector3(0, 0.17 + i * 0.18, -0.07), Vector3(0.16, 0.04, 0.012), "e4d3a7")
 	var rng := RandomNumberGenerator.new()
 	rng.seed = 954
+	var mineral_rng := RandomNumberGenerator.new()
+	mineral_rng.seed = 44761
 	var south_path := crossing_trace()
+	var faces := Stone.surface()
 	for i in range(155):
 		var x := rng.randf_range(-52.0, 52.0)
 		var z := channel_z(x) + rng.randf_range(-3.9, 3.9)
 		var width := rng.randf_range(0.3, 0.9)
-		valley.stone(point(x, z), Vector3(width, 0.18, width * 0.72), ["837b71", "998c7d", "6a645c"][i % 3])
+		valley.rng.randf()
+		Stone.fragment(faces, surface_point(Vector3(x, 0, z)) - Vector3.UP * 0.045,
+			Vector3(width, 0.16, width * 0.73), mineral_rng.randf() * TAU, mineral_rng, surface_point)
 	for i in range(95):
 		var x := rng.randf_range(-52.0, 52.0)
 		var z := rng.randf_range(22.0, 125.0)
@@ -171,16 +178,17 @@ static func dress(valley, field_trail_clearance: Callable):
 		var size_m := rng.randf_range(0.7, 2.8)
 		var obstruction_radius := 1.73 + size_m * 0.92
 		var at := Vector2(x, z)
-		if near_south_path(at, south_path, obstruction_radius) or field_trail_clearance.call(at) < obstruction_radius:
-			# Keep the valley's random sequence when clearing the new solid boulders.
-			valley.rng.randf()
-			if i % 3 == 0: valley.rng.randf()
-			continue
-		var foot := point(x, z)
-		valley.stone(foot + Vector3.UP * size_m * 0.25, Vector3(1.7, 0.9, 1.5) * size_m, "74725c", true)
+		valley.rng.randf()
+		if i % 3 == 0: valley.rng.randf()
+		if near_south_path(at, south_path, obstruction_radius) or field_trail_clearance.call(at) < obstruction_radius: continue
+		var foot := surface_point(Vector3(x, 0, z))
+		var shape := Stone.fragment(faces, foot, Vector3(1.7, 0.94, 1.5) * size_m,
+			mineral_rng.randf() * TAU, mineral_rng, surface_point)
+		Stone.solid(valley, foot, shape, "Piedra de la orilla")
 		if i % 3 == 0:
-			valley.box(foot + Vector3.UP * size_m * 0.58, Vector3(0.11, 1.15, 0.13) * size_m, "635648", true)
-			valley.stone(foot + Vector3.UP * size_m * 1.24, Vector3(1.31, 0.91, 1.25) * size_m, "657253")
+			var root := surface_point(foot + Vector3(minf(size_m * 0.85, 2.1), 0, size_m * 0.35))
+			var kind := Flora.Kind.MOLLE if i % 2 == 0 else Flora.Kind.ESPINILLO
+			Flora.tree(valley, root, kind, 0.62 + 0.27 * size_m, mineral_rng.randf() * TAU)
 	for side in [-1, 1]:
 		for z in range(32, 145, 13):
 			var x: float = side * (50.0 + 2.0 * sin(z))
@@ -188,8 +196,12 @@ static func dress(valley, field_trail_clearance: Callable):
 				x = -73.0 + 2.0 * sin(z)
 			if near_south_path(Vector2(x, z), south_path, 6.9) or field_trail_clearance.call(Vector2(x, z)) < 6.9:
 				x += side * 10.0
-			var foot := Vector3(x, outer_height(x, z), z)
-			valley.stone(foot, Vector3(10.0, 6.0 + 2.0 * cos(z), 11.0), "777562", true)
+			valley.rng.randf()
+			var foot := surface_point(Vector3(x, 0, z))
+			var size_m := Vector3(10.0, 4.7 + 1.6 * cos(z), 11.0)
+			var shape := Stone.fragment(faces, foot, size_m, mineral_rng.randf() * TAU, mineral_rng, surface_point)
+			Stone.solid(valley, foot, shape, "Afloramiento de la quebrada")
+	Stone.finish(valley, faces, "Granito del cauce")
 
 static func near_south_path(at: Vector2, path: PackedVector2Array, margin: float) -> bool:
 	for index in range(path.size() - 1):

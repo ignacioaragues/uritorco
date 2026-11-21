@@ -91,10 +91,12 @@ static func build(valley):
 	var rock_rng := RandomNumberGenerator.new()
 	rock_rng.seed = 57126
 	for site in [MOLLAR, LAJAS]:
-		var foot: Vector3 = Creek.surface_point(Vector3(site.x, 0, site.y - 1.1))
-		var boulder: MeshInstance3D = valley.stone(foot + Vector3.UP * 0.15, Vector3(1.67, 0.64, 0.78), "857363", true)
-		boulder.material_override = stone.paint("857363")
-		var base := Creek.surface_point(foot + Vector3(1.2, 0, 0.16))
+		var across := 1.0 if site == MOLLAR else -1.0
+		var foot := Creek.surface_point(Vector3(site.x + across * 3.5, 0, site.y - 1.9))
+		var boulder := stone.fragment(rock_faces, foot, Vector3(1.67, 0.64, 0.88),
+			rock_rng.randf() * TAU, rock_rng, Creek.surface_point)
+		stone.solid(valley, foot, boulder, "Laja del mirador")
+		var base := Creek.surface_point(foot + Vector3(across * 1.2, 0, 0.16))
 		stone.cairn(valley, rock_faces, base, Creek.surface_point, rock_rng)
 	stone.finish(valley, rock_faces, "Pircas de las lajas y el mollar")
 	for id in FINDS:
