@@ -47,6 +47,8 @@ var archive_read := false
 var trail_replies: Dictionary = {}
 var trail_topic := ""
 var trail_answer := 0
+var trail_spacing_day := -1
+var trail_walk_left := 0.0
 var ending_paragraphs: PackedStringArray = []
 var ending_paragraph := 0
 var ending_fade: Tween
@@ -390,6 +392,13 @@ func calendar_day() -> int:
 	if stage < 16: return 32
 	if stage < 19: return 36
 	return 41
+
+func _physics_process(_delta: float):
+	if trail_walk_left <= 0.0 or trail_spacing_day != calendar_day() or mode not in ["walk", "map"]:
+		return
+	if not player.is_on_floor() or not player.climb_points.is_empty(): return
+	var step: Vector3 = player.get_position_delta()
+	trail_walk_left = maxf(0.0, trail_walk_left - Vector2(step.x, step.z).length())
 
 func _process(delta):
 	objective_seconds = maxf(0.0, objective_seconds - delta)
@@ -887,6 +896,9 @@ func walk():
 
 func conversation(lines: Array, next: String):
 	var replying: bool = mode in ["choice", "report", "reception", "field_report", "day2_reply", "departure_radio", "trail_chat"]
+	if next != "last_call":
+		trail_spacing_day = calendar_day()
+		trail_walk_left = Mara.distance_between_calls(trail_spacing_day)
 	sequence = lines.duplicate()
 	after = next
 	speak()
@@ -909,6 +921,7 @@ func mission_radio_available() -> bool:
 
 func available_trail_chat() -> String:
 	if mission_radio_available() or not player.climb_points.is_empty(): return ""
+	if trail_spacing_day == calendar_day() and trail_walk_left > 0.0: return ""
 	return Mara.available(stage, player.position, bedtime, second_sighting, trail_replies)
 
 func can_visit_mara() -> bool:
@@ -2156,6 +2169,8 @@ func save_game(automatic: bool, resume_mode: String) -> bool:
 	if debug_run: return false
 	var state: Dictionary = {}
 	for key in STATE: state[key] = get(key)
+	if trail_spacing_day == calendar_day() and trail_walk_left > 0.0:
+		state["trail_walk_left"] = trail_walk_left
 	if resume_mode == "dream":
 		state["dream_seconds_left"] = dream_seconds_left
 		state["dream_arches"] = dream_arches
@@ -2175,6 +2190,8 @@ func restore(data: Dictionary):
 	found_collectibles = data.state.get("found_collectibles", {}).duplicate()
 	remove_collected_objects()
 	trail_replies = Mara.saved_replies(data.state)
+	trail_spacing_day = calendar_day()
+	trail_walk_left = clampf(float(data.state.get("trail_walk_left", 0.0)), 0.0, Mara.distance_between_calls(trail_spacing_day))
 	if not data.state.has("filo_report_reply"):
 		if "Recomendás la vaguada." in field_note: filo_report_reply = 0
 		elif "Avisás del escalón." in field_note: filo_report_reply = 1

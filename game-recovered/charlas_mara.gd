@@ -145,38 +145,48 @@ static func available(stage: int, position: Vector3, bedtime: bool, sighting: bo
 		0:
 			if bedtime and absf(position.x) < 14.0:
 				if position.z > 0.0 and position.z < 5.9: topic = "alero"
-				elif position.z >= -14.0 and position.z <= 0.0: topic = "primera_noche"
+				elif position.z >= -14.0 and position.z <= -5.5: topic = "primera_noche"
 		4:
-			if position.z > 30.0 and Creek.trail_distance(Vector2(position.x, position.z)) < 14.0: topic = "cauce"
+			if near(position, Creek.trail_point(0.91), 13.0): topic = "cauce"
 		5:
-			if bedtime and near(position, Creek.trail_point(0.5), 27.0): topic = "piedras"
+			if bedtime and near(position, Creek.trail_point(0.53), 18.0): topic = "piedras"
 		7:
-			if near(position, Vector3(Trail.trail(Museum.DISTANCE), 0.0, Trail.ORIGIN_Z - Museum.DISTANCE), 42.0):
+			if on_ridge(position, Museum.DISTANCE, 33.0):
 				topic = "museo"
-			elif sighting and near(position, Vector3(Trail.trail(389), 0.0, Trail.ORIGIN_Z - 389.0), 50.0):
+			elif sighting and bedtime and on_ridge(position, 389.0, 27.0):
 				topic = "antena"
 		8:
-			if near(position, Vector3(Trail.trail(170), 0.0, Trail.ORIGIN_Z - 170.0), 57.0): topic = "vaguada"
+			if on_ridge(position, 164.0, 49.0): topic = "vaguada"
 		9:
-			if bedtime and near(position, Vector3(Trail.trail(630), 0.0, Trail.ORIGIN_Z - 630.0), 112.0): topic = "sueno"
+			if bedtime and on_ridge(position, 596.0, 91.0): topic = "sueno"
 		10:
-			if near(position, Trail.quarry_point(0.44), 86.0): topic = "cielo"
+			if near(position, Trail.quarry_point(Trail.WEST_JOIN), 47.0): topic = "cielo"
 		12:
-			if near(position, Trail.quarry_point(0.67), 105.0): topic = "cable"
+			if near(position, Trail.quarry_point(0.72), 45.0): topic = "cable"
 		13:
-			if near(position, Trail.ascent_point(0.24), 115.0): topic = "pircas"
+			if near(position, Trail.ascent_point(0.28), 94.0): topic = "pircas"
 		15:
-			if near(position, Trail.ascent_point(0.67), 155.0): topic = "bajada"
+			if near(position, Trail.ascent_point(0.60), 86.0): topic = "bajada"
 		16:
-			if near(position, Creek.crossing_point(0.42), 42.0): topic = "lluvia"
+			if near(position, Creek.crossing_point(0.42), 24.0): topic = "lluvia"
 		18:
-			if near(position, Vector3.ZERO, 36.0): topic = "ventana"
+			if near(position, Vector3(1.0, 0.0, -10.0), 25.0): topic = "ventana"
 		19:
-			if near(position, Vector3.ZERO, 52.0):
+			if near(position, Vector3(4.0, 0.0, -30.0), 13.0):
 				topic = "regreso"
-			elif LastNight.near_stop(position) or near(position, Vector3(Trail.trail(Museum.DISTANCE), 0.0, Trail.ORIGIN_Z - Museum.DISTANCE), 65.0):
+			elif near(position, LastNight.STOP, 13.0):
 				topic = "ultima_curva"
 	return topic if not answered.has(topic) else ""
+
+static func on_ridge(position: Vector3, distance: float, radius: float) -> bool:
+	return near(position, Vector3(Trail.trail(distance), 0.0, Trail.ORIGIN_Z - distance), radius)
+
+static func distance_between_calls(day: int) -> float:
+	match day:
+		1: return 3.0
+		2: return 12.0
+		41: return 15.0
+		_: return 26.0
 
 static func near(position: Vector3, center: Vector3, radius: float) -> bool:
 	return Vector2(position.x - center.x, position.z - center.z).length_squared() < radius * radius

@@ -38,15 +38,20 @@ Cada pasada avanza un solo punto del juego. Al cerrarla se actualiza el estado d
 - [x] Revisar el apoyo de carteles, postes, piedras y objetos de las laderas. Se corrigieron el desvío de la cantera, los postes del cable, el malacate, el banco del acceso, el campamento y las piedras junto a la pasarela.
 - [x] Agregar tres paradas opcionales al camino del cable del Día 27. Hernán puede examinar con E el carrete, la casilla de empalme y el frente de granito antes del malacate.
 - [x] Integrar los ocho coleccionables del cerro en sus alrededores. La vasija quedó semienterrada entre piquillines, el casete entre dos lajas y la chapa debajo del borde de una piedra. El destello se ve de cerca y el plano conserva la silueta al registrar el hallazgo.
+- [x] Espaciar las dieciséis charlas opcionales de Mara por tramos de ida y regreso. Después de una llamada hay que caminar antes de que aparezca otra charla. Los partes y la despedida se pueden abrir cuando corresponden.
 
 ### Por hacer
 
-- [ ] Distribuir las conversaciones de Mara a lo largo de cada caminata.
 - [ ] Hacer que las charlas recojan el avistamiento anterior y den lugar a una reacción más escéptica de Mara.
 - [ ] Afinar la carta del cielo y evaluar más planetas y estrellas reconocibles en el estilo del juego.
 - [ ] Recorrer con el mapa abierto la ida del Día 36 para comprobar que las pircas guían desde el acceso hasta la pasarela.
 - [ ] Volver a mirar la tormenta desde las ventanas del refugio y evaluar cómo se lee su intensidad.
 - [ ] Hacer aparecer objetos en el refugio según lo que pasó con Mara. Queda anotada la botella de vino como posibilidad.
+
+## Ritmo de las charlas de Mara
+
+- El Día 2, una charla se ofrece más abajo del poste y la otra en el regreso. El Día 7, quedan separadas la visita al museo y la vuelta desde la antena. La última mañana, una charla se ofrece al bajar por la huella y la otra cerca de la banquina.
+- Se probaron las dieciséis interacciones, la caminata con el mapa abierto, la prioridad de los partes y la despedida. El guardado conserva el tramo que falta caminar. El umbral para poder visitar a Mara sigue siendo diez respuestas de cercanía.
 
 ## Sonido ambiente del museo
 
@@ -159,7 +164,7 @@ Esta lista reconstruye el estado informado del proyecto editable. La exportació
 
 ## Todavía pendiente
 
-- **Pasada narrativa.** Separar mejor las charlas de Mara durante cada caminata. Retomar lo que Hernán acaba de ver y darle espacio al escepticismo de Mara. Evaluar objetos ligados a decisiones, como una botella que pueda mandar Mara.
+- **Pasada narrativa.** Retomar lo que Hernán acaba de ver y darle espacio al escepticismo de Mara. Evaluar objetos ligados a decisiones, como una botella que pueda mandar Mara.
 - **Ambiente.** Volver a escuchar la mezcla de la última noche y comparar los sonidos de pisadas por superficie.
 - **Arte.** Afinar las texturas del prólogo y la lectura de objetos de cerca. Revisar en conjunto las estrellas, la integración del planeta y las transiciones de fase lunar.
 - **Mundo y recorridos.** Revisar la distribución de destinos alrededor del refugio y seguir afinando la cartografía. Revisar a velocidad normal el ritmo de las ocho microescenas, la tormenta desde las ventanas y el tiempo que llevan las idas y vueltas a la pasarela.
