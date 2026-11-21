@@ -229,6 +229,7 @@ func _ready():
 	overlay_choices.selected.connect(select_option)
 	radio_panel.choices.selected.connect(select_option)
 	recall.selected.connect(select_option)
+	recall.continued.connect(next_memory)
 	ui.add_child(recall)
 	ui.add_child(radio_panel)
 	ui.add_child(radio_hint)
@@ -376,6 +377,10 @@ func memory(paragraph: int = 0):
 	words.text = ""
 	hint.text = ""
 	var entry: Dictionary = memories[page]
+	if entry.get("show_response", false) and keepsakes.has(entry.key):
+		choosing = false
+		recall.present([keepsakes[entry.key]], [])
+		return
 	choosing = entry.has("options")
 	var lines: Array = entry.lines.duplicate()
 	recall.present(lines, entry.get("options", []), paragraph)
@@ -1659,8 +1664,11 @@ func select_option(index: int):
 	if mode == "intro" and recall.complete and choosing:
 		var entry: Dictionary = memories[page]
 		keepsakes[entry.key] = entry.options[index].keepsake
-		choosing = false
-		next_memory()
+		if entry.get("show_response", false):
+			memory()
+		else:
+			choosing = false
+			next_memory()
 	elif mode == "crossing_response":
 		crossing_response = index
 		field_note += " Día 36 · " + CROSSING_NOTES[index]

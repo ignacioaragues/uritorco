@@ -36,18 +36,19 @@
  },
  {
   "key": "patio",
+  "show_response": true,
   "lines": [
-   "Tenés 16 años. Tu papá te sostiene el trípode del telescopio usado para que no se hunda en la tierra del patio. Después de varios intentos, encontrás Saturno.",
-   "Le corrés la silla para que mire. «Hay un puntito al lado del anillo», te dice. «Puede ser Titán». Te deja el ocular a la altura de los ojos."
+   "Tenés 13 años. Tu papá sostiene el trípode en la tierra del patio. Después de varios intentos, encontrás Saturno.",
+   "«El puntito al lado del anillo es Titán», te dice tu papá. «Es una luna de Saturno. Está cubierta de nubes. Desde acá no sabemos qué hay debajo»."
   ],
   "options": [
    {
-    "label": "Le preguntás cómo sabe que es Titán.",
-    "keepsake": "Tu papá te dice que vuelvan a mirar mañana. Una estrella se queda ahí. Titán cambia de lugar."
+    "label": "«¿Vos creés que hay vida ahí?»",
+    "keepsake": "«No sé», dice tu papá. «Si hay algo vivo, capaz no se parece a nada de acá». Vuelve a mirar por el telescopio."
    },
    {
-    "label": "Mirás otra vez y le hacés lugar al lado tuyo.",
-    "keepsake": "Te quedás un rato con tu papá en el patio. Cuando él va a entrar, le pedís que espere un poco más."
+    "label": "«¿Cómo podríamos saber qué hay debajo?»",
+    "keepsake": "«Habría que acercarse. Una sonda podría bajar entre las nubes», te dice. Te corre la silla para que mires otra vez."
    }
   ]
  },

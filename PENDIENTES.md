@@ -25,7 +25,7 @@ Al cierre de cada pasada se actualizan los puntos resueltos y se conserva lo que
 - [x] Reservar el color de selección de «Nuevo juego» para el mouse o la navegación con teclado.
 - [x] Abrir el horizonte de la ruta en ambos sentidos y el del arroyo del prólogo. La corriente se desplaza en el eje X local del cauce.
 - [x] Fundir la imagen y las manos juntas al entrar a un recuerdo, también cuando el jugador se aleja fuera de la huella.
-- [x] Cambiar «diez minutos» por «un minuto» y el recuerdo de los 16 años por el del primer telescopio.
+- [x] Cambiar «diez minutos» por «un minuto». En el recuerdo del primer telescopio, Hernán tiene 13 años.
 - [x] Mostrar Mouse y F1 en la parada. Mostrar WASD y habilitar la caminata al recoger la mochila.
 - [x] Fijar la posición de la luz al abrir cada microescena y dejar el ocaso para después del puente. El sol queda detrás de las nubes.
 - [x] Abrir hacia adentro la puerta del refugio y alargar el gesto de mantener apretado el pulsador de la radio.
@@ -58,7 +58,7 @@ Al cierre de cada pasada se actualizan los puntos resueltos y se conserva lo que
 - **Parada.** El abrigo queda junto a la banquina. Hernán arranca mirando la ruta. Puede girar y levantar la mochila con E o clic desde donde está. Después se habilita la caminata hacia la huella lateral. Las partidas viejas guardadas antes de recoger la mochila abren con la posición nueva.
 - **Cartelería.** Los textos, flechas y el pictograma del ómnibus se dibujan en la cara esmaltada. Se revisó el cartel de la parada de costado y de cerca. Los carteles de orientación se leen en el paisaje. Las interacciones del encargo quedan en el banco, la antena y los hitos.
 - **Ritmo y audio del prólogo.** El fundido entre paisaje y recuerdo dura 1,35 segundos. Se recorrieron las ocho microescenas con ese fundido.
-- **Recuerdos.** A los 16 Hernán encuentra Saturno con su papá. Puede preguntarle cómo reconoce Titán o quedarse un rato más mirando con él. Su papá muere en la segunda semana de septiembre y la oferta de trabajo llega un par de semanas después, antes de la llegada del 1 de octubre.
+- **Recuerdos.** A los 13 Hernán encuentra Saturno con su papá, que le señala Titán y le explica que desde el patio no pueden ver qué hay debajo de las nubes. Hernán puede preguntarle si cree que hay vida o cómo podrían averiguarlo. La respuesta se lee antes de volver al sendero. Su papá muere en la segunda semana de septiembre y la oferta de trabajo llega un par de semanas después, antes de la llegada del 1 de octubre.
 - **Cantera y cumbre.** La huella del cable está pintada en el suelo. Los postes quedan al costado. Se sumaron afloramientos y vegetación en las orillas. Las piedras tienen grano mineral discreto y tonos grises, ocres y levemente rosados. Se comprobaron los apoyos y las colisiones de 657 rocas de la travesía y se recorrieron el cable y la cumbre en ambos sentidos.
 - **Cartografía.** El Día 27 usa una lámina fija con la Senda del Oeste, el carrete, el empalme y el malacate. La del Día 32 comparte el refugio, el banco del acceso, la senda de las pircas, el campamento y la cumbre. Las dos se mantienen al volver. La bajada de la cumbre actualiza la marca del siguiente tramo dentro de su hoja.
 

@@ -1,6 +1,7 @@
 extends Control
 
 signal selected(index: int)
+signal continued
 var fade: Tween
 var lines: Array
 var options: Array
@@ -62,7 +63,7 @@ func show_paragraph():
 func finish():
 	text.modulate.a = 1.0
 	complete = true
-	if paragraph == lines.size() - 1:
+	if paragraph == lines.size() - 1 and not options.is_empty():
 		choices.present(options.map( func(option): return option.label))
 	else: cue.show()
 
@@ -72,3 +73,5 @@ func _gui_input(event):
 		if complete and paragraph < lines.size() - 1:
 			paragraph += 1
 			show_paragraph()
+		elif complete and options.is_empty():
+			continued.emit()
