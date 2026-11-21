@@ -1,0 +1,174 @@
+extends Node3D
+
+const Creek = preload("res://cauce.gd")
+const Flora = preload("res://flora.gd")
+const Stone = preload("res://piedra_serrana.gd")
+const Models = preload("res://fauna_modelos.gd")
+const FOX := "zorro"
+const TEGU := "overo"
+const REED := "cortadera"
+const FOX_START := Vector2(18.1, -2.6)
+const FOX_END := Vector2(30.2, -7.1)
+const FOX_MID := (FOX_START + FOX_END) * 0.5
+const FOX_CROSS_SECONDS := 3.3
+const NATURAL_TARGET_DISTANCE := 13.0
+const TEGU_REST_ANGLE := -2.89
+const ENTRIES := {
+	FOX: ["Zorro gris pampeano", "Cruzó la huella del mollar al trote. Alcancé a ver el lomo gris y, antes de que se metiera en los arbustos, la punta negra de la cola."],
+	TEGU: ["Lagarto overo", "Se calentaba sobre una laja de la orilla. Tenía manchas claras entre las bandas oscuras y una cola larga que casi tocaba el suelo."],
+	REED: ["Cortadera", "Las hojas se doblan hacia el agua. De cerca, cada penacho está hecho de ramitas finas. Dibujé la mata entera para acordarme de su forma."],
+}
+const SKETCHES := {
+	FOX: "res://naturaleza_zorro.webp",
+	TEGU: "res://naturaleza_overo.webp",
+	REED: "res://naturaleza_cortadera.webp",
+}
+
+var fox: Node3D
+var tegu: Node3D
+var tegu_home := Vector3.ZERO
+var reed_foot := Vector3.ZERO
+var day_seen := 0
+var fox_clock := -1.0
+var fox_armed := true
+var tegu_clock := -1.0
+var drawings_on_wall: Dictionary = {}
+
+func _ready():
+	var models := Models.new()
+	fox = models.make_fox(self)
+	tegu = models.make_tegu(self)
+	fox.hide()
+	tegu.hide()
+	dress_bank()
+
+func dress_bank():
+	const ROCK_X := -31.6
+	const REED_X := -25.4
+	var ridge := ground(Vector2(ROCK_X, Creek.channel_z(ROCK_X) - 9.7))
+	var rng := RandomNumberGenerator.new()
+	rng.seed = 958
+	var face := Stone.surface()
+	var shape := Stone.fragment(face, ridge, Vector3(3.35, 0.31, 2.75), 0.8, rng, Creek.surface_point)
+	Stone.solid(self, ridge, shape, "Laja calentada por el sol")
+	Stone.finish(self, face, "Laja del lagarto")
+	tegu_home = ridge
+	for point in shape.slice(-Stone.SIDES):
+		tegu_home.y += (point.y - ridge.y) / Stone.SIDES
+	tegu_home.y -= 0.012
+	tegu.position = tegu_home
+	tegu.rotation.y = TEGU_REST_ANGLE
+
+	reed_foot = ground(Vector2(REED_X, Creek.channel_z(REED_X) - 7.2))
+	var tuft: Array[Vector4] = []
+	for offset in [Vector3.ZERO, Vector3(-0.77, 0, -0.18), Vector3(0.48, 0, 0.53)]:
+		var at := Creek.surface_point(reed_foot + offset)
+		tuft.append(Vector4(at.x, at.y - 0.08, at.z, 1.15 if offset == Vector3.ZERO else 0.74))
+	Flora.herb_batch(self, tuft, Flora.Herb.CORTADERA)
+
+func ground(at: Vector2) -> Vector3:
+	return Creek.surface_point(Vector3(at.x, 0.0, at.y))
+
+func advance(delta: float, day: int, player_position: Vector3, dark: float, rain: float, walking: bool):
+	if day_seen != day:
+		day_seen = day
+		fox_clock = -1.0
+		fox_armed = true
+		tegu_clock = -1.0
+		fox.hide()
+		tegu.hide()
+	if not walking: return
+
+	var player_xz := Vector2(player_position.x, player_position.z)
+	advance_fox(delta, player_xz, day >= 7 and day <= 32 and rain < 0.57 and dark < 0.68)
+	advance_tegu(delta, player_position, day >= 2 and day <= 36 and rain < 0.23 and dark < 0.32)
+
+func advance_fox(delta: float, player_xz: Vector2, active: bool):
+	var distance := player_xz.distance_to(FOX_MID)
+	if not active or distance > 25.0:
+		fox_clock = -1.0
+		fox_armed = true
+		fox.hide()
+		return
+	if fox_armed and distance < 11.2:
+		fox_armed = false
+		fox_clock = 0.0
+	if fox_clock < 0.0: return
+	fox_clock += delta
+	var u := (fox_clock - 0.30) / FOX_CROSS_SECONDS
+	if u < 0.0: return
+	if u >= 1.0:
+		fox_clock = -1.0
+		fox.hide()
+		return
+	var at := FOX_START.lerp(FOX_END, u)
+	var lateral := (FOX_END - FOX_START).orthogonal().normalized()
+	at += lateral * sin(u * PI) * 0.8
+	fox.position = ground(at)
+	var direction := (FOX_END - FOX_START).normalized() + lateral * (0.13 * cos(u * PI))
+	fox.rotation.y = atan2(-direction.x, -direction.y)
+	var stride := u * 53.0
+	fox.position.y += 0.02 + 0.025 * absf(sin(stride))
+	for i in fox.get_child_count():
+		var phase := stride + (PI if i in [1, 2] else 0.0)
+		fox.get_child(i).rotation.x = sin(phase) * 0.53
+	fox.show()
+
+func advance_tegu(delta: float, player_position: Vector3, active: bool):
+	var distance := Vector2(player_position.x - tegu_home.x, player_position.z - tegu_home.z).length()
+	if not active or distance > 23.0:
+		tegu_clock = -1.0
+		tegu.hide()
+		return
+	if tegu_clock < 0.0:
+		tegu.position = tegu_home
+		tegu.rotation.y = TEGU_REST_ANGLE
+		if not tegu.visible:
+			for part in tegu.get_children():
+				if part.has_meta("walking_leg"): part.rotation.y = 0.0
+		tegu.show()
+		if player_position.distance_to(tegu_home) < 1.82: tegu_clock = 0.0
+		return
+	tegu_clock += delta
+	if tegu_clock > 1.28:
+		tegu.hide()
+		return
+	var u := clampf(tegu_clock / 1.28, 0.0, 1.0)
+	var at := tegu_home + Vector3(2.18 * u, 0, 1.41 * u + 0.10 * sin(u * 14.0))
+	var threshold := smoothstep(0.24, 0.54, u)
+	tegu.position = Creek.surface_point(at).lerp(Vector3(at.x, tegu_home.y, at.z), 1.0 - threshold)
+	tegu.rotation.y = -2.15 + 0.10 * sin(u * 24.0)
+	for i in tegu.get_child_count():
+		var part := tegu.get_child(i) as Node3D
+		if part.has_meta("walking_leg"):
+			part.rotation.y = 0.35 * sin(u * 47.0 + (PI if i in [3, 4] else 0.0))
+
+func aimed(camera: Camera3D, player: CharacterBody3D, observations: Dictionary) -> String:
+	var head := camera.global_position
+	var look := -camera.global_basis.z
+	for observation in [
+		[FOX, fox.global_position + Vector3.UP * 0.40, 0.47, fox.visible, NATURAL_TARGET_DISTANCE],
+		[TEGU, tegu.global_position + Vector3.UP * 0.12, 0.33, tegu.visible, 8.0],
+		[REED, to_global(reed_foot + Vector3.UP * 0.71), 0.47, true, 6.0],
+	]:
+		var id: String = observation[0]
+		if observations.has(id) or not observation[3]: continue
+		var point: Vector3 = observation[1]
+		var offset := point - head
+		var depth := offset.dot(look)
+		if depth < 0.2 or depth > observation[4] or (offset - look * depth).length() > observation[2]: continue
+		var ray := PhysicsRayQueryParameters3D.create(head, point, 1, [player.get_rid()])
+		if get_world_3d().direct_space_state.intersect_ray(ray).is_empty(): return id
+	return ""
+
+func next_day_sketches(valley: Node3D, observations: Dictionary, day: int):
+	var index := 0
+	for id in ENTRIES:
+		if observations.has(id) and int(observations[id]) < day and not drawings_on_wall.has(id):
+			var texture := load(SKETCHES[id]) as Texture2D
+			if texture:
+				var place := Vector3(-0.30 + 0.50 * index, 1.10, 5.85)
+				var paper := preload("res://refugio.gd").wall_sketch(valley, place, texture, -1)
+				paper.name = "Dibujo de " + ENTRIES[id][0]
+				drawings_on_wall[id] = paper
+		index += 1

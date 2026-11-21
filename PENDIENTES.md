@@ -53,6 +53,13 @@ Al cierre de cada pasada se actualizan los puntos resueltos y se conserva lo que
 - [x] Darles materiales y siluetas distintas a los tres sueños. El primero tiene placas azules fracturadas, el segundo terrazas cobrizas y el tercero crestas de obsidiana y arcos erosionados. Las formaciones cercanas son sólidas y dejan pasos abiertos hacia los seis hallazgos.
 - [x] Conectar las lajas con la bajada al cauce y abrir un atajo del este a la vuelta del mollar. Las dos huellas están señalizadas y se dibujan en la hoja local, centrada en el refugio. Se recorrieron los enlaces con el mapa de mano abierto.
 
+## Pasada de flora y fauna
+
+- El zorro gris pampeano cruza al trote la huella del mollar. El lagarto overo toma sol sobre una laja en la bajada al cauce y se refugia al acercarse Hernán. Las cortaderas de la orilla también se pueden dibujar.
+- Al mirar un ejemplar, E guarda un dibujo al carboncillo y una nota de Hernán. N abre Flora y fauna, con su propia sección en el cuaderno. C sigue abriendo Coleccionables. Los dibujos quedan en la partida y aparecen junto a la cama a partir de la jornada siguiente.
+- La ficha del zorro confirma presencia en Córdoba y enumera Ascochinga y la Quebrada del Condorito. Los arbustales y pastizales figuran entre sus hábitats. [Ficha de SAREM](https://doi.org/10.31687/SaremLR.19.127)
+- La identificación del lagarto overo usa *Salvator merianae*. Falta cotejar una observación del cerro. El cuis moro figura en Córdoba y en la Quebrada del Condorito y queda como candidato para los pastizales. [The Reptile Database, datos de junio de 2026](https://github.com/PaulESantos/reptiledb.data) · [Ficha del cuis](https://doi.org/10.31687/SaremLR.19.332)
+
 ## Pasada de vegetación por ambientes
 
 - El mollar gana molles, talas y espinillos de diferentes alturas, con piquillines y romerillos en los bordes. El camino del cable tiene matas bajas de romerillo entre los afloramientos.
@@ -222,6 +229,6 @@ Esta lista reconstruye el estado informado del proyecto editable. La exportació
 ## Todavía pendiente
 
 - **Arte.** Cotejar el acabado de las rocas con más fotos del cerro y seguir afinando los objetos de cerca, la vegetación y las lomadas de fondo en los sectores secundarios.
-- **Fauna.** Revisar la lámina de zorro gris y lagarto overo antes de decidir el modelado y las animaciones.
+- **Fauna.** Buscar registros de observación del Uritorco para afinar el reparto por ambientes. El cuis moro queda como candidato para una próxima ampliación.
 - **Prueba de campaña.** Cronometrar una primera partida de principio a fin con alguien que esté descubriendo los caminos.
 - **Windows.** Probar la campaña y el audio de la exportación en un equipo con Windows.

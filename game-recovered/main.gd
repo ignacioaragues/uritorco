@@ -38,7 +38,8 @@ const DREAM_ARCH_EXCHANGES := [
 	"Del otro lado suenan dos golpes secos.\n\n—Hay dos discos. ¿Cuál tengo que mirar?\n—El huequito entre las cuatro estrellas. Como en la vereda, cuando tapábamos el farol."
 ]
 enum Sighting { ABRA, QUARRY, CROSSING, SHELTER }
-const STATE = ["page", "stage", "keepsakes", "bedtime", "field_note", "crossing_note", "filo_report_reply", "quarry_reply", "fox_seen", "hiker_met", "route_reported", "observing", "pending_return", "heard", "radio_taken", "bag_left", "read_note", "creek_note", "bed_pose", "bed_pitch", "gate_jumped", "map_read", "awaiting_call", "dream_count", "branch_found", "mapped_distance", "has_piece", "summit_mapped", "camp_read", "arrival_action", "intro_bridge_drawn", "second_sighting", "book_light_notes", "day7_dusk", "archive_read", "trail_replies", "crossing_response", "summit_echo_response", "night_investigation", "last_night", "night_home", "ending_at_door", "sky_memories", "compass_lost", "last_voice_reply", "found_collectibles"]
+const Natural = preload("res://naturaleza.gd")
+const STATE = ["page", "stage", "keepsakes", "bedtime", "field_note", "crossing_note", "filo_report_reply", "quarry_reply", "fox_seen", "hiker_met", "route_reported", "observing", "pending_return", "heard", "radio_taken", "bag_left", "read_note", "creek_note", "bed_pose", "bed_pitch", "gate_jumped", "map_read", "awaiting_call", "dream_count", "branch_found", "mapped_distance", "has_piece", "summit_mapped", "camp_read", "arrival_action", "intro_bridge_drawn", "second_sighting", "book_light_notes", "day7_dusk", "archive_read", "trail_replies", "crossing_response", "summit_echo_response", "night_investigation", "last_night", "night_home", "ending_at_door", "sky_memories", "compass_lost", "last_voice_reply", "found_collectibles", "nature_notes"]
 var flashlight_out: = false
 var camp_read: = false
 var summit_mapped: = false
@@ -170,11 +171,12 @@ var quarry_reply := -1
 var journal_pages: Array[Dictionary] = []
 var journal_view := Diary.new()
 var journal_page := 0
-var journal_collection := false
+var journal_section := Diary.Section.DIARY
 var journal_from := ""
 var collect_notice := ""
 var collect_notice_seconds := 0.0
 var found_collectibles: Dictionary = {}
+var nature_notes: Dictionary = {}
 var fox_seen: = false
 var hiker_met: = false
 var route_reported: = false
@@ -269,6 +271,7 @@ func _ready():
 	ui.add_child(postcard_view)
 	ui.add_child(journal_view)
 	journal_view.section_requested.connect(toggle_journal_section)
+	journal_view.nature_requested.connect(toggle_nature_section)
 	ui.add_child(menu)
 	menu.settings_changed.connect( func(volume, sensitivity):
 		AudioServer.set_bus_volume_db(0, linear_to_db(volume / 100.0))
@@ -450,6 +453,10 @@ func _process(delta):
 		if day >= 25 and second_sighting: valley.hang_sketch(2, Diary.WALL_ATLAS, Diary.LIGHTS)
 		if day >= 36 and camp_read: valley.hang_sketch(3, Diary.WALL_ATLAS, Diary.RIDGE)
 	var darkness := float(valley.sky_mat.get_shader_parameter("nightfall"))
+	var outside_world: bool = player.intro_center == Vector3.ZERO and (mode in ["walk", "map"] or (radio_panel.visible and player.walking))
+	valley.nature.advance(delta, day, player.position, darkness, rain_strength, outside_world)
+	if not nature_notes.is_empty() and in_refuge:
+		valley.nature.next_day_sketches(valley, nature_notes, day)
 	var hand_tone := Color.WHITE.lerp(Color("#727c8e") if not in_refuge else Color("#b4a392"), darkness)
 	if is_instance_valid(cave) and not cave_outside: hand_tone = Color("#6c6b69") if flashlight_out else Color("#45444c")
 	hands.modulate = hand_tone
@@ -596,6 +603,10 @@ func _process(delta):
 			return
 		if target == "Cortinas":
 			hint.text = curtain_hint()
+			return
+		var subject := aimed_nature()
+		if not subject.is_empty():
+			hint.text = "E · dibujar " + Natural.ENTRIES[subject][0].to_lower()
 			return
 		if stage == 0 and target == "Radio" and not radio_taken:
 			hint.text = "E · levantar la radio"
@@ -818,7 +829,7 @@ func overlay(kind: String, caption: String, footer: Variant, prop: String = ""):
 	Input.mouse_mode = Input.MOUSE_MODE_CAPTURED if mobile and not Input.is_key_pressed(KEY_ALT) else Input.MOUSE_MODE_VISIBLE
 
 func open_journal():
-	journal_collection = false
+	journal_section = Diary.Section.DIARY
 	journal_page = 0
 	if page == 3 and journal_from == "approach": intro_journal_seen = true
 	if journal_from in ["approach", "intro"]:
@@ -923,10 +934,10 @@ func remove_collected_objects():
 
 func toggle_journal_section():
 	if journal_from in ["approach", "intro"]: return
-	if journal_collection:
+	if journal_section == Diary.Section.COLLECTION:
 		open_journal()
 		return
-	journal_collection = true
+	journal_section = Diary.Section.COLLECTION
 	journal_page = 0
 	var total := Exploration.FINDS.size() + Alien.FINDS.size() + 1
 	var introduction := "%d de %d anotados.\n\nHallazgos del cerro y de los sueños." % [found_collectibles.size(), total]
@@ -944,9 +955,37 @@ func toggle_journal_section():
 		journal_pages.append({"title": CaveRunes.TITLE, "text": "Última noche · Cueva\n\n" + CaveRunes.NOTE, "sketch": CaveRunes.sketch()})
 	show_journal_page()
 
+func aimed_nature() -> String:
+	if stage <= 0 or stage >= 19 or not target.is_empty(): return ""
+	return valley.nature.aimed(player.camera, player, nature_notes)
+
+func record_nature(id: String):
+	nature_notes[id] = calendar_day()
+	collect_notice = Natural.ENTRIES[id][0] + " · Anotado en Flora y fauna (N)"
+	collect_notice_seconds = 4.0
+	save_game(true, "walk")
+
+func toggle_nature_section():
+	if journal_from in ["approach", "intro"]: return
+	if journal_section == Diary.Section.NATURE:
+		open_journal()
+		return
+	journal_section = Diary.Section.NATURE
+	journal_page = 0
+	var description := "Cuando veas un animal o una planta que puedas dibujar, miralos y apretá E."
+	if not nature_notes.is_empty():
+		description = "Dibujos y notas que fui tomando en las caminatas."
+	journal_pages = [{"title": "Flora y fauna", "text": description}]
+	for id in Natural.ENTRIES:
+		if not nature_notes.has(id): continue
+		var entry: Array = Natural.ENTRIES[id]
+		journal_pages.append({"title": entry[0], "text": "Día %d\n\n%s" % [nature_notes[id], entry[1]],
+			"sketch": load(Natural.SKETCHES[id])})
+	show_journal_page()
+
 func show_journal_page():
 	overlay("journal", "", "")
-	journal_view.display(journal_pages[journal_page], journal_page, journal_pages.size(), journal_collection, journal_from not in ["approach", "intro"])
+	journal_view.display(journal_pages[journal_page], journal_page, journal_pages.size(), journal_section, journal_from not in ["approach", "intro"])
 
 func walk():
 	journal_view.hide()
@@ -1304,6 +1343,8 @@ func _unhandled_key_input(event):
 			close_journal()
 		elif key == KEY_C:
 			toggle_journal_section()
+		elif key == KEY_N:
+			toggle_nature_section()
 		elif key in [KEY_LEFT, KEY_RIGHT]:
 			journal_page = clampi(journal_page + (1 if key == KEY_RIGHT else -1), 0, journal_pages.size() - 1)
 			show_journal_page()
@@ -1389,10 +1430,11 @@ func _unhandled_key_input(event):
 		journal_from = mode
 		open_journal()
 		return
-	if (mode in ["dream", "cave"] or (mode == "walk" and stage >= 0)) and key == KEY_C:
+	if (mode in ["dream", "cave"] or (mode == "walk" and stage >= 0)) and key in [KEY_C, KEY_N]:
 		journal_from = mode
-		journal_collection = false
-		toggle_journal_section()
+		journal_section = Diary.Section.DIARY
+		if key == KEY_C: toggle_journal_section()
+		else: toggle_nature_section()
 		return
 	if mode == "dream" and key == KEY_M:
 		if hands.map_requested: hands.show_map(false)
@@ -1481,6 +1523,10 @@ func _unhandled_key_input(event):
 				var find := aimed_collectible()
 				if stage >= 0 and Exploration.FINDS.has(find):
 					record_collectible(find)
+					return
+				var subject := aimed_nature()
+				if not subject.is_empty():
+					record_nature(subject)
 					return
 				if at_summit_finish():
 					start_day36()
@@ -2335,7 +2381,7 @@ func show_cave_notebook():
 		cave_notebooks_read = true
 		night_investigation = 2
 	overlay("cave_notebook", "", "")
-	journal_view.display(CAVE_NOTEBOOK[cave_notebook_page], cave_notebook_page, CAVE_NOTEBOOK.size(), false, false)
+	journal_view.display(CAVE_NOTEBOOK[cave_notebook_page], cave_notebook_page, CAVE_NOTEBOOK.size(), Diary.Section.DIARY, false)
 
 func show_departure_choice():
 	var caption := "La radio queda en silencio. Desde la banquina ves el ómnibus doblar en la curva."
@@ -2448,6 +2494,7 @@ func restore(data: Dictionary):
 		if data.state.has(key): set(key, data.state[key])
 	abra_told_mara = bool(data.state.get("abra_told_mara", "Se lo conté a Mara." in str(data.state.get("field_note", ""))))
 	found_collectibles = data.state.get("found_collectibles", {}).duplicate()
+	nature_notes = data.state.get("nature_notes", {}).duplicate()
 	remove_collected_objects()
 	trail_replies = Mara.saved_replies(data.state)
 	trail_spacing_day = calendar_day()

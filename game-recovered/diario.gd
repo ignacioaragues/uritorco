@@ -1,6 +1,9 @@
 extends Control
 
 signal section_requested
+signal nature_requested
+
+enum Section { DIARY, COLLECTION, NATURE }
 
 const PAGE_SIZE := Vector2(820, 510)
 const INK := Color("#41352f")
@@ -27,6 +30,7 @@ var drawings: Texture2D
 var finds: Texture2D
 var dream_finds: Texture2D
 var section := Button.new()
+var nature := Button.new()
 
 func _ready():
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -64,16 +68,19 @@ func _ready():
 	body.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	footer.position = Vector2(63, 451)
 	footer.add_theme_font_size_override("font_size", 20)
-	sheet.add_child(section)
-	section.position = Vector2(586, 48)
-	section.size = Vector2(177, 38)
-	section.focus_mode = Control.FOCUS_NONE
-	section.flat = true
-	section.add_theme_font_override("font", pen)
-	section.add_theme_font_size_override("font_size", 21)
-	section.add_theme_color_override("font_color", INK)
-	section.add_theme_color_override("font_hover_color", Color("#883e2c"))
+	for button in [section, nature]:
+		sheet.add_child(button)
+		button.size = Vector2(173, 39)
+		button.focus_mode = Control.FOCUS_NONE
+		button.flat = true
+		button.add_theme_font_override("font", pen)
+		button.add_theme_font_size_override("font_size", 20)
+		button.add_theme_color_override("font_color", INK)
+		button.add_theme_color_override("font_hover_color", Color("#883e2c"))
+	section.position = Vector2(420, 444)
+	nature.position = Vector2(591, 444)
 	section.pressed.connect(func(): section_requested.emit())
+	nature.pressed.connect(func(): nature_requested.emit())
 	resized.connect(fit_page)
 	hide()
 
@@ -82,7 +89,8 @@ func fit_page():
 	sheet.scale = Vector2.ONE * factor
 	sheet.position = (size - PAGE_SIZE * factor) * 0.5
 
-func display(entry: Dictionary, index: int, total: int, collection: bool, sections := true):
+func display(entry: Dictionary, index: int, total: int, active_section: Section, sections := true):
+	var collection := active_section == Section.COLLECTION
 	var motif: int = entry.get("drawing", -1)
 	var dream := bool(entry.get("dream", false))
 	var atlas := (dream_finds if dream else finds) if collection else drawings
@@ -107,6 +115,8 @@ func display(entry: Dictionary, index: int, total: int, collection: bool, sectio
 	body.text = entry.text
 	section.visible = sections
 	section.text = "C · Diario" if collection else "C · Coleccionables"
+	nature.visible = sections
+	nature.text = "N · Diario" if active_section == Section.NATURE else "N · Flora y fauna"
 	footer.text = "Tab · guardar"
 	if total > 1:
 		footer.text = "← / → · hojear (%d/%d)     " % [index + 1, total] + footer.text

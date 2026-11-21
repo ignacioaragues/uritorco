@@ -14,6 +14,7 @@ const Stone = preload("res://piedra_serrana.gd")
 const Exploration = preload("res://exploracion.gd")
 const Flora = preload("res://flora.gd")
 const Trail = preload("res://travesia.gd")
+const Natural = preload("res://naturaleza.gd")
 const CURTAIN_RAIL := Vector3(3.27, 2.405, 2.8)
 const CURTAIN_WIDTH := 1.82
 const CURTAIN_HEIGHT := 1.32
@@ -22,6 +23,7 @@ const CURTAIN_OPEN_WIDTH_RATIO := 0.18
 var rng: = RandomNumberGenerator.new()
 var route = Trail.new()
 var birds = Birds.new()
+var nature := Natural.new()
 var desk_radio: StaticBody3D
 var desk_note: StaticBody3D
 var bag_drop: StaticBody3D
@@ -199,6 +201,8 @@ func _ready():
 	dress_birds()
 	preload("res://museo.gd").build(self)
 	Exploration.build(self)
+	nature.name = "Flora y fauna"
+	add_child(nature)
 
 func open_mara_path():
 	if mara_path_open: return
