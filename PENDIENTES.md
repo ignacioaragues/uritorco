@@ -45,10 +45,8 @@ Al cierre de cada pasada se actualizan los puntos resueltos y se conserva lo que
 - [x] Recorrer la ida del Día 36 con el mapa de mano y las doce pircas. Se comprobó el cambio de lámina y se llegó desde la tranquera hasta la marca en la pasarela, guardando el mapa para saltar el tronco y trepar la laja.
 - [x] Revisar la tormenta completa del Día 36. Se ve desde la ventana, la lluvia aumenta al bajar al cauce y el sonido baja bajo techo y durante la radio. Se despeja de a poco al regresar, con el arroyo todavía crecido y el suelo mojado.
 - [x] Darle al Sol un ocaso hacia el oeste y a la Luna un disco más grande y luminoso, con fases según la fecha y visibilidad algunas tardes. Las nubes pasan delante de los dos.
-
-### Por hacer
-
-- [ ] Hacer aparecer objetos en el refugio según lo que pasó con Mara. Queda anotada la botella de vino como posibilidad.
+- [x] Ajustar el tamaño aparente de la Luna a plena luz. El disco gana tamaño progresivamente durante el crepúsculo.
+- [x] Hacer que dos charlas de Mara puedan dejar objetos en el refugio. El pisapapeles llega con las pilas a partir del Día 7 y la botella de tinto aparece en la mesada a partir del Día 36. Se pueden inspeccionar con E. Se probaron las dos respuestas de cada charla y la carga de partida.
 
 ## Ritmo de las charlas de Mara
 
@@ -166,7 +164,6 @@ Esta lista reconstruye el estado informado del proyecto editable. La exportació
 
 ## Todavía pendiente
 
-- **Pasada narrativa.** Evaluar objetos ligados a decisiones, como una botella que pueda mandar Mara.
 - **Ambiente.** Volver a escuchar la mezcla de la última noche y comparar los sonidos de pisadas por superficie.
 - **Arte.** Afinar las texturas del prólogo, la lectura de objetos de cerca y la integración visual del terreno de los sueños.
 - **Mundo y recorridos.** Revisar la distribución de destinos alrededor del refugio, seguir afinando la cartografía y revisar a velocidad normal el ritmo de las ocho microescenas.

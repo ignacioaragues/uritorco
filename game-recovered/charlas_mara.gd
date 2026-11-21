@@ -37,7 +37,7 @@ const TOPICS = {
 		0, "De chica llevaba una piedra de cada caminata. Una vez volví con tantas que tuve que dejar el agua para cerrar la mochila.",
 		["«¿Todavía guardás alguna?»", "«Hoy casi me traigo una de acá»."],
 		[
-			["Una blanca y chata. La uso para que no se me vuele el mantel."],
+			["Una blanca y chata. La uso para que no se me vuele el mantel.", "Tengo otra parecida. Te la mando con las pilas. A vos te vendrá bien para sujetar el mapa."],
 			["Fijate si te vuelve a llamar la atención mañana. A veces es la luz de ese momento."]
 		]
 	],
@@ -102,7 +102,7 @@ const TOPICS = {
 		["«¿Dónde te dejo la llave el último día?»", "«¿Me dejás la radio abierta un rato?»"],
 		[
 			["Podés dejarla en el cajón del escritorio. Acá en el puesto tengo una copia para el próximo relevo."],
-			["Sí. Estoy lavando los platos del puesto. Si escuchás que se cae algo, seguí caminando.", "Vos avisame cuando veas el banco."]
+			["Sí. Estoy lavando los platos del puesto. Si escuchás que se cae algo, seguí caminando.", "Vos avisame cuando veas el banco.", "Con el próximo cajón te mando algo. Guardalo para cuando termines el turno."]
 		]
 	],
 	"lluvia": [

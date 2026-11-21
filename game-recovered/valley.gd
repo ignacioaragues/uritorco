@@ -526,11 +526,17 @@ func update_calendar(day: int):
 
 var wall_postcard_added := false
 var wall_sketches: Dictionary = {}
+var mara_stone: StaticBody3D
+var mara_wine: StaticBody3D
 
-func update_shelter_wall(day: int):
+func update_shelter_details(day: int, stone_sent: bool, wine_sent: bool):
 	if day >= 27 and not wall_postcard_added:
 		wall_postcard_added = true
 		Refuge.postcard(self)
+	if day >= 7 and stone_sent and not is_instance_valid(mara_stone):
+		mara_stone = Refuge.map_weight(self)
+	if day >= 36 and wine_sent and not is_instance_valid(mara_wine):
+		mara_wine = Refuge.wine_parcel(self)
 
 func hang_sketch(index: int, image: Texture2D, motif := -1):
 	if wall_sketches.has(index): return

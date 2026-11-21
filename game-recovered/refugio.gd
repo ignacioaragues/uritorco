@@ -5,6 +5,7 @@ const GRAIN = preload("res://grain.gdshader")
 const CLOTH = preload("res://tejido_refugio.gdshader")
 const BOOK_COVER = preload("res://libro_portada.webp")
 const POSTCARD = preload("res://postal_munich.webp")
+const Stone = preload("res://piedra_serrana.gd")
 
 static func wood(color: String, across := false) -> ShaderMaterial:
 	var finish := ShaderMaterial.new()
@@ -103,6 +104,68 @@ static func desk_items(parent: Node3D) -> StaticBody3D:
 	Kit.block(pencil, Vector3(0, 0, 0.070), Vector3(0.013, 0.013, 0.016), Kit.material("925b48"))
 	mug(parent, Vector3(2.93, 0.903, 2.21))
 	return note
+
+static func map_weight(parent: Node3D) -> StaticBody3D:
+	var weight := Kit.item(parent, Vector3(1.97, 0.904, 2.34), "Piedra de Mara", Vector3(0.0, 0.027, 0), Vector3(0.19, 0.054, 0.136))
+	weight.name = "Piedra de Mara"
+	weight.rotation.y = -0.23
+	var note := Kit.block(weight, Vector3(0.045, 0.005, 0.018), Vector3(0.254, 0.008, 0.178), Kit.material("baaa88"))
+	note.rotation.y = 0.19
+	Kit.block(weight, Vector3(0.090, 0.0095, 0.054), Vector3(0.091, 0.001, 0.0035), Kit.material("65594a")).rotation.y = 0.19
+	var faces := Stone.surface()
+	var rng := RandomNumberGenerator.new()
+	rng.seed = 322
+	Stone.fragment(faces, Vector3.UP * 0.016, Vector3(0.149, 0.043, 0.106), 0.21, rng)
+	var pebble := Stone.finish(weight, faces, "Piedra chata")
+	pebble.material_override = Stone.paint("#c8c3b5")
+	return weight
+
+static func wine_parcel(parent: Node3D) -> StaticBody3D:
+	var bottle := Kit.item(parent, Vector3(-2.77, 0.995, 3.67), "Botella de Mara", Vector3.UP * 0.16, Vector3(0.118, 0.32, 0.12))
+	bottle.name = "Botella de Mara"
+	bottle.rotation.y = -0.16
+	var glass := Kit.material("3e4931", false, 0.31)
+	Kit.shell(bottle, [
+		Vector4(0.317, 0.001, 0.001, 0), Vector4(0.317, 0.019, 0.019, 0),
+		Vector4(0.308, 0.021, 0.021, 0), Vector4(0.303, 0.016, 0.016, 0),
+		Vector4(0.253, 0.016, 0.016, 0), Vector4(0.239, 0.022, 0.022, 0),
+		Vector4(0.221, 0.038, 0.038, 0), Vector4(0.201, 0.052, 0.052, 0),
+		Vector4(0.184, 0.054, 0.054, 0), Vector4(0.026, 0.054, 0.054, 0),
+		Vector4(0.011, 0.052, 0.052, 0), Vector4(0.005, 0.041, 0.041, 0),
+		Vector4(0.005, 0.001, 0.001, 0),
+	], glass, 1.0)
+	var foil := Kit.material("743c41", false, 0.58)
+	Kit.shell(bottle, [
+		Vector4(0.321, 0.001, 0.001, 0), Vector4(0.319, 0.020, 0.020, 0),
+		Vector4(0.308, 0.0215, 0.0215, 0), Vector4(0.304, 0.017, 0.017, 0),
+		Vector4(0.274, 0.0165, 0.0165, 0),
+	], foil, 1.0)
+	var paper := Kit.material("cbb38e")
+	Kit.shell(bottle, [
+		Vector4(0.154, 0.0548, 0.0548, 0), Vector4(0.074, 0.0548, 0.0548, 0),
+	], paper, 1.0)
+	var border := Kit.material("885754")
+	for y in [0.080, 0.145]:
+		Kit.shell(bottle, [Vector4(y + 0.0025, 0.055, 0.055, 0), Vector4(y, 0.055, 0.055, 0)], border, 1.0)
+	var label := Label3D.new()
+	label.text = "TINTO"
+	label.modulate = Color("#633b36")
+	label.font_size = 44
+	label.pixel_size = 0.00028
+	label.outline_size = 0
+	bottle.add_child(label)
+	label.rotation.y = PI * 0.5
+	label.position = Vector3(0.0555, 0.114, 0)
+
+	var newspaper := Kit.block(bottle, Vector3(0.014, 0.002, 0.035), Vector3(0.25, 0.006, 0.192), Kit.material("9f9785"))
+	newspaper.rotation.y = 0.19
+	var folded := Kit.block(newspaper, Vector3(0.059, 0.009, -0.069), Vector3(0.123, 0.007, 0.055), Kit.material("b2a995"))
+	folded.rotation.x = -0.13
+	var ink := Kit.material("665e51")
+	for row in 5:
+		var z := -0.041 + row * 0.022
+		Kit.block(newspaper, Vector3(0.083, 0.0034, z), Vector3(0.047 - (0.011 if row == 4 else 0.0), 0.0008, 0.002), ink)
+	return bottle
 
 static func mug(parent: Node3D, pos: Vector3):
 	var cup := Node3D.new()

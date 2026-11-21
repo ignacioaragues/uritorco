@@ -415,7 +415,7 @@ func _process(delta):
 	var in_refuge: bool = absf(player.position.x) < 3.45 and player.position.z > -0.35 and player.position.z < 5.9
 	valley.update_desk_radio(radio_taken or (in_refuge and hands.pose == "radio"))
 	valley.set_desk_note(stage <= 0 and not read_note)
-	valley.update_shelter_wall(day)
+	valley.update_shelter_details(day, trail_replies.get("piedras", -1) == 0, trail_replies.get("bajada", -1) == 1)
 	if stage >= 0:
 		if intro_bridge_drawn: valley.hang_sketch(0, Diary.ARRIVAL_BRIDGE)
 		if not creek_note.is_empty(): valley.hang_sketch(1, Diary.WALL_ATLAS, Diary.CREEK)
@@ -1482,6 +1482,10 @@ func _unhandled_key_input(event):
 						read_note = true
 						valley.set_desk_note(false)
 						overlay("message", "Turno de temporada. Canal 3 para comunicarte con el puesto de abajo. Las baterías de repuesto están en el cajón.", "Espacio · dejar la nota")
+					"Piedra de Mara":
+						overlay("message", "La piedra es chata y cabe en la palma. Venía en la caja de las pilas. El papel dice «Para el mapa. La otra sigue en mi mesa. M.»", "Espacio · dejarla en el escritorio")
+					"Botella de Mara":
+						overlay("message", "Desdoblás el papel de diario. Adentro hay un tinto con el sello intacto. Mara escribió en el margen «Yo todavía te debo una charla sin el botón apretado. Guardá éste para cuando termines».", "Espacio · dejarla en la mesada")
 					"Regla del cauce":
 						if stage == 4:
 							stage = 5

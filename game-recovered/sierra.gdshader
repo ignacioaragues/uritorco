@@ -115,8 +115,9 @@ void sky(){
 	if (moon_dir.y > -moon_radius && EYEDIR.y > -0.008) {
 		float phase = 0.5 - 0.5 * dot(daylight_dir, moon_dir);
 		float moonlight = smoothstep(0.015, 0.085, phase) * smoothstep(-0.008, 0.048, EYEDIR.y);
-		earth = disc(EYEDIR,moon_dir,daylight_dir,moon_radius,vec3(1.28,1.21,1.10),earth,moonlight,1.0);
-		daytime = disc(EYEDIR,moon_dir,daylight_dir,moon_radius,vec3(1.03,1.06,1.10),daytime,moonlight * (0.48 + dusk * 0.19),dusk * 0.12);
+		float apparent_radius = moon_radius * mix(0.58, 1.0, smoothstep(0.36, 0.96, max(dusk * 0.72, nightfall)));
+		earth = disc(EYEDIR,moon_dir,daylight_dir,apparent_radius,vec3(1.28,1.21,1.10),earth,moonlight,1.0);
+		daytime = disc(EYEDIR,moon_dir,daylight_dir,apparent_radius,vec3(1.03,1.06,1.10),daytime,moonlight * (0.48 + dusk * 0.19),dusk * 0.12);
 	}
 	vec3 alien = mix(vec3(0.19,0.095,0.18),vec3(0.024,0.013,0.07),blend);
 	if (other_world > 0.0) alien += vec3(0.66,0.86,0.95)*star_field(EYEDIR.zxy);
