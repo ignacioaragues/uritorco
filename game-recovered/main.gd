@@ -1485,7 +1485,7 @@ func _unhandled_key_input(event):
 					"Piedra de Mara":
 						overlay("message", "La piedra es chata y cabe en la palma. Venía en la caja de las pilas. El papel dice «Para el mapa. La otra sigue en mi mesa. M.»", "Espacio · dejarla en el escritorio")
 					"Botella de Mara":
-						overlay("message", "Desdoblás el papel de diario. Adentro hay un tinto con el sello intacto. Mara escribió en el margen «Yo todavía te debo una charla sin el botón apretado. Guardá éste para cuando termines».", "Espacio · dejarla en la mesada")
+						overlay("message", "Levantás una punta del papel de diario. El sello del tinto está intacto. Entre los dobleces reconocés la letra de Mara. «Yo todavía te debo una charla sin el botón apretado. Guardá este para cuando termines».", "Espacio · dejarla en la repisa")
 					"Regla del cauce":
 						if stage == 4:
 							stage = 5

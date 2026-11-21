@@ -120,11 +120,11 @@ static func map_weight(parent: Node3D) -> StaticBody3D:
 	pebble.material_override = Stone.paint("#c8c3b5")
 	return weight
 
-static func wine_parcel(parent: Node3D) -> StaticBody3D:
-	var bottle := Kit.item(parent, Vector3(-2.77, 0.995, 3.67), "Botella de Mara", Vector3.UP * 0.16, Vector3(0.118, 0.32, 0.12))
+static func wine_parcel(parent: Node3D, spot: Vector3) -> StaticBody3D:
+	var bottle := Kit.item(parent, spot, "Botella de Mara", Vector3.UP * 0.16, Vector3(0.14, 0.32, 0.14))
 	bottle.name = "Botella de Mara"
-	bottle.rotation.y = -0.16
-	var glass := Kit.material("3e4931", false, 0.31)
+	bottle.rotation.y = 0.12
+	var glass := Kit.material("424c32", false, 0.44)
 	Kit.shell(bottle, [
 		Vector4(0.317, 0.001, 0.001, 0), Vector4(0.317, 0.019, 0.019, 0),
 		Vector4(0.308, 0.021, 0.021, 0), Vector4(0.303, 0.016, 0.016, 0),
@@ -140,32 +140,62 @@ static func wine_parcel(parent: Node3D) -> StaticBody3D:
 		Vector4(0.308, 0.0215, 0.0215, 0), Vector4(0.304, 0.017, 0.017, 0),
 		Vector4(0.274, 0.0165, 0.0165, 0),
 	], foil, 1.0)
-	var paper := Kit.material("cbb38e")
+	var paper := Kit.material("d8bd91")
 	Kit.shell(bottle, [
-		Vector4(0.154, 0.0548, 0.0548, 0), Vector4(0.074, 0.0548, 0.0548, 0),
+		Vector4(0.176, 0.0548, 0.0548, 0), Vector4(0.111, 0.0548, 0.0548, 0),
 	], paper, 1.0)
-	var border := Kit.material("885754")
-	for y in [0.080, 0.145]:
-		Kit.shell(bottle, [Vector4(y + 0.0025, 0.055, 0.055, 0), Vector4(y, 0.055, 0.055, 0)], border, 1.0)
+	var border := Kit.material("8d4e49")
+	Kit.shell(bottle, [Vector4(0.168, 0.055, 0.055, 0), Vector4(0.162, 0.055, 0.055, 0)], border, 1.0)
 	var label := Label3D.new()
 	label.text = "TINTO"
 	label.modulate = Color("#633b36")
 	label.font_size = 44
-	label.pixel_size = 0.00028
+	label.pixel_size = 0.00043
 	label.outline_size = 0
 	bottle.add_child(label)
-	label.rotation.y = PI * 0.5
-	label.position = Vector3(0.0555, 0.114, 0)
-
-	var newspaper := Kit.block(bottle, Vector3(0.014, 0.002, 0.035), Vector3(0.25, 0.006, 0.192), Kit.material("9f9785"))
-	newspaper.rotation.y = 0.19
-	var folded := Kit.block(newspaper, Vector3(0.059, 0.009, -0.069), Vector3(0.123, 0.007, 0.055), Kit.material("b2a995"))
-	folded.rotation.x = -0.13
-	var ink := Kit.material("665e51")
-	for row in 5:
-		var z := -0.041 + row * 0.022
-		Kit.block(newspaper, Vector3(0.083, 0.0034, z), Vector3(0.047 - (0.011 if row == 4 else 0.0), 0.0008, 0.002), ink)
+	label.rotation.y = PI
+	label.position = Vector3(0.0, 0.138, -0.0555)
+	wrap_bottle(bottle)
 	return bottle
+
+static func wrap_bottle(bottle: Node3D):
+	# El pliego queda abierto de frente, con los dobleces apoyados en la repisa.
+	var folds := PackedVector3Array()
+	var columns := 16
+	for i in range(columns + 1):
+		var angle := lerpf(0.38, TAU - 0.42, float(i) / columns)
+		var rim := 0.121 + 0.029 * sin(i * 0.54) + 0.008 * sin(i * 2.8)
+		rim -= 0.046 * (1.0 - smoothstep(0.0, 3.0, i))
+		var outward := Vector3(sin(angle), 0.0, -cos(angle))
+		var splay := 0.086 + 0.019 * sin(i * 0.79 + 0.3)
+		folds.append(outward * splay + Vector3.UP * 0.005)
+		folds.append(outward * (0.057 + 0.009 * absf(sin(i * 2.6))) + Vector3.UP * 0.037)
+		folds.append(outward * (0.062 + 0.012 * absf(sin(i * 1.1))) + Vector3.UP * rim)
+	var sheet := SurfaceTool.new()
+	sheet.begin(Mesh.PRIMITIVE_TRIANGLES)
+	for i in range(columns):
+		for panel in range(2):
+			var a := i * 3 + panel
+			for index in [a, a + 3, a + 1, a + 1, a + 3, a + 4]:
+				sheet.set_uv(Vector2(floorf(index / 3.0) / columns, folds[index].y / 0.16))
+				sheet.add_vertex(folds[index])
+	sheet.generate_normals()
+
+	var newsprint := Image.create_empty(384, 160, false, Image.FORMAT_RGB8)
+	newsprint.fill(Color("#bbb09b"))
+	var ink := Color("#696359")
+	for column in range(6):
+		var x := 11 + column * 63
+		newsprint.fill_rect(Rect2i(x, 20 + 4 * (column % 3), 51, 4), ink)
+		for row in range(13):
+			for word in range(4):
+				var width := 4 + (row * 13 + column * 7 + word * 11) % 6
+				newsprint.fill_rect(Rect2i(x + word * 12, 36 + row * 8, width, 2), ink)
+	var paper := StandardMaterial3D.new()
+	paper.albedo_texture = ImageTexture.create_from_image(newsprint)
+	paper.cull_mode = BaseMaterial3D.CULL_DISABLED
+	paper.roughness = 1.0
+	Kit.mesh_part(bottle, sheet.commit(), Vector3.ZERO, paper)
 
 static func mug(parent: Node3D, pos: Vector3):
 	var cup := Node3D.new()

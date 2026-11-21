@@ -46,7 +46,7 @@ Al cierre de cada pasada se actualizan los puntos resueltos y se conserva lo que
 - [x] Revisar la tormenta completa del Día 36. Se ve desde la ventana, la lluvia aumenta al bajar al cauce y el sonido baja bajo techo y durante la radio. Se despeja de a poco al regresar, con el arroyo todavía crecido y el suelo mojado.
 - [x] Darle al Sol un ocaso hacia el oeste y a la Luna un disco más grande y luminoso, con fases según la fecha y visibilidad algunas tardes. Las nubes pasan delante de los dos.
 - [x] Ajustar el tamaño aparente de la Luna a plena luz. El disco gana tamaño progresivamente durante el crepúsculo.
-- [x] Hacer que dos charlas de Mara puedan dejar objetos en el refugio. El pisapapeles llega con las pilas a partir del Día 7 y la botella de tinto aparece en la mesada a partir del Día 36. Se pueden inspeccionar con E. Se probaron las dos respuestas de cada charla y la carga de partida.
+- [x] Hacer que dos charlas de Mara puedan dejar objetos en el refugio. El pisapapeles llega con las pilas a partir del Día 7 y la botella de tinto, envuelta en papel de diario, aparece en la repisa a partir del Día 36. Se pueden inspeccionar con E. Se probaron las dos respuestas de cada charla y la carga de partida.
 
 ## Ritmo de las charlas de Mara
 

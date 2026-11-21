@@ -528,6 +528,7 @@ var wall_postcard_added := false
 var wall_sketches: Dictionary = {}
 var mara_stone: StaticBody3D
 var mara_wine: StaticBody3D
+var refuge_shelf: MeshInstance3D
 
 func update_shelter_details(day: int, stone_sent: bool, wine_sent: bool):
 	if day >= 27 and not wall_postcard_added:
@@ -536,7 +537,8 @@ func update_shelter_details(day: int, stone_sent: bool, wine_sent: bool):
 	if day >= 7 and stone_sent and not is_instance_valid(mara_stone):
 		mara_stone = Refuge.map_weight(self)
 	if day >= 36 and wine_sent and not is_instance_valid(mara_wine):
-		mara_wine = Refuge.wine_parcel(self)
+		var shelf_top := refuge_shelf.position + Vector3(-0.72, refuge_shelf.mesh.size.y * 0.5, -0.056)
+		mara_wine = Refuge.wine_parcel(self, shelf_top)
 
 func hang_sketch(index: int, image: Texture2D, motif := -1):
 	if wall_sketches.has(index): return
@@ -596,8 +598,8 @@ func furnish():
 	var latch: = box(Vector3.ZERO, Vector3(0.14, 0.045, 0.18), "b5a17b")
 	latch.reparent(door, false)
 	latch.position = Vector3(0.43, -0.08, 0)
-	var shelf := box(Vector3(-1.7, 1.52, 5.7), Vector3(2.1, 0.09, 0.43), "745942", true)
-	shelf.material_override = Refuge.wood("745942", true)
+	refuge_shelf = box(Vector3(-1.7, 1.52, 5.7), Vector3(2.1, 0.09, 0.43), "745942", true)
+	refuge_shelf.material_override = Refuge.wood("745942", true)
 	var bracket := Refuge.wood("654c3c")
 	for x in [-2.45, -0.95]:
 		Refuge.brace(self, Vector3(x, 1.30, 5.86), Vector3(x, 1.492, 5.56), 0.060, bracket)
