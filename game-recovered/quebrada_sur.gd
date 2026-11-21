@@ -13,7 +13,7 @@ static func build(valley):
 		[Vector3(-61, 0, 49), "Refugio · por el poste →", 2.7],
 	]:
 		var pos: Vector3 = junction[0]
-		valley.route.signpost(ground(pos), "Desvío de la quebrada", junction[1], junction[2], true)
+		valley.route.signpost(pos, "Desvío de la quebrada", junction[1], junction[2], true)
 	var rng := RandomNumberGenerator.new()
 	rng.seed = 8421
 	var cairn_rng := RandomNumberGenerator.new()
@@ -45,16 +45,7 @@ static func build(valley):
 	dress_bridge(valley, rng)
 
 static func ground(at: Vector3) -> Vector3:
-	var x := floorf(at.x / 2.0) * 2.0
-	var z := floorf(at.z / 2.0) * 2.0
-	var u := (at.x - x) * 0.5
-	var v := (at.z - z) * 0.5
-	var a := Creek.outer_height(x, z)
-	var b := Creek.outer_height(x + 2.0, z)
-	var c := Creek.outer_height(x, z + 2.0)
-	var d := Creek.outer_height(x + 2.0, z + 2.0)
-	var height := a * (1.0 - u - v) + b * u + c * v if u + v <= 1.0 else d * (u + v - 1.0) + b * (1.0 - v) + c * (1.0 - u)
-	return Vector3(at.x, height, at.z)
+	return Creek.surface_point(at)
 
 static func forward(t: float) -> Vector3:
 	var direction := Creek.crossing_point(t + 0.01) - Creek.crossing_point(t - 0.01)
@@ -137,7 +128,7 @@ static func dress_bridge(valley, rng: RandomNumberGenerator):
 		var z := Creek.channel_z(x) + rng.randf_range(-3.1, 3.1)
 		var stone_at := ground(Vector3(x, 0, z))
 		var size := rng.randf_range(0.28, 0.82)
-		valley.stone(stone_at + Vector3.UP * 0.16, Vector3(1.21, 0.54, 0.93) * size, "767167")
+		valley.stone(stone_at + Vector3.UP * (0.08 * size), Vector3(1.21, 0.54, 0.93) * size, "767167")
 
 static func water(valley) -> MeshInstance3D:
 	var surface := SurfaceTool.new()

@@ -4,6 +4,11 @@ const LIMIT_Z := 122.0
 const CROSSING_X := -139.0
 const TURN_COUNT := 48
 const RETURN_COUNT := 12
+const DENSE_LEFT := -184
+const DENSE_RIGHT := 56
+const DENSE_END := 166
+const DENSE_STEP := 2
+const OUTER_STEP := 8
 const SOUTH_KNOTS := [
 	Vector2(-39, -17), Vector2(-44, 0), Vector2(-46, 17), Vector2(-52, 30),
 	Vector2(-63, 44), Vector2(-81, 52), Vector2(-98, 63), Vector2(-111, 73),
@@ -70,6 +75,21 @@ static func outer_height(x: float, z: float) -> float:
 	hills *= smoothstep(-72.0, 8.0, z)
 	return lerpf(height(x, z), hills, outskirts)
 
+static func surface_point(at: Vector3) -> Vector3:
+	# Use the same cells and diagonal as the visible terrain and its collider.
+	var dx := DENSE_STEP if at.x >= DENSE_LEFT and at.x < DENSE_RIGHT else OUTER_STEP
+	var dz := DENSE_STEP if at.z < DENSE_END else OUTER_STEP
+	var x := floorf(at.x / dx) * dx
+	var z := DENSE_END + floorf((at.z - DENSE_END) / dz) * dz
+	var u := (at.x - x) / dx
+	var v := (at.z - z) / dz
+	var a := outer_height(x, z)
+	var b := outer_height(x + dx, z)
+	var c := outer_height(x, z + dz)
+	var d := outer_height(x + dx, z + dz)
+	var y := a * (1.0 - u - v) + b * u + c * v if u + v <= 1.0 else d * (u + v - 1.0) + b * (1.0 - v) + c * (1.0 - u)
+	return Vector3(at.x, y, at.z)
+
 static func west_limit(z: float) -> float:
 	return 46.0 + 119.0 * smoothstep(-2.0, 57.0, z)
 
@@ -101,12 +121,12 @@ static func crossing_trace() -> PackedVector2Array:
 
 static func build_ground(valley, material: ShaderMaterial):
 	var columns := PackedFloat32Array()
-	for x in range(-360, -184, 8): columns.append(x)
-	for x in range(-184, 57, 2): columns.append(x)
-	for x in range(64, 361, 8): columns.append(x)
+	for x in range(-360, DENSE_LEFT, OUTER_STEP): columns.append(x)
+	for x in range(DENSE_LEFT, DENSE_RIGHT + 1, DENSE_STEP): columns.append(x)
+	for x in range(DENSE_RIGHT + OUTER_STEP, 361, OUTER_STEP): columns.append(x)
 	var rows := PackedFloat32Array()
-	for z in range(-72, 167, 2): rows.append(z)
-	for z in range(174, 511, 8): rows.append(z)
+	for z in range(-72, DENSE_END + 1, DENSE_STEP): rows.append(z)
+	for z in range(DENSE_END + OUTER_STEP, 511, OUTER_STEP): rows.append(z)
 	var surface := SurfaceTool.new()
 	surface.begin(Mesh.PRIMITIVE_TRIANGLES)
 	for z in rows:

@@ -35,10 +35,10 @@ Cada pasada avanza un solo punto del juego. Al cerrarla se actualiza el estado d
 - [x] Aclarar desde dónde llama Mara. Trabaja en el puesto de abajo, pasando la curva camino a Capilla. Su casa queda al final de la huella vecinal de la despedida.
 - [x] Esconder una piedra con signos en la cueva y permitir que Hernán los copie en Coleccionables.
 - [x] Revisar el ruido cerca del museo y suavizar la llovizna, la tormenta y el canto de las aves.
+- [x] Revisar el apoyo de carteles, postes, piedras y objetos de las laderas. Se corrigieron el desvío de la cantera, los postes del cable, el malacate, el banco del acceso, el campamento y las piedras junto a la pasarela.
 
 ### Por hacer
 
-- [ ] Buscar otros carteles y objetos de ladera que hayan quedado flotando.
 - [ ] Agregar puntos de interés al camino del cable.
 - [ ] Disimular mejor los hallazgos que todavía están demasiado a la vista.
 - [ ] Distribuir las conversaciones de Mara a lo largo de cada caminata.

@@ -1,6 +1,7 @@
 extends Node3D
 
 const Signage = preload("res://carteleria.gd")
+const Creek = preload("res://cauce.gd")
 const Ladera = preload("res://ladera.gd")
 const Kit = preload("res://equipo_campo.gd")
 const Flora = preload("res://flora.gd")
@@ -63,6 +64,10 @@ func surface_point(x: float, d: float) -> Vector3:
 		height = elevation(left + 4.0, far) * (u + w - 1.0) + elevation(left, far) * (1.0 - u) + elevation(left + 4.0, near) * (1.0 - w)
 	return Vector3(x, height, ORIGIN_Z - d)
 
+func terrain_point(at: Vector3) -> Vector3:
+	if at.z < ORIGIN_Z + 4.0: return surface_point(at.x, ORIGIN_Z - at.z)
+	return Creek.surface_point(at)
+
 static func make_ground_material(route_to_creek: PackedVector2Array, mara_start: Vector3, mara_end: Vector3, exploration: PackedVector2Array) -> ShaderMaterial:
 	var material := ShaderMaterial.new()
 	material.shader = preload("res://monte.gdshader")
@@ -117,15 +122,15 @@ func _ready():
 	plant()
 	make_wildlife()
 	fox.hide()
-	var repeater: = at(trail(420) + 1.6, 420)
+	var repeater := surface_point(trail(420) + 1.6, 420)
 	signpost(repeater, "Antena del abra", "Radio · Abra del viento")
-	box(self, Vector3(0.08, 4.0, 0.08), repeater + Vector3(0, 2, 0), "655a50").create_trimesh_collision()
+	box(self, Vector3(0.08, 4.12, 0.08), repeater + Vector3(0, 1.94, 0), "655a50").create_trimesh_collision()
 	for h in [2.85, 3.45, 3.94]:
 		box(self, Vector3(1.15, 0.04, 0.07), repeater + Vector3(0, h, 0), "737a75")
 	signpost(at(trail(292) - 1.7, 292), "Sala de las sierras", "Museo de sitio →")
 	signpost(Vector3(western_x_at(-27.0) - 1.8, 0.0, -27.0), "Sendero oeste", "Cantera ↖", 0.0, true)
 	var west_sign := western_approach(1.0) + Vector3(2.0, 0.0, 0.0)
-	signpost(surface_point(west_sign.x, ORIGIN_Z - west_sign.z), "Sendero oeste", "Refugio · senda del oeste")
+	signpost(west_sign, "Sendero oeste", "Refugio · senda del oeste")
 
 func laja_rope_route() -> Array[Vector3]:
 	var x := trail(170.0) - 0.64
@@ -166,7 +171,7 @@ func build_laja_rope():
 	box(self, Vector3(0.16, 0.14, 0.17), line[-1], "827665")
 
 func signpost(pos: Vector3, tag: String, caption: String, facing: float = 0.0, painted: bool = false):
-	Signage.trail_post(self, pos, tag, caption, facing, painted)
+	Signage.trail_post(self, terrain_point(pos), tag, caption, facing, painted)
 
 func box(parent: Node3D, size_m: Vector3, pos: Vector3, color: String) -> MeshInstance3D:
 	var mesh: = BoxMesh.new()

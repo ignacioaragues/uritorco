@@ -651,19 +651,30 @@ func kitchen_and_privy():
 	stone(center + Vector3(0, 0.51, 0.35), Vector3(0.34, 0.025, 0.4), "49463e")
 
 var quarry_plate: MeshInstance3D
+
+func ground_support(top: Vector3, width: float, depth: float, tint: String):
+	var bottom: float = route.terrain_point(top).y
+	for x in [-width * 0.5, width * 0.5]:
+		for z in [-depth * 0.5, depth * 0.5]:
+			bottom = minf(bottom, route.terrain_point(top + Vector3(x, 0, z)).y)
+	var height := maxf(0.04, top.y - bottom + 0.055)
+	box(top - Vector3.UP * height * 0.5, Vector3(width, height, depth), tint, true)
+
 func dress_day27():
 	if quarry_plate: return
 	route.signpost(route.quarry_point(0) + Vector3.RIGHT * 1.4, "Desvío de la cantera", "Cantera · cable viejo ←")
+	var previous := Vector3.ZERO
 	for i in range(33):
-		var foot: Vector3 = route.quarry_point(i / 32.0)
-		box(foot + Vector3.UP * 1.5, Vector3(0.18, 3, 0.18), "715e49", true)
+		var foot: Vector3 = route.terrain_point(route.quarry_point(i / 32.0))
+		ground_support(foot + Vector3.UP * 3.0, 0.18, 0.18, "715e49")
+		var eye := foot + Vector3.UP * 2.8
 		if i > 0:
-			var previous: Vector3 = route.quarry_point((i - 1) / 32.0)
-			var cable: = box((foot + previous) * 0.5 + Vector3.UP * 2.8, Vector3(0.04, 0.04, foot.distance_to(previous)), "4f524b")
-			cable.look_at(foot + Vector3.UP * 2.8)
-	var end: Vector3 = route.quarry_point(1)
+			var cable := box((eye + previous) * 0.5, Vector3(0.04, 0.04, eye.distance_to(previous)), "4f524b")
+			cable.look_at(eye)
+		previous = eye
+	var end: Vector3 = route.terrain_point(route.quarry_point(1))
 	for side in [-1, 1]:
-		box(end + Vector3(side, 0.6, -1), Vector3(0.23, 1.2, 0.4), "68594c", true)
+		ground_support(end + Vector3(side, 1.2, -1), 0.23, 0.4, "68594c")
 	box(end + Vector3(0, 0.82, -1), Vector3(2.3, 0.22, 0.23), "57534a", true)
 	quarry_plate = box(end + Vector3(0, 1.38, -1), Vector3(1.1, 0.76, 0.06), "b6aa8a", true, "Chapa del malacate")
 	Refuge.cutting(self)
@@ -676,11 +687,11 @@ func dress_day32():
 	if summit_dressed: return
 	summit_dressed = true
 	route.signpost(route.eastern_access(0.54) + Vector3(2.0, 0, 0), "Camino al acceso", "Acceso a la cumbre")
-	var access: Vector3 = route.ascent_point(0)
+	var access: Vector3 = route.terrain_point(route.ascent_point(0))
 	route.signpost(access + Vector3.RIGHT * 2.0, "Acceso a la cumbre", "Uritorco · Inicio del ascenso")
 	box(access + Vector3(-2.4, 0.42, 1.1), Vector3(1.8, 0.14, 0.42), "7a634c", true)
 	for offset in [-2.94, -1.86]:
-		box(access + Vector3(offset, 0.17, 1.1), Vector3(0.15, 0.42, 0.37), "665342", true)
+		ground_support(access + Vector3(offset, 0.38, 1.1), 0.15, 0.37, "665342")
 	for progress in [0.31, 0.64, 0.92]:
 		var foot: Vector3 = route.ascent_point(progress)
 		var uphill: Vector3 = route.ascent_point(progress + 0.02) - foot
@@ -702,28 +713,36 @@ func dress_day32():
 
 func place_descent_sign(foot: Vector3, uphill: Vector3, caption: String):
 	var beside := foot + Vector3(uphill.z, 0.0, -uphill.x).normalized() * 2.1
-	var ground: Vector3 = route.surface_point(beside.x, route.ORIGIN_Z - beside.z)
-	route.signpost(ground, "Bajada al acceso", caption, atan2(uphill.x, uphill.z))
+	route.signpost(beside, "Bajada al acceso", caption, atan2(uphill.x, uphill.z))
 
 var camp_log: MeshInstance3D
 
 func dress_camp():
-	var camp: Vector3 = route.camp_point()
-	var tripod: Vector3 = route.at(camp.x + 2.1, route.ORIGIN_Z - camp.z + 0.8)
-	var pivot: = tripod + Vector3.UP * 1.08
+	var camp: Vector3 = route.terrain_point(route.camp_point())
+	var tripod: Vector3 = route.terrain_point(camp + Vector3(2.1, 0.0, -0.8))
+	var pivot := tripod + Vector3.UP * 1.08
 	for offset in [Vector2( - 0.44, - 0.24), Vector2(0.44, - 0.24), Vector2(0, 0.55)]:
-		var foot: Vector3 = route.at(tripod.x + offset.x, route.ORIGIN_Z - tripod.z - offset.y)
-		var leg: = box((foot + pivot) * 0.5, Vector3(0.046, 0.046, foot.distance_to(pivot)), "676761", true, "Trípode vacío")
+		var foot: Vector3 = route.terrain_point(tripod + Vector3(offset.x, 0, offset.y)) - Vector3.UP * 0.065
+		var leg := box((foot + pivot) * 0.5, Vector3(0.046, 0.046, foot.distance_to(pivot)), "676761", true, "Trípode vacío")
 		leg.look_at(pivot)
 	box(pivot, Vector3(0.29, 0.063, 0.24), "424745", true, "Trípode vacío")
-	var tarp: Vector3 = route.at(camp.x - 2.6, route.ORIGIN_Z - camp.z + 0.35)
-	box(tarp + Vector3.UP * 0.48, Vector3(2.5, 0.035, 1.45), "aba385").rotation = Vector3(0.44, 0.22, 0.15)
-	for x in [-1.04, 1.04]:
-		box(tarp + Vector3(x, 0.47, - 0.5), Vector3(0.05, 0.96, 0.05), "757366", true).rotation.z = 0.22
+	var tarp: Vector3 = route.terrain_point(camp + Vector3(-2.6, 0, -0.35))
+	var pitch := Basis.from_euler(Vector3(0.44, 0.22, 0.15))
+	var tarp_center := tarp + Vector3.UP * 0.48
+	var lift := 0.0
+	for x in [-1.25, 0.0, 1.25]:
+		for z in [-0.725, 0.0, 0.725]:
+			var edge := tarp_center + pitch * Vector3(x, 0, z)
+			lift = maxf(lift, route.terrain_point(edge).y - edge.y + 0.18)
+	tarp_center.y += lift
+	box(tarp_center, Vector3(2.5, 0.035, 1.45), "aba385").basis = pitch
+	for x in [-1.10, 1.10]:
+		for z in [-0.60, 0.60]:
+			ground_support(tarp_center + pitch * Vector3(x, -0.012, z), 0.05, 0.05, "757366")
 	for offset in [Vector2( - 0.44, 0.4), Vector2( - 0.17, 0.65), Vector2(0.1, 0.62), Vector2(0.44, 0.47)]:
-		var foot: Vector3 = route.at(tarp.x + offset.x, route.ORIGIN_Z - tarp.z - offset.y)
-		stone(foot + Vector3.UP * 0.09, Vector3(0.27, 0.22, 0.25), "77716a")
-	box(camp + Vector3.UP * 0.24, Vector3(0.87, 0.48, 0.64), "6c6455", true)
+		var foot: Vector3 = route.terrain_point(tarp + Vector3(offset.x, 0, offset.y))
+		stone(foot + Vector3.UP * 0.04, Vector3(0.27, 0.22, 0.25), "77716a")
+	ground_support(camp + Vector3.UP * 0.48, 0.87, 0.64, "6c6455")
 	camp_log = box(camp + Vector3.UP * 0.51, Vector3(0.4, 0.058, 0.32), "b2a383", true, "Cuaderno del campamento")
 	camp_log.rotation.y = 0.19
 	box(camp + Vector3(0.54, 0.31, - 0.08), Vector3(0.14, 0.24, 0.14), "658078")

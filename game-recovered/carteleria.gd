@@ -53,7 +53,7 @@ static func station(parent: Node3D):
 
 static func trail_post(parent: Node3D, at: Vector3, tag: String, caption: String, heading: float, local: bool):
 	var iron := Kit.material("655e51" if local else "646a65", false, 0.77)
-	solid(parent, at + Vector3.UP * 0.74, Vector3(0.13, 1.48, 0.12), iron, tag)
+	solid(parent, at + Vector3.UP * 0.70, Vector3(0.13, 1.56, 0.12), iron, tag)
 	var size := Vector2(1.68 if local else 1.38, 0.40 if "\n" in caption else 0.32)
 	var sign := plate(parent, at + Vector3(0, 1.27, 0) + Vector3(sin(heading), 0, cos(heading)) * 0.073,
 		size, "545b42" if local else "655e49", heading)
