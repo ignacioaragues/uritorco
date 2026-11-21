@@ -30,7 +30,7 @@ Cada pasada avanza un solo punto del juego. Al cerrarla se actualiza el estado d
 - [x] Fijar la posición de la luz al abrir cada microescena y dejar el ocaso para después del puente. El sol queda detrás de las nubes.
 - [x] Abrir hacia adentro la puerta del refugio y alargar el gesto de mantener apretado el pulsador de la radio.
 - [x] Recuperar detalle de vegetación y piedras al alejarse del refugio. Los senderos largos tienen pastos curvos, copas irregulares con ramas y tres formas de roca con vetas y manchas.
-- [x] Ampliar la historia comechingona con tres láminas en la sala de objetos, el pasillo principal y la sala de relatos.
+- [x] Ampliar la historia comechingona con tres afiches ilustrados en la sala de objetos, el pasillo principal y la sala de relatos.
 
 ### Por hacer
 
@@ -49,7 +49,7 @@ Cada pasada avanza un solo punto del juego. Al cerrarla se actualiza el estado d
 ## Pasada de historia comechingona
 
 - La sala de objetos incorpora «Sembrar en las sierras», sobre agricultura, caza y recolección. «Tierra y encomienda» queda en el pasillo principal, y «Memoria comechingona» lleva a la sala de relatos la historia de la comunidad del Pueblo de La Toma.
-- Cada lámina usa una ilustración interpretativa propia y abre su ficha al acercarse y pulsar E. Se probó la visita a pie, la lectura de las tres fichas y el acceso a las vitrinas y al archivo.
+- Los tres afiches llevan el título y el pie impresos en la pared, con escenas ilustradas de personas comechingonas en cada época. Al acercarse, E abre la ficha. Se probó la visita a pie y el acceso a las vitrinas y al archivo.
 
 ## Pasada de vegetación y piedras
 

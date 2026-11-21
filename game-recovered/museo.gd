@@ -13,7 +13,7 @@ const LABELS = {
 	"Pueblos comechingones": "Los documentos coloniales usaron el nombre comechingones para referirse a poblaciones de las Sierras Centrales. Sus modos de vida variaban según el lugar y la época. Hoy hay comunidades comechingonas en Córdoba que se reconocen como parte de esa historia.",
 	"Vivir en las sierras": "En los sitios arqueológicos serranos aparecen instrumentos para moler, restos de plantas y fragmentos de vasijas. Un objeto encontrado junto al lugar donde se lo usó aporta más información que una pieza suelta. Las ilustraciones muestran usos posibles de las réplicas.",
 	"Sembrar en las sierras": "Antes de la conquista · Ilustración\n\nEn las Sierras Centrales se cultivaban maíz y zapallo. Según el lugar y la época, la siembra convivía con la caza y la recolección de frutos como el algarrobo. Los restos de plantas encontrados en los sitios ayudan a reconstruir qué se cultivaba y qué se juntaba.",
-	"Tierra y encomienda": "Siglos XVI a XVIII · Esquema\n\nCon la conquista española llegaron las encomiendas, que exigían trabajo o tributo a los pueblos indígenas. Hubo traslados y disputas por la tierra. En los expedientes coloniales quedaron reclamos de comunidades que defendían los lugares donde vivían y sembraban.",
+	"Tierra y encomienda": "Siglos XVI a XVIII · Recreación ilustrada\n\nCon la conquista española llegaron las encomiendas, que exigían trabajo o tributo a los pueblos indígenas. Hubo traslados y disputas por la tierra. En los expedientes coloniales quedaron reclamos de comunidades que defendían los lugares donde vivían y sembraban.",
 	"Relatos del cerro": "La sala reúne testimonios y reconstrucciones sobre el Uritorco. En la entrada, una lámina recoge la historia reciente de las comunidades comechingonas. Cada ficha identifica qué se muestra y de dónde viene la información.",
 	"Memoria comechingona": "Comunidades de hoy · Ilustración\n\nEn la ciudad de Córdoba, la comunidad comechingona del Pueblo de La Toma reconstruye su historia con documentos y relatos de familia. La memoria del territorio también se transmite al recordar los nombres de los lugares y contar quiénes vivían allí.",
 	"Mortero y mano": "Réplica · Molienda\n\nSe golpeaba o frotaba el material con una piedra de mano sobre una cavidad. Moler podía servir para preparar alimentos y también otros materiales. El desgaste y los residuos que quedan en la piedra ayudan a investigar qué se molió.",
@@ -77,9 +77,9 @@ static func build(valley):
 	plaque(valley, c + Vector3(0, 2.32, -1.66), "Pueblos comechingones", 0.0, 2.55)
 	plaque(valley, c + Vector3(0, 2.49, 1.646), "Relatos del cerro", PI, 2.55)
 	plaque(valley, c + Vector3(-3.19, 1.47, -1.66), "Vivir en las sierras", 0.0, 2.1)
-	display_panel(valley, c + Vector3(HALF_WIDTH - 0.151, 1.65, -2.91), "Sembrar en las sierras", "historia", 0, -PI / 2.0)
-	display_panel(valley, c + Vector3(-2.94, 1.65, 1.673), "Tierra y encomienda", "historia", 1, PI)
-	display_panel(valley, c + Vector3(2.94, 1.65, 1.927), "Memoria comechingona", "historia", 2, 0.0)
+	display_panel(valley, c + Vector3(HALF_WIDTH - 0.151, 1.65, -2.91), "Sembrar en las sierras", "historia", 0, -PI / 2.0, "Vida cotidiana antes de la conquista")
+	display_panel(valley, c + Vector3(-2.94, 1.65, 1.673), "Tierra y encomienda", "historia", 1, PI, "Trabajo, tributo y territorio")
+	display_panel(valley, c + Vector3(2.94, 1.65, 1.927), "Memoria comechingona", "historia", 2, 0.0, "Pueblo de La Toma · Córdoba")
 	valley.box(c + Vector3(3.65, 0.44, -0.76), Vector3(2.3, 0.14, 0.49), "846b50", true, "Banco")
 	for x in [2.7, 4.58]:
 		valley.box(c + Vector3(x, 0.23, -0.76), Vector3(0.16, 0.46, 0.42), "6d5d51", true)
@@ -175,8 +175,10 @@ static func dress_archive(valley):
 	preload("res://estructuras.gd").arch(valley, base, 0.31)
 	plaque(valley, base + Vector3(0, -0.14, -0.58), "Maqueta del arco", PI, 1.55)
 
-static func display_panel(valley, center_pos: Vector3, title: String, group: String, index: int, angle: float):
-	var frame: MeshInstance3D = valley.box(center_pos, Vector3(0.94, 1.42, 0.055), "766650", true, title)
+static func display_panel(valley, center_pos: Vector3, title: String, group: String, index: int, angle: float, caption := ""):
+	var poster := not caption.is_empty()
+	var dimensions := Vector3(0.82, 1.58, 0.055) if poster else Vector3(0.94, 1.42, 0.055)
+	var frame: MeshInstance3D = valley.box(center_pos, dimensions, "766650", true, title)
 	frame.rotation.y = angle
 	var art_path := "res://museo/" + group + ".webp"
 	if ResourceLoader.exists(art_path):
@@ -190,9 +192,26 @@ static func display_panel(valley, center_pos: Vector3, title: String, group: Str
 		frame.add_child(image)
 		image.texture = artwork
 		image.position.z = 0.033
-		image.pixel_size = 1.33 / atlas.get_height()
+		image.pixel_size = (1.50 if poster else 1.33) / atlas.get_height()
 		image.shaded = false
+		if poster:
+			image.alpha_cut = SpriteBase3D.ALPHA_CUT_DISCARD
+			poster_text(frame, title, 0.637, 0.064)
+			poster_text(frame, caption, -0.647, 0.047)
+			return
 	plaque(valley, center_pos + Vector3(0, -0.81, 0), title, angle, 1.95)
+
+static func poster_text(frame: Node3D, caption: String, y: float, height: float):
+	var print_label := Label3D.new()
+	print_label.text = caption
+	print_label.font_size = 48
+	print_label.outline_size = 0
+	print_label.render_priority = 1
+	print_label.modulate = Color("#3d3024")
+	var pixels := ThemeDB.fallback_font.get_string_size(caption, HORIZONTAL_ALIGNMENT_LEFT, -1, print_label.font_size).x
+	print_label.pixel_size = minf(height / print_label.font_size, 0.65 / maxf(1.0, pixels))
+	frame.add_child(print_label)
+	print_label.position = Vector3(0.0, y, 0.042)
 
 static func plaque(valley, at: Vector3, title: String, angle: float, width: float):
 	var panel: MeshInstance3D = valley.box(at, Vector3(width, 0.21, 0.047), "534737", true, title)
