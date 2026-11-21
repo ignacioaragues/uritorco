@@ -9,11 +9,13 @@ const HEIGHT := 2.85
 const REPLICAS := ["Mortero y mano", "Tortero", "Vasija de cerámica"]
 const STORIES := ["Bastón de Mando", "Vikingos en las sierras", "Luces sobre el cerro"]
 const LABELS = {
-	"Sala de las sierras": "Museo de sitio · Pueblos comechingones\n\nLas salas reúnen réplicas, ilustraciones y documentos. En la primera están los objetos y sus contextos arqueológicos. En la segunda están los relatos que circularon sobre el cerro.",
+	"Sala de las sierras": "Museo de sitio · Pueblos comechingones\n\nEl pasillo cuenta qué pasó con la tierra después de la conquista. En la sala de objetos se puede ver cómo se vivía y trabajaba en las sierras. Al fondo, la sala de relatos también reúne memoria de las comunidades de hoy.",
 	"Pueblos comechingones": "Los documentos coloniales usaron el nombre comechingones para referirse a poblaciones de las Sierras Centrales. Sus modos de vida variaban según el lugar y la época. Hoy hay comunidades comechingonas en Córdoba que se reconocen como parte de esa historia.",
 	"Vivir en las sierras": "En los sitios arqueológicos serranos aparecen instrumentos para moler, restos de plantas y fragmentos de vasijas. Un objeto encontrado junto al lugar donde se lo usó aporta más información que una pieza suelta. Las ilustraciones muestran usos posibles de las réplicas.",
-	"Relatos del cerro": "Esta sala reúne testimonios, ilustraciones y reconstrucciones. Los relatos modernos también forman parte de la historia del cerro. Las fichas indican cuándo hay un testimonio y cuándo hay evidencia material.",
-	"Memoria comechingona": "Durante la colonización se repartieron tierras y comunidades bajo el sistema de encomiendas. Algunos pueblos sostuvieron reclamos por sus tierras durante generaciones. Hoy las comunidades comechingonas conservan memorias familiares y lugares de importancia, y participan en las discusiones sobre cómo se cuida el patrimonio serrano.",
+	"Sembrar en las sierras": "Antes de la conquista · Ilustración\n\nEn las Sierras Centrales se cultivaban maíz y zapallo. Según el lugar y la época, la siembra convivía con la caza y la recolección de frutos como el algarrobo. Los restos de plantas encontrados en los sitios ayudan a reconstruir qué se cultivaba y qué se juntaba.",
+	"Tierra y encomienda": "Siglos XVI a XVIII · Esquema\n\nCon la conquista española llegaron las encomiendas, que exigían trabajo o tributo a los pueblos indígenas. Hubo traslados y disputas por la tierra. En los expedientes coloniales quedaron reclamos de comunidades que defendían los lugares donde vivían y sembraban.",
+	"Relatos del cerro": "La sala reúne testimonios y reconstrucciones sobre el Uritorco. En la entrada, una lámina recoge la historia reciente de las comunidades comechingonas. Cada ficha identifica qué se muestra y de dónde viene la información.",
+	"Memoria comechingona": "Comunidades de hoy · Ilustración\n\nEn la ciudad de Córdoba, la comunidad comechingona del Pueblo de La Toma reconstruye su historia con documentos y relatos de familia. La memoria del territorio también se transmite al recordar los nombres de los lugares y contar quiénes vivían allí.",
 	"Mortero y mano": "Réplica · Molienda\n\nSe golpeaba o frotaba el material con una piedra de mano sobre una cavidad. Moler podía servir para preparar alimentos y también otros materiales. El desgaste y los residuos que quedan en la piedra ayudan a investigar qué se molió.",
 	"Tortero": "Réplica · Hilado\n\nEl disco perforado se monta en un huso. Su peso sostiene el giro mientras se estira y se tuerce la fibra. En un hallazgo, la forma del disco y el contexto ayudan a reconocer la herramienta. El hilo rara vez se conserva.",
 	"Vasija de cerámica": "Réplica · Alfarería\n\nUna forma de hacer una vasija es superponer rollos de arcilla, alisar las uniones y cocerla. El borde y el cuerpo ayudan a reconstruir su forma a partir de tiestos. Para conocer su uso también se examinan las huellas de calor y los residuos.",
@@ -74,8 +76,10 @@ static func build(valley):
 		valley.box(c + Vector3(0, 2.68, z), Vector3(0.48, 0.08, 0.32), "dcc9a4")
 	plaque(valley, c + Vector3(0, 2.32, -1.66), "Pueblos comechingones", 0.0, 2.55)
 	plaque(valley, c + Vector3(0, 2.49, 1.646), "Relatos del cerro", PI, 2.55)
-	plaque(valley, c + Vector3(2.94, 1.47, 1.925), "Memoria comechingona", 0.0, 2.35)
 	plaque(valley, c + Vector3(-3.19, 1.47, -1.66), "Vivir en las sierras", 0.0, 2.1)
+	display_panel(valley, c + Vector3(HALF_WIDTH - 0.151, 1.65, -2.91), "Sembrar en las sierras", "historia", 0, -PI / 2.0)
+	display_panel(valley, c + Vector3(-2.94, 1.65, 1.673), "Tierra y encomienda", "historia", 1, PI)
+	display_panel(valley, c + Vector3(2.94, 1.65, 1.927), "Memoria comechingona", "historia", 2, 0.0)
 	valley.box(c + Vector3(3.65, 0.44, -0.76), Vector3(2.3, 0.14, 0.49), "846b50", true, "Banco")
 	for x in [2.7, 4.58]:
 		valley.box(c + Vector3(x, 0.23, -0.76), Vector3(0.16, 0.46, 0.42), "6d5d51", true)
