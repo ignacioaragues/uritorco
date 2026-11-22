@@ -166,7 +166,7 @@ static func available(stage: int, position: Vector3, bedtime: bool, sighting: bo
 		5:
 			if near(position, Creek.trail_point(0.53), 18.0): topic = "piedras"
 		7:
-			if on_ridge(position, 142.0, 33.0):
+			if not bedtime and not sighting and on_ridge(position, 142.0, 33.0):
 				topic = "cauce"
 			elif on_ridge(position, Museum.DISTANCE, 33.0):
 				topic = "museo"

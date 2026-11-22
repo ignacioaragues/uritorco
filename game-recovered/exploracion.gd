@@ -310,6 +310,7 @@ static func dress_find(valley, id: String):
 	shape.shape = hitbox
 	target.add_child(shape)
 	shape.position.y = hitbox.size.y * 0.48
+	if id == "negativo": root.scale = Vector3.ONE * 0.38
 
 static func dress_hideout(site: Node3D, route, id: String, index: int):
 	var stones: Array = []

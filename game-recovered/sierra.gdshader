@@ -12,7 +12,7 @@ uniform vec3 planet_dirs[2];
 uniform vec3 galactic_pole;
 uniform vec3 moon_dir;
 uniform vec3 daylight_dir = vec3(0.69, 0.41, 0.59);
-uniform float moon_radius = 0.083;
+uniform float moon_radius = 0.057;
 uniform float daylight_moon = 1.0;
 uniform float other_world = 0.0;
 uniform int dream_style = 1;
@@ -169,10 +169,10 @@ vec3 crux_ink(vec3 sight) {
 	vec3 gacrux = catalog[2].xyz;
 	float arms = max(crux_line(sight, acrux, gacrux), crux_line(sight, catalog[1].xyz, catalog[3].xyz));
 	float fade = smoothstep(0.0, 0.29, crux_trace);
-	float length_now = smoothstep(0.20, 0.98, crux_trace);
+	float length_now = smoothstep(0.19, 0.65, crux_trace);
 	float extension = 0.47 * crux_line(sight, acrux, normalize(mix(acrux, crux_pole, length_now)));
 	vec3 horizon = normalize(vec3(crux_pole.x, 0.0, crux_pole.z));
-	float horizon_progress = smoothstep(0.52, 1.0, crux_trace);
+	float horizon_progress = smoothstep(0.65, 1.0, crux_trace);
 	extension += 0.33 * horizon_progress * crux_line(sight, crux_pole, normalize(mix(crux_pole, horizon, horizon_progress)));
 	return vec3(0.52, 0.76, 0.98) * (arms * fade + extension * length_now);
 }

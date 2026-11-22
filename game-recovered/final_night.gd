@@ -7,6 +7,7 @@ const CaveRunes = preload("res://piedra_cueva.gd")
 const Structures = preload("res://estructuras.gd")
 const Stone = preload("res://piedra_serrana.gd")
 const Refuge = preload("res://refugio.gd")
+const Signage = preload("res://carteleria.gd")
 const DREAM_BOUNDS := Rect2(-73.0, -144.0, 146.0, 177.0)
 const DREAM_ARCH_SITES := [Vector2(-44, -24), Vector2(44, -52), Vector2(-32, -108), Vector2(40, -128)]
 const DREAM_ARCH_ENTRIES := [Vector2(-35, -9), Vector2(38, -36), Vector2(-41, -89), Vector2(53, -112)]
@@ -427,15 +428,15 @@ static func build_observation_book(parent: Node3D, at: Vector3):
 		var corner := Kit.block(book, Vector3(0.21 - 0.16 * i, 0.074, 0.29), Vector3(0.064, 0.003, 0.025), paper)
 		corner.rotation.y = 0.34 * i - 0.48
 	Kit.block(book, Vector3(0.01, 0.074, -0.062), Vector3(0.316, 0.004, 0.24), paper)
-	var label := Label3D.new()
-	label.text = "OBSERVACIONES\nSECTOR 08"
-	label.font_size = 30
-	label.pixel_size = 0.00235
-	label.outline_size = 0
-	label.modulate = Color("#504136")
-	book.add_child(label)
-	label.position = Vector3(0.012, 0.077, -0.057)
-	label.rotation = Vector3(-PI / 2.0, PI, 0)
+	var card := Node3D.new()
+	book.add_child(card)
+	card.position = Vector3(0.010, 0.078, -0.062)
+	card.rotation = Vector3(-PI / 2.0, PI, 0)
+	var ink := Color("59493c")
+	Signage.printed_face(card, Vector3.ZERO, Vector2(0.304, 0.226), Color("bfaa85"), [
+		[Vector2(0, 0.029), "OBSERVACIONES", 0.030, ink, 0.272],
+		[Vector2(0, -0.032), "SECTOR 08", 0.027, ink, 0.244],
+	])
 
 static func cave_approach_ground(x: float, z: float) -> Vector3:
 	var banks := smoothstep(4.5, 23.0, absf(x))
@@ -498,6 +499,11 @@ static func build_door(v, at: Vector3):
 	Kit.block(door, Vector3(0, 1.09, 0.088), Vector3(1.29, 0.12, 0.105), frame)
 	Kit.block(door, Vector3(0.448, -0.01, 0.096), Vector3(0.086, 0.198, 0.021), zinc_trim)
 	Kit.block(door, Vector3(0.412, 0.024, 0.132), Vector3(0.13, 0.033, 0.065), zinc_trim)
+	var hinge := Node3D.new()
+	hinge.name = "Bisagra de la puerta de Mara"
+	v.add_child(hinge)
+	hinge.position = at + Vector3(-0.625, 0, -4.75)
+	door.reparent(hinge)
 	var step: MeshInstance3D = v.box(at + Vector3(0, 0.073, -4.36), Vector3(1.68, 0.146, 0.91), "8d806d", true)
 	step.material_override = Stone.paint("807569")
 	var window := at + Vector3(-2.0, 1.48, -4.655)

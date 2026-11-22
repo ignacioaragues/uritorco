@@ -38,7 +38,7 @@ void fragment() {
 	if (fragment_index == 4) { x = -4.8 * sin(distance * 0.105); }
 	if (fragment_index == 6) { x = 5.0 * sin(distance * 0.113); }
 	if (fragment_index == 7) { x = -4.4 * sin(distance * 0.14) + 0.11 * distance; }
-	if (lane_to_house) { x = 4.3 * sin((ground.z + 4.5) * 0.093) * smoothstep(0.0, 9.0, ground.z + 4.5); }
+	if (lane_to_house) { x = 4.3 * sin((ground.z + 4.5) * 0.093) * smoothstep(3.0, 13.0, ground.z + 4.5); }
 	float track = 1.0 - smoothstep(0.70, 1.86, abs(ground.x - x) + edge_wear);
 	if (lane_to_house) { track *= smoothstep(-5.0, -4.08, ground.z); }
 	vec3 meadow = soil_tint.rgb * (0.91 + 0.19 * earth);

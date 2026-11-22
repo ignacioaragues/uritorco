@@ -88,14 +88,14 @@ Desde el Día 7, la primera respuesta deja el fósil sobre el escritorio. Con E,
 
 - **Mara** · «Ayer se perdió el enlace con el abra. ¿Te llegás hasta la antena?»
 - **Hernán** · «Dale. ¿Por dónde tengo mejor vista del abra?»
-- **Mara** · «Primero por el mirador del mollar, al este. Después seguí pasando el museo hasta el mástil.»
+- **Mara** · «Seguí la huella principal que sube desde la tranquera. El mástil está pasando el museo.»
 - **Mara** · «Si perdés el canal, esperá unos segundos. Desde el puesto de abajo voy a seguir llamando.»
 
 ### Cómo te está tratando el camino
 
 **Charla opcional de cercanía.**
 
-**Disparador.** Con R entre el acceso y el mirador, en la primera parte del sendero hacia el museo después del encargo de la antena.
+**Disparador.** Con R en el tramo de ida hacia el museo, después del encargo de la antena.
 
 **Empieza Mara.** «La semana pasada te largué con dos encargos encima. Hoy vamos con más tiempo. ¿Cómo te está tratando el camino?»
 
@@ -122,32 +122,32 @@ La segunda respuesta puede volver como recuerdo en la despedida.
 
 La primera respuesta puede volver en la despedida.
 
+### Prueba de alcance en el mástil
+
+**Empieza Hernán.** Se prepara el equipo con E al pie de la antena. Espacio vuelve al mástil y R abre la prueba de recepción.
+
+- **Hernán** · «Estoy al pie del mástil. ¿Me copiás?»
+- **Mara** · «Ahora sí te oigo. ¿Cómo me escuchás vos desde ahí?»
+
+- **Opción 1, Hernán** · «Sí, te copio. Se fue la estática.»
+  - **Mara** · «Perfecto. Entonces el mástil está haciendo su trabajo.»
+- **Opción 2, Hernán** · «Te copio, aunque se te come el final de algunas palabras.»
+  - **Mara** · «Ese es el canal que más se corta. Dejo la radio prendida.»
+- **Mara, en ambas si Hernán contó lo del abra** · «Desde la antena tu voz entra limpia. Guardá la hora de los destellos. Puedo preguntar si había alguien del otro lado.»
+
+*Las dos respuestas dan paso al atardecer.*
+
 ### Los dos destellos
 
-**Disparador.** El avistamiento ocurre en el mirador del mollar o más adelante al caer la noche en la senda. E al sostener la vista sobre los destellos abre la reacción.
+**Disparador.** El avistamiento ocurre al oscurecer, después de probar la recepción desde la antena. E al sostener la vista sobre los destellos abre la reacción.
 
 **Primero entra una voz cortada.** Se oye «…cruces…». Si el jugador abre la conversación, **Hernán** es el primero en hablar.
 
 - **Opción 1, Hernán** · «Vi dos destellos. Uno quedó por encima de la ladera. Y en el canal se cortó una voz, como si dijera «cruces».»
   - **Mara** · «Desde mi ventana veo la curva hasta el primer poste. Por ahí no pasó nadie mientras hablábamos.»
-  - **Mara** · «Si una luz quedó arriba del filo, marcame desde dónde la viste. Lo de la voz lo podemos probar en la antena.»
+  - **Mara** · «Si una luz quedó arriba del filo, marcame desde dónde la viste. Avisame si vuelve a cortarse el canal en la bajada.»
 - **Opción 2** · «Anotás el rumbo para más tarde.»
   - *Hernán guarda la observación. No hay charla en ese momento. Las réplicas posteriores de Mara que se apoyan en ese relato quedan fuera.*
-
-### Prueba de alcance en el mástil
-
-**Empieza Hernán.** Después del destello, se puede abrir la radio desde la antena.
-
-- **Hernán** · «Estoy al pie del mástil. ¿Me copiás?»
-- **Mara** · «Ahora sí te oigo. ¿Cómo me escuchás vos desde ahí?»
-
-- **Opción 1, Hernán** · «Te oigo claro. Se fue la estática.»
-  - **Mara** · «Perfecto. Entonces el mástil está haciendo su trabajo.»
-- **Opción 2, Hernán** · «Me quedo un rato en el mástil.»
-  - **Mara** · «Dale. Dejo la radio prendida.»
-- **Mara, en ambas si Hernán contó lo del abra** · «Desde la antena tu voz entra limpia. Guardá la hora de los destellos. Puedo preguntar si había alguien del otro lado.»
-
-*En ambas queda terminado el encargo.*
 
 ### La prueba durante la bajada
 
@@ -711,11 +711,11 @@ Se puede terminar esta charla y volver a abrir la radio para despedirse.
 
 ### Las decisiones de partida
 
-La despedida termina a pie. El jugador continúa por el camino marcado en el mapa. Cada destino se abre cuando el fundido ya dejó la pantalla negra.
+La despedida termina a pie. Al llegar a la bifurcación, Hernán puede seguir la huella de la derecha hacia la parada. Si la cercanía habilitó la invitación, la huella de la izquierda lo lleva a la casa de Mara. Cada destino se abre cuando el fundido ya dejó la pantalla negra.
 
-- **«Seguir hasta la parada del ómnibus.»** Disponible siempre. Hernán vuelve a la parada del prólogo. El ómnibus espera sobre la ruta y se puede subir con E.
-- **«Tomar la huella hacia la casa de Mara.»** Disponible con nueve charlas de cercanía. El sendero vecinal sale a la izquierda. Tras el fundido se abre el puesto de Mara en su propio paisaje. Hernán puede golpear con E. Mara queda fuera de escena y del otro lado cruje una tabla.
-- *Si Hernán preguntó «¿Papá…?» en el último sueño, el texto final recuerda la voz y las cuatro estrellas. En las otras rutas, Hernán piensa llevar el libro cuando vuelva a dar clase.*
+- **Parada del ómnibus.** Hernán llega por la huella del prólogo. E abre la puerta del urbano y, en la penumbra, se distingue la silueta del conductor antes del epílogo.
+- **Puesto de Mara.** Hernán llega por el camino que da al jardín. E hace sonar dos golpes. La puerta se entorna hacia adentro antes del epílogo. Mara queda fuera de escena.
+- *Si Hernán preguntó «¿Papá…?» en el último sueño y sigue a la parada, el texto final recuerda la voz y las cuatro estrellas. En la ruta de Mara, el epílogo se queda en el escalón.*
 
 ## Cartas breves ligadas a las charlas
 

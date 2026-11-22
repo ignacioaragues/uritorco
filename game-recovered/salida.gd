@@ -8,16 +8,18 @@ const Stone = preload("res://piedra_serrana.gd")
 const Coach = preload("res://omnibus.gd")
 const Garden = preload("res://jardin_mara.gd")
 const PATH := [Vector2(3.8, -13.2), Vector2(12, -16.8), Vector2(18.6, -10.8), Vector2(22.8, -0.6),
-	Vector2(22.7, 12.0), Vector2(23.9, 25.0), Vector2(27.8, 37.4), Vector2(29.6, 49.7), Vector2(28.2, 62.0)]
+	Vector2(22.7, 12.0), Vector2(23.9, 25.0), Vector2(27.8, 37.4), Vector2(29.6, 49.7), Vector2(28.2, 62.0),
+	Vector2(25.2, 72), Vector2(22.4, 86), Vector2(12.0, 124)]
 const RADIO_STOP := Vector3(23.9, 0, 25.0)
 const END := Vector3(28.2, 0, 62.0)
-const MARA_PATH := [Vector2(29.6, 49.7), Vector2(31.6, 55.4), Vector2(33.4, 59.6), Vector2(41.8, 61.1)]
+const FORK := Vector3(29.6, 0, 49.7)
+const MARA_PATH := [Vector2(29.6, 49.7), Vector2(31.6, 55.4), Vector2(33.4, 59.6), Vector2(41.8, 61.1),
+	Vector2(53.7, 66.4), Vector2(63.5, 78), Vector2(79.0, 92.0)]
 const MARA_END := Vector3(41.8, 0, 61.1)
 const BUS_ROAD_POSITION := Vector3(1.65, 0, -4.2)
-const BUS_START := Vector3(6.10, 0, -6.45)
 const BUS_BOUNDS := Rect2(-30, -16, 60, 35)
 const MARA_SITE := Vector3(-760, 72, 1650)
-const MARA_START := Vector3(0, 0.02, 0.8)
+const MARA_START := Vector3(2.07, 0.02, 4.50)
 const MARA_BOUNDS := Rect2(-26, -23, 52, 52)
 const SCENE_LAYER := 1 << 19
 const PACK_ITEMS := ["Observar el Cielo", "Recorte de astronomía", "Postal de Paula", "Dibujos"]
@@ -51,7 +53,8 @@ static func isolate(scene: Node3D):
 static func bus(roadside: Node3D) -> Vector3:
 	if not roadside.has_node("Ómnibus"):
 		Coach.build(roadside, Arrival.surface_point(0, BUS_ROAD_POSITION))
-	return roadside.to_global(Arrival.surface_point(0, BUS_START) + Vector3.UP * 0.02)
+	var start := Vector3(12.9, 0, Arrival.branch_z(12.9))
+	return roadside.to_global(Arrival.surface_point(0, start) + Vector3.UP * 0.02)
 
 static func mara(valley) -> Node3D:
 	var yard := Node3D.new()
@@ -88,7 +91,7 @@ static func dress_mara_yard(yard: Node3D):
 		var x := rng.randf_range(-49.0, 52.0)
 		var z := rng.randf_range(-51.0, 53.0)
 		if absf(x) < 4.7 and z > -12.0 and z < 4.0: continue
-		var lane := 4.3 * sin((z + 4.5) * 0.093) * smoothstep(0.0, 9.0, z + 4.5)
+		var lane := 4.3 * sin((z + 4.5) * 0.093) * smoothstep(3.0, 13.0, z + 4.5)
 		if z > -4.85 and absf(x - lane) < 2.38: continue
 		var at := Vector3(x, mara_height(x, -z), z)
 		if i % 19 == 0 and absf(x) > 7.0:

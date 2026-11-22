@@ -3,9 +3,13 @@ extends RefCounted
 const Kit = preload("res://equipo_campo.gd")
 const TIRE_RADIUS := 0.48
 const WHEEL_ARCH := 0.565
-const AXLES := [-2.44, 2.31]
+const AXLES := [-2.44, 1.98]
 const FRONT := 3.68
 const REAR := -3.62
+const DOOR_BACK := 2.61
+const DOOR_FRONT := 3.41
+const DOOR_CENTER := (DOOR_FRONT + DOOR_BACK) * 0.5
+const DOOR_Z := 1.193
 
 # Cada estación define la anchura y la caída del techo al llegar a las puntas.
 const STATIONS := [
@@ -23,13 +27,15 @@ const SECTION := [
 ]
 
 static func build(parent: Node3D, at: Vector3):
-	var bus := Kit.item(parent, at, "Subir al ómnibus", Vector3.UP * 1.61, Vector3(7.36, 2.4, 2.38))
+	var bus := Kit.item(parent, at, "", Vector3.UP * 1.61, Vector3(7.36, 2.4, 2.26))
 	bus.name = "Ómnibus"
+	bus.rotation.y = PI
 	var metal := bodywork("8e9083", bus.global_position.y, 0.64)
 	var rubber := Kit.material("333631")
-	var glass := Kit.tinted_glass("536463")
+	var glass := Kit.tinted_glass("333d40")
+	glass.set_shader_parameter("reflection", 0.30)
 	var frame := Kit.material("4b4940", false, 0.71)
-	var paint := bodywork("c0b598", bus.global_position.y, 0.92)
+	var paint := bodywork("667f8e", bus.global_position.y, 0.92)
 	paint.set_shader_parameter("coach_livery", true)
 	var body := Kit.mesh_part(bus, shell_mesh(), Vector3.ZERO, paint)
 	body.name = "Carrocería curva"
@@ -37,6 +43,7 @@ static func build(parent: Node3D, at: Vector3):
 		side_details(bus, side, glass, rubber, metal)
 		wheels(bus, side, rubber, frame, metal)
 	coach_ends(bus, metal, rubber, glass, frame)
+	passenger_door(bus, glass, rubber, metal)
 
 static func bus_station(x: float) -> Vector2:
 	for i in range(1, STATIONS.size()):
@@ -62,6 +69,8 @@ static func shell_mesh() -> ArrayMesh:
 	for axle: float in AXLES:
 		for index in 13:
 			profile_x.append(axle + (index - 6.0) * WHEEL_ARCH / 6.0)
+	profile_x.append(DOOR_BACK)
+	profile_x.append(DOOR_FRONT)
 	profile_x.sort()
 	var vertices := PackedVector3Array()
 	for x in profile_x:
@@ -78,7 +87,9 @@ static func shell_mesh() -> ArrayMesh:
 	for vertex in vertices: surface.add_vertex(vertex)
 	var span := SECTION.size()
 	for row in profile_x.size() - 1:
+		var doorway := profile_x[row] >= DOOR_BACK - 0.0001 and profile_x[row + 1] <= DOOR_FRONT + 0.0001
 		for i in span:
+			if doorway and i in [16, 17, 18, 19, 20, 21]: continue
 			var a := row * span + i
 			var b := row * span + (i + 1) % span
 			for index in [a, a + span, b, b, a + span, b + span]: surface.add_index(index)
@@ -97,6 +108,7 @@ static func shell_mesh() -> ArrayMesh:
 static func side_details(bus: Node3D, side: float, glass: Material, rubber: Material, metal: Material):
 	var direction := Vector3.BACK * side
 	for i in 7:
+		if side > 0.0 and i == 6: continue
 		var x := -2.87 + i * 0.95
 		var window := Vector2(x, 2.057)
 		var frame_size := Vector2(0.862, 0.696)
@@ -109,14 +121,11 @@ static func side_details(bus: Node3D, side: float, glass: Material, rubber: Mate
 		Kit.block(bus, bottom + direction * 0.013, Vector3(0.766, 0.019, 0.023), metal)
 	var molding := PackedVector3Array()
 	for station: Vector3 in STATIONS:
-		molding.append(Vector3(station.x, 1.265, side * (1.195 * station.y + 0.007)))
+		if side < 0.0 or station.x < 2.6:
+			molding.append(Vector3(station.x, 1.265, side * (1.195 * station.y + 0.007)))
+	if side > 0.0: molding.append(Vector3(DOOR_BACK - 0.024, 1.265, 1.205))
 	Kit.cord(bus, molding, 0.021, metal)
-	coach_label(bus, Vector3(-0.50, 1.475, side * 1.211), 0.0 if side > 0.0 else PI, 0.0027, "CAPILLA DEL MONTE")
-	if side < 0.0:
-		var seam := Kit.material("51463f", false, 0.73)
-		for x in [2.39, 3.02]:
-			Kit.block(bus, Vector3(x, 1.489, -(1.197 * bus_station(x).x + 0.011)), Vector3(0.014, 0.484, 0.015), seam)
-		Kit.block(bus, Vector3(2.71, 1.578, -1.219), Vector3(0.139, 0.025, 0.038), metal)
+	coach_label(bus, Vector3(-0.49, 1.475, side * 1.211), 0.0 if side > 0.0 else PI, 0.0026, "URBANO · CAPILLA DEL MONTE", "dbd0ab")
 
 static func wheels(bus: Node3D, side: float, rubber: Material, frame: Material, metal: Material):
 	for x: float in AXLES:
@@ -173,7 +182,70 @@ static func coach_ends(bus: Node3D, metal: Material, rubber: Material, glass: Ma
 		wiper.rotation.x = side * 0.26
 		Kit.block(bus, Vector3(3.29, 2.279, side * 1.255), Vector3(0.038, 0.038, 0.303), metal)
 		Kit.block(bus, Vector3(3.27, 2.304, side * 1.408), Vector3(0.098, 0.217, 0.120), rubber)
-	coach_label(bus, Vector3(FRONT + 0.009, 2.517, 0), PI * 0.5, 0.0013, "CAPILLA DEL MONTE")
+	var board := Kit.material("c6bd9d", false, 0.82)
+	Kit.block(bus, Vector3(FRONT - 0.032, 2.492, 0), Vector3(0.14, 0.245, 1.70), rubber)
+	Kit.block(bus, Vector3(FRONT + 0.044, 2.492, 0), Vector3(0.03, 0.203, 1.64), board)
+	coach_label(bus, Vector3(FRONT + 0.061, 2.493, 0), PI * 0.5, 0.0018, "URBANO  CAPILLA DEL MONTE", "3d5365")
+
+static func passenger_door(bus: Node3D, glass: Material, frame: Material, metal: Material):
+	var entry := Kit.item(bus, Vector3(DOOR_CENTER, 1.55, DOOR_Z + 0.049),
+		"Puerta del ómnibus", Vector3.ZERO, Vector3(0.84, 1.91, 0.080))
+	entry.name = "Entrada"
+	entry.collision_layer = 2
+	entry.collision_mask = 0
+	var blue := bodywork("637c8a", bus.global_position.y, 0.94)
+	var shadow := unlit("191b1e")
+	var seat := unlit("22282d")
+	var step := unlit("34383a")
+	Kit.block(bus, Vector3(DOOR_CENTER, 1.60, 0.17), Vector3(1.23, 1.98, 0.055), seat)
+	Kit.block(bus, Vector3(DOOR_BACK - 0.032, 1.57, 0.65), Vector3(0.065, 1.86, 1.13), shadow)
+	Kit.block(bus, Vector3(DOOR_FRONT + 0.051, 1.57, 0.68), Vector3(0.063, 1.86, 1.04), shadow)
+	Kit.block(bus, Vector3(DOOR_CENTER, 2.453, 0.64), Vector3(0.90, 0.095, 1.17), shadow)
+	Kit.block(bus, Vector3(DOOR_CENTER, 0.659, 0.95), Vector3(0.80, 0.086, 0.48), step)
+	Kit.block(bus, Vector3(DOOR_CENTER, 0.772, 0.66), Vector3(0.79, 0.145, 0.27), shadow)
+	for edge in [DOOR_BACK, DOOR_FRONT]:
+		Kit.block(bus, Vector3(edge, 1.57, DOOR_Z - 0.024), Vector3(0.073, 1.80, 0.097), frame)
+	Kit.block(bus, Vector3(DOOR_CENTER, 2.443, DOOR_Z - 0.020), Vector3(0.85, 0.10, 0.11), frame)
+	for i in 2:
+		var side := -1.0 if i == 0 else 1.0
+		var pivot := Node3D.new()
+		pivot.name = "Hoja %d" % i
+		bus.add_child(pivot)
+		pivot.position = Vector3(DOOR_CENTER + side * 0.376, 1.548, DOOR_Z)
+		var offset := Vector3.RIGHT * (-side * 0.185)
+		Kit.block(pivot, offset, Vector3(0.372, 1.70, 0.051), blue)
+		Kit.block(pivot, offset + Vector3(0, 0.334, 0.030), Vector3(0.319, 0.829, 0.026), frame)
+		Kit.block(pivot, offset + Vector3(0, 0.332, 0.046), Vector3(0.286, 0.779, 0.018), glass)
+		Kit.block(pivot, offset + Vector3(0, -0.663, 0.034), Vector3(0.351, 0.032, 0.014), metal)
+	draw_driver(bus)
+
+static func draw_driver(bus: Node3D):
+	var driver := Node3D.new()
+	driver.name = "Silueta del conductor"
+	bus.add_child(driver)
+	driver.position = Vector3(DOOR_FRONT - 0.24, 0.76, 0.41)
+	var fabric := unlit("111518")
+	Kit.shell(driver, [Vector4(0.57, 0.18, 0.13, 0.0), Vector4(0.78, 0.26, 0.15, 0.0),
+		Vector4(0.94, 0.25, 0.13, 0.0), Vector4(1.04, 0.106, 0.10, 0.0)], fabric, 0.83, true)
+	var head := SphereMesh.new()
+	head.radius = 0.135
+	head.height = 0.324
+	head.radial_segments = 10
+	head.rings = 6
+	Kit.mesh_part(driver, head, Vector3(0.018, 1.126, 0.0), fabric)
+	Kit.mesh_part(driver, head, Vector3(0.095, 1.067, 0.0), fabric).scale = Vector3(0.53, 0.39, 0.69)
+
+static func unlit(tint: String) -> StandardMaterial3D:
+	var finish := StandardMaterial3D.new()
+	finish.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	finish.albedo_color = Color(tint)
+	return finish
+
+static func open_door(bus: Node3D) -> Tween:
+	var motion := bus.create_tween().set_parallel().set_trans(Tween.TRANS_SINE)
+	motion.tween_property(bus.get_node("Hoja 0"), "rotation:y", deg_to_rad(77.0), 0.74)
+	motion.tween_property(bus.get_node("Hoja 1"), "rotation:y", deg_to_rad(-78.0), 0.79)
+	return motion
 
 static func panel(parent: Node3D, center: Vector2, size: Vector2, radius: float, project: Callable, normal: Vector3, finish: Material):
 	var points := PackedVector3Array()
@@ -202,13 +274,13 @@ static func bodywork(tint: String, height: float, exposure: float) -> ShaderMate
 	material.set_shader_parameter("exposure", exposure)
 	return material
 
-static func coach_label(parent: Node3D, point: Vector3, yaw: float, size: float, content: String):
+static func coach_label(parent: Node3D, point: Vector3, yaw: float, size: float, content: String, tint: String):
 	var label := Label3D.new()
 	label.text = content
 	label.font_size = 45
 	label.pixel_size = size
 	label.outline_size = 0
-	label.modulate = Color("#754b3e")
+	label.modulate = Color(tint)
 	parent.add_child(label)
 	label.position = point
 	label.rotation.y = yaw

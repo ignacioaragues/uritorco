@@ -16,7 +16,6 @@ const PAPER = preload("res://diario_papel.webp")
 const PAPER_FIELD := Rect2(0, 0, 560, 330)
 const PAGE_ASPECT := 1.33 / 1.14
 const COFFEE = preload("res://equipo/mancha_cafe.webp")
-const ATLAS_EARTH = preload("res://diario_hallazgos.webp")
 const QUARRY_ZONE := 1
 const SUMMIT_ZONE := 2
 const CREEK_ZONE := 3
@@ -48,7 +47,6 @@ var departure_sheet := false
 var dream_sheet := 0
 var arrival_sheet := -1
 var active_zone := -1
-var found: Dictionary = {}
 var objective_mark: Variant = null
 var location := Vector3.ZERO
 var relief: Dictionary = {}
@@ -150,7 +148,6 @@ func draw_markers():
 	if zone < 0 or dream_sheet > 0: return
 	var limits := survey_extent(zone)
 	var inside := frame(limits).grow(-9.0)
-	if zone != ARRIVAL_ZONE: draw_finds(limits)
 	if objective_mark is Vector3:
 		var destination: Vector3 = objective_mark
 		var goal := point(limits, destination)
@@ -278,10 +275,10 @@ func draw_main_trail(limits: Rect2, zone: int):
 			var pos: Vector2 = Departure.MARA_PATH[i].lerp(Departure.MARA_PATH[i + 1], step - i)
 			return Vector3(pos.x, 0, pos.y), LINK_COLOR)
 		return
-	pin(limits, trail_landmark(170.0), "Laja con cuerda", Vector2(-10, 18))
-	pin(limits, trail_landmark(171.0, ROUTE.detour(171.0) - ROUTE.trail(171.0)), "Vaguada", Vector2(9, -9))
 	pin(limits, trail_landmark(420.0, 1.6), "Antena del abra", Vector2(9, -12))
 	if zone == FILO_ZONE:
+		pin(limits, trail_landmark(170.0), "Laja con cuerda", Vector2(-10, 18))
+		pin(limits, trail_landmark(171.0, ROUTE.detour(171.0) - ROUTE.trail(171.0)), "Vaguada", Vector2(9, -9))
 		pin(limits, trail_landmark(ROUTE.CREST, -1.50), "Hito del filo", Vector2(-9, -10))
 
 func trail_landmark(distance: float, side: float = 0.0) -> Vector3:
@@ -373,42 +370,6 @@ func draw_dream_symbols():
 					brush.append(center + (Vector2(point) + jitter).rotated(angle) * size_m)
 				draw_polyline(brush, Color(0.28, 0.25, 0.24, opacity * 0.26), 3.65, true)
 				draw_polyline(brush, Color(0.26, 0.23, 0.21, opacity), 1.65, true)
-
-func draw_finds(limits: Rect2):
-	const COLUMNS := 4
-	var tile := ATLAS_EARTH.get_size() / Vector2(COLUMNS, 2)
-	var here := Vector2(location.x, location.z)
-	var plot := frame(limits)
-	var occupied := used_labels.duplicate()
-	for id in Exploration.FINDS:
-		var entry: Array = Exploration.FINDS[id]
-		var at: Vector2 = entry[2]
-		var world := Vector3(at.x, 0, at.y)
-		if not contains(limits, world): continue
-		var seen := found.has(id)
-		if not seen and here.distance_to(at) > 2.8: continue
-		var mark := point(limits, world)
-		var picture := Vector2(34, 34) if seen else Vector2(29, 29)
-		var radius := picture * 0.5
-		var badge := mark.clamp(plot.position + radius, plot.end - radius)
-		var side := -1.0 if entry[0] % 2 == 0 else 1.0
-		for offset in [Vector2(19 * side, 21), Vector2(-19 * side, 21), Vector2(19 * side, -21), Vector2(-19 * side, -21)]:
-			var candidate := (mark + Vector2(offset)).clamp(plot.position + radius, plot.end - radius)
-			if clear_of(Rect2(candidate - radius, picture), occupied):
-				badge = candidate
-				break
-		var bounds := Rect2(badge - radius, picture)
-		occupied.append(bounds)
-		markers.draw_line(mark, mark.lerp(badge, 0.60), Color("#6e655098"), 0.75, true)
-		markers.draw_circle(badge, 12.0, Color("#f5deb566" if seen else "#f8d78b80"), true, -1, true)
-		var tint := Color.WHITE if seen else Color(1, 1, 1, 0.76)
-		var sketch: Texture2D = Exploration.SKETCHES.get(id)
-		if sketch:
-			markers.draw_texture_rect(sketch, bounds, false, tint)
-		else:
-			var index: int = entry[0]
-			var src := Rect2(Vector2(index % COLUMNS, index / COLUMNS) * tile, tile)
-			markers.draw_texture_rect_region(ATLAS_EARTH, bounds, src, tint)
 
 func projection_z() -> float:
 	if arrival_sheet >= 0: return Arrival.origin(arrival_sheet).z

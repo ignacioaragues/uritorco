@@ -67,6 +67,8 @@ static func build(valley):
 	var foundation := c.y - lowest + 0.23
 	var floor: MeshInstance3D = valley.box(c - Vector3.UP * foundation * 0.5, Vector3(width, foundation, depth), "9d8f76", true)
 	floor.get_child(0).set_meta("footstep", &"stone")
+	Refuge.masonry(floor, Vector3.UP)
+	floor.name = "Base de piedra del museo"
 	for side in [-1, 1]:
 		wall(valley, c + Vector3(0, HEIGHT * 0.5, side * HALF_DEPTH), Vector3(width, HEIGHT, 0.22))
 		wall(valley, c + Vector3(-HALF_WIDTH, HEIGHT * 0.5, side * 3.95), Vector3(0.23, HEIGHT, 6.1))
@@ -122,6 +124,8 @@ static func build_entrance(valley, c: Vector3):
 	var ramp: MeshInstance3D = valley.box(start.lerp(end, 0.5) - Vector3.UP * 0.09, Vector3(span.length(), 0.18, 2.38), "a38e71", true)
 	ramp.get_child(0).set_meta("footstep", &"stone")
 	ramp.rotation.z = atan2(span.y, span.x)
+	ramp.material_override = Stone.paint("9d8c75")
+	ramp.name = "Pasarela de piedra del museo"
 	valley.museum_hinge = Node3D.new()
 	valley.add_child(valley.museum_hinge)
 	valley.museum_hinge.position = front + Vector3(0, 0, -0.88)

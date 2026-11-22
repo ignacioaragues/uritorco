@@ -1,6 +1,7 @@
 shader_type spatial;
 
 uniform vec4 tint : source_color = vec4(0.32, 0.40, 0.42, 1.0);
+uniform float reflection = 1.0;
 varying vec3 glass_point;
 
 void vertex() {
@@ -18,7 +19,7 @@ void fragment() {
 		* sin(glass_point.y * 49.0 - glass_point.z * 31.0);
 	vec3 horizon = mix(vec3(0.27, 0.26, 0.18), vec3(0.44, 0.54, 0.57), sky);
 	horizon = mix(horizon, vec3(0.66, 0.67, 0.61), cloud * sky * 0.18);
-	ALBEDO = mix(tint.rgb * (0.68 + dust * 0.07), horizon, 0.19 + at_edge * 0.49);
+	ALBEDO = mix(tint.rgb * (0.68 + dust * 0.07), horizon, (0.19 + at_edge * 0.49) * reflection);
 	ROUGHNESS = 0.24 + dust * 0.08;
 	SPECULAR = 0.35;
 }

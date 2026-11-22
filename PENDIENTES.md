@@ -64,6 +64,24 @@ Al cierre de cada pasada se actualizan los puntos resueltos y se conserva lo que
 - [x] Darles materiales y siluetas distintas a los tres sueños. El primero tiene placas azules fracturadas, el segundo terrazas cobrizas y el tercero crestas de obsidiana y arcos erosionados. Las formaciones cercanas son sólidas y dejan pasos abiertos hacia los seis hallazgos.
 - [x] Conectar las lajas con la bajada al cauce y abrir un atajo del este a la vuelta del mollar. Las dos huellas están señalizadas y se dibujan en la hoja local, centrada en el refugio. Se recorrieron los enlaces con el mapa de mano abierto.
 
+## Pasada del urbano, la antena y la despedida
+
+- El urbano de Capilla del Monte espera en la ruta del prólogo, con el frente hacia la derecha visto desde la banquina. Tiene azul apagado, ventanillas oscuras y una puerta de dos hojas del lado de la parada. Hernán llega a pie por la huella. E abre la puerta y, antes del fundido, se distingue la silueta del conductor.
+- Al cerrar la charla de despedida, la cercanía habilita el ramal izquierdo a la casa de Mara. El ramal derecho lleva a la parada. Los dos senderos se prolongan más allá del punto donde entra el fundido. Hernán llega al jardín por el camino. Suenan dos golpes al usar E en la puerta, la hoja se entorna hacia adentro y la música continúa en el epílogo. El texto de Mara se centra en la despedida.
+- El Día 2 oscurece en tres minutos desde el parte del cauce. El Día 7 conserva la lámina y la marca de la antena. Mara indica el camino por el museo, la charla sobre la caminata corresponde a la ida y el ocaso empieza al terminar la prueba de recepción. Después se ven los destellos sobre el abra.
+- Los hallazgos se consultan en el cuaderno y se retiraron sus marcas del mapa. Las entradas nuevas aparecen primero. Se redujeron el negativo velado y la luna nocturna.
+- La base y la pasarela del museo tienen textura de piedra. El cuaderno del Sector 08 lleva el título impreso dentro de una etiqueta. Mara pregunta por la caída desde la radio que Hernán tiene guardada. El trazo de la Cruz del Sur llega al polo y luego baja hasta el horizonte. Hernán puede caminar durante el fundido del regreso.
+- El primer sueño se abre con un parpadeo y Hernán empieza mirando en sentido opuesto a Saturno.
+
+### Pendientes del texto pegado
+
+- Revisar los espacios vacíos que se ven desde las alturas y ajustar la luz de las demás jornadas según el momento de cada encargo.
+- Darle una aparición propia a la estrella de Paula tras leer su recorte.
+- Hacer más fáciles de encontrar los cactus, el zorro y los cuises. Repartir más lagartos y cuises tras los primeros dibujos y sumar un ave que se pueda dibujar, con su croquis generado.
+- Darle un costo al rodeo por la vaguada, como un tronco caído, y extender el paredón de la laja hacia el oeste para bloquear los atajos al nivel superior.
+- Adaptar los diálogos de los arcos al ritmo y la presentación de la radio.
+- Reordenar el Día 41. Llamada de Mara antes de empacar, con respuestas según cercanía. De camino al museo Hernán menciona que es su último día. Elvira deja en el banco un libro ilustrado sobre los comechingones con el grabado de un arco. Al recogerlo se habilita y se marca la bajada. El flirteo puede aparecer al salir del museo y la invitación queda para la despedida en la bajada.
+
 ## Pasada del jardín y la carrocería
 
 - El puesto de Mara tiene dos canteros de piedra con flores, una cerca de madera con paso central y cuatro pinos plantados alrededor. El fundido deja a Hernán frente al jardín. Desde ahí puede caminar hasta la puerta y golpear con E.

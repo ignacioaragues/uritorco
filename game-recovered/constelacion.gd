@@ -1,7 +1,7 @@
 extends RefCounted
 
 const CHAPTER_DAYS := [1, 2, 7, 25]
-const MOON_RADIUS := 0.083
+const MOON_RADIUS := 0.057
 const GALACTIC_POLE := ["", 12.8573, 27.1283, 0.0]
 const SIDEREAL_HOURS := [13.00854, 13.07425, 13.4028, 14.5856]
 const LATITUDE := -30.75 * PI / 180.0

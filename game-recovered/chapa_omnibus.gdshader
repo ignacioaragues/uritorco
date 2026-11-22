@@ -5,6 +5,7 @@ uniform float axle_height = 0.0;
 uniform float exposure = 1.0;
 uniform bool coach_livery = false;
 varying vec3 panel_point;
+varying vec3 body_point;
 
 float hash_cell(vec3 p) {
 	vec3 s = fract(p * vec3(0.1031, 0.1030, 0.0973));
@@ -24,6 +25,7 @@ float surface_wear(vec3 p) {
 
 void vertex() {
 	panel_point = (MODEL_MATRIX * vec4(VERTEX, 1.0)).xyz;
+	body_point = VERTEX;
 }
 
 void fragment() {
@@ -39,8 +41,12 @@ void fragment() {
 		* (0.36 + dust * 0.64) * resolved;
 	vec3 pigment = enamel.rgb;
 	if (coach_livery) {
-		float lower = 1.0 - smoothstep(1.20, 1.23, h);
-		pigment = mix(pigment, vec3(0.49, 0.275, 0.224), lower);
+		float side = 1.0 - smoothstep(3.04, 3.55, abs(body_point.x));
+		float band = smoothstep(1.70, 1.74, h) * (1.0 - smoothstep(2.48, 2.54, h));
+		pigment = mix(pigment, vec3(0.24, 0.28, 0.28), band * side * 0.83);
+		pigment = mix(pigment, vec3(0.55, 0.55, 0.50), smoothstep(2.50, 2.67, h) * (0.35 + 0.65 * side));
+		float accent = smoothstep(1.45, 1.49, h) * (1.0 - smoothstep(1.53, 1.56, h));
+		pigment = mix(pigment, vec3(0.48, 0.30, 0.27), accent * (1.0 - side));
 	}
 	vec3 faded = pigment * (0.87 + 0.15 * patches + 0.085 * streaks + 0.10 * (grain - 0.5) * resolved);
 	vec3 oxidized = vec3(0.25, 0.18, 0.12) * (0.71 + 0.29 * grain);
