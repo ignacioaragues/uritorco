@@ -91,6 +91,7 @@ var packed_items: Array = []
 var departure_destination := ""
 var departure_path_open := false
 var departure_scene := ""
+var mara_yard: Node3D
 var cave: Node3D
 var return_terrain: Node3D
 var return_heading := Vector3.ZERO
@@ -595,7 +596,7 @@ func _process(delta):
 			branch_found = true
 	if stage == 13 and not awaiting_call and not summit_mapped and Departure.near(player.position, valley.route.ascent_point(0.0), 11.5):
 		summit_mapped = true
-	if mode in ["approach", "walk", "dream", "map", "sighting", "cave", "mara_door"] or (radio_panel.visible and player.walking):
+	if mode in ["approach", "walk", "dream", "map", "sighting", "cave", "mara_door", "departure_bus"] or (radio_panel.visible and player.walking):
 		var velocity: = Vector2(player.velocity.x, player.velocity.z).length() if player.is_on_floor() else 0.0
 		var outdoors: bool = not in_museum and (player.position.z < 0 or absf(player.position.x) > 3.5)
 		if hands.requested_pose == "compass":
@@ -773,7 +774,7 @@ func update_weather(day: int, delta: float, in_museum: bool):
 	ambience.weather(delta, rain_strength if shows_world else 0.0, shows_world and (not outside or in_museum), radio_panel.visible, day == 36)
 
 func play_footfall(surface: StringName, impact: float):
-	if mode not in ["approach", "walk", "map", "cave", "sighting", "dream", "mara_door"]: return
+	if mode not in ["approach", "walk", "map", "cave", "sighting", "dream", "mara_door", "departure_bus"]: return
 	var foot: Vector3 = player.position
 	if player.water_depth > 0.07:
 		surface = &"water"
@@ -1751,7 +1752,6 @@ func _unhandled_key_input(event):
 		show_ending()
 	elif mode == "mara_door" and key == KEY_E and target == "Puerta de Mara":
 		ending_at_door = true
-		player.intro_center = Vector3.ZERO
 		save_game(true, "end")
 		show_ending()
 	elif mode == "intro": return
@@ -2870,20 +2870,32 @@ func finish_departure_walk():
 
 func place_departure_scene(destination: String):
 	walk()
-	player.intro_center = Vector3.ZERO
 	player.velocity = Vector3.ZERO
-	if destination == "mara":
-		var at: Vector3 = valley.route.terrain_point(Departure.MARA_STOP)
-		var door_base: Vector3 = valley.route.terrain_point(at + Vector3(0, 0, -4.74))
-		at.y = door_base.y - 0.02
-		valley.open_mara_path(at)
-		player.position = valley.route.terrain_point(at + Vector3(0, 0, -2.10)) + Vector3.UP * 0.1
+	player.intro_heading = 0.0
+	target = ""
+	var is_mara := destination == "mara"
+	Arrival.show_fragment(valley, -1 if is_mara else 0)
+	if is_instance_valid(mara_yard):
+		mara_yard.visible = is_mara
+		mara_yard.process_mode = Node.PROCESS_MODE_INHERIT if is_mara else Node.PROCESS_MODE_DISABLED
+	if is_mara:
+		if not is_instance_valid(mara_yard): mara_yard = Departure.mara(valley)
+		Departure.isolate(mara_yard)
+		player.intro_center = mara_yard.position
+		player.scene_bounds = Departure.MARA_BOUNDS
+		player.position = mara_yard.to_global(Departure.MARA_START)
 		player.rotation.y = 0.0
 		mode = "mara_door"
 	else:
-		player.position = Departure.bus(valley)
+		var roadside: Node3D = valley.arrival_fragments[0]
+		set_arrival_bag_visible(false)
+		player.position = Departure.bus(roadside)
+		Departure.isolate(roadside)
+		player.intro_center = roadside.position
+		player.scene_bounds = Departure.BUS_BOUNDS
 		player.rotation.y = 2.04
 		mode = "departure_bus"
+	player.camera.cull_mask = Departure.SCENE_LAYER
 	player.camera.rotation = Vector3.ZERO
 	departure_scene = destination
 

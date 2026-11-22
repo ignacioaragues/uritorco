@@ -64,6 +64,12 @@ Al cierre de cada pasada se actualizan los puntos resueltos y se conserva lo que
 - [x] Darles materiales y siluetas distintas a los tres sueños. El primero tiene placas azules fracturadas, el segundo terrazas cobrizas y el tercero crestas de obsidiana y arcos erosionados. Las formaciones cercanas son sólidas y dejan pasos abiertos hacia los seis hallazgos.
 - [x] Conectar las lajas con la bajada al cauce y abrir un atajo del este a la vuelta del mollar. Las dos huellas están señalizadas y se dibujan en la hoja local, centrada en el refugio. Se recorrieron los enlaces con el mapa de mano abierto.
 
+## Pasada de los escenarios de la despedida
+
+- Los dos ramales terminan con un fundido en la caminata. Con la pantalla negra se abre la parada del prólogo o el puesto de Mara, que tiene su propio terreno, sendero y sierras al fondo.
+- La parada conserva la ruta, la marquesina y los carteles del comienzo. El ómnibus queda sobre el asfalto y se puede subir con E. La puerta de Mara ofrece golpear con E.
+- Los guardados que terminaban en cualquiera de los dos destinos abren el escenario correspondiente.
+
 ## Pasada de flora y laderas
 
 - Cuatro espinillos en flor crecen en distintos claros, y diez cactus bajos se reparten en cuatro colonias entre lajas. Se puede dibujar cualquier ejemplar con E. El croquis de cada tipo se guarda con su fecha en «Flora y fauna». Al dibujarlo desaparece la E en todos los ejemplares del mismo tipo, incluso al cargar. Los dibujos se cuelgan en el puesto a partir de la siguiente jornada y se guardan con los demás el último día.

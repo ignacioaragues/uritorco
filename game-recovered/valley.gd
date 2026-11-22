@@ -29,7 +29,6 @@ var desk_radio: StaticBody3D
 var desk_note: StaticBody3D
 var desk_clipping: StaticBody3D
 var bag_drop: StaticBody3D
-var mara_path_open := false
 var desk_portable: Node3D
 var env: = Environment.new()
 var flag_material: ShaderMaterial
@@ -172,11 +171,6 @@ func _ready():
 	preload("res://bordes.gd").dress(self)
 	nature.name = "Flora y fauna"
 	add_child(nature)
-
-func open_mara_path(at: Vector3):
-	if mara_path_open: return
-	mara_path_open = true
-	LastNight.build_door(self, at)
 
 func update_desk_radio(held: bool):
 	if desk_portable.visible != held: return

@@ -711,10 +711,10 @@ Se puede terminar esta charla y volver a abrir la radio para despedirse.
 
 ### Las decisiones de partida
 
-La despedida termina a pie. El jugador continúa por el camino marcado en el mapa hasta el fundido.
+La despedida termina a pie. El jugador continúa por el camino marcado en el mapa. Cada destino se abre cuando el fundido ya dejó la pantalla negra.
 
-- **«Seguir hasta la parada del ómnibus.»** Disponible siempre. Al terminar la bajada, el fundido deja a Hernán en una parada de la ruta. Puede subir con E.
-- **«Tomar la huella hacia la casa de Mara.»** Disponible con nueve charlas de cercanía. El sendero vecinal sale a la izquierda. El fundido deja a Hernán ante la puerta y puede golpear con E. Mara queda fuera de escena y del otro lado cruje una tabla.
+- **«Seguir hasta la parada del ómnibus.»** Disponible siempre. Hernán vuelve a la parada del prólogo. El ómnibus espera sobre la ruta y se puede subir con E.
+- **«Tomar la huella hacia la casa de Mara.»** Disponible con nueve charlas de cercanía. El sendero vecinal sale a la izquierda. Tras el fundido se abre el puesto de Mara en su propio paisaje. Hernán puede golpear con E. Mara queda fuera de escena y del otro lado cruje una tabla.
 - *Si Hernán preguntó «¿Papá…?» en el último sueño, el texto final recuerda la voz y las cuatro estrellas. En las otras rutas, Hernán piensa llevar el libro cuando vuelva a dar clase.*
 
 ## Cartas breves ligadas a las charlas

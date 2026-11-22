@@ -1,6 +1,7 @@
 shader_type spatial;
 
 uniform int fragment_index;
+uniform bool lane_to_house = false;
 uniform vec4 soil_tint : source_color;
 uniform vec4 track_tint : source_color;
 uniform sampler2D brushwork : filter_linear_mipmap, repeat_enable;
@@ -37,7 +38,9 @@ void fragment() {
 	if (fragment_index == 4) { x = -4.8 * sin(distance * 0.105); }
 	if (fragment_index == 6) { x = 5.0 * sin(distance * 0.113); }
 	if (fragment_index == 7) { x = -4.4 * sin(distance * 0.14) + 0.11 * distance; }
+	if (lane_to_house) { x = 4.3 * sin((ground.z + 4.5) * 0.093) * smoothstep(0.0, 9.0, ground.z + 4.5); }
 	float track = 1.0 - smoothstep(0.70, 1.86, abs(ground.x - x) + edge_wear);
+	if (lane_to_house) { track *= smoothstep(-5.0, -4.08, ground.z); }
 	vec3 meadow = soil_tint.rgb * (0.91 + 0.19 * earth);
 	vec3 trail = track_tint.rgb * (0.86 + 0.28 * earth);
 	vec3 color = mix(meadow, trail, track);

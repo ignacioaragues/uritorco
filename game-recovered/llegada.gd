@@ -159,6 +159,11 @@ static func build_fragments(v):
 		v.arrival_fragments.append(fragment)
 
 static func build_ground(v, center: Vector3, index: int):
+	var heights := func(x: float, distance: float) -> float: return ground_height(index, x, distance)
+	var ground: MeshInstance3D = v.prop(terrain_mesh(heights), center, SOIL[index], true)
+	ground.material_override = terrain_material(index, SOIL[index], TRACK[index])
+
+static func terrain_mesh(height_at: Callable) -> ArrayMesh:
 	var surface := SurfaceTool.new()
 	surface.begin(Mesh.PRIMITIVE_TRIANGLES)
 	var xs := PackedFloat32Array()
@@ -175,7 +180,7 @@ static func build_ground(v, center: Vector3, index: int):
 	for d in range(112, 221, 12): distances.append(d)
 	for d in distances:
 		for x in xs:
-			surface.add_vertex(Vector3(x, ground_height(index, x, d), -d))
+			surface.add_vertex(Vector3(x, height_at.call(x, d), -d))
 	for row in range(distances.size() - 1):
 		for column in range(xs.size() - 1):
 			var a := row * xs.size() + column
@@ -183,14 +188,16 @@ static func build_ground(v, center: Vector3, index: int):
 			for point in [a, b, a + 1, a + 1, b, b + 1]:
 				surface.add_index(point)
 	surface.generate_normals()
-	var ground: MeshInstance3D = v.prop(surface.commit(), center, SOIL[index], true)
+	return surface.commit()
+
+static func terrain_material(index: int, soil: String, track: String) -> ShaderMaterial:
 	var material := ShaderMaterial.new()
 	material.shader = preload("res://llegada_suelo.gdshader")
 	material.set_shader_parameter("fragment_index", index)
-	material.set_shader_parameter("soil_tint", Color(SOIL[index]))
-	material.set_shader_parameter("track_tint", Color(TRACK[index]))
+	material.set_shader_parameter("soil_tint", Color(soil))
+	material.set_shader_parameter("track_tint", Color(track))
 	material.set_shader_parameter("brushwork", preload("res://tierra_serrana.webp"))
-	ground.material_override = material
+	return material
 
 static func dress_landscape(v, center: Vector3, index: int):
 	var rng := RandomNumberGenerator.new()
