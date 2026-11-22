@@ -20,7 +20,9 @@ const Exploration = preload("res://exploracion.gd")
 const Diary = preload("res://diario.gd")
 const Refuge = preload("res://refugio.gd")
 const INTRO_LOOK_AMOUNT := 0.14
-const SUMMIT_NIGHT_SECONDS := 40.0
+const SUMMIT_NIGHT_SECONDS := 120.0
+const RIDGE_NIGHT_SECONDS := 155.0
+const QUARRY_NIGHT_SECONDS := 105.0
 const SIGHTING_FOCUS_SECONDS := 0.4
 const NIGHT_SCENE_VIEW := 200.0
 const DREAM_SECONDS := 150.0
@@ -549,7 +551,7 @@ func _process(delta):
 		if day >= 36 and camp_read: valley.hang_sketch(3, Diary.WALL_ATLAS, Diary.RIDGE)
 	var darkness := float(valley.sky_mat.get_shader_parameter("nightfall"))
 	var outside_world: bool = player.intro_center == Vector3.ZERO and (mode in ["walk", "map"] or (radio_panel.visible and player.walking))
-	valley.nature.advance(delta, day, player.position, darkness, rain_strength, outside_world)
+	valley.nature.advance(delta, day, player.position, darkness, rain_strength, outside_world, nature_notes)
 	if not nature_notes.is_empty() and in_refuge:
 		valley.nature.next_day_sketches(valley, nature_notes, day)
 	var hand_tone := Color.WHITE.lerp(Color("#727c8e") if not in_refuge else Color("#b4a392"), darkness)
@@ -1923,7 +1925,7 @@ func _unhandled_key_input(event):
 							stage = 14
 							summit_mapped = true
 							field_note += " Desde la cumbre vi que el cable y la muesca de la segunda luz quedan separados por un pliegue del cerro."
-							valley.sunset()
+							valley.sunset(37.0)
 						var sketch := "Desde arriba ves terminar el cable antes del corte. Un pliegue entero de sierra lo separa de la muesca que dibujaron en el campamento."
 						if quarry_reply == 1: sketch += " El rumbo que anotaste en el malacate cae detrás de ese pliegue."
 						overlay("message", sketch + "\n\nAbrís el mapa sobre la piedra y marcás desde dónde miraste. El viento te levanta una esquina. La sujetás con el pulgar.", "Espacio · doblar el mapa")
@@ -1932,7 +1934,7 @@ func _unhandled_key_input(event):
 							stage = 11
 							branch_found = true
 							valley.quarry_plate.rotation.y += 0.9
-							valley.sunset()
+							valley.sunset(33.0)
 						overlay("message", "La chapa gira sobre un solo bulón. La orientás hacia el último sol y la sujetás contra el bastidor.", "Espacio · soltar la manija")
 					"Cuerda de la laja":
 						var points: Array[Vector3] = valley.route.laja_rope_route()
@@ -1942,7 +1944,7 @@ func _unhandled_key_input(event):
 						if stage == 8 and not awaiting_call:
 							stage = 9
 							field_note += " Día 25 · Hito del filo revisado."
-							valley.sunset()
+							valley.sunset(46.0)
 						overlay("message", "Desde el hito ves el pliegue entero de la quebrada. Recién acá se entiende la vuelta que da el sendero. Marcás el rodeo en el cuaderno.", "Espacio · guardar")
 					"Bolso":
 						if stage == 0:
@@ -2053,7 +2055,7 @@ func _unhandled_key_input(event):
 			valley.night(Climate.STORM_RETURN_NIGHT, Climate.STORM_RETURN_DUSK)
 			walk()
 		elif after == "summit_home":
-			valley.night(SUMMIT_NIGHT_SECONDS)
+			valley.night(SUMMIT_NIGHT_SECONDS, 45.0)
 			radio.play_knocks()
 			radio_choices("summit_echo", "Soltás el botón. La radio da dos golpes secos. Después se oye «hasta el banco». La frase es de Mara. La voz suena como la tuya.", ["¿Vos acabás de repetir «hasta el banco»?", "Guardás la radio y empezás a bajar."])
 		elif after == "summit_echo_done":
@@ -2064,8 +2066,9 @@ func _unhandled_key_input(event):
 			bedtime = true
 			field_note += " Día 27 · En el malacate vi una luz por encima del corte con la chapa quieta."
 			if quarry_reply == 1: field_note += " Dejé anotados el rumbo y la hora junto al croquis."
-			valley.night()
+			valley.night(QUARRY_NIGHT_SECONDS, 35.0)
 			walk()
+			save_game(true, "walk")
 		elif after == "last_call":
 			choose_departure("fork" if can_visit_mara() else "bus")
 		elif after == "departure_morning_done":
@@ -2128,8 +2131,9 @@ func _unhandled_key_input(event):
 		elif after == "filo":
 			route_reported = true
 			bedtime = true
-			valley.night()
+			valley.night(RIDGE_NIGHT_SECONDS, 52.0)
 			walk()
+			save_game(true, "walk")
 		elif after == "reception_done":
 			day7_dusk = true
 			bedtime = second_sighting
@@ -3139,6 +3143,7 @@ func save_game(automatic: bool, resume_mode: String) -> bool:
 	elif stage >= 10: title = "Día 27"
 	var data = {"version": 1, "slot": slot, "title": title, "state": state, "mode": resume_mode, "pose": player.transform, "pitch": player.camera.rotation.x, "paragraph": recall.paragraph, "chapter": valley.sky_chapter, "museum_offset": Museum.SITE_OFFSET, "south_crossing": true, "stop_verge": Arrival.STOP_LAYOUT, "rain": rain_strength, "light_target": valley.light_target, "light_left": valley.remaining_light_transition(), "door": valley.door_open, "book": valley.book_unpacked, "night": valley.sky_mat.get_shader_parameter("nightfall"), "dusk": valley.sky_mat.get_shader_parameter("dusk"), "music": score.position_of("prologo")}
 	data["curtains_open"] = valley.curtains_open
+	data["dusk_left"] = valley.remaining_dusk_transition()
 	return Saves.write(slot, automatic, data)
 
 func restore(data: Dictionary):
@@ -3240,7 +3245,8 @@ func restore(data: Dictionary):
 	valley.restore_light(maxf(saved_dusk, saved_night), saved_night)
 	var seconds := 0.0 if legacy_abra else float(data.get("light_left", 0.0))
 	if seconds > 0.01 and data.get("light_target") == "night":
-		var dusk_left := maxf(0.1, seconds - (Climate.STORM_RETURN_NIGHT - Climate.STORM_RETURN_DUSK)) if stage == 18 else 14.0
+		var old_dusk := maxf(0.1, seconds - (Climate.STORM_RETURN_NIGHT - Climate.STORM_RETURN_DUSK)) if stage == 18 else 14.0
+		var dusk_left := maxf(0.1, float(data.get("dusk_left", old_dusk)))
 		valley.night(seconds, dusk_left)
 	elif seconds > 0.01 and data.get("light_target") == "dusk":
 		valley.sunset(seconds)

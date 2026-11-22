@@ -286,6 +286,7 @@ var atmosphere_sample := Vector4(-1, -1, -1, -1)
 var exterior_light := true
 var light_target := ""
 var light_duration := 0.0
+var dusk_duration_seconds := 0.0
 
 func set_sun_phase(dusk: float, dark: float):
 	sky_mat.set_shader_parameter("dusk", dusk)
@@ -295,6 +296,7 @@ func sunset(duration: float = 5.0):
 	var tween := transition()
 	light_target = "dusk"
 	light_duration = duration
+	dusk_duration_seconds = duration
 	tween.tween_method(func(v): sky_mat.set_shader_parameter("dusk", v), float(sky_mat.get_shader_parameter("dusk")), 1.0, duration)
 
 func night(duration: float = 6.0, dusk_duration: float = 14.0):
@@ -302,11 +304,15 @@ func night(duration: float = 6.0, dusk_duration: float = 14.0):
 	var tween := transition()
 	light_target = "night"
 	light_duration = duration
+	dusk_duration_seconds = minf(duration, dusk_duration)
 	tween.tween_method(func(v): sky_mat.set_shader_parameter("nightfall", v), float(sky_mat.get_shader_parameter("nightfall")), 1.0, duration)
-	tween.tween_method(func(v): sky_mat.set_shader_parameter("dusk", v), float(sky_mat.get_shader_parameter("dusk")), 1.0, minf(duration, dusk_duration))
+	tween.tween_method(func(v): sky_mat.set_shader_parameter("dusk", v), float(sky_mat.get_shader_parameter("dusk")), 1.0, dusk_duration_seconds)
 
 func remaining_light_transition() -> float:
 	return maxf(0.0, light_duration - lighting.get_total_elapsed_time()) if lighting and lighting.is_running() else 0.0
+
+func remaining_dusk_transition() -> float:
+	return maxf(0.0, dusk_duration_seconds - lighting.get_total_elapsed_time()) if lighting and lighting.is_running() else 0.0
 
 func restore_light(dusk: float, dark: float):
 	if lighting and lighting.is_valid(): lighting.kill()

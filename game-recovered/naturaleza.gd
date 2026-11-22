@@ -8,6 +8,10 @@ const FOX := "zorro"
 const TEGU := "overo"
 const REED := "cortadera"
 const CAVY := "cuis"
+const CHINGOLO := "chingolo"
+const BIRD_PERCH := Vector2(-12.9, -18.95)
+const CAVY_LATER := [Vector2(19.0, -9.4), Vector2(-33.8, 50.1)]
+const TEGU_LATER := [Vector2(-31.4, -8.3), Vector2(-22.4, 57.4)]
 const ESPINILLO := "espinillo"
 const CACTUS := "cactus"
 const ESPINILLO_SITES := [Vector3(32.5, 1.02, -0.5), Vector3(-28.6, 0.92, -32.4),
@@ -25,6 +29,7 @@ const CAVY_LAJAS := Vector2(-22.0, -28.75)
 const CAVY_REFUGE_CREEK := Vector2(3.18, 0.80)
 const CAVY_REFUGE_LAJAS := Vector2(-1.38, -3.0)
 const ENTRIES := {
+	CHINGOLO: ["Chingolo", "Se erizó al oírme. Alcancé a dibujarle las rayas de la cabeza, el pico corto y el cuello color ladrillo."],
 	FOX: ["Zorro gris pampeano", "Cruzó la huella del mollar al trote. Alcancé a ver el lomo gris y, antes de que se metiera en los arbustos, la punta negra de la cola."],
 	TEGU: ["Lagarto overo", "Se calentaba sobre una laja de la orilla. Tenía manchas claras entre las bandas oscuras y una cola larga que casi tocaba el suelo."],
 	REED: ["Cortadera", "Las hojas largas se arquean hasta el suelo. De cerca, cada penacho está hecho de ramitas finas. Dibujé la mata entera para acordarme de su forma."],
@@ -33,6 +38,7 @@ const ENTRIES := {
 	CACTUS: ["Cactus serrano", "Apenas sobresale del suelo. Desde arriba, las costillas se abren como los gajos de una naranja. Dibujé cómo salen las espinas en grupos."],
 }
 const SKETCHES := {
+	CHINGOLO: "res://naturaleza_chingolo.webp",
 	FOX: "res://naturaleza_zorro.webp",
 	TEGU: "res://naturaleza_overo.webp",
 	REED: "res://naturaleza_cortadera.webp",
@@ -44,6 +50,11 @@ const SKETCHES := {
 var fox: Node3D
 var tegu: Node3D
 var tegu_home := Vector3.ZERO
+var current_tegu_home := Vector3.ZERO
+var tegu_outcrops: Array[Vector3] = []
+var chingolo: Node3D
+var bird_perch := Vector3.ZERO
+var bird_flight := -1.0
 var reed_foot := Vector3.ZERO
 var espinillo_focus: Array[Vector3] = []
 var cactus_focus: Array[Vector3] = []
@@ -53,6 +64,7 @@ var fox_armed := true
 var tegu_clock := -1.0
 var cavies: Array[Node3D] = []
 var cavy_idle := 0.0
+var current_cavy_site := Vector2.INF
 var cavy_bolt := -1.0
 var cavy_start := PackedVector2Array([Vector2.ZERO, Vector2.ZERO])
 var drawings_on_wall: Dictionary = {}
@@ -64,6 +76,15 @@ func _ready():
 	fox.hide()
 	tegu.hide()
 	dress_bank()
+	current_tegu_home = tegu_home
+	for site in TEGU_LATER:
+		tegu_outcrops.append(build_basking_rock(site))
+	chingolo = models.make_chingolo(self)
+	chingolo.hide()
+	var perch_base := ground(BIRD_PERCH)
+	bird_perch = perch_base + Vector3(-0.28, 0.81, -0.09)
+	Flora.branch(self, perch_base - Vector3.UP * 0.08, perch_base + Vector3(-0.10, 0.73, -0.02), 0.044, 0.017, true)
+	Flora.branch(self, perch_base + Vector3(-0.10, 0.68, -0.02), bird_perch + Vector3(-0.24, -0.024, 0.035), 0.022, 0.007)
 	var first := models.make_cavy(self)
 	var second := first.duplicate() as Node3D
 	add_child(second)
@@ -72,6 +93,8 @@ func _ready():
 	reset_cavies()
 	dress_pastizal(CAVY_CREEK, CAVY_REFUGE_CREEK, 2097)
 	dress_pastizal(CAVY_LAJAS, CAVY_REFUGE_LAJAS, 2781)
+	for i in CAVY_LATER.size():
+		dress_pastizal(CAVY_LATER[i], CAVY_REFUGE_LAJAS, 2845 + i)
 	dress_flora()
 
 func dress_flora():
@@ -131,6 +154,19 @@ func dress_bank():
 		tuft.append(Vector4(at.x, at.y - 0.08, at.z, 1.15 if offset == Vector3.ZERO else 0.74))
 	Flora.herb_batch(self, tuft, Flora.Herb.CORTADERA)
 
+func build_basking_rock(site: Vector2) -> Vector3:
+	var base := ground(site) - Vector3.UP * 0.08
+	var faces := Stone.surface()
+	var rng := RandomNumberGenerator.new()
+	rng.seed = int(absf(site.x * site.y) * 731.0)
+	var shape := Stone.fragment(faces, base, Vector3(1.95, 0.29, 1.48), 0.23, rng, Creek.surface_point, Stone.LAJA_PROFILE)
+	Stone.solid(self, base, shape, "Laja calentada por el sol")
+	Stone.finish(self, faces, "Laja del lagarto").material_override = Stone.paint("8f8270")
+	var top := base
+	for point in shape.slice(-Stone.SIDES):
+		top.y += (point.y - base.y) / Stone.SIDES
+	return top
+
 func dress_pastizal(site: Vector2, shelter: Vector2, seed_value: int):
 	var rng := RandomNumberGenerator.new()
 	rng.seed = seed_value
@@ -150,7 +186,7 @@ func dress_pastizal(site: Vector2, shelter: Vector2, seed_value: int):
 func ground(at: Vector2) -> Vector3:
 	return Creek.surface_point(Vector3(at.x, 0.0, at.y))
 
-func advance(delta: float, day: int, player_position: Vector3, dark: float, rain: float, walking: bool):
+func advance(delta: float, day: int, player_position: Vector3, dark: float, rain: float, walking: bool, observations: Dictionary):
 	if day_seen != day:
 		day_seen = day
 		fox_clock = -1.0
@@ -158,13 +194,55 @@ func advance(delta: float, day: int, player_position: Vector3, dark: float, rain
 		tegu_clock = -1.0
 		fox.hide()
 		tegu.hide()
+		chingolo.hide()
+		bird_flight = -1.0
 		reset_cavies()
 	if not walking: return
 
 	var player_xz := Vector2(player_position.x, player_position.z)
 	advance_fox(delta, player_xz, day >= 7 and day <= 32 and rain < 0.57 and dark < 0.68)
-	advance_tegu(delta, player_position, day >= 2 and day <= 36 and rain < 0.23 and dark < 0.32)
-	advance_cavies(delta, player_xz, day == 2, day >= 2 and day <= 36 and rain < 0.30 and dark < 0.39)
+	var tegu_site := tegu_home
+	if observations.has(TEGU):
+		for outcrop in tegu_outcrops:
+			if player_position.distance_squared_to(outcrop) < player_position.distance_squared_to(tegu_site): tegu_site = outcrop
+	if current_tegu_home != tegu_site:
+		current_tegu_home = tegu_site
+		tegu_clock = -1.0
+		tegu.hide()
+	advance_tegu(delta, player_position, day >= 2 and rain < 0.23 and dark < 0.32)
+	var cavy_site := CAVY_CREEK if day == 2 else CAVY_LAJAS
+	if observations.has(CAVY):
+		for site: Vector2 in CAVY_LATER:
+			if player_xz.distance_squared_to(site) < player_xz.distance_squared_to(cavy_site): cavy_site = site
+	if cavy_site != current_cavy_site:
+		current_cavy_site = cavy_site
+		reset_cavies()
+	advance_cavies(delta, player_xz, cavy_site, day >= 2 and rain < 0.30 and dark < 0.39)
+	advance_chingolo(delta, player_position, day >= 2 and rain < 0.25 and dark < 0.36)
+
+func advance_chingolo(delta: float, listener: Vector3, active: bool):
+	var distance := bird_perch.distance_to(listener)
+	if not active or distance > 17.0:
+		bird_flight = -1.0
+		chingolo.hide()
+		return
+	if bird_flight < 0.0:
+		chingolo.position = bird_perch
+		chingolo.rotation = Vector3(0, -0.89 + sin(Time.get_ticks_msec() * 0.0019) * 0.32, 0)
+		chingolo.show()
+		for wing in chingolo.get_children(): wing.hide()
+		if distance < 2.15: bird_flight = 0.0
+		return
+	bird_flight += delta
+	chingolo.visible = bird_flight < 0.95
+	if chingolo.visible:
+		chingolo.position = bird_perch + Vector3(-2.4, 2.6, -3.7) * bird_flight
+		chingolo.rotation = Vector3(0.44, 0.58, 0.12 * sin(bird_flight * 50.0))
+		var phase := sin(bird_flight * TAU * 10.0)
+		for i in chingolo.get_child_count():
+			var wing := chingolo.get_child(i) as Node3D
+			wing.show()
+			wing.rotation.z = phase * (0.92 if i == 0 else -0.92)
 
 func advance_fox(delta: float, player_xz: Vector2, active: bool):
 	var distance := player_xz.distance_to(FOX_MID)
@@ -198,28 +276,28 @@ func advance_fox(delta: float, player_xz: Vector2, active: bool):
 	fox.show()
 
 func advance_tegu(delta: float, player_position: Vector3, active: bool):
-	var distance := Vector2(player_position.x - tegu_home.x, player_position.z - tegu_home.z).length()
+	var distance := Vector2(player_position.x - current_tegu_home.x, player_position.z - current_tegu_home.z).length()
 	if not active or distance > 23.0:
 		tegu_clock = -1.0
 		tegu.hide()
 		return
 	if tegu_clock < 0.0:
-		tegu.position = tegu_home
+		tegu.position = current_tegu_home
 		tegu.rotation.y = TEGU_REST_ANGLE
 		if not tegu.visible:
 			for part in tegu.get_children():
 				if part.has_meta("walking_leg"): part.rotation.y = 0.0
 		tegu.show()
-		if player_position.distance_to(tegu_home) < 1.82: tegu_clock = 0.0
+		if player_position.distance_to(current_tegu_home) < 1.82: tegu_clock = 0.0
 		return
 	tegu_clock += delta
 	if tegu_clock > 1.28:
 		tegu.hide()
 		return
 	var u := clampf(tegu_clock / 1.28, 0.0, 1.0)
-	var at := tegu_home + Vector3(2.18 * u, 0, 1.41 * u + 0.10 * sin(u * 14.0))
+	var at := current_tegu_home + Vector3(2.18 * u, 0, 1.41 * u + 0.10 * sin(u * 14.0))
 	var threshold := smoothstep(0.24, 0.54, u)
-	tegu.position = Creek.surface_point(at).lerp(Vector3(at.x, tegu_home.y, at.z), 1.0 - threshold)
+	tegu.position = Creek.surface_point(at).lerp(Vector3(at.x, current_tegu_home.y, at.z), 1.0 - threshold)
 	tegu.rotation.y = -2.15 + 0.10 * sin(u * 24.0)
 	for i in tegu.get_child_count():
 		var part := tegu.get_child(i) as Node3D
@@ -231,8 +309,8 @@ func reset_cavies():
 	cavy_bolt = -1.0
 	for cavy in cavies: cavy.hide()
 
-func advance_cavies(delta: float, player_xz: Vector2, creek: bool, active: bool):
-	var site := CAVY_CREEK if creek else CAVY_LAJAS
+func advance_cavies(delta: float, player_xz: Vector2, site: Vector2, active: bool):
+	var creek := site == CAVY_CREEK
 	var distance := player_xz.distance_to(site)
 	if not active or distance > 18.0:
 		reset_cavies()
@@ -275,6 +353,7 @@ func aimed(camera: Camera3D, player: CharacterBody3D, observations: Dictionary) 
 	var samples := [
 		[FOX, fox.global_position + Vector3.UP * 0.40, 0.47, fox.visible, NATURAL_TARGET_DISTANCE],
 		[TEGU, tegu.global_position + Vector3.UP * 0.12, 0.33, tegu.visible, 8.0],
+		[CHINGOLO, chingolo.global_position + Vector3.UP * 0.083, 0.18, chingolo.visible and bird_flight < 0.0, 7.3],
 		[REED, to_global(reed_foot + Vector3.UP * 0.71), 0.47, true, 6.0],
 	]
 	if not observations.has(CAVY):

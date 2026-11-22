@@ -75,8 +75,13 @@ Al cierre de cada pasada se actualizan los puntos resueltos y se conserva lo que
 
 ### Pendientes del texto pegado
 
-- Revisar los claros restantes fuera del corredor serrano y ajustar la luz de las demás jornadas según el momento de cada encargo.
-- Repartir más lagartos y cuises tras los primeros dibujos y sumar un ave que se pueda dibujar, con su croquis generado.
+- Revisar los claros restantes fuera del corredor serrano.
+## Pasada de fauna y anocheceres
+
+- El chingolo se posa en una rama cerca de la huella. Se puede dibujar con E. El croquis generado tiene fondo transparente y aparece en Flora y fauna y, más adelante, en la pared del puesto.
+- Al dibujar por primera vez al lagarto overo y al cuis, se habilitan nuevos sitios de avistamiento para esa especie.
+- Los regresos de los Días 25, 27, 32 y 36 tienen transiciones más largas. El guardado conserva el tiempo pendiente de cada fase del anochecer.
+- El chofer, el asiento y el interior del urbano tienen el mismo tono negro. La abertura del otro lado deja ver el paisaje.
 ## Pasada del chofer y la vaguada
 
 - El chofer tiene proporciones adultas, con las manos en el volante y los pies sobre el piso de la cabina. La ventanilla opuesta se abre al paisaje.

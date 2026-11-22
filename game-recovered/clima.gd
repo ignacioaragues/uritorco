@@ -1,7 +1,7 @@
 extends RefCounted
 
 const STORM_CLEAR_SECONDS := 52.0
-const STORM_RETURN_NIGHT := 72.0
+const STORM_RETURN_NIGHT := 132.0
 const STORM_RETURN_DUSK := 42.0
 
 # Nubosidad de día y de noche, bruma base, capa alta, exposición al viento y luz directa.

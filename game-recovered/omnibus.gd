@@ -231,42 +231,35 @@ static func build_cockpit(bus: Node3D):
 	var interior := Node3D.new()
 	interior.name = "Cabina del conductor"
 	bus.add_child(interior)
-	var trim := unlit("323a3a")
-	var rubber := unlit("202727")
-	var cushion := unlit("394144")
-	var piping := unlit("515753")
-	var floor_mat := unlit("303432")
-	Kit.block(interior, Vector3(2.73, 0.793, -0.31), Vector3(1.85, 0.11, 1.61), floor_mat)
-	Kit.block(interior, Vector3(2.74, 1.202, -1.05), Vector3(1.79, 0.72, 0.05), trim)
-	Kit.block(interior, Vector3(2.74, 2.551, -1.059), Vector3(1.97, 0.34, 0.067), rubber)
-	Kit.block(interior, Vector3(1.985, 1.988, -1.043), Vector3(0.26, 0.89, 0.065), trim)
-	Kit.block(interior, Vector3(3.56, 1.988, -1.043), Vector3(0.17, 0.89, 0.065), trim)
+	var silhouette := unlit("080808")
+	Kit.block(interior, Vector3(2.73, 0.793, -0.31), Vector3(1.85, 0.11, 1.61), silhouette)
+	Kit.block(interior, Vector3(2.74, 1.202, -1.05), Vector3(1.79, 0.72, 0.05), silhouette)
+	Kit.block(interior, Vector3(2.74, 2.551, -1.059), Vector3(1.97, 0.34, 0.067), silhouette)
+	Kit.block(interior, Vector3(1.985, 1.988, -1.043), Vector3(0.26, 0.89, 0.065), silhouette)
+	Kit.block(interior, Vector3(3.56, 1.988, -1.043), Vector3(0.17, 0.89, 0.065), silhouette)
 	var window := Node3D.new()
 	window.name = "Marco de la ventanilla opuesta"
 	interior.add_child(window)
 	for x in [FAR_WINDOW_START, FAR_WINDOW_END]:
-		Kit.block(window, Vector3(x, 2.001, -1.037), Vector3(0.085, 0.84, 0.22), piping)
-	Kit.block(window, Vector3(2.80, 2.43, -1.048), Vector3(1.51, 0.13, 0.24), rubber)
-	Kit.block(window, Vector3(2.80, 1.625, -1.048), Vector3(1.51, 0.16, 0.24), trim)
-	Kit.block(window, Vector3(2.91, 2.012, -1.087), Vector3(0.026, 0.69, 0.07), rubber)
-	Kit.block(interior, Vector3(3.50, 1.335, -0.34), Vector3(0.30, 0.20, 1.23), rubber)
-	Kit.block(interior, Vector3(2.80, 0.922, -0.34), Vector3(0.22, 0.15, 0.28), trim)
-	Kit.block(interior, Vector3(2.83, 1.038, -0.34), Vector3(0.44, 0.124, 0.53), cushion)
-	Kit.block(interior, Vector3(2.606, 1.328, -0.34), Vector3(0.107, 0.64, 0.52), cushion).rotation.z = 0.13
-	Kit.block(interior, Vector3(2.558, 1.63, -0.34), Vector3(0.114, 0.10, 0.41), piping).rotation.z = 0.13
-	draw_driver(interior)
+		Kit.block(window, Vector3(x, 2.001, -1.037), Vector3(0.085, 0.84, 0.22), silhouette)
+	Kit.block(window, Vector3(2.80, 2.43, -1.048), Vector3(1.51, 0.13, 0.24), silhouette)
+	Kit.block(window, Vector3(2.80, 1.625, -1.048), Vector3(1.51, 0.16, 0.24), silhouette)
+	Kit.block(window, Vector3(2.91, 2.012, -1.087), Vector3(0.026, 0.69, 0.07), silhouette)
+	Kit.block(interior, Vector3(3.50, 1.335, -0.34), Vector3(0.30, 0.20, 1.23), silhouette)
+	Kit.block(interior, Vector3(2.80, 0.922, -0.34), Vector3(0.22, 0.15, 0.28), silhouette)
+	Kit.block(interior, Vector3(2.83, 1.038, -0.34), Vector3(0.44, 0.124, 0.53), silhouette)
+	Kit.block(interior, Vector3(2.606, 1.328, -0.34), Vector3(0.107, 0.64, 0.52), silhouette).rotation.z = 0.13
+	Kit.block(interior, Vector3(2.558, 1.63, -0.34), Vector3(0.114, 0.10, 0.41), silhouette).rotation.z = 0.13
+	draw_driver(interior, silhouette)
 
-static func draw_driver(interior: Node3D):
+static func draw_driver(interior: Node3D, silhouette: Material):
 	var driver := Node3D.new()
 	driver.name = "Silueta del conductor"
 	interior.add_child(driver)
 	driver.position = Vector3(2.82, 1.082, -0.34)
-	var jacket := unlit("192022")
-	var trousers := unlit("151b1d")
-	var skin := unlit("242928")
 	Kit.shell(driver, [Vector4(-0.036, 0.153, 0.19, 0.0), Vector4(0.08, 0.171, 0.205, 0.0),
 		Vector4(0.29, 0.149, 0.174, 0.0), Vector4(0.49, 0.177, 0.247, 0.0),
-		Vector4(0.56, 0.136, 0.213, 0.0), Vector4(0.626, 0.069, 0.089, 0.0)], jacket, 0.90, true)
+		Vector4(0.56, 0.136, 0.213, 0.0), Vector4(0.626, 0.069, 0.089, 0.0)], silhouette, 0.90, true)
 	var head := Node3D.new()
 	driver.add_child(head)
 	head.position = Vector3(0.028, 0.0, 0.0)
@@ -274,22 +267,22 @@ static func draw_driver(interior: Node3D):
 	Kit.shell(head, [Vector4(0.56, 0.065, 0.069, 0.0), Vector4(0.647, 0.071, 0.072, 0.0),
 		Vector4(0.691, 0.105, 0.088, 0.0), Vector4(0.772, 0.132, 0.104, 0.0),
 		Vector4(0.879, 0.126, 0.113, 0.0), Vector4(0.949, 0.083, 0.083, 0.0),
-		Vector4(0.973, 0.001, 0.001, 0.0)], skin, 0.96, true)
+		Vector4(0.973, 0.001, 0.001, 0.0)], silhouette, 0.96, true)
 	var nose := SphereMesh.new()
 	nose.radius = 0.043
 	nose.height = 0.095
-	Kit.mesh_part(head, nose, Vector3(0.126, 0.817, 0.009), skin).scale = Vector3(0.85, 1.0, 0.62)
+	Kit.mesh_part(head, nose, Vector3(0.126, 0.817, 0.009), silhouette).scale = Vector3(0.85, 1.0, 0.62)
 	for side in [-1.0, 1.0]:
 		driver_limb(driver, [Vector4(0.02, 0.065, side * 0.112, 0.125),
 			Vector4(0.24, 0.068, side * 0.127, 0.099), Vector4(0.419, 0.034, side * 0.138, 0.088),
-			Vector4(0.448, -0.062, side * 0.138, 0.078), Vector4(0.467, -0.22, side * 0.134, 0.052)], trousers)
+			Vector4(0.448, -0.062, side * 0.138, 0.078), Vector4(0.467, -0.22, side * 0.134, 0.052)], silhouette)
 		driver_limb(driver, [Vector4(0.448, -0.223, side * 0.134, 0.056),
-			Vector4(0.523, -0.223, side * 0.134, 0.059), Vector4(0.595, -0.229, side * 0.134, 0.042)], trousers)
+			Vector4(0.523, -0.223, side * 0.134, 0.059), Vector4(0.595, -0.229, side * 0.134, 0.042)], silhouette)
 		driver_limb(driver, [Vector4(0.002, 0.497, side * 0.165, 0.103),
 			Vector4(0.135, 0.386, side * 0.243, 0.086), Vector4(0.28, 0.298, side * 0.252, 0.073),
-			Vector4(0.418, 0.334, side * 0.196, 0.058), Vector4(0.519, 0.375, side * 0.160, 0.044)], jacket)
+			Vector4(0.418, 0.334, side * 0.196, 0.058), Vector4(0.519, 0.375, side * 0.160, 0.044)], silhouette)
 		driver_limb(driver, [Vector4(0.499, 0.37, side * 0.16, 0.044),
-			Vector4(0.557, 0.389, side * 0.147, 0.045), Vector4(0.590, 0.397, side * 0.132, 0.028)], skin)
+			Vector4(0.557, 0.389, side * 0.147, 0.045), Vector4(0.590, 0.397, side * 0.132, 0.028)], silhouette)
 	var steering := Node3D.new()
 	driver.add_child(steering)
 	steering.position = Vector3(0.589, 0.405, 0)
@@ -297,8 +290,8 @@ static func draw_driver(interior: Node3D):
 	var wheel := TorusMesh.new()
 	wheel.inner_radius = 0.145
 	wheel.outer_radius = 0.174
-	Kit.mesh_part(steering, wheel, Vector3.ZERO, trousers).rotation.z = PI * 0.5
-	Kit.cylinder(steering, Vector3(0.083, 0, 0), 0.033, 0.033, 0.17, trousers).rotation.z = PI * 0.5
+	Kit.mesh_part(steering, wheel, Vector3.ZERO, silhouette).rotation.z = PI * 0.5
+	Kit.cylinder(steering, Vector3(0.083, 0, 0), 0.033, 0.033, 0.17, silhouette).rotation.z = PI * 0.5
 
 static func driver_limb(parent: Node3D, profile: Array[Vector4], finish: Material):
 	const SIDES := 12

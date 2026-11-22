@@ -87,6 +87,42 @@ func cavy_color(at: Vector3, side: int) -> Color:
 	var flank := Color("#8c775d").lerp(back, smoothstep(0.042, 0.125, at.y))
 	return flank.lerp(Color("#ada084"), 1.0 - smoothstep(0.027, 0.056, at.y))
 
+func make_chingolo(parent: Node3D) -> Node3D:
+	var surface := SurfaceTool.new()
+	surface.begin(Mesh.PRIMITIVE_TRIANGLES)
+	var chest := Color("#b7ad95")
+	var wing := Color("#655641")
+	var collar := Color("#986349")
+	var gray := Color("#a3a29a")
+	var stripe := Color("#2e3030")
+	loft(surface, [ring(-0.092, 0.066, 0.004, 0.005), ring(-0.055, 0.074, 0.023, 0.027),
+		ring(-0.006, 0.065, 0.034, 0.040), ring(0.038, 0.061, 0.026, 0.028),
+		ring(0.077, 0.056, 0.007, 0.013)], 12,
+		func(point: Vector3, _side: int): return collar if point.z < -0.044 else (wing if point.y > 0.069 else chest))
+	loft(surface, [ring(-0.116, 0.118, 0.001, 0.001), ring(-0.097, 0.118, 0.014, 0.016),
+		ring(-0.070, 0.122, 0.024, 0.029), ring(-0.049, 0.119, 0.019, 0.022),
+		ring(-0.036, 0.110, 0.005, 0.008)], 12,
+		func(point: Vector3, _side: int): return stripe if point.y > 0.139 or (absf(point.x) > 0.013 and point.y > 0.113 and point.y < 0.125) else gray)
+	loft(surface, [ring(-0.137, 0.110, 0.001, 0.001), ring(-0.110, 0.111, 0.011, 0.008)], 8, tinted(Color("#786d60")))
+	for side in [-1.0, 1.0]:
+		polygon(surface, PackedVector3Array([Vector3(side * 0.027, 0.093, -0.027), Vector3(side * 0.037, 0.072, 0.028),
+			Vector3(side * 0.018, 0.047, 0.101), Vector3(side * 0.023, 0.055, 0.009)]), wing, Vector3(side, 0.2, 0))
+		loft(surface, [ring(0.009, 0.006, 0.0022, 0.002, side * 0.013),
+			ring(0.015, 0.039, 0.003, 0.005, side * 0.013)], 6, tinted(Color("#816d5f")), true)
+	polygon(surface, PackedVector3Array([Vector3(-0.011, 0.065, 0.035), Vector3(0.011, 0.065, 0.035),
+		Vector3(0.017, 0.049, 0.140), Vector3(-0.017, 0.049, 0.140)]), wing, Vector3.UP)
+	var bird := finish(parent, surface, "Chingolo", false)
+	for side in [-1.0, 1.0]:
+		var extended := SurfaceTool.new()
+		extended.begin(Mesh.PRIMITIVE_TRIANGLES)
+		polygon(extended, PackedVector3Array([Vector3(0, 0.002, -0.036), Vector3(side * 0.043, 0.014, -0.027),
+			Vector3(side * 0.108, -0.008, 0.018), Vector3(side * 0.103, -0.013, 0.053),
+			Vector3(side * 0.048, -0.003, 0.039), Vector3(0, 0, 0.029)]), wing, Vector3.UP)
+		var feathers := finish(bird, extended, "Ala", false)
+		feathers.position = Vector3(side * 0.026, 0.081, -0.005)
+		feathers.hide()
+	return bird
+
 func make_cavy(parent: Node3D) -> Node3D:
 	var surface := SurfaceTool.new()
 	surface.begin(Mesh.PRIMITIVE_TRIANGLES)
