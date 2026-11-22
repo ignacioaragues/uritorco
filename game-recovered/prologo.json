@@ -4,15 +4,15 @@
   "lines": [
    "Tenés 6 años. Tu papá llega con un paquete escondido abajo del pulóver.",
    "Adentro hay un libro para chicos. Se llama Observar el Cielo. Lo apoyás en sus rodillas y pasás las hojas con las dos manos.",
-   "Salen a la vereda con el libro. Tu papá te señala cuatro estrellas. Las miran juntos y las buscás en la lámina de la Cruz del Sur."
+   "Tu papá te muestra la lámina de la Cruz del Sur. Miran las cuatro estrellas en la página. Después te pasa un lápiz."
   ],
   "options": [
    {
-    "label": "Copiás la Cruz del Sur.",
-    "keepsake": "La copiás a lápiz en una hoja. Levantás la vista otra vez para ubicar la estrella de abajo."
+    "label": "Copiás la constelación en un papel.",
+    "keepsake": "La copiás a lápiz en una hoja. La estrella de abajo te sale más grande. Metés el papel entre la tapa y la primera página."
    },
    {
-    "label": "Le pedís que escriba tu nombre.",
+    "label": "Le pedís que escriba tu nombre en el libro.",
     "keepsake": "Tu papá escribe tu nombre en imprenta grande. La última letra se le sube por el margen."
    }
   ]
@@ -21,16 +21,16 @@
   "key": "apagon",
   "lines": [
    "Tenés 11 años. Se corta la luz en toda la cuadra. Los vecinos sacan las reposeras a la vereda. Por primera vez ves una mancha blanca que cruza el cielo de tapia a tapia.",
-   "Buscás la página en el libro. Cuando volvés ya todos están hablando de la comida que se les va a echar a perder. En la medianera todavía queda lugar para uno."
+   "Buscás la página en el libro. Cuando volvés ya todos están hablando de la comida que se les va a echar a perder. Del otro lado de la cuadra todavía no prendió ninguna luz."
   ],
   "options": [
    {
-    "label": "Trepás para verla un rato más.",
-    "keepsake": "Desde la tapia ves cómo la franja se pierde detrás del tanque de agua."
+    "label": "Buscás la Cruz del Sur.",
+    "keepsake": "Al fin ves las cuatro juntas. En el cielo, la cruz está más inclinada que en la lámina."
    },
    {
-    "label": "Te sentás en el cordón y esperás que se te acostumbren los ojos.",
-    "keepsake": "Al rato distinguís estrellas donde antes veías una mancha. Desde el cordón todavía se oyen las voces de los vecinos."
+    "label": "Tratás de contar todas las estrellas.",
+    "keepsake": "Perdés la cuenta cuando llegás al tanque de agua. Cada vez que empezás de nuevo distinguís una más."
    }
   ]
  },

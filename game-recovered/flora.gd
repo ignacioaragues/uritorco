@@ -11,11 +11,11 @@ const PALETTES = [
 ]
 const BRUSH = preload("res://follaje.gdshader")
 
-static func tree(parent: Node3D, foot: Vector3, kind: Kind, size: float, angle: float):
+static func tree(parent: Node3D, foot: Vector3, kind: Kind, size: float, angle: float, horizontal_scale := 1.0):
 	var tree_root := Node3D.new()
 	parent.add_child(tree_root)
 	tree_root.position = foot
-	tree_root.scale = Vector3.ONE * size
+	tree_root.scale = Vector3(horizontal_scale, 1.0, horizontal_scale) * size
 	tree_root.rotation.y = angle
 	var palette: Array = PALETTES[kind]
 	var rng := RandomNumberGenerator.new()

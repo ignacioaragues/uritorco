@@ -16,6 +16,8 @@ const Saves = preload("res://partidas.gd")
 const Mara = preload("res://charlas_mara.gd")
 const Exploration = preload("res://exploracion.gd")
 const Diary = preload("res://diario.gd")
+const Refuge = preload("res://refugio.gd")
+const INTRO_LOOK_AMOUNT := 0.14
 const SUMMIT_NIGHT_SECONDS := 40.0
 const SIGHTING_FOCUS_SECONDS := 0.4
 const NIGHT_SCENE_VIEW := 200.0
@@ -43,7 +45,7 @@ const DREAM_ARCH_EXCHANGES := [
 ]
 enum Sighting { ABRA, QUARRY, CROSSING, SHELTER }
 const Natural = preload("res://naturaleza.gd")
-const STATE = ["page", "stage", "keepsakes", "bedtime", "field_note", "crossing_note", "filo_report_reply", "quarry_reply", "fox_seen", "hiker_met", "route_reported", "observing", "pending_return", "heard", "radio_taken", "bag_left", "read_note", "creek_note", "bed_pose", "bed_pitch", "gate_jumped", "map_read", "awaiting_call", "dream_count", "branch_found", "mapped_distance", "has_piece", "summit_mapped", "camp_read", "arrival_action", "intro_bridge_drawn", "second_sighting", "book_light_notes", "day7_dusk", "archive_read", "trail_replies", "crossing_response", "summit_echo_response", "night_investigation", "last_night", "night_home", "ending_at_door", "sky_memories", "compass_lost", "last_voice_reply", "found_collectibles", "nature_notes"]
+const STATE = ["page", "stage", "keepsakes", "bedtime", "field_note", "crossing_note", "filo_report_reply", "quarry_reply", "fox_seen", "hiker_met", "route_reported", "observing", "pending_return", "heard", "radio_taken", "bag_left", "creek_note", "bed_pose", "bed_pitch", "gate_jumped", "map_read", "awaiting_call", "dream_count", "branch_found", "mapped_distance", "has_piece", "summit_mapped", "camp_read", "arrival_action", "intro_bridge_drawn", "second_sighting", "book_light_notes", "day7_dusk", "archive_read", "trail_replies", "crossing_response", "summit_echo_response", "night_investigation", "last_night", "night_home", "ending_at_door", "sky_memories", "compass_lost", "last_voice_reply", "found_collectibles", "nature_notes"]
 var flashlight_out: = false
 var camp_read: = false
 var summit_mapped: = false
@@ -119,6 +121,7 @@ var walk_score_turn := 0
 var score = preload("res://banda_sonora.gd").new()
 var book_view = preload("res://libro.gd").new()
 var postcard_view = preload("res://postal.gd").new()
+var held_desk_paper: StaticBody3D
 var rain_strength := 0.0
 var storm_return_seconds := 0.0
 var mist_strength := 0.0
@@ -148,6 +151,9 @@ var gate_jumped: = false
 var map_read: = false
 var objective_seconds := 0.0
 var intro_controls_seconds := 0.0
+var intro_look_amount := 0.0
+var intro_look_done := false
+var intro_objectives_seen := false
 var map = preload("res://plano.gd").new()
 var map_goal_origin := Vector3.INF
 var menu = preload("res://menu.gd").new()
@@ -206,7 +212,6 @@ var page: = 0
 var mode: = "menu"
 var stage: = -1
 var heard: = false
-var read_note: = false
 var sequence: Array = []
 var after: = ""
 var target: = ""
@@ -338,7 +343,11 @@ func approach(reset_position: bool = false):
 		player.velocity = Vector3.ZERO
 		arrival_action = false
 		objective_seconds = 0.0
-		intro_controls_seconds = 3.0
+		intro_controls_seconds = 0.0
+		if page == 0:
+			intro_look_amount = 0.0
+			intro_look_done = false
+			intro_objectives_seen = false
 		if page == 6: flashlight_out = false
 	if page == 0:
 		set_arrival_bag_visible(not arrival_action)
@@ -346,10 +355,16 @@ func approach(reset_position: bool = false):
 		player.looking_only = not arrival_action
 	player.intro_center = center
 	player.intro_heading = Arrival.HEADINGS[page]
-	hint.text = "Mouse · mirar     F1 · objetivos" if page == 0 and not arrival_action else ""
+	hint.text = stop_control_hint() if page == 0 and not arrival_action else ""
+
+func stop_control_hint() -> String:
+	if intro_objectives_seen: return "E · recogé tu mochila"
+	if intro_look_done: return "F1 · ver los objetivos"
+	return "Mouse · mirar"
 
 func use_arrival_item():
 	if arrival_action or target != Arrival.ACTIONS[page] or page in [1, 2, 3, 4, 6, 7]: return
+	if page == 0 and not intro_objectives_seen: return
 	if page == 5:
 		player.climb_rope(Arrival.rope_route(), Arrival.HEADINGS[page])
 		return
@@ -359,13 +374,19 @@ func use_arrival_item():
 		player.walking = true
 		player.looking_only = false
 		intro_controls_seconds = 4.0
-	hint.text = ""
+		hint.text = "WASD · moverte"
+		save_game(true, "approach")
+	else:
+		hint.text = ""
 
 func set_arrival_bag_visible(shown: bool):
 	valley.arrival_bag.visible = shown
 	valley.arrival_bag.collision_layer = 1 if shown else 0
 
 func _input(event: InputEvent):
+	if event is InputEventMouseMotion and mode == "approach" and page == 0 and not arrival_action and not intro_look_done and Input.mouse_mode == Input.MOUSE_MODE_CAPTURED:
+		intro_look_amount += event.relative.length() * player.look_speed
+		intro_look_done = intro_look_amount >= INTRO_LOOK_AMOUNT
 	if event is InputEventMouseButton and event.pressed and radio_panel.visible and radio_panel.choices.visible:
 		if event.button_index in [MOUSE_BUTTON_WHEEL_UP, MOUSE_BUTTON_WHEEL_DOWN]:
 			get_viewport().set_input_as_handled()
@@ -471,7 +492,7 @@ func _process(delta):
 	update_water(delta)
 	valley.shade_ridges()
 	valley.update_desk_radio(radio_taken or (in_refuge and hands.pose == "radio"))
-	valley.set_desk_note(stage <= 0 and not read_note)
+	valley.set_desk_note(stage <= 0 and held_desk_paper != valley.desk_note)
 	valley.update_shelter_details(day, trail_replies.get("piedras", -1) == 0, trail_replies.get("bajada", -1) == 1)
 	if stage >= 0:
 		if day >= 7 and intro_bridge_drawn: valley.hang_sketch(0, Diary.ARRIVAL_BRIDGE)
@@ -575,7 +596,7 @@ func _process(delta):
 		target = str(hit.get_meta("item", "")) if hit else ""
 		var local: = Arrival.local_position(page, player.position)
 		if page == 2: note_intro_bridge(local)
-		if page == 1 and local.z < -10.43 and local.y > 0.29 and absf(local.x) < 1.70:
+		if page == 1 and local.z < -10.43 and local.y > Arrival.surface_point(1, local).y + 0.29 and absf(local.x) < 1.70:
 			arrival_action = true
 		if page == 5 and not player.rope_climbing and local.y >= Arrival.LEDGE_TOP - 0.04 and local.z < -10.76:
 			arrival_action = true
@@ -586,10 +607,9 @@ func _process(delta):
 		if objective_seconds > 0.0:
 			hint.text = intro_objective()
 		elif page == 0 and not arrival_action:
-			hint.text = "Mouse · mirar     F1 · objetivos"
-			if target == Arrival.ACTIONS[page]: hint.text += "\nE o clic · " + target
+			hint.text = stop_control_hint()
 		elif page == 0 and intro_controls_seconds > 0.0:
-			hint.text = "WASD · caminar"
+			hint.text = "WASD · moverte"
 		elif page == 3 and not intro_journal_seen:
 			hint.text = "Tab · mirá el croquis del puente" if intro_bridge_drawn else "Tab · abrí el diario"
 		elif page == 6 and not arrival_action:
@@ -848,7 +868,7 @@ func overlay(kind: String, caption: String, footer: Variant, prop: String = ""):
 	hands.hold(prop)
 	shade.color = Color(0.03, 0.045, 0.06, 0.07 if prop == "radio" else (0.48 if prop else 0.87))
 	if prop == "radio":
-		radio_panel.display(kind, caption, footer)
+		radio_panel.display(kind, caption, footer, kind == "choice" and stage == 0 and not heard)
 		words.text = ""
 		hint.text = ""
 	else:
@@ -1138,7 +1158,7 @@ func update_first_call(delta: float, inside: bool) -> bool:
 		welcome_mara()
 		return true
 	if first_call_caption > 0.0:
-		hint.text = "Mara, por la radio · Hernán, ¿me copiás?"
+		hint.text = "Por la radio · ¿Me copiás?"
 		if not radio_taken and target == "Radio": hint.text += "\nE · levantar la radio"
 		return true
 	return false
@@ -1164,7 +1184,7 @@ func put_down_arrival_bag():
 func welcome_mara():
 	radio.incoming.stop()
 	first_call_caption = 0.0
-	conversation(["Hernán, ¿me copiás? Soy Mara. Te hablo desde el puesto de abajo, pasando la curva del camino a Capilla."], "choice")
+	conversation(["¿Me copiás? Soy Mara. Te hablo desde el puesto de abajo, pasando la curva del camino a Capilla."], "choice")
 
 func start_patio_call():
 	save_game(true, "walk")
@@ -1403,10 +1423,14 @@ func _unhandled_key_input(event):
 		return
 	if mode in ["approach", "walk", "cave"] and not player.climb_points.is_empty() and key not in [KEY_ESCAPE, KEY_F1]:
 		return
-	if mode == "postcard":
-		if key == KEY_X:
+	if mode in ["postcard", "desk_paper"]:
+		if key == KEY_X and mode == "postcard":
 			postcard_view.flip()
 		elif key == KEY_E:
+			if is_instance_valid(held_desk_paper):
+				held_desk_paper.visible = true
+				held_desk_paper.collision_layer = 1
+				held_desk_paper = null
 			postcard_view.hide()
 			walk()
 		return
@@ -1446,6 +1470,13 @@ func _unhandled_key_input(event):
 	if mode == "pause_menu" and key == KEY_ESCAPE:
 		if menu.showing_settings: menu.close_settings()
 		else: resume_play()
+		return
+	if mode == "approach" and page == 0 and not arrival_action:
+		if key == KEY_F1 and intro_look_done:
+			intro_objectives_seen = true
+			hint.text = stop_control_hint()
+		elif key == KEY_E:
+			use_arrival_item()
 		return
 	if key == KEY_E and mode == "approach":
 		use_arrival_item()
@@ -1629,7 +1660,7 @@ func _unhandled_key_input(event):
 						overlay("postcard", "", "")
 						postcard_view.pick_up("telescopio" in str(keepsakes.get("beca", "")))
 					"Recorte de astronomía":
-						overlay("message", "Un equipo de Heidelberg mide el giro de estrellas dobles. Reconocés a Paula en la foto antes de leer el epígrafe. Tiene los anteojos colgando del cuello con el mismo cordón colorado.", "Espacio · doblar el recorte")
+						open_desk_paper(valley.desk_clipping, Refuge.CLIPPING_ART)
 					"Banco del acceso":
 						if not awaiting_call: summit_mapped = true
 						overlay("message", "Apoyás la mochila en el banco y ajustás las correas. La senda sube por la ladera bajo las pircas.", "Espacio · empezar a subir")
@@ -1705,9 +1736,7 @@ func _unhandled_key_input(event):
 						if stage == 0 and not radio_taken: take_arrival_radio()
 						else: transmit()
 					"Nota":
-						read_note = true
-						valley.set_desk_note(false)
-						overlay("message", "Turno de temporada. Canal 3 para comunicarte con el puesto de abajo. Las baterías de repuesto están en el cajón.", "Espacio · dejar la nota")
+						open_desk_paper(valley.desk_note, Refuge.NOTE_ART)
 					"Piedra de Mara":
 						overlay("message", "La piedra es chata y cabe en la palma. Venía en la caja de las pilas. El papel dice «Para el mapa. La otra sigue en mi mesa. M.»", "Espacio · dejarla en el escritorio")
 					"Botella de Mara":
@@ -2262,7 +2291,14 @@ func book_has_ribbon() -> bool:
 func open_book():
 	overlay("book", "", "")
 	var book_memory := str(keepsakes.get("libro", ""))
-	book_view.open("imprenta grande" in book_memory, book_has_ribbon(), stage >= 8)
+	book_view.open("imprenta grande" in book_memory, book_has_ribbon(), stage >= 8, book_memory.begins_with("La copiás a lápiz"))
+
+func open_desk_paper(paper: StaticBody3D, art: Texture2D):
+	held_desk_paper = paper
+	paper.visible = false
+	paper.collision_layer = 0
+	overlay("desk_paper", "", "")
+	postcard_view.inspect(art)
 
 func turn_book(step: int):
 	book_view.turn(step)
@@ -2638,6 +2674,9 @@ func save_game(automatic: bool, resume_mode: String) -> bool:
 	if debug_run: return false
 	var state: Dictionary = {}
 	for key in STATE: state[key] = get(key)
+	if stage < 0 and page == 0:
+		state["intro_look_done"] = intro_look_done
+		state["intro_objectives_seen"] = intro_objectives_seen
 	state["abra_told_mara"] = abra_told_mara
 	state["mara_heard_paula"] = mara_heard_paula
 	if stage == 5:
@@ -2706,7 +2745,9 @@ func restore(data: Dictionary):
 		if camp_read: summit_mapped = true
 	radio_taken = data.state.get("radio_taken", stage > 0 or (stage == 0 and heard))
 	bag_left = data.state.get("bag_left", stage == 0 and heard)
-	valley.set_desk_note(stage <= 0 and not read_note)
+	intro_look_done = bool(data.state.get("intro_look_done", false))
+	intro_objectives_seen = bool(data.state.get("intro_objectives_seen", false))
+	valley.set_desk_note(stage <= 0)
 	valley.update_desk_radio(radio_taken)
 	if stage >= 1:
 		valley.unpack_book(book_has_ribbon())

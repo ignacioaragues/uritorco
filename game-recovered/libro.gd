@@ -6,11 +6,13 @@ const INK: = Color("#483b34")
 const GOLD: = Color("#bc9461")
 var page: = 0
 var inscribed: = false
+var copied_crux := false
 var bookmark: = false
 var light_comparison := false
 var cover: Texture2D
 var signature: Texture2D
 var crux_page: Texture2D
+const HAND_COPY = preload("res://libro_crux_hernan.webp")
 var serif: = SystemFont.new()
 
 func _ready():
@@ -26,9 +28,10 @@ func _ready():
 	resized.connect(queue_redraw)
 	hide()
 
-func open(has_name: bool, has_ribbon: bool, can_compare_lights: bool = false):
+func open(has_name: bool, has_ribbon: bool, can_compare_lights: bool = false, has_hand_copy: bool = false):
 	page = 0
 	inscribed = has_name
+	copied_crux = has_hand_copy
 	bookmark = has_ribbon
 	light_comparison = can_compare_lights
 	show()
@@ -60,6 +63,11 @@ func _draw():
 				var signature_width: = 126.0
 				var signature_height: = signature_width * signature.get_height() / signature.get_width()
 				draw_texture_rect(signature, Rect2(Vector2.ZERO, Vector2(signature_width, signature_height)), false, Color(1, 1, 1, 0.86))
+		elif page == 1 and copied_crux:
+			draw_set_transform(origin + Vector2(86, 125) * scale_factor, -0.105, Vector2.ONE * scale_factor)
+			var sheet_size := Vector2(290.0, 290.0 * HAND_COPY.get_height() / HAND_COPY.get_width())
+			draw_texture_rect(HAND_COPY, Rect2(Vector2(5.5, 8.0), sheet_size), false, Color(0.20, 0.13, 0.08, 0.34))
+			draw_texture_rect(HAND_COPY, Rect2(Vector2.ZERO, sheet_size), false)
 		elif page >= 2:
 			draw_chart()
 			if page == 3: draw_light_comparison(origin, scale_factor)

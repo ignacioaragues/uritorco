@@ -38,7 +38,7 @@ func _ready():
 	options.add_theme_color_override("font_color", Color("#d5dcd3"))
 	hide()
 
-func display(kind: String, caption: String, footer: Variant):
+func display(kind: String, caption: String, footer: Variant, teach_selection := false):
 	speaker.text = "RADIO"
 	if reveal: reveal.kill()
 	line.text = caption
@@ -53,8 +53,8 @@ func display(kind: String, caption: String, footer: Variant):
 		reveal.tween_property(line, "visible_characters", line.text.length(), maxf(0.32, line.text.length() / 34.0))
 		reveal.tween_callback(func(): line.visible_characters = -1)
 	choices.present(footer if footer is Array else [], true)
-	options.visible = footer is String or footer is Array
-	options.text = "Rueda · cambiar respuesta     Clic · confirmar" if footer is Array else (footer if footer is String else "")
+	options.visible = footer is String or (footer is Array and teach_selection)
+	options.text = "Rueda · cambiar respuesta     Clic · confirmar" if footer is Array and teach_selection else (footer if footer is String else "")
 	show()
 	offset_left = 0
 	offset_right = 0

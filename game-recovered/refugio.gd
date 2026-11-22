@@ -5,6 +5,8 @@ const GRAIN = preload("res://grain.gdshader")
 const CLOTH = preload("res://tejido_refugio.gdshader")
 const BOOK_COVER = preload("res://libro_portada.webp")
 const POSTCARD = preload("res://postal_munich.webp")
+const NOTE_ART = preload("res://nota_turno.webp")
+const CLIPPING_ART = preload("res://recorte_paula_2011.webp")
 const Stone = preload("res://piedra_serrana.gd")
 const ROOF_PITCH := 0.022
 const ROOF_CENTER := Vector3(0, 3.002, 2.65)
@@ -129,6 +131,13 @@ static func print_surface(parent: Node3D, pos: Vector3, size: Vector2, image: Te
 	picture.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	return picture
 
+static func desk_paper(parent: StaticBody3D, width: float, art: Texture2D):
+	var dimensions := Vector2(width, width * art.get_height() / art.get_width())
+	var print := print_surface(parent, Vector3.UP * 0.004, dimensions, art)
+	print.rotation = Vector3(-PI / 2.0, PI, 0)
+	print.material_override.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA_SCISSOR
+	print.material_override.alpha_scissor_threshold = 0.48
+
 static func desk(parent: Node3D, drawers: Dictionary) -> StaticBody3D:
 	var table := Kit.item(parent, Vector3(2.55, 0, 2.35), "", Vector3(0, 0.871, 0.008), Vector3(1.80, 0.069, 0.70))
 	var timber := wood("735340")
@@ -173,13 +182,9 @@ static func desk(parent: Node3D, drawers: Dictionary) -> StaticBody3D:
 
 static func desk_items(parent: Node3D) -> StaticBody3D:
 	var paper := Kit.material("e2d2ad")
-	var ink := Kit.material("8b8271")
 	var note := Kit.item(parent, Vector3(1.96, 0.905, 2.35), "Nota", Vector3.UP * 0.011, Vector3(0.35, 0.043, 0.26))
 	note.rotation.y = -0.18
-	Kit.block(note, Vector3.UP * 0.004, Vector3(0.32, 0.008, 0.23), paper)
-	for i in 5:
-		var length := 0.25 - (0.042 if i % 2 == 0 else 0.0) - (0.073 if i == 4 else 0.0)
-		Kit.block(note, Vector3((length - 0.25) * 0.5, 0.0085, -0.072 + i * 0.033), Vector3(length, 0.0012, 0.0030), ink)
+	desk_paper(note, 0.33, NOTE_ART)
 	var journal := Node3D.new()
 	parent.add_child(journal)
 	journal.position = Vector3(2.35, 0.904, 2.54)
@@ -523,24 +528,10 @@ static func gas_connection(parent: Node3D, foot: Vector3, steel: Material, brass
 	var inner := Vector3(-3.38, entry.y, entry.z)
 	Kit.cord(parent, PackedVector3Array([inner, inner + Vector3(0.16, 0, 0), Vector3(-3.213, 0.93, 3.17), Vector3(-3.181, 1.02, 3.17)]), 0.010, brass)
 
-static func cutting(parent: Node3D):
-	var clipping := Kit.item(parent, Vector3(3.165, 0.905, 2.505), "Recorte de astronomía", Vector3.UP * 0.014, Vector3(0.33, 0.030, 0.24))
+static func cutting(parent: Node3D) -> StaticBody3D:
+	var clipping := Kit.item(parent, Vector3(3.165, 0.905, 2.505), "Recorte de astronomía", Vector3.UP * 0.014, Vector3(0.29, 0.030, 0.35))
 	clipping.rotation.y = 0.18
-	var paper := Kit.material("cab896")
-	var ink := Kit.material("877866")
-	Kit.block(clipping, Vector3.UP * 0.004, Vector3(0.326, 0.008, 0.234), paper)
-	Kit.block(clipping, Vector3(-0.077, 0.0086, 0.012), Vector3(0.116, 0.0015, 0.124), Kit.material("9a8772"))
-	for row in 6:
-		Kit.block(clipping, Vector3(0.076, 0.009, -0.027 + row * 0.021), Vector3(0.114, 0.0015, 0.0035), ink)
-	var headline := Label3D.new()
-	clipping.add_child(headline)
-	headline.text = "Estrellas dobles"
-	headline.position = Vector3(0, 0.0091, 0.082)
-	headline.rotation = Vector3(-PI / 2.0, PI, 0)
-	headline.font_size = 32
-	headline.pixel_size = 0.001
-	headline.outline_size = 0
-	headline.modulate = Color("574b42")
+	desk_paper(clipping, 0.27, CLIPPING_ART)
 	var cell_wrap := Kit.material("9d8050", false, 0.55)
 	var cell_cap := Kit.material("8d8b7d", false, 0.42)
 	for i in 2:
@@ -548,6 +539,7 @@ static func cutting(parent: Node3D):
 		cell.rotation = Vector3(PI / 2.0, 0.25 + i * 0.27, 0)
 		for side in [-1.0, 1.0]:
 			Kit.cylinder(cell, Vector3.UP * side * 0.043, 0.0174, 0.0174, 0.008, cell_cap)
+	return clipping
 
 static func kitchenette(parent: Node3D, doors: Dictionary):
 	var cabinet := Kit.item(parent, Vector3(-3, 0, 3.6), "", Vector3(-0.035, 0.48, 0), Vector3(0.647, 0.95, 2.18))

@@ -26,7 +26,7 @@ Al cierre de cada pasada se actualizan los puntos resueltos y se conserva lo que
 - [x] Abrir el horizonte de la ruta en ambos sentidos y el del arroyo del prólogo. La corriente se desplaza en el eje X local del cauce.
 - [x] Fundir la imagen y las manos juntas al entrar a un recuerdo, también cuando el jugador se aleja fuera de la huella.
 - [x] Cambiar «diez minutos» por «un minuto». En el recuerdo del primer telescopio, Hernán tiene 13 años.
-- [x] Mostrar Mouse y F1 en la parada. Mostrar WASD y habilitar la caminata al recoger la mochila.
+- [x] Enseñar los controles de la parada en orden. Primero Mouse, después F1 al mirar, luego E para recoger la mochila y por último WASD al habilitar la caminata.
 - [x] Fijar la posición de la luz al abrir cada microescena y dejar el ocaso para después del puente. El sol queda detrás de las nubes.
 - [x] Abrir hacia adentro la puerta del refugio y alargar el gesto de mantener apretado el pulsador de la radio.
 - [x] Recuperar detalle de vegetación y piedras al alejarse del refugio. Los senderos largos tienen pastos curvos, copas irregulares con ramas y tres formas de roca con vetas y manchas.
@@ -52,6 +52,14 @@ Al cierre de cada pasada se actualizan los puntos resueltos y se conserva lo que
 - [x] Afinar el arte del prólogo. La huella tiene distintos tonos de tierra y ripio, con piedras y pastos agrupados en los márgenes. La parada tiene chapas remachadas y el puente, tablones separados con clavos visibles. La cuerda pasa por delante de la laja y por encima del borde hasta el anclaje. La trepada queda al atardecer y la noche entra en el tramo de la linterna.
 - [x] Darles materiales y siluetas distintas a los tres sueños. El primero tiene placas azules fracturadas, el segundo terrazas cobrizas y el tercero crestas de obsidiana y arcos erosionados. Las formaciones cercanas son sólidas y dejan pasos abiertos hacia los seis hallazgos.
 - [x] Conectar las lajas con la bajada al cauce y abrir un atajo del este a la vuelta del mollar. Las dos huellas están señalizadas y se dibujan en la hoja local, centrada en el refugio. Se recorrieron los enlaces con el mapa de mano abierto.
+
+## Pasada del prólogo y los papeles del escritorio
+
+- La parada enseña un control por vez. La vista se mueve con el mouse desde el inicio. Mirar habilita F1. F1 muestra «E · recogé tu mochila». Levantarla habilita caminar y presenta WASD. Las ocho microescenas empiezan con los pies a ras de su terreno.
+- El sendero del tronco asciende suavemente. Los piquillines, molles, talas, romerillos y pastos acompañan el camino por los dos lados. Las ramas densas cierran el paso lateral también detrás de Hernán y después del tronco.
+- Hernán y su papá miran la Cruz del Sur en la lámina y el padre le pasa un lápiz. Si Hernán copia, en la guarda del libro aparece un papel viejo con cuatro estrellas repasadas a lápiz. La opción del nombre conserva la inscripción. En el apagón se puede buscar la Cruz del Sur o tratar de contar las estrellas.
+- Con E se levanta y se devuelve al escritorio la nota del primer día o el recorte del Día 27. La nota conserva el canal y la ubicación de las pilas. El recorte tiene una foto ilustrada de Paula y fecha del 12 de agosto de 2011.
+- Mara saluda sin llamar a Hernán por su nombre. La ayuda de rueda y clic aparece sólo en la primera conversación. Ambas entradas siguen activas para elegir después.
 
 ## Pasada de los diálogos con Mara
 

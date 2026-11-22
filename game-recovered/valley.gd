@@ -27,6 +27,7 @@ var birds = Birds.new()
 var nature := Natural.new()
 var desk_radio: StaticBody3D
 var desk_note: StaticBody3D
+var desk_clipping: StaticBody3D
 var bag_drop: StaticBody3D
 var mara_path_open := false
 var desk_portable: Node3D
@@ -752,7 +753,7 @@ func dress_day27():
 	quarry_plate.material_override = FieldKit.material("a99a7c", false, 0.47)
 	Cable.dress_winch(self, end)
 	Cable.build(self)
-	Refuge.cutting(self)
+	desk_clipping = Refuge.cutting(self)
 
 var arrival_bag: StaticBody3D
 var arrival_fragments: Array[Node3D] = []

@@ -5,7 +5,7 @@ const FieldKit = preload("res://equipo_campo.gd")
 const Refuge = preload("res://refugio.gd")
 const Flora = preload("res://flora.gd")
 const Stone = preload("res://piedra_serrana.gd")
-const STOP_START := Vector3(-1.18, 0.12, -6.30)
+const STOP_START := Vector3(-1.18, 0.0, -6.30)
 const STOP_CENTER := Vector3(-1.55, 0.0, -7.92)
 const STOP_PACK := Vector3(-0.34, 0.316, -7.25)
 const STOP_LAYOUT := 2
@@ -40,7 +40,8 @@ static func world_position(index: int, point: Vector3) -> Vector3:
 	return origin(index) + point.rotated(Vector3.UP, HEADINGS[index])
 
 static func spawn_point(index: int) -> Vector3:
-	return world_position(index, STOP_START if index == 0 else Vector3.UP * 0.12)
+	var foot := surface_point(index, STOP_START if index == 0 else Vector3.ZERO)
+	return world_position(index, foot + Vector3.UP * 0.003)
 
 static func spawn_heading(index: int) -> float:
 	return PI if index == 0 else HEADINGS[index]
@@ -60,7 +61,10 @@ static func ground_height(index: int, x: float, distance: float) -> float:
 	var off_track := absf(x - track_x(index, distance))
 	var bank := (2.6 + 1.8 * sin(x * 0.11 + distance * 0.15 + index)) * smoothstep(2.3, 17.0, off_track)
 	match index:
-		1, 5:
+		1:
+			var gradual_rise := clampf(distance * 0.022, -0.29, 1.14)
+			return gradual_rise + bank * smoothstep(10.0, 23.0, off_track) * 0.56
+		5:
 			var flanks := 8.0 * smoothstep(1.4, 3.65, absf(x))
 			return bank + flanks * smoothstep(5.0, 9.2, distance) * (1.0 - smoothstep(11.6, 17.0, distance))
 		2:
@@ -97,13 +101,16 @@ static func safe_saved_position(index: int, position: Vector3, action_done: bool
 	var local := local_position(index, position)
 	if not action_done and index in [1, 5] and local.z < -10.15:
 		local = path_point(index, 7.2)
-	var floor_y := ground_height(index, local.x, -local.z)
+	if index == 1 and absf(local.x - track_x(index, -local.z)) > 1.78:
+		# Los guardados previos al matorral podían quedar del otro lado de sus ramas.
+		local = path_point(index, -local.z)
+	var floor_y := surface_point(index, local).y if absf(local.x) < 24.0 and local.z > -47.0 and local.z < 14.0 else ground_height(index, local.x, -local.z)
 	if index == 2 and absf(local.x) < 1.38 and local.z < -6.94 and local.z > -14.47:
 		floor_y = 0.008
 	elif index == 5 and absf(local.x) < 1.76 and local.z < -10.72 and local.z > LEDGE_TOE:
 		var descent := clampf(inverse_lerp(LEDGE_BACK, LEDGE_TOE, local.z), 0.0, 1.0)
 		floor_y = maxf(floor_y, lerpf(LEDGE_TOP, -0.12 * LEDGE_RISE, descent))
-	local.y = maxf(local.y, floor_y + 0.045)
+	local.y = maxf(local.y, floor_y + 0.005)
 	return world_position(index, local)
 
 static func rope_route() -> Array[Vector3]:
@@ -215,7 +222,8 @@ static func clear_verge(index: int, x: float, distance: float, shoulder: float) 
 		if x > 0.0 and absf(z - branch_z(x)) < shoulder: return false
 		return absf(x - STOP_CENTER.x) > 2.80 or absf(z - STOP_CENTER.z) > 3.9
 	if index == 2 and absf(distance - 10.45) < 5.10: return false
-	if index in [1, 5] and distance > 6.9 and distance < 15.1 and absf(x) < 5.4: return false
+	if index == 1 and absf(x - track_x(index, distance)) < 5.4: return false
+	if index == 5 and distance > 6.9 and distance < 15.1 and absf(x) < 5.4: return false
 	return absf(x - track_x(index, distance)) > shoulder
 
 static func ridge_materials(v) -> Array[ShaderMaterial]:
@@ -299,8 +307,8 @@ static func build_stop(v, center: Vector3):
 	v.arrival_bag.rotation.y = -0.14
 
 static func build_log(v, center: Vector3):
-	var start := Vector3(-2.62, 0.190, -9.76)
-	var end := Vector3(2.50, 0.242, -10.24)
+	var start := surface_point(1, Vector3(-2.71, 0, -9.76)) + Vector3.UP * 0.223
+	var end := surface_point(1, Vector3(2.62, 0, -10.24)) + Vector3.UP * 0.231
 	var axis := (end - start).normalized()
 	var log := CylinderMesh.new()
 	log.top_radius = 0.25
@@ -312,13 +320,13 @@ static func build_log(v, center: Vector3):
 	wood.quaternion = Quaternion(Vector3.UP, axis)
 	v.timber(wood)
 	Flora.branch(v, center + start.lerp(end, 0.69) + Vector3.UP * 0.12,
-		center + Vector3(1.25, 0.49, -9.64), 0.098, 0.049)
+		center + Vector3(1.25, 0.66, -9.64), 0.098, 0.049)
 	Flora.branch(v, center + start.lerp(end, 0.29) + Vector3.UP * 0.13,
-		center + Vector3(-1.29, 0.48, -10.32), 0.113, 0.038)
+		center + Vector3(-1.29, 0.68, -10.32), 0.113, 0.038)
 	dress_log_edge(v, center)
 
-static func obstacle_ground(index: int, foot: Vector3) -> Vector3:
-	# Las dos microescenas usan la cuadrícula de un metro alrededor de la huella.
+static func surface_point(index: int, foot: Vector3) -> Vector3:
+	# Interpolación de los triángulos de un metro alrededor de la huella.
 	var x := floorf(foot.x)
 	var d := floorf(-foot.z)
 	var u := foot.x - x
@@ -333,28 +341,51 @@ static func obstacle_ground(index: int, foot: Vector3) -> Vector3:
 static func dress_log_edge(v, center: Vector3):
 	var rng := RandomNumberGenerator.new()
 	rng.seed = 61108
-	var ground := func(at: Vector3) -> Vector3: return center + obstacle_ground(1, at - center)
+	var ground := func(at: Vector3) -> Vector3: return center + surface_point(1, at - center)
 	var roots: Array[Vector4] = []
+	var scrub: Array[Vector4] = []
 	var rocks := Stone.surface()
+	var understory := RandomNumberGenerator.new()
+	understory.seed = 84191
 	for side: float in [-1.0, 1.0]:
-		for distance in [1.9, 6.2, 12.9, 17.2]:
-			var foot: Vector3 = ground.call(center + Vector3(side * rng.randf_range(2.8, 4.5), 0, -distance))
-			var kind := Flora.Kind.MOLLE if side < 0 else Flora.Kind.TALA
-			Flora.tree(v, foot, kind, rng.randf_range(1.0, 1.35), rng.randf() * TAU)
-		for distance in [4.1, 7.7, 9.71, 11.2, 14.6]:
-			var foot: Vector3 = ground.call(center + Vector3(side * rng.randf_range(1.96, 2.42), 0, -distance))
-			Flora.tree(v, foot, Flora.Kind.PIQUILLIN, rng.randf_range(0.82, 1.08), rng.randf() * TAU)
-		for i in 7:
-			var offset := Vector3(side * (2.06 + i * 0.98), 0, -9.56 - rng.randf_range(0.0, 0.78))
-			var foot: Vector3 = ground.call(center + offset) - Vector3.UP * 0.12
-			var span := Vector3(1.48, 1.33, 1.40) * rng.randf_range(0.89, 1.28)
-			var rock := Stone.fragment(rocks, foot, span, rng.randf() * TAU, rng, ground, Stone.OUTCROP_PROFILE)
-			Stone.solid(v, foot, rock, "Rocas al pie del tronco")
-		for i in 40:
-			var foot: Vector3 = ground.call(center + Vector3(side * rng.randf_range(1.47, 5.5), 0, rng.randf_range(-20, -1.0)))
-			roots.append(Vector4(foot.x, foot.y - 0.05, foot.z, rng.randf_range(0.61, 1.29)))
+		var thicket := StaticBody3D.new()
+		thicket.name = "Ramas del borde este" if side > 0.0 else "Ramas del borde oeste"
+		v.add_child(thicket)
+		thicket.position = center
+		for segment in 32:
+			var distance := -12.0 + segment * 1.48
+			var boundary := log_verge(side, distance)
+			var plant := boundary + Vector3(side * rng.randf_range(0.34, 0.59), 0, rng.randf_range(-0.30, 0.30))
+			Flora.tree(v, ground.call(center + plant), Flora.Kind.PIQUILLIN, rng.randf_range(1.39, 1.82), rng.randf() * TAU, 0.62)
+			var next := log_verge(side, distance + 1.48)
+			var offset := next - boundary
+			var branch_barrier := BoxShape3D.new()
+			branch_barrier.size = Vector3(0.61, 2.16, offset.length() + 0.17)
+			var hit := CollisionShape3D.new()
+			hit.shape = branch_barrier
+			thicket.add_child(hit)
+			hit.position = surface_point(1, (boundary + next) * 0.5) + Vector3.UP * 1.04
+			hit.rotation.y = atan2(offset.x, offset.z)
+			var understory_foot: Vector3 = ground.call(center + boundary + Vector3(side * understory.randf_range(-0.22, 0.27), 0, understory.randf_range(-0.45, 0.48)))
+			scrub.append(Vector4(understory_foot.x, understory_foot.y - 0.045, understory_foot.z, understory.randf_range(1.18, 1.68)))
+			if segment % 3 == 0:
+				var stem := boundary + Vector3(side * rng.randf_range(2.28, 3.32), 0, rng.randf_range(-0.43, 0.45))
+				var kind := Flora.Kind.MOLLE if (segment + int(side)) % 2 == 0 else Flora.Kind.TALA
+				Flora.tree(v, ground.call(center + stem), kind, rng.randf_range(0.90, 1.29), rng.randf() * TAU)
+			if segment % 2 == 0:
+				var foot: Vector3 = ground.call(center + boundary + Vector3(side * rng.randf_range(0.61, 1.05), 0, 0.65))
+				scrub.append(Vector4(foot.x, foot.y - 0.052, foot.z, rng.randf_range(0.60, 1.0)))
+				Stone.fragment(rocks, foot - Vector3.UP * 0.045, Vector3(0.83, 0.27, 0.54) * rng.randf_range(0.5, 1.2), rng.randf() * TAU, rng, ground)
+			for tuft in 3:
+				var foot: Vector3 = ground.call(center + boundary + Vector3(side * rng.randf_range(-0.45, 1.58), 0, rng.randf_range(-0.69, 0.69)))
+				roots.append(Vector4(foot.x, foot.y - 0.046, foot.z, rng.randf_range(0.49, 1.29)))
 	Flora.grass_batch(v, roots)
+	Flora.herb_batch(v, scrub, Flora.Herb.ROMERILLO)
 	Stone.finish(v, rocks, "Piedras entre la vegetación")
+
+static func log_verge(side: float, distance: float) -> Vector3:
+	var brush := 2.07 + 0.13 * sin(distance * 0.72) + 0.14 * sin(distance * 0.24 + side)
+	return Vector3(track_x(1, distance) + side * brush, 0.0, -distance)
 
 static func build_bridge(v, center: Vector3):
 	var sheet := PlaneMesh.new()
@@ -456,7 +487,7 @@ static func dress_laja_shoulders(v, center: Vector3):
 	var pieces := Stone.surface()
 	var rng := RandomNumberGenerator.new()
 	rng.seed = 53091
-	var ground := func(at: Vector3) -> Vector3: return center + obstacle_ground(5, at - center)
+	var ground := func(at: Vector3) -> Vector3: return center + surface_point(5, at - center)
 	for side: float in [-1.0, 1.0]:
 		for index in 6:
 			var x := side * (2.16 + index * 1.38)

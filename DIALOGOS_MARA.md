@@ -2,7 +2,7 @@
 
 Informe en orden de campaña para revisar el diálogo frase por frase. Incluye quién habla primero, cuándo se abre cada intercambio, qué puede elegir Hernán y qué cambia después. Las frases entre comillas son los textos del juego. Las acotaciones en cursiva describen lo que ocurre entre líneas.
 
-Para las charlas de sendero el jugador abre la radio con **R**. El nombre que figura en cada apertura indica quién dice la primera frase. La rueda cambia de respuesta, el clic confirma y Espacio avanza el diálogo. Los encargos principales se pueden abrir siempre que corresponda. Entre dos charlas opcionales tienen que pasar 12 metros y 8 segundos el Día 2, 15 metros y 8 segundos el Día 41, o 26 metros y 16 segundos en las demás jornadas. Cada charla cuenta una sola vez.
+Para las charlas de sendero el jugador abre la radio con **R**. El nombre que figura en cada apertura indica quién dice la primera frase. La rueda cambia de respuesta, el clic confirma y Espacio avanza el diálogo. La bienvenida muestra la ayuda de rueda y clic. Los encargos principales se pueden abrir siempre que corresponda. Entre dos charlas opcionales tienen que pasar 12 metros y 8 segundos el Día 2, 15 metros y 8 segundos el Día 41, o 26 metros y 16 segundos en las demás jornadas. Cada charla cuenta una sola vez.
 
 **La visita a Mara requiere nueve de las catorce charlas de cercanía.** Las opciones que suman están señaladas en el informe. Poner un límite cuando Mara pregunta por el padre o por Paula también puede sumar cercanía. La bienvenida, el parte, los mensajes de la cueva y las demás llamadas de misión quedan fuera del cálculo.
 
@@ -12,7 +12,7 @@ Para las charlas de sendero el jugador abre la radio con **R**. El nombre que fi
 
 **Empieza Mara.** Insiste por radio desde el puesto de abajo. La conversación se abre al levantar la radio del escritorio y darle tiempo al llamado.
 
-- **Mara** · «Hernán, ¿me copiás? Soy Mara. Te hablo desde el puesto de abajo, pasando la curva del camino a Capilla.»
+- **Mara** · «¿Me copiás? Soy Mara. Te hablo desde el puesto de abajo, pasando la curva del camino a Capilla.»
 - **Hernán elige** «Sí, te copio.» o «Sí. Recién llego.».
 - **Mara, en ambas** · «Ahí te escucho. Mañana te voy a pedir un par de datos del cauce. Desde afuera la señal llega un poco mejor.»
 - **Mara** · «Te dejo que te sigas acomodando. Después descansá. Mañana te llamo temprano.»
