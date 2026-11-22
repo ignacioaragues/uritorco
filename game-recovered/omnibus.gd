@@ -195,14 +195,12 @@ static func passenger_door(bus: Node3D, glass: Material, frame: Material, metal:
 	entry.collision_mask = 0
 	var blue := bodywork("637c8a", bus.global_position.y, 0.94)
 	var shadow := unlit("191b1e")
-	var seat := unlit("22282d")
 	var step := unlit("34383a")
-	Kit.block(bus, Vector3(DOOR_CENTER, 1.60, 0.17), Vector3(1.23, 1.98, 0.055), seat)
-	Kit.block(bus, Vector3(DOOR_BACK - 0.032, 1.57, 0.65), Vector3(0.065, 1.86, 1.13), shadow)
-	Kit.block(bus, Vector3(DOOR_FRONT + 0.051, 1.57, 0.68), Vector3(0.063, 1.86, 1.04), shadow)
-	Kit.block(bus, Vector3(DOOR_CENTER, 2.453, 0.64), Vector3(0.90, 0.095, 1.17), shadow)
+	Kit.block(bus, Vector3(DOOR_BACK - 0.032, 0.92, 0.66), Vector3(0.065, 0.49, 1.13), shadow)
+	Kit.block(bus, Vector3(DOOR_FRONT + 0.051, 1.11, 0.68), Vector3(0.063, 0.96, 1.04), shadow)
+	Kit.block(bus, Vector3(DOOR_CENTER, 2.453, 0.52), Vector3(1.32, 0.095, 1.45), shadow)
 	Kit.block(bus, Vector3(DOOR_CENTER, 0.659, 0.95), Vector3(0.80, 0.086, 0.48), step)
-	Kit.block(bus, Vector3(DOOR_CENTER, 0.772, 0.66), Vector3(0.79, 0.145, 0.27), shadow)
+	Kit.block(bus, Vector3(DOOR_CENTER, 0.772, 0.63), Vector3(0.79, 0.145, 0.31), step)
 	for edge in [DOOR_BACK, DOOR_FRONT]:
 		Kit.block(bus, Vector3(edge, 1.57, DOOR_Z - 0.024), Vector3(0.073, 1.80, 0.097), frame)
 	Kit.block(bus, Vector3(DOOR_CENTER, 2.443, DOOR_Z - 0.020), Vector3(0.85, 0.10, 0.11), frame)
@@ -217,23 +215,60 @@ static func passenger_door(bus: Node3D, glass: Material, frame: Material, metal:
 		Kit.block(pivot, offset + Vector3(0, 0.334, 0.030), Vector3(0.319, 0.829, 0.026), frame)
 		Kit.block(pivot, offset + Vector3(0, 0.332, 0.046), Vector3(0.286, 0.779, 0.018), glass)
 		Kit.block(pivot, offset + Vector3(0, -0.663, 0.034), Vector3(0.351, 0.032, 0.014), metal)
-	draw_driver(bus)
+	build_cockpit(bus)
 
-static func draw_driver(bus: Node3D):
+static func build_cockpit(bus: Node3D):
+	var interior := Node3D.new()
+	interior.name = "Cabina del conductor"
+	bus.add_child(interior)
+	var trim := unlit("323a3a")
+	var rubber := unlit("202727")
+	var cushion := unlit("394144")
+	var piping := unlit("515753")
+	var floor_mat := unlit("303432")
+	Kit.block(interior, Vector3(2.73, 0.793, -0.31), Vector3(1.85, 0.11, 1.61), floor_mat)
+	Kit.block(interior, Vector3(2.74, 1.202, -1.05), Vector3(1.79, 0.72, 0.05), trim)
+	Kit.block(interior, Vector3(2.74, 2.535, -1.059), Vector3(1.97, 0.30, 0.067), rubber)
+	Kit.block(interior, Vector3(1.985, 1.988, -1.043), Vector3(0.26, 0.89, 0.065), trim)
+	Kit.block(interior, Vector3(3.56, 1.988, -1.043), Vector3(0.17, 0.89, 0.065), trim)
+	var opposite := Vector2(2.81, 2.00)
+	var side_wall := func(point: Vector2) -> Vector3: return Vector3(point.x, point.y, -1.012)
+	panel(interior, opposite, Vector2(1.46, 0.79), 0.077, side_wall, Vector3.BACK, piping)
+	panel(interior, opposite, Vector2(1.37, 0.70), 0.060,
+		func(point: Vector2) -> Vector3: return side_wall.call(point) + Vector3.BACK * 0.009,
+		Vector3.BACK, unlit("191e20"))
+	var far_glass := panel(interior, opposite + Vector2(0.01, 0.01), Vector2(1.302, 0.63), 0.052,
+		func(point: Vector2) -> Vector3: return side_wall.call(point) + Vector3.BACK * 0.016,
+		Vector3.BACK, unlit("67665b"))
+	far_glass.name = "Ventanilla opuesta"
+	Kit.block(interior, Vector3(2.96, 1.995, -0.982), Vector3(0.026, 0.65, 0.025), rubber)
+	Kit.block(interior, Vector3(2.80, 1.625, -0.986), Vector3(1.50, 0.042, 0.058), trim)
+	Kit.block(interior, Vector3(3.50, 1.335, -0.34), Vector3(0.30, 0.20, 1.23), rubber)
+	Kit.block(interior, Vector3(2.80, 0.922, -0.34), Vector3(0.22, 0.15, 0.28), trim)
+	Kit.block(interior, Vector3(2.83, 1.038, -0.34), Vector3(0.44, 0.124, 0.53), cushion)
+	Kit.block(interior, Vector3(2.606, 1.328, -0.34), Vector3(0.107, 0.64, 0.52), cushion).rotation.z = 0.13
+	Kit.block(interior, Vector3(2.558, 1.63, -0.34), Vector3(0.114, 0.10, 0.41), piping).rotation.z = 0.13
+	draw_driver(interior)
+
+static func draw_driver(interior: Node3D):
 	var driver := Node3D.new()
 	driver.name = "Silueta del conductor"
-	bus.add_child(driver)
-	driver.position = Vector3(DOOR_FRONT - 0.24, 0.76, 0.41)
-	var fabric := unlit("111518")
-	Kit.shell(driver, [Vector4(0.57, 0.18, 0.13, 0.0), Vector4(0.78, 0.26, 0.15, 0.0),
-		Vector4(0.94, 0.25, 0.13, 0.0), Vector4(1.04, 0.106, 0.10, 0.0)], fabric, 0.83, true)
+	interior.add_child(driver)
+	driver.position = Vector3(2.82, 1.082, -0.34)
+	var fabric := unlit("14191b")
+	Kit.shell(driver, [Vector4(0.00, 0.16, 0.16, 0.0), Vector4(0.18, 0.16, 0.16, 0.0),
+		Vector4(0.37, 0.25, 0.15, 0.0), Vector4(0.48, 0.106, 0.10, 0.0)], fabric, 0.83, true)
+	for side in [-0.12, 0.12]:
+		Kit.block(driver, Vector3(0.167, 0.052, side), Vector3(0.41, 0.133, 0.17), fabric)
+		Kit.block(driver, Vector3(0.307, -0.112, side), Vector3(0.108, 0.30, 0.14), fabric).rotation.z = -0.12
+	Kit.block(driver, Vector3(0.215, 0.270, 0.17), Vector3(0.36, 0.108, 0.112), fabric).rotation.z = -0.10
 	var head := SphereMesh.new()
 	head.radius = 0.135
-	head.height = 0.324
+	head.height = 0.303
 	head.radial_segments = 10
 	head.rings = 6
-	Kit.mesh_part(driver, head, Vector3(0.018, 1.126, 0.0), fabric)
-	Kit.mesh_part(driver, head, Vector3(0.095, 1.067, 0.0), fabric).scale = Vector3(0.53, 0.39, 0.69)
+	Kit.mesh_part(driver, head, Vector3(0.033, 0.598, 0.0), fabric)
+	Kit.mesh_part(driver, head, Vector3(0.111, 0.547, 0.0), fabric).scale = Vector3(0.53, 0.39, 0.69)
 
 static func unlit(tint: String) -> StandardMaterial3D:
 	var finish := StandardMaterial3D.new()
@@ -247,7 +282,7 @@ static func open_door(bus: Node3D) -> Tween:
 	motion.tween_property(bus.get_node("Hoja 1"), "rotation:y", deg_to_rad(-78.0), 0.79)
 	return motion
 
-static func panel(parent: Node3D, center: Vector2, size: Vector2, radius: float, project: Callable, normal: Vector3, finish: Material):
+static func panel(parent: Node3D, center: Vector2, size: Vector2, radius: float, project: Callable, normal: Vector3, finish: Material) -> MeshInstance3D:
 	var points := PackedVector3Array()
 	for corner in 4:
 		var phase := PI * 0.5 * corner
@@ -265,6 +300,7 @@ static func panel(parent: Node3D, center: Vector2, size: Vector2, radius: float,
 	surface.generate_normals()
 	var part := Kit.mesh_part(parent, surface.commit(), Vector3.ZERO, finish)
 	part.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	return part
 
 static func bodywork(tint: String, height: float, exposure: float) -> ShaderMaterial:
 	var material := ShaderMaterial.new()

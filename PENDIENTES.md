@@ -76,11 +76,16 @@ Al cierre de cada pasada se actualizan los puntos resueltos y se conserva lo que
 ### Pendientes del texto pegado
 
 - Revisar los espacios vacíos que se ven desde las alturas y ajustar la luz de las demás jornadas según el momento de cada encargo.
-- Darle una aparición propia a la estrella de Paula tras leer su recorte.
 - Hacer más fáciles de encontrar los cactus, el zorro y los cuises. Repartir más lagartos y cuises tras los primeros dibujos y sumar un ave que se pueda dibujar, con su croquis generado.
 - Darle un costo al rodeo por la vaguada, como un tronco caído, y extender el paredón de la laja hacia el oeste para bloquear los atajos al nivel superior.
-- Adaptar los diálogos de los arcos al ritmo y la presentación de la radio.
-- Reordenar el Día 41. Llamada de Mara antes de empacar, con respuestas según cercanía. De camino al museo Hernán menciona que es su último día. Elvira deja en el banco un libro ilustrado sobre los comechingones con el grabado de un arco. Al recogerlo se habilita y se marca la bajada. El flirteo puede aparecer al salir del museo y la invitación queda para la despedida en la bajada.
+
+## Pasada del libro de Elvira y los finales
+
+- Las voces de los arcos se leen frase por frase en el panel de diálogo. Hernán puede mirar y caminar con el artefacto en la mano. La última voz sigue siendo ambigua.
+- Al leer el recorte de Paula, Atria adquiere un brillo cálido en el cielo nocturno. Al mirarla, Hernán la reconoce como la estrella de Paula.
+- El Día 41, Mara llama antes de empacar. La charla cambia según lo ocurrido la noche anterior y la cercanía. Después de empacar, Hernán puede llamar de camino al museo y hablar de la partida.
+- Elvira deja un libro sobre los comechingones en el banco del museo. Tiene tapa ilustrada y un grabado que recuerda los arcos del sueño. Al guardar el libro, aparece la bajada en el terreno y en la misma lámina del mapa. La charla de cercanía queda a la salida del museo y la invitación sólo puede surgir en la despedida.
+- La puerta del urbano deja ver el asiento del chofer y la ventanilla opuesta en la penumbra. Los molles, espinillos, talas y romerillos alrededor de la casa de Mara continúan fuera del jardín.
 
 ## Pasada del jardín y la carrocería
 

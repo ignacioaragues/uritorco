@@ -704,6 +704,7 @@ func update_night_catalog(day: int):
 	for planet in SkyGuide.PLANETS:
 		planets.append(SkyGuide.direction(planet, sidereal))
 	sky_mat.set_shader_parameter("catalog", stars)
+	sky_mat.set_shader_parameter("paula_star_dir", SkyGuide.direction(SkyGuide.PAULA_STAR, sidereal))
 	sky_mat.set_shader_parameter("planet_dirs", planets)
 	sky_mat.set_shader_parameter("galactic_pole", SkyGuide.direction(SkyGuide.GALACTIC_POLE, sidereal))
 

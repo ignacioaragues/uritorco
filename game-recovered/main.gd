@@ -47,9 +47,9 @@ const MAST_REPLIES := ["Sí, te copio. Se fue la estática.", "Te copio, aunque 
 const QUARRY_REPLIES := ["La chapa sigue quieta. Estoy al lado del bastidor.", "Te paso el rumbo que acabo de anotar. Lo marqué desde el malacate."]
 const NIGHT_REPLIES := ["Se van al monte y las voy a seguir.", "Las dejo ir. Se van al monte. Me voy a acostar."]
 const DREAM_ARCH_EXCHANGES := [
-	"—¿La ves?\n—¿Qué cosa?\n—La que tarda en aparecer. Quedate un segundo sin mover la cabeza.\n\nLa voz viene del otro lado de la piedra. La pieza deja de latir.",
-	"—¿Me hablás por la radio?\n—Probá apagarla.\n\nTanteás la perilla. Ya está apagada.\n\n—¿Me oís igual?",
-	"Del otro lado suenan dos golpes secos.\n\n—Hay dos discos. ¿Cuál tengo que mirar?\n—El huequito entre las cuatro estrellas. Como en la vereda, cuando tapábamos el farol."
+	[["Voz", "¿La ves?"], ["Hernán", "¿Cuál?"], ["Voz", "La que tarda más en aparecer. Quedate quieto un segundo."]],
+	[["Hernán", "¿Me hablás por la radio?"], ["Voz", "Probá apagarla."], ["Hernán", "Ya está apagada."], ["Voz", "¿Me oís igual?"]],
+	[["Hernán", "Veo dos discos. ¿Cuál tengo que mirar?"], ["Voz", "El huequito entre las cuatro estrellas."], ["Voz", "Como cuando tapábamos el farol en la vereda."]],
 ]
 enum Sighting { ABRA, QUARRY, CROSSING, SHELTER }
 const Natural = preload("res://naturaleza.gd")
@@ -65,6 +65,7 @@ var dream_piece_height := 0.0
 var dream_piece_phase := 0.0
 var dream_world: Node3D
 var archive_read := false
+var paula_clipping_read := false
 var trail_replies: Dictionary = {}
 var mara_heard_paula := false
 var trail_topic := ""
@@ -91,6 +92,10 @@ var ending_at_door: = false
 var packed_items: Array = []
 var departure_destination := ""
 var departure_path_open := false
+var departure_briefed := false
+var departure_call_wait := 1.5
+var elvira_book_taken := false
+var elvira_book: StaticBody3D
 var departure_scene := ""
 var mara_yard: Node3D
 var cave: Node3D
@@ -162,6 +167,7 @@ var book_light_notes := false
 var dream_count: = 0
 var dream_seconds_left := DREAM_SECONDS
 var dream_arch_visits: Array[int] = []
+var dream_arch_lines: Array = []
 var dream_pulse_wait := 0.0
 var compass_out: = false
 var ambience = preload("res://ambiente.gd").new()
@@ -407,6 +413,10 @@ func set_arrival_bag_visible(shown: bool):
 	valley.arrival_bag.collision_layer = 1 if shown else 0
 
 func _input(event: InputEvent):
+	if mode == "elvira_book" and event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
+		get_viewport().set_input_as_handled()
+		advance_elvira_book()
+		return
 	if event is InputEventMouseMotion and mode == "approach" and page == 0 and not arrival_action and not intro_look_done and Input.mouse_mode == Input.MOUSE_MODE_CAPTURED:
 		intro_look_amount += event.relative.length() * player.look_speed
 		intro_look_done = intro_look_amount >= INTRO_LOOK_AMOUNT
@@ -518,6 +528,11 @@ func _process(delta):
 	var in_refuge: bool = absf(player.position.x) < 3.45 and player.position.z > -0.35 and player.position.z < 5.9
 	update_creek_return(delta)
 	update_day40(delta)
+	if stage == 19 and not departure_briefed and departure_call_wait > 0.0 and mode in ["walk", "map"]:
+		departure_call_wait = maxf(0.0, departure_call_wait - delta)
+		if departure_call_wait == 0.0:
+			radio.incoming.play()
+			objective_seconds = 4.5
 	update_departure()
 	valley.update_calendar(day)
 	update_weather(day, delta, in_museum)
@@ -687,7 +702,7 @@ func _process(delta):
 			hint.text = "E · dejar la mochila al lado de la cama"
 			return
 		if not hit and ( - player.camera.global_basis.z).y > 0.12 and float(valley.sky_mat.get_shader_parameter("nightfall")) > 0.6:
-			var star := SkyGuide.identify(-player.camera.global_basis.z, valley.sky_chapter, day, valley.moon_direction)
+			var star := SkyGuide.identify(-player.camera.global_basis.z, valley.sky_chapter, day, valley.moon_direction, paula_clipping_read)
 			if can_pause_under_sky():
 				if watching_crux_tonight() and not looking_at_crux():
 					hint.text = star if not star.is_empty() else "Buscá las dos estrellas del eje largo de la Cruz del Sur."
@@ -876,16 +891,18 @@ func objective() -> String:
 	if stage == 17: return "R · Pasale la marca del agua a Mara."
 	if stage == 18: return "Te queda la tarde libre. Podés dar una vuelta." if last_night and day40_seconds_left > 0.0 else "Volvé a dormir al puesto."
 	if stage == 19:
+		if not departure_briefed: return "R · Escuchá a Mara antes de empacar."
 		if packed_items.size() < Departure.PACK_ITEMS.size():
 			var missing := PackedStringArray()
 			for i in Departure.PACK_NAMES.size():
 				if not packed_items.has(i): missing.append(Departure.PACK_NAMES[i])
 			return "Terminá de empacar: " + ", ".join(missing) + "."
+		if not elvira_book_taken: return "Subí al museo. Elvira dejó un libro en el banco de adentro."
 		if departure_destination == "mara": return "Al final de la bajada, tomá el camino vecinal a la izquierda."
 		if departure_destination == "bus": return "Seguí bajando por la huella hasta la ruta."
 		if departure_destination == "fork": return "En la bifurcación, a la izquierda está la casa de Mara y a la derecha, la parada."
 		if at_departure_stop(): return "R · Llamá a Mara desde la bajada."
-		return "Tomá la bajada a la ruta fuera de la tranquera. Podés visitar el museo antes."
+		return "Tomá la bajada a la ruta fuera de la tranquera."
 	if stage == 14: return "R · Pasale a Mara lo que ves desde la cumbre."
 	if stage == 8: return "Día 25 · Compará la subida con cuerda y la vuelta por la vaguada. Llegá al hito del filo."
 	if stage == 9: return "R · Pasá el parte del filo." if not route_reported else "Volvé al puesto."
@@ -1116,7 +1133,7 @@ func walk():
 	Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
 
 func conversation(lines: Array, next: String):
-	if next not in ["last_call", "departure_chat"]:
+	if next != "last_call":
 		trail_spacing_day = calendar_day()
 		trail_walk_left = Mara.distance_between_calls(trail_spacing_day)
 		trail_quiet_left = Mara.seconds_between_calls(trail_spacing_day)
@@ -1173,7 +1190,7 @@ func creek_evening_available() -> bool:
 	return stage == 5 and bedtime and not creek_evening_call and absf(at.x) < 10.0 and at.z > -13.0 and at.z < 10.0
 
 func at_departure_stop() -> bool:
-	if stage != 19 or departure_scene != "" or packed_items.size() < Departure.PACK_ITEMS.size() or departure_destination != "": return false
+	if stage != 19 or departure_scene != "" or not elvira_book_taken or departure_destination != "": return false
 	var at: Vector3 = player.position
 	return at.z >= 17.0 and at.z <= 69.0 and Departure.edge_distance(Vector2(at.x, at.z)) < 8.0
 
@@ -1213,13 +1230,14 @@ func call_from_camp(topic: String):
 	conversation(lines, "camp:" + topic)
 
 func mission_radio_available() -> bool:
-	return (stage == 0 and not heard) or awaiting_call or stage == 2 or (stage == 5 and creek_return_left < 0.0 and not bedtime) or creek_evening_available() or observing or (stage == 9 and not route_reported) or stage in [11, 14, 17] or not next_camp_report().is_empty() or (stage == 18 and night_home == 1)
+	return (stage == 0 and not heard) or (stage == 19 and not departure_briefed) or awaiting_call or stage == 2 or (stage == 5 and creek_return_left < 0.0 and not bedtime) or creek_evening_available() or observing or (stage == 9 and not route_reported) or stage in [11, 14, 17] or not next_camp_report().is_empty() or (stage == 18 and night_home == 1)
 
 func available_trail_chat() -> String:
 	if mission_radio_available() or not player.climb_points.is_empty(): return ""
 	if stage == 18 and last_night: return ""
 	if trail_spacing_day == calendar_day() and (trail_walk_left > 0.0 or trail_quiet_left > 0.0): return ""
-	var topic := Mara.available(stage, player.position, bedtime, second_sighting, trail_replies)
+	if stage == 19 and (packed_items.size() < Departure.PACK_ITEMS.size() or not departure_destination.is_empty() or Museum.under_roof(valley, player.position)): return ""
+	var topic := Mara.available(stage, player.position, bedtime, second_sighting, trail_replies, elvira_book_taken)
 	if topic == "cable" and float(valley.sky_mat.get_shader_parameter("nightfall")) < 0.62: return ""
 	return topic
 
@@ -1242,7 +1260,7 @@ func start_trail_chat(topic: String):
 				"¿Astronomía, de verdad? Yo te pedí que me leyeras una regla. ¿Seguiste trabajando de eso?"])
 		"pircas":
 			lines.append_array([hernan("Supongo que nunca encontré el tiempo."), "¿Y alguna chica? ¿Alguien con quien te hayan dado ganas? Si querés contarme."])
-		"regreso": lines.append("A la vuelta de la loma arranca la bajada. ¿Sabés qué vas a hacer cuando llegues a casa?")
+		"regreso": lines.append("Desde el museo se ve todo el valle. ¿Sabés qué vas a hacer cuando llegues a casa?")
 	if lines.size() > 1:
 		conversation(lines, "trail_prompt")
 	else:
@@ -1361,10 +1379,7 @@ func start_patio_call():
 	var lines: Array = ["¿Me copiás? Te quería avisar lo del ómnibus de mañana.",
 		hernan("¿Lo espero abajo en la ruta, después de la bajada?"),
 		"Sí. Parate donde el chofer te vea desde antes de doblar."]
-	if can_visit_mara():
-		lines.append("En la bajada vas a ver una huella vecinal. Si te sobra un rato, podrías pasar a verme.")
-	else:
-		lines.append("Avisame por el tres cuando salgas a la bajada. Voy a estar en el puesto de abajo.")
+	lines.append("Avisame por el tres cuando salgas a la bajada. Voy a estar en el puesto de abajo.")
 	lines.append("Pará. ¿Vos también ves esas dos luces por encima del monte?")
 	conversation(lines, "night_patio")
 
@@ -1393,16 +1408,12 @@ func radio_exchange():
 		start_day40()
 		return
 	if stage == 19:
-		if packed_items.size() < Departure.PACK_ITEMS.size() or departure_destination != "": return
-		if not at_departure_stop():
-			if not chat.is_empty(): start_trail_chat(chat)
-		elif chat.is_empty():
+		if not departure_briefed:
+			departure_morning()
+		elif at_departure_stop():
 			farewell_mara()
-		else:
-			trail_topic = chat
-			radio.play()
-			radio_choices("departure_radio", "Mara · Estoy acá. ¿Cómo va esa última mañana?",
-				["¿Tenés un minuto para charlar?", "Te llamaba para despedirme.", "Guardás la radio."])
+		elif not chat.is_empty():
+			start_trail_chat(chat)
 		return
 	if not chat.is_empty():
 		start_trail_chat(chat)
@@ -1496,13 +1507,29 @@ func radio_exchange():
 
 		6, 7: overlay("message", "El parte es al anochecer. " + objective(), "Espacio · volver")
 
-func farewell_mara(opening: Array = []):
+func departure_morning():
+	radio.incoming.stop()
+	var lines: Array = ["Buen día, Hernán. ¿Ya empezaste a juntar tus cosas?"]
+	if night_investigation > 0:
+		lines.append(hernan("Recién me levanté. Quería hablar de lo de anoche. En la cueva había alguien anotando las mismas luces que vimos nosotros."))
+	elif night_investigation < 0:
+		lines.append(hernan("Todavía no. Me quedé pensando en esas luces que vimos anoche."))
+	else:
+		lines.append(hernan("Todavía no. Me cuesta creer que ya me toque bajar."))
+	if can_visit_mara():
+		lines.append("Yo también me quedé pensando. Terminá de empacar y hablamos cuando estés bajando.")
+	else:
+		lines.append("En ese cerro siempre pasa algo raro. Te quedás unos días y empezás a oír historias de todos lados.")
+	lines.append_array(["Antes de bajar, pasá por el museo. Elvira te dejó un libro en el banco de adentro.",
+		hernan("Bueno. Paso a buscarlo cuando tenga todo listo.")])
+	conversation(lines, "departure_morning_done")
+
+func farewell_mara():
 	var reply := "Te escucho. Todavía tenés tiempo de sobra para alcanzar el ómnibus."
 	if archive_read:
 		reply = "Ese parte del museo quedó entre los papeles del cauce. Elvira nunca pudo averiguar quién lo firmó."
 	var close_enough := can_visit_mara()
-	var lines := opening.duplicate()
-	if lines.is_empty(): lines.append(hernan("Ya estoy bajando a la ruta. Te quería avisar antes de irme."))
+	var lines := [hernan("Ya estoy bajando a la ruta. Te quería avisar antes de irme.")]
 	lines.append(reply)
 	if night_investigation > 0:
 		lines.append_array([hernan("Antes de subir, ¿podemos hablar de las luces? Necesito saber que vos también viste las dos."),
@@ -1535,7 +1562,7 @@ func show_map(variant: int = 0):
 	elif stage in [13, 14, 15]: sheet = map.SUMMIT_ZONE
 	elif stage in [16, 17, 18]: sheet = map.CREEK_ZONE
 	elif stage == 19: sheet = map.DEPARTURE_ZONE
-	map.open_at(player.position, variant, arrival, goal, sheet, stage == 19)
+	map.open_at(player.position, variant, arrival, goal, sheet, stage == 19 and elvira_book_taken)
 	hands.show_map(true)
 	update_flashlight()
 
@@ -1606,6 +1633,13 @@ func _unhandled_key_input(event):
 				held_desk_paper.collision_layer = 1
 				held_desk_paper = null
 			postcard_view.hide()
+			walk()
+		return
+	if mode == "elvira_book":
+		if advance or key in [KEY_E, KEY_RIGHT]:
+			advance_elvira_book()
+		elif key == KEY_ESCAPE and book_view.page == 0:
+			book_view.hide()
 			walk()
 		return
 	if mode == "book":
@@ -1729,8 +1763,15 @@ func _unhandled_key_input(event):
 		hint.text = ""
 		reveal_dream(create_tween())
 	elif mode == "dream_arch_talk" and advance:
-		explore_dream()
-		save_game(true, "dream")
+		if radio_panel.line.visible_ratio < 1.0:
+			radio_panel.reveal.kill()
+			radio_panel.line.visible_characters = -1
+		elif dream_arch_lines.is_empty():
+			radio_panel.hide()
+			explore_dream()
+			save_game(true, "dream")
+		else:
+			show_dream_arch_line()
 	elif mode == "day40_card" and advance:
 		start_day40_morning()
 	elif mode == "night_cut" and advance:
@@ -1779,6 +1820,10 @@ func _unhandled_key_input(event):
 			KEY_R: transmit()
 			KEY_E:
 				if pack_item(target): return
+				if target == Museum.ELVIRA_BOOK and not elvira_book_taken:
+					overlay("elvira_book", "", "")
+					book_view.open_elvira()
+					return
 				var find := aimed_collectible()
 				if stage >= 0 and Exploration.FINDS.has(find):
 					record_collectible(find)
@@ -1842,6 +1887,10 @@ func _unhandled_key_input(event):
 						overlay("postcard", "", "")
 						postcard_view.pick_up("telescopio" in str(keepsakes.get("beca", "")))
 					"Recorte de astronomía":
+						if not paula_clipping_read:
+							paula_clipping_read = true
+							valley.sky_mat.set_shader_parameter("paula_star_visible", true)
+							save_game(true, "walk")
 						open_desk_paper(valley.desk_clipping, Refuge.CLIPPING_ART)
 					"Banco del acceso":
 						if not awaiting_call: summit_mapped = true
@@ -1962,7 +2011,7 @@ func _unhandled_key_input(event):
 	elif mode == "crossing_warning" and advance:
 		radio.play_interference()
 		show_sighting(Sighting.CROSSING)
-	elif key == KEY_ESCAPE and (mode in ["departure_radio", "trail_chat"] or (mode == "talk" and after == "last_call")):
+	elif key == KEY_ESCAPE and (mode == "trail_chat" or (mode == "talk" and after == "last_call")):
 		walk()
 	elif mode == "talk" and advance:
 		if radio_panel.line.visible_ratio < 1.0:
@@ -2019,8 +2068,11 @@ func _unhandled_key_input(event):
 			walk()
 		elif after == "last_call":
 			choose_departure("fork" if can_visit_mara() else "bus")
-		elif after == "departure_chat":
-			start_trail_chat(trail_topic)
+		elif after == "departure_morning_done":
+			departure_briefed = true
+			walk()
+			objective_seconds = 5.0
+			save_game(true, "walk")
 		elif after in ["cave_intro", "cave_rope", "cave_tunnel"]:
 			resume_cave()
 		elif after == "cave_plate":
@@ -2166,12 +2218,12 @@ func select_option(index: int):
 		conversation(chosen_reply(index) + ["Voy a quedarme acá con la radio prendida."], "cave_entry")
 	elif mode == "last_voice":
 		last_voice_reply = index
-		var answer: = "La voz tarda. «Mirá una más. Después nos vamos». Viene de atrás del arco, o de muy cerca de tu oído."
-		if index == 1:
-			answer = "La voz hace una pausa. «Mirá una más. Después nos vamos». En la vereda, tu papá decía algo parecido. Esta vez te quedás mirando hasta que se apaga sola."
-		overlay("last_voice_answer", answer, "")
+		show_dream_voice("last_voice_answer", "Hernán", "¿Papá…?" if index == 1 else "¿Quién es…?", "")
 		var voice := create_tween()
-		voice.tween_interval(maxf(6.0, answer.length() / 23.0))
+		voice.tween_interval(1.65 if index == 1 else 1.15)
+		voice.tween_callback(func():
+			show_dream_voice("last_voice_answer", "Voz", "Mirá una más. Después nos vamos.", ""))
+		voice.tween_interval(5.8)
 		voice.tween_callback(finish_dream)
 	elif mode == "day2_reply":
 		var reply := "Menos mal. Esa cama tiene sus años." if index == 0 else "Es normal. El monte en realidad es más ruidoso que la ciudad, ¿viste?"
@@ -2179,11 +2231,6 @@ func select_option(index: int):
 	elif mode == "day2_ready":
 		conversation(chosen_reply(index) + ["Hoy me hacen falta dos datos. Salí por la tranquera y tomá la huella que rodea la cerca hacia el sur.",
 			"Fijate qué fecha tiene la chapa del poste en la bajada. Nos hablamos cuando la tengas."], "day2_confirm")
-	elif mode == "departure_radio":
-		match index:
-			0: conversation(chosen_reply(index), "departure_chat")
-			1: farewell_mara(chosen_reply(index))
-			2: walk()
 	elif mode == "trail_chat":
 		trail_answer = index
 		var chat: Array = Mara.TOPICS[trail_topic]
@@ -2431,7 +2478,8 @@ func update_dream_arch(delta: float):
 		dream_pulse_wait = 3.0
 		if exchange < DREAM_ARCH_EXCHANGES.size():
 			if exchange == 2: radio.play_knocks()
-			overlay("dream_arch_talk", DREAM_ARCH_EXCHANGES[exchange], "Espacio · seguir")
+			dream_arch_lines = DREAM_ARCH_EXCHANGES[exchange].duplicate()
+			show_dream_arch_line()
 		else:
 			hear_last_voice()
 		return
@@ -2443,6 +2491,17 @@ func update_dream_arch(delta: float):
 	if bearing > 0.72 and dream_pulse_wait == 0.0:
 		ambience.play_piece_pulse(signal_strength)
 		dream_pulse_wait = 6.8
+
+func show_dream_arch_line():
+	var voice: Array = dream_arch_lines.pop_front()
+	show_dream_voice("dream_arch_talk", voice[0], voice[1], "Espacio · seguir")
+
+func show_dream_voice(kind: String, speaker: String, text: String, footer: Variant):
+	overlay(kind, "", "")
+	shade.hide()
+	shade.color.a = 0.0
+	player.walking = true
+	radio_panel.display("dream_voice", speaker + "\n\n" + text, footer)
 
 func restore_dream_arches(state: Dictionary):
 	dream_arch_visits.clear()
@@ -2478,12 +2537,17 @@ func finish_dream(had_dream := true):
 		if stage == 18:
 			valley.morning()
 			stage = 19
+			bedtime = false
+			awaiting_call = false
+			departure_briefed = false
+			departure_call_wait = 1.5
+			elvira_book_taken = false
 			packed_items.clear()
 			departure_destination = ""
 			if valley.door_open: valley.toggle_door()
 			valley.update_packing(packed_items, true)
 			save_game(true, "walk")
-			var departure := "Terminá de empacar antes de salir. Podés pasar por el museo y después tomar la bajada a la ruta."
+			var departure := "La mochila está abierta al pie de la cama."
 			if had_dream:
 				var waking := "Abrís los ojos en tu cama. Sobre la mesa, la radio sigue en el canal de anoche. Buscás entre tus cosas. El único cuaderno que encontrás es el tuyo.\n\n"
 				day_card("Día 41 · El dibujo", waking + "Intentás dibujar el arco en el reverso de un parte. Cuando enderezás el dintel, deja de parecerse al del sueño. " + departure, "Espacio · levantarse")
@@ -2841,19 +2905,37 @@ func pack_item(label: String) -> bool:
 	if stage != 19 or packed_items.size() == Departure.PACK_ITEMS.size(): return false
 	var index := Departure.PACK_ITEMS.find(label)
 	if index < 0 or packed_items.has(index): return false
+	if not departure_briefed:
+		objective_seconds = 4.0
+		return true
 	packed_items.append(index)
 	update_departure()
-	collect_notice = "Mochila lista. Ya podés salir." if packed_items.size() == Departure.PACK_ITEMS.size() else "Guardaste " + Departure.PACK_NAMES[index] + "."
+	collect_notice = "Mochila lista. Elvira te dejó un libro en el museo." if packed_items.size() == Departure.PACK_ITEMS.size() else "Guardaste " + Departure.PACK_NAMES[index] + "."
 	collect_notice_seconds = 3.0
 	save_game(true, "walk")
 	return true
 
+func advance_elvira_book():
+	if book_view.page == 0:
+		book_view.turn(1)
+		return
+	book_view.hide()
+	elvira_book_taken = true
+	elvira_book.queue_free()
+	elvira_book = null
+	walk()
+	update_departure()
+	objective_seconds = 5.0
+	save_game(true, "walk")
+
 func update_departure():
 	if stage != 19 or mode not in ["walk", "map"]: return
-	if packed_items.size() < Departure.PACK_ITEMS.size():
-		if valley.wall_sketches.is_empty(): valley.hang_sketch(0, Diary.ARRIVAL_BRIDGE)
+	var packed := packed_items.size() == Departure.PACK_ITEMS.size()
+	if not packed and valley.wall_sketches.is_empty(): valley.hang_sketch(0, Diary.ARRIVAL_BRIDGE)
 	valley.update_packing(packed_items, true)
-	if packed_items.size() == Departure.PACK_ITEMS.size() and not departure_path_open:
+	if packed and departure_briefed and not elvira_book_taken and not is_instance_valid(elvira_book):
+		elvira_book = Museum.build_elvira_book(valley)
+	if elvira_book_taken and not departure_path_open:
 		Departure.open(valley)
 		departure_path_open = true
 	if departure_destination == "fork":
@@ -2977,7 +3059,7 @@ func watch_sky():
 
 func hear_last_voice():
 	radio.play_interference()
-	overlay("last_voice", "La voz vuelve del otro lado del arco. «¿Ya la encontraste?». Tu papá te hacía esa pregunta cuando miraban el cielo. Abrís la boca sin saber a quién le hablás.", ["«¿Quién es…?»", "«¿Papá…?»"])
+	show_dream_voice("last_voice", "Voz", "¿Ya la encontraste?", ["«¿Quién es…?»", "«¿Papá…?»"])
 
 func show_ending():
 	var memory_of_book := str(keepsakes.get("libro", "El lomo cruje como la primera noche en que lo abriste."))
@@ -3024,9 +3106,12 @@ func save_game(automatic: bool, resume_mode: String) -> bool:
 		state["intro_objectives_seen"] = intro_objectives_seen
 	state["abra_told_mara"] = abra_told_mara
 	state["mara_heard_paula"] = mara_heard_paula
+	state["paula_clipping_read"] = paula_clipping_read
 	if stage == 19:
 		state["packed_items"] = packed_items.duplicate()
 		state["departure_destination"] = departure_destination
+		state["departure_briefed"] = departure_briefed
+		state["elvira_book_taken"] = elvira_book_taken
 	if spare_compass_taken: state["spare_compass_taken"] = true
 	if fossil_sketched: state["fossil_sketched"] = true
 	if stage in [13, 14]:
@@ -3067,11 +3152,19 @@ func restore(data: Dictionary):
 	departure_destination = str(data.state.get("departure_destination", ""))
 	if stage == 19 and not data.state.has("packed_items") and not Departure.near(data.pose.origin, Vector3.ZERO, 10.0):
 		packed_items = [0, 1, 2, 3]
+	if stage == 19:
+		var past_museum: bool = not departure_destination.is_empty() or data.pose.origin.z > 17.0
+		departure_briefed = bool(data.state.get("departure_briefed", past_museum))
+		elvira_book_taken = bool(data.state.get("elvira_book_taken", past_museum))
+		bedtime = false
+		awaiting_call = false
 	valley.update_spare_compass(stage == 19, spare_compass_taken)
 	day40_seconds_left = clampf(float(data.state.get("day40_seconds_left", 0.0 if last_night else -1.0)), -1.0, DAY40_SECONDS)
 	day40_interlude_done = bool(data.state.get("day40_interlude_done", false))
 	abra_told_mara = bool(data.state.get("abra_told_mara", "Se lo conté a Mara." in str(data.state.get("field_note", ""))))
 	mara_heard_paula = bool(data.state.get("mara_heard_paula", false))
+	paula_clipping_read = bool(data.state.get("paula_clipping_read", false))
+	valley.sky_mat.set_shader_parameter("paula_star_visible", paula_clipping_read)
 	camp_reported = bool(data.state.get("camp_reported", camp_read))
 	camp_observations = data.state.get("camp_observations", {}).duplicate()
 	creek_return_left = clampf(float(data.state.get("creek_return_left", -1.0)), -1.0, CREEK_RETURN_SECONDS)
@@ -3410,6 +3503,7 @@ func debug_scene(code: String):
 	if stage == 19:
 		match code:
 			"41":
+				departure_briefed = true
 				packed_items = [0, 1, 2, 3]
 				player.position = valley.route.at(valley.route.trail(292), 292) + Vector3.UP * 0.12
 			"41_pack":
@@ -3418,6 +3512,8 @@ func debug_scene(code: String):
 				valley.hang_sketch(0, Diary.ARRIVAL_BRIDGE)
 				valley.hang_sketch(1, Diary.WALL_ATLAS, Diary.CREEK)
 			"41_close":
+				departure_briefed = true
+				elvira_book_taken = true
 				packed_items = [0, 1, 2, 3]
 				for topic in Mara.TOPICS: trail_replies[topic] = Mara.TOPICS[topic][0]
 				mara_heard_paula = true
@@ -3475,7 +3571,8 @@ func map_destination() -> Variant:
 			return route.summit_point(1) if camp_reported else route.camp_point()
 		16: return South.mark_position()
 		19:
-			if packed_items.size() < Departure.PACK_ITEMS.size(): return Vector3.ZERO
+			if not departure_briefed or packed_items.size() < Departure.PACK_ITEMS.size(): return Vector3.ZERO
+			if not elvira_book_taken: return Museum.center(valley)
 			if departure_destination.is_empty(): return Departure.RADIO_STOP
 			return Departure.FORK if departure_destination == "fork" else Departure.trail_end(departure_destination)
 	return null

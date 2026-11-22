@@ -510,8 +510,7 @@ Si antes retrocedió y ambos oyeron la voz de Hernán, Mara añade «Si se repit
 - **Mara** · «¿Me copiás? Te quería avisar lo del ómnibus de mañana.»
 - **Hernán** · «¿Lo espero abajo en la ruta, después de la bajada?»
 - **Mara** · «Sí. Parate donde el chofer te vea desde antes de doblar.»
-- **Mara, con suficiente cercanía para la visita** · «En la bajada vas a ver una huella vecinal. Si te sobra un rato, podrías pasar a verme.»
-- **Mara, en las demás partidas** · «Avisame por el tres cuando salgas a la bajada. Voy a estar en el puesto de abajo.»
+- **Mara** · «Avisame por el tres cuando salgas a la bajada. Voy a estar en el puesto de abajo.»
 - **Mara** · «Pará. ¿Vos también ves esas dos luces por encima del monte?»
 
 ### Seguir las luces o dejarlas ir
@@ -626,55 +625,47 @@ Si antes retrocedió y ambos oyeron la voz de Hernán, Mara añade «Si se repit
 
 ## Día 41 · La partida
 
-### Empacar y salir
+### La llamada antes de empacar
 
-La mochila espera en el suelo. Al guardar el libro, los papeles, la postal y los dibujos juntos, Hernán puede abrir la puerta. El museo queda por el camino ascendente. La partida sigue por la bajada a la ruta.
+**Disparador.** Mara llama al levantarse. R abre la conversación. Al terminarla se habilita la mochila.
 
-### La última caminata
+- **Mara** · «Buen día, Hernán. ¿Ya empezaste a juntar tus cosas?»
+- **Hernán, si entró al Sector 08** · «Recién me levanté. Quería hablar de lo de anoche. En la cueva había alguien anotando las mismas luces que vimos nosotros.»
+- **Hernán, si dejó pasar las luces** · «Todavía no. Me quedé pensando en esas luces que vimos anoche.»
+- **Hernán, en una partida sin registro de la última noche** · «Todavía no. Me cuesta creer que ya me toque bajar.»
+- **Mara, con suficiente cercanía** · «Yo también me quedé pensando. Terminá de empacar y hablamos cuando estés bajando.»
+- **Mara, con menos cercanía** · «En ese cerro siempre pasa algo raro. Te quedás unos días y empezás a oír historias de todos lados.»
+- **Mara, en todos los casos** · «Antes de bajar, pasá por el museo. Elvira te dejó un libro en el banco de adentro.»
+- **Hernán** · «Bueno. Paso a buscarlo cuando tenga todo listo.»
 
-**Charla opcional de cercanía.**
+### Camino al museo
 
-**Disparador.** Con R después de dejar el puesto, en el primer tramo de la bajada a la ruta.
+**Charla opcional de cercanía.** R en la huella ascendente después de guardar los objetos en la mochila y antes de llegar al museo.
 
-**Empieza Hernán.** «Ya salí. Me cuesta creer que sea la última vez que vengo por esta huella.»
-- **Apertura alternativa. Si Hernán mencionó a Paula y quedó registrado en la partida** · «Salí con ganas de escribirle a Paula. Pero eso puede esperar. Ahora me cuesta creer que sea la última vez que vengo por esta huella.»
-
-- **Mara, en ambas aperturas** · «A la vuelta de la loma arranca la bajada. ¿Sabés qué vas a hacer cuando llegues a casa?»
-
-- **Opción 1, Hernán** · «Cuando llegue a casa voy a abrir la ventana y dejar todo en el bolso.»
+**Empieza Hernán.** «Voy al museo. Me cuesta creer que sea la última vez que subo por esta huella.»
+- **Apertura alternativa, si habló de Paula** · «Salí con ganas de escribirle a Paula. Pero eso puede esperar. Ahora me cuesta creer que sea la última vez que vengo por esta huella.»
+- **Mara** · «Desde el museo se ve todo el valle. ¿Sabés qué vas a hacer cuando llegues a casa?»
+- **Opción 1, Hernán** · «Todavía no me acostumbré a despedirme de los lugares.»
   - **Mara** · «Si te olvidaste de algo, yo subo al puesto después.»
 - **Opción 2, Hernán** · «Creo que voy a salir a mirar el cielo desde la vereda. Hace mucho que no lo hago.» *(suma cercanía)*
   - **Mara** · «Ojalá esté despejado. Si llegás a ver la cruz, pensá que desde acá va a estar para el mismo lado.»
 
-### Primer llamado en la bajada
+Al abrir el libro del banco y guardarlo, se habilita la bajada en el terreno y en el mapa.
 
-**Empieza Mara** si todavía está disponible la charla de la ventanilla. Se abre con R a mitad de la bajada a la ruta.
+### Al salir del museo
 
-- **Mara** · «Estoy acá. ¿Cómo va esa última mañana?»
-- **Hernán** · «¿Tenés un minuto para charlar?» Abre la charla opcional de la ventanilla.
-- **Hernán** · «Te llamaba para despedirme.» Pasa a la despedida.
-- **«Guardás la radio.»** Vuelve a la caminata.
+**Charla opcional de cercanía.** R al salir del museo y volver a tomar la huella. Si llega a haber una invitación, se escucha más tarde, durante la despedida.
 
-*Si la charla opcional ya se completó o todavía está activo el intervalo, R abre la despedida directamente.*
+**Empieza Mara.** «¿Ya saliste del museo? Elvira me hizo prometer que te iba a mandar hasta ahí. Quería que te llevaras algo.»
 
-### La ventanilla del ómnibus
-
-**Charla opcional de cercanía.**
-
-**Disparador.** Con R a mitad de la bajada y al elegir «¿Tenés un minuto para charlar?» si aparece el menú previo a la despedida.
-
-**Empieza Mara.** «Si te das vuelta en la bajada, vas a ver el techo del puesto entre los árboles. Yo siempre lo busco desde ahí.»
-
-- **Opción 1, Hernán** · «Voy a sentarme del lado de la sierra.»
-  - **Mara** · «Sentate adelante si hay lugar. De atrás a veces sólo se ve el polvo.»
+- **Opción 1, Hernán** · «Sí. Me lo voy a llevar en la mano, para abrirlo en el viaje.»
+  - **Mara** · «Hay un asiento junto a la ventana del lado del cerro. De ahí se lee bien hasta que dobla a la ruta.»
 - **Opción 2, Hernán** · «Voy a extrañar más que la vista. Vos también me vas a hacer falta.» *(suma cercanía)*
   - **Mara** · «A mí también me va a faltar oírte llegar. Hoy dejé la radio prendida un rato antes de que salieras.»
 
-Se puede terminar esta charla y volver a abrir la radio para despedirse.
-
 ### La despedida
 
-**Empieza Hernán** al llamar desde la bajada. Si viene de la elección «Te llamaba para despedirme.», Mara responde directamente.
+**Empieza Hernán** al llamar desde la bajada.
 
 - **Hernán** · «Ya estoy bajando a la ruta. Te quería avisar antes de irme.»
 - **Mara, apertura habitual** · «Te escucho. Todavía tenés tiempo de sobra para alcanzar el ómnibus.»

@@ -264,6 +264,7 @@ func draw_main_trail(limits: Rect2, zone: int):
 	draw_route(limits, 14, func(t): return trail_landmark(Museum.DISTANCE).lerp(museum, t), ROUTE_COLOR)
 	pin(limits, museum, "Museo de sitio", Vector2(9, -15))
 	if zone == DEPARTURE_ZONE:
+		if not departure_sheet: return
 		draw_route(limits, Departure.PATH.size(), func(t):
 			var step: float = t * (Departure.PATH.size() - 1)
 			var i := mini(int(step), Departure.PATH.size() - 2)

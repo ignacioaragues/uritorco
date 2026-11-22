@@ -73,6 +73,7 @@ static func mara(valley) -> Node3D:
 		prop.reparent(yard)
 	dress_mara_yard(yard)
 	Garden.dress(yard)
+	dress_mara_woodland(yard)
 	return yard
 
 static func mara_height(x: float, distance: float) -> float:
@@ -107,3 +108,32 @@ static func dress_mara_yard(yard: Node3D):
 			grass.append(Vector4(at.x, at.y - 0.062, at.z, rng.randf_range(0.55, 1.39)))
 	Stone.finish(yard, faces, "Lajas del puesto")
 	Flora.grass_batch(yard, grass)
+
+static func dress_mara_woodland(yard: Node3D):
+	var rng := RandomNumberGenerator.new()
+	rng.seed = 9371
+	var grass: Array[Vector4] = []
+	var shrubs: Array[Vector4] = []
+	var groves := [
+		Vector2(-8, -3), Vector2(-11, 0), Vector2(-9, 6), Vector2(-14, 9),
+		Vector2(8, -6), Vector2(14, -2), Vector2(11, 5), Vector2(16, 10),
+		Vector2(-6, -12), Vector2(-13, -12), Vector2(-5, -19), Vector2(2, -15),
+		Vector2(8, -14), Vector2(14, -18), Vector2(-19, -7), Vector2(19, -8),
+	]
+	for i in groves.size():
+		var grove: Vector2 = groves[i]
+		var species := [Flora.Kind.MOLLE, Flora.Kind.ESPINILLO, Flora.Kind.TALA][i % 3] as Flora.Kind
+		Flora.tree(yard, Vector3(grove.x, mara_height(grove.x, -grove.y) - 0.04, grove.y),
+			species, rng.randf_range(0.72, 1.16), rng.randf() * TAU, 1.0, i % 7 == 1)
+		for j in 18:
+			var point := grove + Vector2(rng.randf_range(-3.2, 3.2), rng.randf_range(-2.6, 2.6))
+			var lane := 4.3 * sin((point.y + 4.5) * 0.093) * smoothstep(3.0, 13.0, point.y + 4.5)
+			if point.y > -4.85 and absf(point.x - lane) < 2.5: continue
+			if absf(point.x) < 5.6 and point.y > -11.0 and point.y < 5.0: continue
+			var root := Vector4(point.x, mara_height(point.x, -point.y) - 0.043, point.y, rng.randf_range(0.48, 1.25))
+			if j % 4 == 0:
+				shrubs.append(root)
+			else:
+				grass.append(root)
+	Flora.grass_batch(yard, grass)
+	Flora.herb_batch(yard, shrubs, Flora.Herb.ROMERILLO)

@@ -12,6 +12,9 @@ var light_comparison := false
 var cover: Texture2D
 var signature: Texture2D
 var crux_page: Texture2D
+const ELVIRA_COVER = preload("res://museo/libro_comechingones.webp")
+const ELVIRA_ENGRAVING = preload("res://museo/grabado_arco.webp")
+var elvira := false
 const HAND_COPY = preload("res://libro_crux_hernan.webp")
 var serif: = SystemFont.new()
 
@@ -30,6 +33,7 @@ func _ready():
 
 func open(has_name: bool, has_ribbon: bool, can_compare_lights: bool = false, has_hand_copy: bool = false):
 	page = 0
+	elvira = false
 	inscribed = has_name
 	copied_crux = has_hand_copy
 	bookmark = has_ribbon
@@ -37,8 +41,14 @@ func open(has_name: bool, has_ribbon: bool, can_compare_lights: bool = false, ha
 	show()
 	queue_redraw()
 
+func open_elvira():
+	page = 0
+	elvira = true
+	show()
+	queue_redraw()
+
 func turn(step: int):
-	page = clampi(page + step, 0, 3 if light_comparison else 2)
+	page = clampi(page + step, 0, 1 if elvira else (3 if light_comparison else 2))
 	queue_redraw()
 
 func title_at(value: String, y: float, font_size: int, tint: Color):
@@ -51,6 +61,12 @@ func _draw():
 	var origin: = (size - PAGE_SIZE * scale_factor) * 0.5
 	draw_set_transform(origin, 0.0, Vector2.ONE * scale_factor)
 	draw_rect(Rect2(Vector2(7, 10), PAGE_SIZE), Color("#0d0e0d"))
+	if elvira:
+		var illustration: Texture2D = ELVIRA_COVER if page == 0 else ELVIRA_ENGRAVING
+		var width := PAGE_SIZE.y * float(illustration.get_width()) / illustration.get_height()
+		draw_texture_rect(illustration, Rect2((PAGE_SIZE.x - width) * 0.5, 0, width, PAGE_SIZE.y), false)
+		title_at("E o clic · abrir   /   Esc · dejar" if page == 0 else "E o clic · guardar el libro", 647, 21, Color("#ebdfc5"))
+		return
 	if page == 0:
 		draw_cover()
 	else:

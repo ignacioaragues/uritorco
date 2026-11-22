@@ -117,18 +117,18 @@ const TOPICS = {
 		]
 	],
 	"regreso": [
-		1, "Ya salí. Me cuesta creer que sea la última vez que vengo por esta huella.",
-		["Cuando llegue a casa voy a abrir la ventana y dejar todo en el bolso.", "Creo que voy a salir a mirar el cielo desde la vereda. Hace mucho que no lo hago."],
+		1, "Voy al museo. Me cuesta creer que sea la última vez que subo por esta huella.",
+		["Todavía no me acostumbré a despedirme de los lugares.", "Creo que voy a salir a mirar el cielo desde la vereda. Hace mucho que no lo hago."],
 		[
 			["Si te olvidaste de algo, yo subo al puesto después."],
 			["Ojalá esté despejado. Si llegás a ver la cruz, pensá que desde acá va a estar para el mismo lado."]
 		]
 	],
 	"ultima_curva": [
-		1, "Si te das vuelta en la bajada, vas a ver el techo del puesto entre los árboles. Yo siempre lo busco desde ahí.",
-		["Voy a sentarme del lado de la sierra.", "Voy a extrañar más que la vista. Vos también me vas a hacer falta."],
+		1, "¿Ya saliste del museo? Elvira me hizo prometer que te iba a mandar hasta ahí. Quería que te llevaras algo.",
+		["Sí. Me lo voy a llevar en la mano, para abrirlo en el viaje.", "Voy a extrañar más que la vista. Vos también me vas a hacer falta."],
 		[
-			["Sentate adelante si hay lugar. De atrás a veces sólo se ve el polvo."],
+			["Hay un asiento junto a la ventana del lado del cerro. De ahí se lee bien hasta que dobla a la ruta."],
 			["A mí también me va a faltar oírte llegar. Hoy dejé la radio prendida un rato antes de que salieras."]
 		]
 	]
@@ -160,7 +160,7 @@ static func farewell_memory(answered: Dictionary) -> String:
 		return "Si volvés al museo, fijate en las fichas de las casas. Me acordé de lo que hablamos por radio."
 	return ""
 
-static func available(stage: int, position: Vector3, bedtime: bool, sighting: bool, answered: Dictionary) -> String:
+static func available(stage: int, position: Vector3, bedtime: bool, sighting: bool, answered: Dictionary, book_taken := false) -> String:
 	var topic := ""
 	match stage:
 		5:
@@ -189,9 +189,9 @@ static func available(stage: int, position: Vector3, bedtime: bool, sighting: bo
 		18:
 			if near(position, Vector3(1.0, 0.0, -10.0), 25.0): topic = "ventana"
 		19:
-			if near(position, Vector3(21.0, 0.0, -3.0), 13.0):
+			if not book_taken and on_ridge(position, 110.0, 90.0):
 				topic = "regreso"
-			elif near(position, Departure.RADIO_STOP, 13.0):
+			elif book_taken and on_ridge(position, Museum.DISTANCE - 26.0, 49.0):
 				topic = "ultima_curva"
 	return topic if not answered.has(topic) else ""
 

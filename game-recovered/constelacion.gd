@@ -7,6 +7,8 @@ const SIDEREAL_HOURS := [13.00854, 13.07425, 13.4028, 14.5856]
 const LATITUDE := -30.75 * PI / 180.0
 const AXIAL_TILT := 23.44 * PI / 180.0
 
+const PAULA_STAR := ["Atria", 16.81, -69.03, 1.91]
+
 const STARS = [
 	["Acrux · Cruz del Sur", 12.443, -63.1, 0.76], ["Mimosa · Cruz del Sur", 12.795, -59.69, 1.25], 
 	["Gacrux · Cruz del Sur", 12.519, -57.11, 1.63], ["Imai · Cruz del Sur", 12.252, -58.75, 2.79], 
@@ -15,7 +17,7 @@ const STARS = [
 	["Antares", 16.49, -26.43, 0.96], ["Espiga", 13.42, -11.16, 0.98], 
 	["Arturo", 14.26, 19.18, -0.05], ["Sirio", 6.75, -16.72, -1.46], 
 	["Fomalhaut", 22.96, -29.62, 1.16], ["Shaula", 17.56, -37.1, 1.62], 
-	["Atria", 16.81, -69.03, 1.91], ["Miaplacidus", 9.22, -69.72, 1.67], 
+	PAULA_STAR, ["Miaplacidus", 9.22, -69.72, 1.67],
 	["Avior", 8.38, -59.51, 1.86], ["Alsephina", 8.75, -54.71, 1.95], 
 	["Regulus", 10.14, 11.97, 1.35], ["Peacock", 20.43, -56.74, 1.94],
 	["Sargas · Escorpio", 17.622, -42.998, 1.87], ["Dschubba · Escorpio", 16.005, -22.622, 2.29],
@@ -67,7 +69,7 @@ static func sun_and_moon(day: int, dusk: float, dark: float) -> Array[Vector3]:
 	var moon_ra := atan2(sin(moon_longitude) * cos(AXIAL_TILT) - tan(tilt) * sin(AXIAL_TILT), cos(moon_longitude))
 	return [horizontal(hour_angle, sun_declination), horizontal(sunset_angle + deg_to_rad(24.0) + sun_ra - moon_ra, moon_declination)]
 
-static func identify(look: Vector3, chapter: int, day: int, moon: Vector3) -> String:
+static func identify(look: Vector3, chapter: int, day: int, moon: Vector3, clipping_read := false) -> String:
 	if moon.y > 0.0 and look.distance_squared_to(moon) < MOON_RADIUS * MOON_RADIUS: return "Luna"
 	var sidereal := sidereal_at(chapter, day)
 	var closest: = cos(deg_to_rad(2.0))
@@ -78,5 +80,5 @@ static func identify(look: Vector3, chapter: int, day: int, moon: Vector3) -> St
 			var similarity := at.dot(look)
 			if at.y > 0.065 and similarity > closest:
 				closest = similarity
-				name = object[0]
+				name = "Atria · La estrella de Paula" if clipping_read and object == PAULA_STAR else object[0]
 	return name

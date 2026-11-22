@@ -10,6 +10,8 @@ uniform vec4 rim_night : source_color = vec4(0.19,0.205,0.30,1.0);
 uniform vec4 catalog[48];
 uniform vec3 planet_dirs[2];
 uniform vec3 galactic_pole;
+uniform vec3 paula_star_dir;
+uniform bool paula_star_visible = false;
 uniform vec3 moon_dir;
 uniform vec3 daylight_dir = vec3(0.69, 0.41, 0.59);
 uniform float moon_radius = 0.057;
@@ -84,6 +86,10 @@ vec3 night_stars(vec3 sight) {
 		points += power * (1.0 - smoothstep(radius * radius * 0.0256, radius * radius, dot(offset, offset)));
 	}
 	glow += vec3(0.90, 0.93, 1.0) * points;
+	if (paula_star_visible) {
+		float atria = length(sight - paula_star_dir);
+		glow += vec3(1.0, 0.72, 0.46) * (0.49 * (1.0 - smoothstep(0.0009, 0.0041, atria)) + 0.12 * exp(-atria * atria * 41000.0));
+	}
 	float jupiter = length(sight - planet_dirs[0]);
 	float saturn = length(sight - planet_dirs[1]);
 	glow += vec3(1.0, 0.91, 0.73) * (1.42 * (1.0 - smoothstep(0.0015, 0.0045, jupiter)) + 0.22 * exp(-jupiter * jupiter * 38000.0));

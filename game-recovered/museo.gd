@@ -9,6 +9,8 @@ const LEGACY_SITE_OFFSET := 9.5
 const HALF_WIDTH := 5.4
 const HALF_DEPTH := 7.0
 const HEIGHT := 2.85
+const ELVIRA_BOOK := "Libro de Elvira"
+const ELVIRA_COVER = preload("res://museo/libro_comechingones.webp")
 const REPLICAS := ["Mortero y mano", "Tortero", "Vasija de cerámica"]
 const STORIES := ["Bastón de Mando", "Vikingos en las sierras", "Luces sobre el cerro"]
 const REPLICA_CAPTIONS := ["Réplica · Molienda", "Réplica · Hilado", "Réplica · Alfarería"]
@@ -106,6 +108,15 @@ static func build(valley):
 		vitrine(valley, c + Vector3(x, 0, -4.37), i)
 		display_panel(valley, c + Vector3(x, 1.67, -6.85), REPLICAS[i], "comechingones", i, 0.0, REPLICA_CAPTIONS[i])
 		display_panel(valley, c + Vector3(x, 1.67, 6.85), STORIES[i], "relatos", i, PI, STORY_CAPTIONS[i])
+
+static func build_elvira_book(valley: Node3D) -> StaticBody3D:
+	var at := center(valley) + Vector3(3.43, 0.54, -0.77)
+	var book := Kit.item(valley, at, ELVIRA_BOOK, Vector3.ZERO, Vector3(0.25, 0.07, 0.37))
+	book.rotation.y = -0.16
+	Kit.block(book, Vector3.ZERO, Vector3(0.23, 0.038, 0.34), Kit.material("c2a775"))
+	Kit.block(book, Vector3(0, -0.025, 0), Vector3(0.247, 0.012, 0.36), Kit.material("654a2f"))
+	Refuge.print_surface(book, Vector3(0, 0.021, 0), Vector2(0.247, 0.36), ELVIRA_COVER).rotation.x = -PI * 0.5
+	return book
 
 static func wall(valley, at: Vector3, size_m: Vector3):
 	var surface: MeshInstance3D = valley.box(at, size_m, "b9aa94", true)
