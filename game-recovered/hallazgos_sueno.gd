@@ -42,24 +42,58 @@ static func loop(parent: Node3D, center: Vector3, radius: float, height: float, 
 		points.append(center + Vector3(radius * cos(a), height * sin(a), 0))
 	beam_path(parent, points, width, material)
 
-static func tesseract(parent: Node3D) -> Node3D:
+static func artifact(parent: Node3D) -> Node3D:
 	var instrument := Node3D.new()
+	instrument.name = "Artefacto"
 	parent.add_child(instrument)
-	var metal := Kit.material("3c5867", false, 0.44)
-	var fibre := luminous("81d9ed", 0.86)
-	for scale in [1.0, 0.61, 0.34]:
-		var e: float = 0.17 * scale
-		var shift := Vector3(0.15, 0.11, -0.08) * (1.0 - float(scale))
+	var metal := Kit.material("364956", false, 0.42)
+	var edge := luminous("5da6b8", 0.46)
+	var fibre := luminous("9adcdf", 0.82)
+	var cap := SphereMesh.new()
+	cap.radius = 0.031
+	cap.height = 0.059
+	cap.radial_segments = 6
+	cap.rings = 2
+	for scale in [1.0, 0.59]:
+		var e: float = 0.218 * scale
+		var shift := Vector3(0.059, 0.045, -0.025) * (1.0 - float(scale))
 		for i in 8:
 			var a := Vector3(-e if i & 1 == 0 else e, -e if i & 2 == 0 else e, -e if i & 4 == 0 else e)
+			Kit.mesh_part(instrument, cap, a + shift, metal).scale = Vector3.ONE * scale
 			for bit in [1, 2, 4]:
 				if i & bit: continue
 				var b := a
 				b[0 if bit == 1 else (1 if bit == 2 else 2)] = e
-				strut(instrument, a + shift, b + shift, 0.011 if scale > 0.7 else 0.008, fibre if (i + bit) % 3 == 0 else metal)
-	for sign_x in [-1.0, 1.0]:
-		strut(instrument, Vector3(sign_x * 0.17, 0.17, 0.17), Vector3(sign_x * 0.103 + 0.058, 0.146, 0.072), 0.007, fibre)
+				strut(instrument, a + shift, b + shift, 0.017 * scale, metal)
+				if (i + bit) % 3 == 0:
+					var seam := Vector3(0.004, 0.009, 0.010)
+					strut(instrument, a.lerp(b, 0.14) + shift + seam, a.lerp(b, 0.79) + shift + seam, 0.008 * scale, edge)
+	var seed := Kit.mesh_part(instrument, cap, Vector3(0.019, 0.023, -0.012), fibre)
+	seed.scale = Vector3(0.96, 1.83, 0.84)
+	seed.rotation.z = 0.51
 	return instrument
+
+static func artifact_glow(parent: Node3D):
+	var halo_colors := Gradient.new()
+	halo_colors.offsets = PackedFloat32Array([0.0, 0.26, 0.64, 1.0])
+	halo_colors.colors = PackedColorArray([Color(0.47, 0.87, 0.95, 0.43), Color(0.39, 0.75, 0.87, 0.20),
+		Color(0.29, 0.63, 0.77, 0.064), Color(0.29, 0.63, 0.77, 0.0)])
+	var falloff := GradientTexture2D.new()
+	falloff.gradient = halo_colors
+	falloff.fill = GradientTexture2D.FILL_RADIAL
+	falloff.fill_from = Vector2(0.5, 0.5)
+	falloff.fill_to = Vector2(0.5, 0.99)
+	var glow := Sprite3D.new()
+	glow.texture = falloff
+	glow.billboard = BaseMaterial3D.BILLBOARD_ENABLED
+	glow.pixel_size = 0.021
+	glow.render_priority = -1
+	parent.add_child(glow)
+	var light := OmniLight3D.new()
+	light.light_color = Color("7ec9dd")
+	light.light_energy = 0.53
+	light.omni_range = 2.4
+	parent.add_child(light)
 
 static func chip(parent: Node3D, outline: PackedVector2Array, top: float, material: Material) -> MeshInstance3D:
 	var mesh := SurfaceTool.new()

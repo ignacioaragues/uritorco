@@ -669,13 +669,6 @@ func arrival_light(amount: float):
 var sky_chapter: = 0
 var sun_direction := Vector3.UP
 var moon_direction := Vector3.DOWN
-var dream_view := Vector3.FORWARD
-
-func update_dream_view(direction: Vector3):
-	if dream_view.is_equal_approx(direction): return
-	dream_view = direction
-	sky_mat.set_shader_parameter("dream_view", direction)
-
 func configure_sky(chapter: int):
 	sky_chapter = chapter
 	var day: int = weather_day if weather_day > 0 else SkyGuide.CHAPTER_DAYS[chapter]

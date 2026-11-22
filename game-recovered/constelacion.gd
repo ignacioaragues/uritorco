@@ -41,6 +41,11 @@ static func horizontal(h: float, dec: float) -> Vector3:
 	var north := sin(dec) * cos(LATITUDE) - cos(dec) * sin(LATITUDE) * cos(h)
 	return Vector3(east, up, -north).normalized()
 
+static func pole_from_crux(sidereal: float) -> Vector3:
+	var gacrux := direction(STARS[2], sidereal)
+	var acrux := direction(STARS[0], sidereal)
+	return acrux.rotated(gacrux.cross(acrux).normalized(), gacrux.angle_to(acrux) * 4.5)
+
 static func sun_and_moon(day: int, dusk: float, dark: float) -> Array[Vector3]:
 	# Aproximación para octubre y noviembre, con luna llena alrededor del Día 7.
 	var sun_longitude := TAU * (273.0 + day - 80.0) / 365.24

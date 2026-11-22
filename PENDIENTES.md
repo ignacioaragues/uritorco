@@ -8,7 +8,7 @@ Al cierre de cada pasada se actualizan los puntos resueltos y se conserva lo que
 
 - [x] Colgar progresivamente los croquis del puente, el cauce, los avistamientos y la cumbre en la pared del puesto. El del puente se puede consultar en el diario enseguida y se cuelga en la tercera jornada, el Día 7.
 - [x] Activar las luces y la cueva la noche anterior a la partida. En «Elegir escena» hay accesos directos a «Última noche · Luces», «Última noche · Cueva» y «Última noche · Los arcos».
-- [x] Mantener tres sueños. En los dos primeros se despierta tras 2:30 de exploración y en el tercero al terminar la conversación de la voz.
+- [x] Mantener los dos primeros sueños de 2:30 de exploración. El tercero ocurre si Hernán sigue las luces y se cierra con la conversación de la voz.
 - [x] Alargar el trayecto del último sueño, retirar los cuerpos flotantes entre los pilares y abrir una conversación al acercarse a cada uno de los cuatro arcos. Los diálogos pasan de una indicación extraña a un recuerdo que Hernán reconoce.
 - [x] Bajar volumen e intensidad de la lluvia. Las gotas caen dentro del paisaje y se generan también cuando Hernán está bajo techo.
 - [x] Mostrar la lectura real de la regla con el cauce crecido. La regla marcó 78 centímetros en la prueba del Día 36.
@@ -52,6 +52,15 @@ Al cierre de cada pasada se actualizan los puntos resueltos y se conserva lo que
 - [x] Afinar el arte del prólogo. La huella tiene distintos tonos de tierra y ripio, con piedras y pastos agrupados en los márgenes. La parada tiene chapas remachadas y el puente, tablones separados con clavos visibles. La cuerda pasa por delante de la laja y por encima del borde hasta el anclaje. La trepada queda al atardecer y la noche entra en el tramo de la linterna.
 - [x] Darles materiales y siluetas distintas a los tres sueños. El primero tiene placas azules fracturadas, el segundo terrazas cobrizas y el tercero crestas de obsidiana y arcos erosionados. Las formaciones cercanas son sólidas y dejan pasos abiertos hacia los seis hallazgos.
 - [x] Conectar las lajas con la bajada al cauce y abrir un atajo del este a la vuelta del mollar. Las dos huellas están señalizadas y se dibujan en la hoja local, centrada en el refugio. Se recorrieron los enlaces con el mapa de mano abierto.
+
+## Pasada del Sector 08 y los sueños
+
+- Después del avistamiento, Hernán le dice a Mara si va a seguir las luces. Si decide quedarse, puede acostarse y llegar al Día 41 sin el último sueño. El museo y la despedida siguen disponibles.
+- La entrada tiene lajas superpuestas, ripio y matas de paja en las orillas. La chapa «SECTOR 08» es de esmalte gastado, con cuatro tornillos y dos flejes contra la roca. Hernán la lee por radio y Mara le pide que espere. Las dos respuestas de Hernán llevan a entrar. En el pozo, mira hacia la pared y baja de espaldas con S. La cuerda se corta antes del fondo y aterriza antes de volver a hablar.
+- Mara conoce la cueva a través de lo que Hernán le va contando. Pregunta por el cable después de que él describe el receptor. En el túnel, oye repetido el «¿me copiás?» de Hernán antes de la pérdida de señal. Al volver al puesto comparan lo que oyeron.
+- Misterio se funde con Cosmic al salir. Con E, el cielo dibuja la Cruz del Sur y prolonga el eje de Gacrux a Acrux hasta una aproximación al polo sur celeste. El destello queda en ese azimut y Cosmic sigue sonando durante el regreso.
+- El artefacto flota y gira cerca del inicio del segundo sueño. También se puede encontrar en el tercero si Hernán todavía no lo recogió. Hay que acercarse y mirarlo para tomarlo con E. Para orientar hacia los arcos usa sobre todo el brillo. Suena un pulso breve cuando se encuentra el rumbo y se vuelve a buscar.
+- Saturno conserva su rumbo y su tamaño angular al girar la cámara. Los anillos tienen sombras y bordes más difusos. El globo tiene un lado en penumbra y bandas de menor contraste.
 
 ## Pasada del tamaño de la luna
 
@@ -114,7 +123,7 @@ Al cierre de cada pasada se actualizan los puntos resueltos y se conserva lo que
 
 - **Última noche.** La vuelta de la pasarela sigue en el Día 36. Una cartela sitúa la última noche en el Día 40. La radio empieza en el patio y dos luces aparecen sobre los molles durante la charla. Seguirlas lleva a la entrada exterior de la cueva. Desde «Elegir escena» se puede entrar en «Última noche · Luces» o directamente en «Última noche · Cueva».
 - **Cueva.** La boca irregular lleva a 148 metros de galerías con techo continuo. El borde del pozo bloquea el paso a pie y la linterna revela el anclaje. La cuerda cede después del descenso. Hernán se lo cuenta a Mara por radio y la galería rodea un derrumbe hasta la estación. Un recodo guarda la piedra con runas. Las cuatro páginas del cuaderno sitúan los avistamientos entre 1975 y 1976. Después del parte por radio se abre el túnel de salida y se va perdiendo la señal.
-- **Luz y música.** La luz ambiente baja gradualmente a medida que Hernán entra. La linterna concentra el haz sobre las superficies y deja el cielo y los bordes de la imagen con su luz natural. Misterio acompaña el interior y se funde en la salida. Cosmic entra al reconocer la Cruz del Sur.
+- **Luz y música.** La luz ambiente baja gradualmente a medida que Hernán entra. La linterna concentra el haz sobre las superficies y deja el cielo y los bordes de la imagen con su luz natural. Misterio acompaña el interior y al cruzar la salida se funde con Cosmic.
 - **Regreso.** El monte oscuro se prolonga alrededor del túnel. M queda sin mapa, B hace que Hernán advierta que perdió la brújula y R devuelve estática. Reconocer la Cruz del Sur con E revela un destello al sur. Al acercarse, un fundido gradual deja a Hernán en la puerta. La llamada a Mara confirma el regreso y la pérdida de la brújula. Quedan en hablar al día siguiente. Después puede acostarse y entrar al último sueño.
 - **Trepada del prólogo.** La laja llega a 2,62 metros. La cuerda sigue la cara de la piedra hasta un anclaje por encima del borde. Se comprobó la trepada con E y W y el paso al recuerdo.
 - **Prólogo y llegada.** El fundido empieza en negro transparente. Tab se enseña en la microescena que sigue al puente. Hernán ve Saturno por primera vez con su padre, que menciona Titán como posibilidad. Los sueños muestran un planeta con anillos. La música del prólogo baja al abrir la puerta y queda una pausa antes del primer llamado de Mara. Se levanta la radio, se responde y después se deja la mochila. La lámpara queda más adentro y los croquis empiezan a colgarse a partir de la jornada siguiente.

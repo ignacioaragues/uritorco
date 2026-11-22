@@ -31,6 +31,7 @@ var rope_steps := 0
 var rope_heading := 0.0
 var rope_entry_pitch := 0.0
 var rope_descending := false
+var rope_falling := false
 var ledge_elapsed := 0.0
 var look_speed: = 0.002
 var step_distance := 0.0
@@ -76,7 +77,7 @@ func _ready():
 	ray.add_exception(self)
 
 func _unhandled_input(event):
-	if Input.mouse_mode == Input.MOUSE_MODE_CAPTURED and (walking or looking_only) and climb_points.is_empty() and event is InputEventMouseMotion:
+	if Input.mouse_mode == Input.MOUSE_MODE_CAPTURED and (walking or looking_only) and climb_points.is_empty() and not rope_falling and event is InputEventMouseMotion:
 		if gaze_shift and gaze_shift.is_running(): gaze_shift.kill()
 		rotate_y( - event.relative.x * look_speed)
 		camera.rotation.x = clampf(camera.rotation.x - event.relative.y * look_speed, -1.45, 1.45)
@@ -159,13 +160,21 @@ func finish_climb():
 	camera.rotation.z = 0.0
 	camera.rotation.x = rope_entry_pitch
 
+func drop_from_rope():
+	climb_points.clear()
+	finish_climb()
+	rope_falling = true
+	camera.rotation.x = -0.34
+	camera.rotation.z = 0.18
+	velocity.y = -2.3
+
 func _physics_process(delta):
 	if not climb_points.is_empty():
 		step_distance = 0.0
 		if not walking: return
 		var speed := 2.2
 		if rope_climbing:
-			var moving := Input.is_physical_key_pressed(KEY_W)
+			var moving := Input.is_physical_key_pressed(KEY_S if rope_descending else KEY_W)
 			var pulling := climb_points.size() < rope_steps and climb_points.size() > 2
 			if moving and pulling: rope_phase += delta * TAU / 0.71
 			var push := pow(maxf(0.0, sin(rope_phase - 0.46)), 1.45)
@@ -194,11 +203,16 @@ func _physics_process(delta):
 			if climb_points.is_empty(): finish_climb()
 		return
 	var direction: = Vector3.ZERO
-	if walking:
+	if walking and not rope_falling:
 		direction = Vector3(int(Input.is_physical_key_pressed(KEY_D)) - int(Input.is_physical_key_pressed(KEY_A)), 0, int(Input.is_physical_key_pressed(KEY_S)) - int(Input.is_physical_key_pressed(KEY_W)))
 	direction = transform.basis * direction.normalized()
 	var resistance := smoothstep(0.045, 1.60, water_depth)
 	var speed := lerpf(3.4, 1.42, resistance)
+	if rope_falling:
+		direction = transform.basis.z
+		speed = 1.0
+		camera.rotation.x = move_toward(camera.rotation.x, -0.61, delta * 1.85)
+		camera.rotation.z = move_toward(camera.rotation.z, 0.24, delta * 0.8)
 	velocity.x = direction.x * speed
 	velocity.z = direction.z * speed
 	velocity.y -= (3.8 if low_gravity else lerpf(16.0, 10.0, resistance)) * delta
@@ -206,6 +220,11 @@ func _physics_process(delta):
 	var was_grounded := is_on_floor()
 	var fall_speed := -velocity.y
 	move_and_slide()
+	if rope_falling and is_on_floor():
+		rope_falling = false
+		var recover := create_tween().set_parallel().set_trans(Tween.TRANS_SINE)
+		recover.tween_property(camera, "rotation:z", 0.0, 0.38)
+		recover.tween_property(camera, "rotation:x", -0.10, 0.38)
 	if intro_center != Vector3.ZERO:
 		var local: = (position - intro_center).rotated(Vector3.UP, - intro_heading)
 		var bounds := dream_bounds if low_gravity else scene_bounds

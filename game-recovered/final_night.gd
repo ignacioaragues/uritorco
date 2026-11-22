@@ -2,6 +2,7 @@ extends RefCounted
 
 const Alien = preload("res://hallazgos_sueno.gd")
 const Kit = preload("res://equipo_campo.gd")
+const Flora = preload("res://flora.gd")
 const CaveRunes = preload("res://piedra_cueva.gd")
 const Structures = preload("res://estructuras.gd")
 const Stone = preload("res://piedra_serrana.gd")
@@ -32,6 +33,7 @@ const ENTRY := Vector3(0, 0.08, 15)
 const MOUTH_Z := 0.0
 const DROP_Z := -14.4
 const LIP := Vector3(0, 0.09, -13.45)
+const ROPE_BREAK_Y := -3.12
 const LOWER_FLOOR := -6.1
 const CHECKPOINT := Vector3(0, LOWER_FLOOR + 0.08, -17.0)
 const STATION := Vector3(-4.6, -6.0, -69.0)
@@ -39,6 +41,9 @@ const TUNNEL_Z := -77.0
 const EXIT_Z := -148.0
 const RETURN_START := Vector3(0, 0.08, EXIT_Z - 1.0)
 const HEADING := PI
+const ENTRY_PLATE := "Chapa del sector"
+const ENTRY_PLATE_POSITION := Vector3(2.97, 1.31, 3.98)
+const ENTRY_LIMIT_Z := 1.45
 const BOUNDS := Rect2(-31, EXIT_Z - 6, 62, 192)
 const RUNES_FOOT := Vector3(12.5, -6.27, -46.4)
 # Cada sección define distancia, eje, piso, semiancho y altura.
@@ -118,6 +123,7 @@ static func build_cave(v) -> Node3D:
 	build_cave_approach(v)
 	build_portal(v, rings[0], 1.0)
 	build_portal(v, rings[-1], -1.0)
+	build_entry_plate(v)
 	for light_data in [[Vector3(-3.1, 5.3, 8.7), 1.16, 20.0], [Vector3(0.2, 1.93, EXIT_Z - 1.0), 0.51, 17.0]]:
 		var light := OmniLight3D.new()
 		light.light_color = Color("#a5b4d1")
@@ -216,31 +222,89 @@ static func dress_entrance(v):
 	var rng := RandomNumberGenerator.new()
 	rng.seed = 7149
 	for ledge in [
-		[Vector3(-4.37, -0.25, 2.40), Vector3(3.1, 2.68, 2.78), -0.39],
-		[Vector3(4.29, -0.19, 2.66), Vector3(3.39, 2.44, 2.59), 0.28],
-		[Vector3(-3.41, 1.56, 2.43), Vector3(2.17, 1.18, 1.92), -0.44],
-		[Vector3(2.98, 2.05, 2.41), Vector3(2.37, 0.96, 2.84), 0.31],
-		[Vector3(-0.89, 2.91, 2.15), Vector3(3.84, 0.76, 2.72), -0.17],
-		[Vector3(1.88, 2.81, 1.80), Vector3(3.36, 0.94, 2.23), 0.19],
-		[Vector3(-1.22, 3.64, 1.87), Vector3(4.17, 0.76, 2.30), -0.31],
+		[Vector3(-4.44, -0.25, 2.42), Vector3(3.34, 2.65, 3.04), -0.39],
+		[Vector3(4.38, -0.19, 2.65), Vector3(3.61, 2.53, 3.12), 0.28],
+		[Vector3(-3.85, 0.43, 2.67), Vector3(2.61, 0.58, 2.72), -0.34],
+		[Vector3(-3.64, 1.37, 2.52), Vector3(2.63, 0.69, 2.58), -0.40],
+		[Vector3(3.76, 0.65, 2.84), Vector3(2.61, 0.43, 2.73), 0.29],
+		[Vector3(3.42, 1.72, 2.55), Vector3(2.72, 0.66, 2.86), 0.25],
+		[Vector3(2.39, 2.27, 2.29), Vector3(2.96, 0.60, 2.80), 0.27],
+		[Vector3(-1.17, 2.78, 2.05), Vector3(4.30, 0.58, 2.64), -0.18],
+		[Vector3(0.73, 3.08, 2.12), Vector3(4.50, 0.51, 2.14), 0.04],
+		[Vector3(-1.42, 3.56, 1.77), Vector3(5.14, 0.66, 2.37), -0.26],
 	]:
 		var foot: Vector3 = CAVE + ledge[0]
-		var fragment := Stone.fragment(faces, foot, ledge[1], ledge[2], rng)
+		var fragment := Stone.fragment(faces, foot, ledge[1], ledge[2], rng, Callable(), Stone.LAJA_PROFILE)
 		Stone.solid(v, foot, fragment, "Laja de la boca")
+	var plate_bed := CAVE + ENTRY_PLATE_POSITION + Vector3(0.04, -0.58, -0.43)
+	var apron := Stone.fragment(faces, plate_bed, Vector3(1.25, 0.99, 0.81), -0.16, rng, Callable(), Stone.OUTCROP_PROFILE)
+	Stone.solid(v, plate_bed, apron, "Laja de la chapa")
+	var grass: Array[Vector4] = []
+	var tussocks: Array[Vector4] = []
 	for side in [-1.0, 1.0]:
-		for i in 19:
-			var foot := CAVE + Vector3(side * rng.randf_range(1.55, 4.8), -0.035, rng.randf_range(0.55, 5.9))
-			var size_m := rng.randf_range(0.12, 0.69)
-			Stone.fragment(faces, foot, Vector3(1.26, 0.52, 0.89) * size_m, rng.randf() * TAU, rng)
+		for i in 39:
+			var foot := CAVE + Vector3(side * rng.randf_range(1.9, 5.2), -0.026, rng.randf_range(1.1, 9.4))
+			var size_m := rng.randf_range(0.08, 0.62)
+			Stone.fragment(faces, foot, Vector3(1.27, 0.36, 0.79) * size_m, rng.randf() * TAU, rng, Callable(), Stone.LAJA_PROFILE)
+		for i in 13:
+			var x: float = side * rng.randf_range(3.1, 5.15)
+			var z := rng.randf_range(4.25, 12.1)
+			var height := cave_approach_ground(x, z).y
+			var blades := Vector4(CAVE.x + x, CAVE.y + height - 0.018, CAVE.z + z, rng.randf_range(0.39, 0.74))
+			grass.append(blades)
+			if i % 3 == 0: tussocks.append(blades)
+	for i in 47:
+		var z := rng.randf_range(2.4, 11.4)
+		var x := rng.randfn(0.21, 0.76)
+		var size_m := rng.randf_range(0.022, 0.095)
+		Stone.fragment(faces, CAVE + Vector3(x, -0.007, z), Vector3(1.42, 0.46, 0.86) * size_m, rng.randf() * TAU, rng)
 	Stone.finish(v, faces, "Lajas y derrubios de la boca")
+	Flora.grass_batch(v, grass)
+	Flora.herb_batch(v, tussocks, Flora.Herb.PAJA)
 
 static func descent_route() -> Array[Vector3]:
 	var points: Array[Vector3] = [LIP, Vector3(0, 0.12, DROP_Z - 0.57)]
-	for step in 8:
-		points.append(Vector3(0, lerpf(0.12, LOWER_FLOOR + 0.09, (step + 1) / 8.0), DROP_Z - 0.62))
-	points.append(CHECKPOINT)
+	for step in 5:
+		points.append(Vector3(0, lerpf(0.12, ROPE_BREAK_Y - 0.08, (step + 1) / 5.0), DROP_Z - 0.62))
 	for i in points.size(): points[i] = cave_point(points[i])
 	return points
+
+static func build_entry_plate(parent: Node3D):
+	var plate := Kit.item(parent, CAVE + ENTRY_PLATE_POSITION, ENTRY_PLATE, Vector3.ZERO, Vector3(0.68, 0.40, 0.10))
+	plate.collision_layer = 2
+	plate.rotation = Vector3(0.06, -0.13, -0.048)
+	var rust := Kit.material("554139", false, 0.88)
+	var bolts := Kit.material("8b7c5d", false, 0.60)
+	var edge := Kit.material("9b9575", false, 0.75)
+	var enamel := ShaderMaterial.new()
+	enamel.shader = preload("res://chapa_sector.gdshader")
+	for x in [-0.28, 0.28]:
+		Kit.block(plate, Vector3(x, 0, -0.080), Vector3(0.058, 0.444, 0.12), rust)
+		for y in [-0.139, 0.139]:
+			var washer := Kit.cylinder(plate, Vector3(x, y, 0.022), 0.022, 0.022, 0.008, rust)
+			washer.rotation.x = PI / 2.0
+			var screw := Kit.cylinder(plate, Vector3(x, y, 0.029), 0.012, 0.010, 0.016, bolts)
+			screw.rotation.x = PI / 2.0
+			Kit.block(plate, Vector3(x, y, 0.038), Vector3(0.010, 0.0026, 0.001), rust).rotation.z = x * 4.0 + y * 2.1
+	Kit.block(plate, Vector3.ZERO, Vector3(0.64, 0.35, 0.028), enamel)
+	for y in [-0.153, 0.153]:
+		for x in [-0.147, 0.143]:
+			Kit.block(plate, Vector3(x, y, 0.0145), Vector3(0.239, 0.004, 0.001), edge)
+	for x in [-0.301, 0.301]:
+		Kit.block(plate, Vector3(x, 0, 0.0145), Vector3(0.004, 0.202, 0.001), edge)
+	stencil_text(plate, "S E C T O R", 45, 0.093, Color("c5bd9c"))
+	stencil_text(plate, "08", 111, -0.044, Color("c6bd9e"))
+
+static func stencil_text(parent: Node3D, text: String, font_size: int, height: float, tint: Color):
+	var stencil := Label3D.new()
+	stencil.text = text
+	stencil.font_size = font_size
+	stencil.pixel_size = 0.0015
+	stencil.outline_size = 0
+	stencil.shaded = true
+	stencil.modulate = tint
+	parent.add_child(stencil)
+	stencil.position = Vector3(0, height, 0.0155)
 
 static func dress_cave(v):
 	var anchor := Vector3(-0.04, 0.24, -13.1)
@@ -322,13 +386,14 @@ static func build_station(v):
 		wire.append(CAVE + gallery_center(z) + Vector3(-1.17, 0.064, 0))
 	Kit.cord(v, wire, 0.032, Kit.material("77614b"))
 
+static func cave_approach_ground(x: float, z: float) -> Vector3:
+	var banks := smoothstep(4.5, 23.0, absf(x))
+	var rise := (7.7 + 3.3 * sin(z * 0.094 + x * 0.13)) * banks * smoothstep(0.0, 8.0, z)
+	rise += 13.0 * smoothstep(22.0, 61.0, z)
+	return Vector3(x, rise, z)
+
 static func build_cave_approach(v):
 	var levels := Stone.surface()
-	var ground_at := func(x: float, z: float) -> Vector3:
-		var banks := smoothstep(4.5, 23.0, absf(x))
-		var rise := (7.7 + 3.3 * sin(z * 0.094 + x * 0.13)) * banks * smoothstep(0.0, 8.0, z)
-		rise += 13.0 * smoothstep(22.0, 61.0, z)
-		return Vector3(x, rise, z)
 	for row in 27:
 		var z := row * 3.0
 		for column in 50:
@@ -336,7 +401,7 @@ static func build_cave_approach(v):
 			for offset in [Vector2.ZERO, Vector2.RIGHT * 3, Vector2.DOWN * 3, Vector2.RIGHT * 3,
 					Vector2.ONE * 3, Vector2.DOWN * 3]:
 				levels.set_color(Color("#716854").lightened(0.034 * sin(x * 0.31 + z * 0.35)))
-				levels.add_vertex(ground_at.call(x + offset.x, z + offset.y))
+				levels.add_vertex(cave_approach_ground(x + offset.x, z + offset.y))
 	var ground := Stone.finish(v, levels, "Quebrada de la entrada")
 	ground.position = CAVE
 	ground.create_trimesh_collision()
@@ -347,7 +412,7 @@ static func build_cave_approach(v):
 		for i in 13:
 			var x: float = side * rng.randf_range(5.3, 21.8)
 			var z := rng.randf_range(3.9, 29.0)
-			var foot: Vector3 = ground_at.call(x, z)
+			var foot := cave_approach_ground(x, z)
 			var size_m := rng.randf_range(1.2, 3.55)
 			var shape := Stone.fragment(scree, CAVE + foot - Vector3.UP * 0.12,
 				Vector3(1.5, 0.80, 1.08) * size_m, rng.randf() * TAU, rng)

@@ -16,7 +16,8 @@ uniform float moon_radius = 0.083;
 uniform float daylight_moon = 1.0;
 uniform float other_world = 0.0;
 uniform int dream_style = 1;
-uniform vec3 dream_view = vec3(0.0, 0.0, -1.0);
+uniform float crux_trace : hint_range(0.0, 1.0) = 0.0;
+uniform vec3 crux_pole = vec3(0.0, 0.51, 0.86);
 uniform float cloud_cover = 0.0;
 uniform float cloud_pattern = 0.0;
 uniform vec2 cloud_drift = vec2(0.0);
@@ -104,24 +105,11 @@ vec3 disc(vec3 sight, vec3 center, vec3 light, float radius, vec3 tint, vec3 bac
 	return mix(backdrop, tint * (0.065 + lit * maria), edge * opacity * mix(lit, 1.0, shadow));
 }
 
-vec3 ringed_world(vec3 sight, vec3 backdrop, bool compensate_projection) {
+vec3 ringed_world(vec3 sight, vec3 backdrop) {
 	vec3 center = normalize(vec3(0.35, 0.48, -1.0));
 	if (dot(sight, center) < 0.994) return backdrop;
-	if (compensate_projection) {
-		// Compensar la ampliación de la cámara en los bordes sin mover el centro celeste.
-		float incidence = dot(center, dream_view);
-		vec3 radial = dream_view - center * incidence;
-		if (dot(radial, radial) > 0.00001) {
-			radial = normalize(radial);
-			float perspective = max(0.53, incidence);
-			vec3 offset = sight / dot(sight, center) - center;
-			vec3 along = radial * dot(radial, offset);
-			sight = normalize(center + (offset - along) / perspective + along / (perspective * perspective));
-		}
-	}
-
-	vec3 planet = center * 28.0;
-	vec3 light = normalize(vec3(-0.63, 0.46, 0.76));
+	vec3 planet = center * 31.0;
+	vec3 light = normalize(vec3(-0.76, 0.35, 0.49));
 	vec3 east = normalize(cross(center, vec3(0.0, 1.0, 0.0)));
 	vec3 north = cross(east, center);
 	vec3 axis = normalize(north * 0.96 + east * 0.24 - center * 0.24);
@@ -138,32 +126,53 @@ vec3 ringed_world(vec3 sight, vec3 backdrop, bool compensate_projection) {
 	float ring_depth = dot(planet, axis) / min(-0.025, dot(sight, axis));
 	vec3 ring_sample = sight * ring_depth - planet;
 	float orbit = length(ring_sample);
-	float belt = smoothstep(1.24, 1.47, orbit) * (1.0 - smoothstep(2.23, 2.29, orbit));
+	float belt = smoothstep(1.28, 1.47, orbit) * (1.0 - smoothstep(2.22, 2.32, orbit));
 	float division = 1.0 - 0.85 * (1.0 - smoothstep(0.019, 0.063, abs(orbit - 1.94)));
 	float texture = 0.81 + 0.14 * sin(orbit * 23.0) + 0.045 * sin(orbit * 87.0);
 	float shade = dot(ring_sample, light) < 0.0 ? smoothstep(0.92, 1.07, length(cross(ring_sample, light))) : 1.0;
-	vec3 dust = mix(vec3(0.67, 0.58, 0.46), vec3(0.80, 0.75, 0.65), smoothstep(1.68, 1.97, orbit));
+	vec3 dust = mix(vec3(0.45, 0.42, 0.39), vec3(0.65, 0.59, 0.49), smoothstep(1.68, 1.97, orbit));
 	dust *= texture * mix(0.17, 1.0, shade);
-	float ring_cover = belt * division * 0.93;
+	float ring_cover = belt * division * mix(0.42, 0.77, smoothstep(1.47, 1.78, orbit));
 	if (ring_depth >= globe_depth) backdrop = mix(backdrop, dust, ring_cover);
 	if (planet_cover > 0.0) {
 		vec3 globe = sight * globe_depth - planet;
 		vec3 normal = normalize(globe + axis * dot(globe, axis) * 0.204);
 		float latitude = dot(globe, axis);
-		float bands = 0.46 + 0.26 * sin(latitude * 15.4 + 1.4) + 0.15 * sin(latitude * 31.7);
-		bands += 0.11 * cloud_texture(vec2(dot(globe, east) * 6.0, latitude * 45.0));
-		vec3 vapor = mix(vec3(0.63, 0.45, 0.32), vec3(0.93, 0.81, 0.60), bands);
-		vapor = mix(vapor, vec3(0.56, 0.53, 0.48), smoothstep(0.51, 0.94, abs(latitude)) * 0.83);
+		float bands = 0.51 + 0.17 * sin(latitude * 15.4 + 1.4) + 0.11 * sin(latitude * 31.7);
+		bands += 0.15 * cloud_texture(vec2(dot(globe, east) * 4.0, latitude * 34.0));
+		vec3 vapor = mix(vec3(0.55, 0.40, 0.30), vec3(0.88, 0.77, 0.60), bands);
+		vapor = mix(vapor, vec3(0.53, 0.52, 0.48), smoothstep(0.51, 0.94, abs(latitude)) * 0.83);
 		float light_height = dot(light, axis);
 		float shadow_depth = -dot(globe, axis) / max(0.035, light_height);
 		float shadow_orbit = length(globe + light * shadow_depth);
 		float ring_shadow = smoothstep(1.30, 1.52, shadow_orbit) * (1.0 - smoothstep(2.20, 2.29, shadow_orbit)) * step(0.0, shadow_depth);
-		float phase = smoothstep(-0.10, 0.55, dot(normal, light));
-		float limb = 0.76 + 0.24 * sqrt(clamp(dot(normal, -sight), 0.0, 1.0));
-		backdrop = mix(backdrop, vapor * limb * (0.11 + 0.91 * phase * (1.0 - 0.41 * ring_shadow)), planet_cover);
+		float phase = pow(max(0.0, dot(normal, light)), 0.62);
+		float limb = 0.57 + 0.43 * sqrt(clamp(dot(normal, -sight), 0.0, 1.0));
+		vec3 ambient = backdrop * 0.64 + vec3(0.017, 0.013, 0.014);
+		backdrop = mix(backdrop, ambient + vapor * limb * phase * (0.83 - 0.38 * ring_shadow), planet_cover);
 	}
 	if (ring_depth < globe_depth) backdrop = mix(backdrop, dust, ring_cover);
 	return backdrop;
+}
+
+float crux_line(vec3 sight, vec3 from, vec3 to) {
+	vec3 edge = to - from;
+	float amount = clamp(dot(sight - from, edge) / max(0.00001, dot(edge, edge)), 0.0, 1.0);
+	float distance = length(sight - normalize(mix(from, to, amount)));
+	return 0.75 * (1.0 - smoothstep(0.0006, 0.0026, distance)) + 0.25 * exp(-distance * distance * 81000.0);
+}
+
+vec3 crux_ink(vec3 sight) {
+	vec3 acrux = catalog[0].xyz;
+	vec3 gacrux = catalog[2].xyz;
+	float arms = max(crux_line(sight, acrux, gacrux), crux_line(sight, catalog[1].xyz, catalog[3].xyz));
+	float fade = smoothstep(0.0, 0.29, crux_trace);
+	float length_now = smoothstep(0.20, 0.98, crux_trace);
+	float extension = 0.47 * crux_line(sight, acrux, normalize(mix(acrux, crux_pole, length_now)));
+	float projected = dot(sight - acrux, crux_pole - acrux) / max(0.001, dot(crux_pole - acrux, crux_pole - acrux));
+	extension *= smoothstep(0.15, 0.40, fract(projected * 24.0)) * length_now;
+	float pole = exp(-dot(sight - crux_pole, sight - crux_pole) * 54000.0) * smoothstep(0.89, 1.0, crux_trace);
+	return vec3(0.52, 0.76, 0.98) * (arms * fade + extension + pole * 0.75);
 }
 
 void sky(){
@@ -199,7 +208,7 @@ void sky(){
 	}
 	vec3 alien = mix(alien_rim, alien_high, smoothstep(0.0, 0.62, height));
 	if (other_world > 0.0) alien += vec3(0.66,0.86,0.95)*star_field(EYEDIR.zxy);
-	if (other_world > 0.0) alien = ringed_world(EYEDIR, alien, !AT_CUBEMAP_PASS);
+	if (other_world > 0.0) alien = ringed_world(EYEDIR, alien);
 	alien=disc(EYEDIR,normalize(vec3(0.08,0.66,-1.0)),normalize(vec3(-1.0,0.6,0.4)),0.016,vec3(0.65,0.83,0.91),alien,1.0,1.0);
 	vec2 shift = vec2(cloud_pattern * 0.31, cloud_pattern * 0.59) + cloud_drift;
 	vec2 alto = EYEDIR.xz * vec2(3.5, 7.0) / (height + 0.47) + shift;
@@ -233,5 +242,6 @@ void sky(){
 		earth = mix(earth, dark * (0.79 + 0.31 * underside), overcast * 0.97);
 	}
 	vec3 earthly_night = mix(dark, earth, smoothstep(0.0, 0.065, height));
+	if (crux_trace > 0.0 && !AT_CUBEMAP_PASS) earthly_night += crux_ink(EYEDIR);
 	COLOR = mix(daytime, mix(earthly_night, alien, other_world), nightfall);
 }
