@@ -36,7 +36,6 @@ var flag_material: ShaderMaterial
 var sun: = DirectionalLight3D.new()
 var beacon := Sprite3D.new()
 var second_beacon := Sprite3D.new()
-var return_beacon := Sprite3D.new()
 var sky_mat: = ShaderMaterial.new()
 var window_glass := ShaderMaterial.new()
 var curtains_open := true
@@ -144,6 +143,7 @@ func _ready():
 	var fascia := box(Vector3(0, 2.825, -0.52), Vector3(7.27, 0.20, 0.092), "665648")
 	fascia.material_override = Refuge.wood("665648", true)
 	desk_note = Refuge.desk(self, desk_drawers)
+	spare_compass = Refuge.spare_compass(desk_drawers["Cajón derecho"])
 	desk_radio = FieldKit.desk_radio(self, Vector3(2.64, 0.90, 2.42))
 	desk_radio.rotation.y = PI + 0.24
 	desk_portable = desk_radio.get_node("Transceptor")
@@ -169,16 +169,14 @@ func _ready():
 	dress_birds()
 	preload("res://museo.gd").build(self)
 	Exploration.build(self)
+	preload("res://bordes.gd").dress(self)
 	nature.name = "Flora y fauna"
 	add_child(nature)
 
-func open_mara_path():
+func open_mara_path(at: Vector3):
 	if mara_path_open: return
 	mara_path_open = true
-	route.ground_material.set_shader_parameter("mara_track", true)
-	LastNight.build_door(self)
-	var fork := LastNight.door_approach(0.22)
-	route.signpost(fork + Vector3(0.0, 0, -2.4), "Camino vecinal →", -1.72, true)
+	LastNight.build_door(self, at)
 
 func update_desk_radio(held: bool):
 	if desk_portable.visible != held: return
@@ -275,15 +273,11 @@ func build_sighting_lights():
 	texture.fill = GradientTexture2D.FILL_RADIAL
 	texture.fill_from = Vector2(0.5, 0.5)
 	texture.fill_to = Vector2(1.0, 0.5)
-	var line: GradientTexture2D = texture.duplicate()
-	line.width = 152
-	line.height = 22
-	for light in [beacon, second_beacon, return_beacon]:
+	for light in [beacon, second_beacon]:
 		light.texture = texture
 		light.billboard = BaseMaterial3D.BILLBOARD_ENABLED
 		add_child(light)
 		light.hide()
-	return_beacon.texture = line
 
 func transition() -> Tween:
 	if lighting and lighting.is_valid():
@@ -555,16 +549,18 @@ func update_calendar(day: int):
 		calendar_dates[cell].modulate = Color("#893f34") if number == date else Color("#473c32")
 		calendar_strokes[cell].visible = number < date
 
-var wall_postcard_added := false
+var wall_postcard: StaticBody3D
+var packed_bag: StaticBody3D
+var drawings_hit: StaticBody3D
+var staged_book: StaticBody3D
 var wall_sketches: Dictionary = {}
 var mara_stone: StaticBody3D
 var mara_wine: StaticBody3D
 var refuge_shelf: MeshInstance3D
 
 func update_shelter_details(day: int, stone_sent: bool, wine_sent: bool):
-	if day >= 27 and not wall_postcard_added:
-		wall_postcard_added = true
-		Refuge.postcard(self)
+	if day >= 27 and not is_instance_valid(wall_postcard):
+		wall_postcard = Refuge.postcard(self)
 	if day >= 7 and stone_sent and not is_instance_valid(mara_stone):
 		mara_stone = Refuge.map_weight(self)
 	if day >= 36 and wine_sent and not is_instance_valid(mara_wine):
@@ -652,7 +648,25 @@ func unpack_book(ribbon := false):
 	if bag:
 		bag.queue_free()
 		bag = null
-	Refuge.closed_book(self, ribbon)
+	staged_book = Refuge.closed_book(self, ribbon)
+
+func update_packing(packed: Array, packing: bool):
+	if not is_instance_valid(packed_bag) and packing:
+		packed_bag = FieldKit.backpack(self, Vector3(1.56, 0.26, 5.05), "Mochila")
+		packed_bag.rotation = Vector3(-1.32, 0.27, 0.0)
+		packed_bag.collision_layer = 0
+		drawings_hit = FieldKit.item(self, Vector3(0.39, 1.59, 5.805), "Dibujos", Vector3.ZERO, Vector3(1.91, 0.42, 0.080))
+		drawings_hit.collision_mask = 0
+	if not packing: return
+	packed_bag.visible = packed.size() < 4
+	var things := [staged_book, desk_clipping, wall_postcard, drawings_hit]
+	for i in things.size():
+		var thing: StaticBody3D = things[i]
+		if not is_instance_valid(thing): continue
+		thing.visible = not packed.has(i)
+		thing.collision_layer = (2 if i == 3 else 1) if thing.visible else 0
+	for item in wall_sketches.values(): item.visible = not packed.has(3)
+	for item in nature.drawings_on_wall.values(): item.visible = not packed.has(3)
 
 func toggle_door():
 	if door_motion and door_motion.is_running(): return
@@ -775,7 +789,7 @@ func dress_day32():
 	var summit: Vector3 = route.summit_point(1)
 	var descent: Vector3 = route.summit_point(0.94)
 	place_descent_sign(descent, summit - descent, "Bajada · acceso")
-	route.signpost(summit + Vector3.RIGHT * 1.3, "Uritorco · Cumbre", 0.0, false, true)
+	route.signpost(summit + Vector3.RIGHT * 1.3, "Filo · Última pirca", 0.0, false, true)
 	var ground := func(at: Vector3) -> Vector3:
 		return route.surface_point(at.x, route.ORIGIN_Z - at.z)
 	var base: Vector3 = ground.call(summit + Vector3(0.0, 0.0, -0.25))
@@ -809,9 +823,16 @@ func dress_day36():
 var fridge_doors: Dictionary = {}
 var cabinet_doors: Dictionary = {}
 var desk_drawers: Dictionary = {}
+var spare_compass: StaticBody3D
 var yard_hinge: Node3D
 var privy_hinge: Node3D
 var museum_hinge: Node3D
+
+func update_spare_compass(departure_day: bool, taken: bool):
+	var drawer := spare_compass.get_parent()
+	spare_compass.visible = not taken
+	var reachable := not taken and departure_day and bool(drawer.get_meta("open", false)) and not drawer.has_meta("fitting_motion")
+	spare_compass.collision_layer = 2 if reachable else 0
 
 func build_yard_fence():
 	var gate_x: = path_x(-13.0)

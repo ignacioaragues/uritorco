@@ -364,14 +364,14 @@ static func cut_descent(cave: Node3D):
 
 static func build_station(v):
 	var base := CAVE + STATION
-	v.timber(v.box(base + Vector3(0, 0.45, 0), Vector3(1.17, 0.90, 3.27), "63503f", true))
-	v.box(base + Vector3(-0.02, 1.10, -0.56), Vector3(0.76, 0.38, 0.78), "414948", true, "Receptor")
-	for i in 3:
-		v.box(base + Vector3(0.373, 1.10, -0.82 + i * 0.21), Vector3(0.04, 0.075, 0.1), "9c8567")
-	var notebook: MeshInstance3D = v.box(base + Vector3(0.08, 0.93, 0.95),
-		Vector3(0.53, 0.061, 0.68), "9d876a", true, "Cuaderno de observación")
-	notebook.rotation.y = -0.13
-	v.box(base + Vector3(0.08, 0.956, 0.95), Vector3(0.49, 0.011, 0.62), "c6b599").rotation.y = -0.13
+	v.timber(v.box(base + Vector3(0, 0.867, 0), Vector3(1.17, 0.066, 3.27), "63503f", true))
+	for x in [-0.46, 0.46]:
+		for z in [-1.42, 1.42]:
+			v.timber(v.box(base + Vector3(x, 0.43, z), Vector3(0.106, 0.86, 0.106), "514639", true))
+	for z in [-1.43, 1.43]:
+		v.timber(v.box(base + Vector3(0, 0.32, z), Vector3(1.02, 0.096, 0.094), "625045"))
+	build_receiver(v, base + Vector3(-0.02, 1.10, -0.56))
+	build_observation_book(v, base + Vector3(0.08, 0.906, 0.95))
 	var tripod := base + Vector3(7.05, 0.02, -3.6)
 	var head := tripod + Vector3.UP * 1.12
 	for leg in [Vector3(-0.33, 0, 0.23), Vector3(0.33, 0, 0.23), Vector3(0, 0, -0.31)]:
@@ -379,12 +379,62 @@ static func build_station(v):
 		var strut: MeshInstance3D = v.box(foot.lerp(head, 0.5), Vector3(0.052, 0.052, foot.distance_to(head)), "665e51")
 		strut.look_at(head)
 	v.box(head, Vector3(0.31, 0.19, 0.40), "50545a", true)
-	var lamp: MeshInstance3D = v.box(base + Vector3(0.37, 1.20, -0.58), Vector3(0.018, 0.039, 0.069), "a65634")
-	lamp.material_override.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
 	var wire := PackedVector3Array([base + Vector3(-0.10, 1.06, -0.92), base + Vector3(-0.56, 0.14, -1.73)])
 	for z in range(-74, int(EXIT_Z) + 1, -2):
 		wire.append(CAVE + gallery_center(z) + Vector3(-1.17, 0.064, 0))
 	Kit.cord(v, wire, 0.032, Kit.material("77614b"))
+
+static func build_receiver(parent: Node3D, at: Vector3):
+	var receiver := Kit.item(parent, at, "Receptor", Vector3.ZERO, Vector3(0.81, 0.38, 0.78))
+	var case := Kit.material("424844", false, 0.73)
+	var plate := Kit.material("686558", false, 0.61)
+	var trim := Kit.material("242822", false, 0.84)
+	var marks := Kit.material("b3a58a")
+	Kit.block(receiver, Vector3.ZERO, Vector3(0.76, 0.36, 0.78), case)
+	Kit.block(receiver, Vector3(0.38, 0, 0), Vector3(0.027, 0.32, 0.73), plate)
+	Kit.block(receiver, Vector3(0.398, 0.079, -0.072), Vector3(0.019, 0.109, 0.45), trim)
+	Kit.block(receiver, Vector3(0.411, 0.079, -0.072), Vector3(0.007, 0.078, 0.413), Kit.material("b5ab8a"))
+	for i in 17:
+		var z := -0.254 + 0.022 * i
+		Kit.block(receiver, Vector3(0.415, 0.097, z), Vector3(0.003, 0.019 if i % 4 == 0 else 0.009, 0.002), trim)
+	Kit.block(receiver, Vector3(0.417, 0.074, -0.092), Vector3(0.003, 0.072, 0.006), Kit.material("8a4938"))
+	for z in [-0.26, -0.083, 0.108, 0.276]:
+		var radius := 0.059 if z == 0.108 else 0.038
+		var knob := Kit.cylinder(receiver, Vector3(0.422, -0.071, z), radius, radius * 0.9, 0.051, trim)
+		knob.rotation.z = PI / 2.0
+		Kit.block(receiver, Vector3(0.449, -0.052, z), Vector3(0.005, 0.028, 0.006), marks)
+	for i in 9:
+		Kit.block(receiver, Vector3(0.06, 0.181, 0.04 + 0.023 * i), Vector3(0.32, 0.006, 0.009), trim)
+	for z in [-0.35, 0.35]:
+		for y in [-0.137, 0.138]:
+			Kit.cylinder(receiver, Vector3(0.396, y, z), 0.008, 0.008, 0.009, marks).rotation.z = PI / 2.0
+	Kit.block(receiver, Vector3(0.405, 0.087, 0.273), Vector3(0.015, 0.021, 0.031), Kit.material("844b3c", false, 0.57))
+
+static func build_observation_book(parent: Node3D, at: Vector3):
+	var book := Kit.item(parent, at, "Cuaderno de observación", Vector3.UP * 0.038, Vector3(0.53, 0.087, 0.68))
+	book.rotation.y = -0.13
+	var cover := Kit.material("685244", true, 0.86)
+	var paper := Kit.material("c1aa84", true, 0.92)
+	var spine := Kit.material("4c4034", true)
+	for y in [0.004, 0.066]:
+		Kit.block(book, Vector3.UP * y, Vector3(0.52, 0.010, 0.65), cover)
+	Kit.block(book, Vector3.UP * 0.033, Vector3(0.49, 0.054, 0.615), paper)
+	Kit.block(book, Vector3(-0.242, 0.035, 0), Vector3(0.046, 0.072, 0.652), spine)
+	for i in 6:
+		Kit.block(book, Vector3(0.246, 0.014 + i * 0.008, 0.0), Vector3(0.003, 0.0014, 0.58), spine)
+	for i in 3:
+		var corner := Kit.block(book, Vector3(0.21 - 0.16 * i, 0.074, 0.29), Vector3(0.064, 0.003, 0.025), paper)
+		corner.rotation.y = 0.34 * i - 0.48
+	Kit.block(book, Vector3(0.01, 0.074, -0.062), Vector3(0.316, 0.004, 0.24), paper)
+	var label := Label3D.new()
+	label.text = "OBSERVACIONES\nSECTOR 08"
+	label.font_size = 30
+	label.pixel_size = 0.00235
+	label.outline_size = 0
+	label.modulate = Color("#504136")
+	book.add_child(label)
+	label.position = Vector3(0.012, 0.077, -0.057)
+	label.rotation = Vector3(-PI / 2.0, PI, 0)
 
 static func cave_approach_ground(x: float, z: float) -> Vector3:
 	var banks := smoothstep(4.5, 23.0, absf(x))
@@ -419,21 +469,21 @@ static func build_cave_approach(v):
 			Stone.solid(v, CAVE + foot, shape, "Piedra de la quebrada")
 	Stone.finish(v, scree, "Piedras al pie de la boca")
 
-static func build_door(v):
+static func build_door(v, at: Vector3):
 	for side in [-1, 1]:
-		v.plaster(v.box(DOOR + Vector3(side * 1.97, 1.32, -4.8), Vector3(2.65, 2.64, 0.24), "b09d80", true))
-		v.plaster(v.box(DOOR + Vector3(side * 3.22, 1.32, -7.25), Vector3(0.24, 2.64, 5.05), "a9967d", true))
-		var roof: MeshInstance3D = v.box(DOOR + Vector3(side * 1.73, 2.79, -7.25), Vector3(3.71, 0.17, 5.6), "6d5849")
+		v.plaster(v.box(at + Vector3(side * 1.97, 1.32, -4.8), Vector3(2.65, 2.64, 0.24), "b09d80", true))
+		v.plaster(v.box(at + Vector3(side * 3.22, 1.32, -7.25), Vector3(0.24, 2.64, 5.05), "a9967d", true))
+		var roof: MeshInstance3D = v.box(at + Vector3(side * 1.73, 2.79, -7.25), Vector3(3.71, 0.17, 5.6), "6d5849")
 		roof.rotation.z = -side * 0.13
-	v.plaster(v.box(DOOR + Vector3(0, 1.32, -9.78), Vector3(6.52, 2.64, 0.24), "a9967d", true))
-	v.plaster(v.box(DOOR + Vector3(0, 2.46, -4.8), Vector3(1.29, 0.37, 0.24), "b09d80", true))
-	v.timber(v.box(DOOR + Vector3(0, 1.12, -4.74), Vector3(1.29, 2.24, 0.14), "705342", true, "Puerta de Mara"))
-	v.box(DOOR + Vector3(0.42, 1.12, -4.65), Vector3(0.12, 0.065, 0.06), "a08d68")
-	v.box(DOOR + Vector3(0, 0.073, -4.36), Vector3(1.68, 0.146, 0.91), "8d806d", true)
-	v.box(DOOR + Vector3(-2.0, 1.48, -4.655), Vector3(1.24, 0.91, 0.07), "695744")
-	v.box(DOOR + Vector3(-2.0, 1.48, -4.608), Vector3(1.09, 0.77, 0.025), "596566")
-	v.box(DOOR + Vector3(-2.0, 1.48, -4.587), Vector3(0.045, 0.80, 0.018), "8b795f")
-	v.box(DOOR + Vector3(0.88, 1.06, -4.63), Vector3(0.30, 0.25, 0.18), "75634f")
+	v.plaster(v.box(at + Vector3(0, 1.32, -9.78), Vector3(6.52, 2.64, 0.24), "a9967d", true))
+	v.plaster(v.box(at + Vector3(0, 2.46, -4.8), Vector3(1.29, 0.37, 0.24), "b09d80", true))
+	v.timber(v.box(at + Vector3(0, 1.12, -4.74), Vector3(1.29, 2.24, 0.14), "705342", true, "Puerta de Mara"))
+	v.box(at + Vector3(0.42, 1.12, -4.65), Vector3(0.12, 0.065, 0.06), "a08d68")
+	v.box(at + Vector3(0, 0.073, -4.36), Vector3(1.68, 0.146, 0.91), "8d806d", true)
+	v.box(at + Vector3(-2.0, 1.48, -4.655), Vector3(1.24, 0.91, 0.07), "695744")
+	v.box(at + Vector3(-2.0, 1.48, -4.608), Vector3(1.09, 0.77, 0.025), "596566")
+	v.box(at + Vector3(-2.0, 1.48, -4.587), Vector3(0.045, 0.80, 0.018), "8b795f")
+	v.box(at + Vector3(0.88, 1.06, -4.63), Vector3(0.30, 0.25, 0.18), "75634f")
 
 static func dream_x(variant: int, distance: float) -> float:
 	match variant:

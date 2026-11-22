@@ -7,6 +7,7 @@ const Exploration = preload("res://exploracion.gd")
 const Creek = preload("res://cauce.gd")
 const Cable = preload("res://camino_del_cable.gd")
 const Museum = preload("res://museo.gd")
+const Departure = preload("res://salida.gd")
 const INK = Color("#384235")
 const ROUTE_COLOR = Color("#875d41")
 const LINK_COLOR = Color("#9b775b")
@@ -40,7 +41,7 @@ const LIMITS = [
 const MAIN_TRAIL_LIMITS := [
 	Rect2(-280, -100, 560, 555),
 	Rect2(-350, -103, 730, 1070),
-	Rect2(-245, -104, 490, 457),
+	Rect2(-245, -152, 490, 506),
 ]
 var itinerary_sheet := -1
 var departure_sheet := false
@@ -137,7 +138,7 @@ func _draw():
 			ABRA_ZONE, FILO_ZONE, DEPARTURE_ZONE: draw_main_trail(limits, zone)
 			_: draw_ridge(limits)
 		add_refuge_pin(limits)
-		if departure_sheet: pin(limits, LastNight.STOP, "Curva · Ómnibus", Vector2(-20, -18))
+		if departure_sheet: pin(limits, Departure.END, "Bajada a la ruta", Vector2(-20, -18))
 	for crease in [173.0, 384.0]:
 		draw_line(Vector2(crease, 0), Vector2(crease, 330), Color("#6d514821"), 2.0, true)
 		draw_line(Vector2(crease + 1.3, 0), Vector2(crease + 1.3, 330), Color("#fff6db54"), 0.8, true)
@@ -265,7 +266,18 @@ func draw_main_trail(limits: Rect2, zone: int):
 	var museum := trail_landmark(Museum.DISTANCE, Museum.SITE_OFFSET)
 	draw_route(limits, 14, func(t): return trail_landmark(Museum.DISTANCE).lerp(museum, t), ROUTE_COLOR)
 	pin(limits, museum, "Museo de sitio", Vector2(9, -15))
-	if zone == DEPARTURE_ZONE: return
+	if zone == DEPARTURE_ZONE:
+		draw_route(limits, Departure.PATH.size(), func(t):
+			var step: float = t * (Departure.PATH.size() - 1)
+			var i := mini(int(step), Departure.PATH.size() - 2)
+			var pos: Vector2 = Departure.PATH[i].lerp(Departure.PATH[i + 1], step - i)
+			return Vector3(pos.x, 0, pos.y), ROUTE_COLOR)
+		draw_route(limits, Departure.MARA_PATH.size(), func(t):
+			var step: float = t * (Departure.MARA_PATH.size() - 1)
+			var i := mini(int(step), Departure.MARA_PATH.size() - 2)
+			var pos: Vector2 = Departure.MARA_PATH[i].lerp(Departure.MARA_PATH[i + 1], step - i)
+			return Vector3(pos.x, 0, pos.y), LINK_COLOR)
+		return
 	pin(limits, trail_landmark(170.0), "Laja con cuerda", Vector2(-10, 18))
 	pin(limits, trail_landmark(171.0, ROUTE.detour(171.0) - ROUTE.trail(171.0)), "Vaguada", Vector2(9, -9))
 	pin(limits, trail_landmark(420.0, 1.6), "Antena del abra", Vector2(9, -12))

@@ -7,7 +7,7 @@ uniform vec4 rim_day : source_color = vec4(0.95,0.77,0.62,1.0);
 uniform vec4 high_night : source_color = vec4(0.039,0.054,0.116,1.0);
 uniform vec4 rim_night : source_color = vec4(0.19,0.205,0.30,1.0);
 
-uniform vec4 catalog[32];
+uniform vec4 catalog[48];
 uniform vec3 planet_dirs[2];
 uniform vec3 galactic_pole;
 uniform vec3 moon_dir;
@@ -77,7 +77,7 @@ vec3 night_stars(vec3 sight) {
 		glow = vec3(0.078, 0.087, 0.12) * band * (0.12 + 0.52 * dust);
 	}
 	float points = star_field(sight);
-	for (int i = 0; i < 32; i++) {
+	for (int i = 0; i < 48; i++) {
 		float power = clamp(1.30 - 0.25 * catalog[i].w, 0.48, 1.80);
 		float radius = 0.0038 * power;
 		vec3 offset = sight - catalog[i].xyz;
@@ -100,7 +100,9 @@ vec3 disc(vec3 sight, vec3 center, vec3 light, float radius, vec3 tint, vec3 bac
 	float lit = smoothstep(-0.025,0.06,dot(normal,light));
 	vec3 right = normalize(cross(center, abs(center.y) > 0.98 ? vec3(1.0, 0.0, 0.0) : vec3(0.0, 1.0, 0.0)));
 	vec2 surface = vec2(dot(offset, right), dot(offset, cross(right, center)));
-	float maria = 0.72 + 0.30 * cloud_texture(surface * 3.4 + vec2(5.3, 13.1));
+	float basins = cloud_texture(surface * 2.55 + vec2(5.3, 13.1));
+	float maria = mix(0.43, 0.96, smoothstep(0.27, 0.66, basins));
+	maria *= 0.89 + 0.17 * cloud_noise(surface * 19.5 + vec2(8.3, 2.7));
 	float edge = 1.0 - smoothstep(0.95, 1.035, r);
 	return mix(backdrop, tint * (0.065 + lit * maria), edge * opacity * mix(lit, 1.0, shadow));
 }
@@ -148,7 +150,7 @@ vec3 ringed_world(vec3 sight, vec3 backdrop) {
 		float ring_shadow = smoothstep(1.30, 1.52, shadow_orbit) * (1.0 - smoothstep(2.20, 2.29, shadow_orbit)) * step(0.0, shadow_depth);
 		float phase = pow(max(0.0, dot(normal, light)), 0.62);
 		float limb = 0.57 + 0.43 * sqrt(clamp(dot(normal, -sight), 0.0, 1.0));
-		vec3 ambient = backdrop * 0.64 + vec3(0.017, 0.013, 0.014);
+		vec3 ambient = vec3(0.034, 0.027, 0.031);
 		backdrop = mix(backdrop, ambient + vapor * limb * phase * (0.83 - 0.38 * ring_shadow), planet_cover);
 	}
 	if (ring_depth < globe_depth) backdrop = mix(backdrop, dust, ring_cover);
@@ -169,10 +171,10 @@ vec3 crux_ink(vec3 sight) {
 	float fade = smoothstep(0.0, 0.29, crux_trace);
 	float length_now = smoothstep(0.20, 0.98, crux_trace);
 	float extension = 0.47 * crux_line(sight, acrux, normalize(mix(acrux, crux_pole, length_now)));
-	float projected = dot(sight - acrux, crux_pole - acrux) / max(0.001, dot(crux_pole - acrux, crux_pole - acrux));
-	extension *= smoothstep(0.15, 0.40, fract(projected * 24.0)) * length_now;
-	float pole = exp(-dot(sight - crux_pole, sight - crux_pole) * 54000.0) * smoothstep(0.89, 1.0, crux_trace);
-	return vec3(0.52, 0.76, 0.98) * (arms * fade + extension + pole * 0.75);
+	vec3 horizon = normalize(vec3(crux_pole.x, 0.0, crux_pole.z));
+	float horizon_progress = smoothstep(0.52, 1.0, crux_trace);
+	extension += 0.33 * horizon_progress * crux_line(sight, crux_pole, normalize(mix(crux_pole, horizon, horizon_progress)));
+	return vec3(0.52, 0.76, 0.98) * (arms * fade + extension * length_now);
 }
 
 void sky(){
@@ -194,7 +196,7 @@ void sky(){
 		float phase = 0.5 - 0.5 * dot(daylight_dir, moon_dir);
 		float moonlight = smoothstep(0.015, 0.085, phase) * smoothstep(-0.008, 0.048, EYEDIR.y);
 		float apparent_radius = mix(SUN_DISC_RADIUS, moon_radius, smoothstep(0.64, 1.0, nightfall));
-		earth = disc(EYEDIR,moon_dir,daylight_dir,apparent_radius,vec3(1.28,1.21,1.10),earth,moonlight,1.0);
+		earth = disc(EYEDIR,moon_dir,daylight_dir,apparent_radius,vec3(1.12,1.08,1.01),earth,moonlight,1.0);
 		daytime = disc(EYEDIR,moon_dir,daylight_dir,apparent_radius,vec3(1.03,1.06,1.10),daytime,daylight_moon * moonlight * (0.39 + dusk * 0.19),dusk * 0.12);
 	}
 	vec3 alien_rim = vec3(0.21, 0.31, 0.38);

@@ -13,6 +13,6 @@ void fragment() {
 	float center = 1.0 - smoothstep(0.66, 1.05, length(on_stone));
 	float cyan = smoothstep(0.025, 0.27, art.b - art.r) * smoothstep(0.28, 0.72, art.g);
 	float beat = 0.5 + 0.5 * sin(TIME * 2.4);
-	vec3 flash = vec3(0.28, 0.54, 0.64) * cyan * center * (0.42 + 0.58 * beat) * bearing;
+	vec3 flash = vec3(0.31, 0.76, 0.94) * center * (0.16 + 0.84 * cyan) * (0.46 + 0.54 * beat) * bearing;
 	COLOR = vec4(art.rgb + flash, art.a) * tint;
 }

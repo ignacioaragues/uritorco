@@ -69,18 +69,18 @@ func _ready():
 	piece_pulse.stream = piece_pulse_sound()
 
 func play_piece_pulse(intensity: float):
-	piece_pulse.volume_db = lerpf(-38.0, -30.0, intensity)
+	piece_pulse.volume_db = lerpf(-46.0, -37.0, intensity)
 	piece_pulse.play()
 
 static func piece_pulse_sound() -> AudioStreamWAV:
 	const RATE := 22050
-	var count := int(RATE * 0.31)
+	var count := int(RATE * 0.20)
 	var samples := PackedByteArray()
 	samples.resize(count * 2)
 	for i in count:
 		var t := float(i) / RATE
 		var phase := TAU * t * (156.0 + 49.0 * t)
-		var envelope := smoothstep(0.0, 0.047, t) * (1.0 - smoothstep(0.10, 0.31, t))
+		var envelope := smoothstep(0.0, 0.047, t) * (1.0 - smoothstep(0.065, 0.20, t))
 		var tone := sin(phase) * 0.66 + sin(phase * 1.51) * 0.09
 		samples.encode_s16(2 * i, int(tone * envelope * 17000.0))
 	var wave := AudioStreamWAV.new()

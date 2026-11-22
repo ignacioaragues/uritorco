@@ -14,6 +14,9 @@ uniform bool mara_track = false;
 uniform vec2 mara_start;
 uniform vec2 mara_end;
 uniform vec2 creek_path[12];
+uniform vec2 departure_path[9];
+uniform vec2 departure_branch[4];
+uniform bool departure_open = false;
 uniform vec2 exploration_segments[64];
 uniform int exploration_segment_count = 0;
 uniform vec2 south_paths[62];
@@ -130,6 +133,16 @@ void fragment() {
 		south = max(track(route, 1.95, grain), track(link, 1.42, grain));
 	}
 	float exposed = max(max(central, west), max(max(east, mara), max(south, max(low_trail, local_trails))));
+	if (departure_open && p.y > -23.0 && p.y < 66.0 && p.x > -4.0 && p.x < 46.0) {
+		float descent = 70.0;
+		for (int i = 0; i < 8; i++) {
+			descent = min(descent, edge_distance(p, departure_path[i], departure_path[i + 1]));
+		}
+		for (int i = 0; i < 3; i++) {
+			descent = min(descent, edge_distance(p, departure_branch[i], departure_branch[i + 1]));
+		}
+		exposed = max(exposed, track(descent, 1.94, grain));
+	}
 	float band = sin(p.y * 0.031 + cos(p.x * 0.12));
 	float stipple = sin(p.x * 1.04 + p.y * 0.52) * sin(p.y * 0.79 - p.x * 0.42);
 	float north = smoothstep(-2.0, 36.0, d);

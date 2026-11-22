@@ -6,6 +6,9 @@ Al cierre de cada pasada se actualizan los puntos resueltos y se conserva lo que
 
 ### Resuelto
 
+- [x] Revisar las aperturas de radio y mostrar las respuestas de Hernán en primera persona. Las opciones largas muestran la primera frase y, tras elegir, las frases completas avanzan una a una.
+- [x] Darle al Día 2 una elección afirmativa antes del encargo y pasar al saludo del Día 27 la devolución sobre la subida a la laja.
+- [x] Poner una brújula de repuesto en el cajón derecho del puesto. Se ve al abrir el cajón y se puede recoger el Día 41. La charla de regreso de la cueva se centra en la voz del túnel.
 - [x] Rehacer el recorte del Día 27 como una nota de Clarín de 2011. El titular le atribuye el hallazgo a la científica argentina Paula Soria. La foto en gris la muestra con el equipo alemán de Heidelberg y el texto describe su análisis astrométrico.
 - [x] Variar los perfiles de granito y las copas del monte. Agregar desprendimientos chicos junto a las lajas y al cable, con romerillos en las laderas y matas más altas camino al filo.
 - [x] Pasar la muerte del padre de Hernán a julio. La propuesta de trabajo llega un tiempo después.
@@ -60,6 +63,16 @@ Al cierre de cada pasada se actualizan los puntos resueltos y se conserva lo que
 - [x] Afinar el arte del prólogo. La huella tiene distintos tonos de tierra y ripio, con piedras y pastos agrupados en los márgenes. La parada tiene chapas remachadas y el puente, tablones separados con clavos visibles. La cuerda pasa por delante de la laja y por encima del borde hasta el anclaje. La trepada queda al atardecer y la noche entra en el tramo de la linterna.
 - [x] Darles materiales y siluetas distintas a los tres sueños. El primero tiene placas azules fracturadas, el segundo terrazas cobrizas y el tercero crestas de obsidiana y arcos erosionados. Las formaciones cercanas son sólidas y dejan pasos abiertos hacia los seis hallazgos.
 - [x] Conectar las lajas con la bajada al cauce y abrir un atajo del este a la vuelta del mollar. Las dos huellas están señalizadas y se dibujan en la hoja local, centrada en el refugio. Se recorrieron los enlaces con el mapa de mano abierto.
+
+## Pasada de la despedida, el Sector 08 y el monte
+
+- El Día 41 empieza con la mochila en el suelo. Libro, papeles, postal y dibujos se guardan con clic o E. La bajada señalizada y sus dos ramales llevan al ómnibus o a la puerta de Mara tras la despedida por radio. «Elegir escena» incluye «Día 41 · Empacar» y «Día 41 · Camino · Máxima cercanía».
+- Se amplió el área transitable junto a la quebrada y se vistieron las lomas distantes. Afloramientos y matorral dan profundidad al borde del monte y a la escena del tronco. Se prolongó el paredón de la laja por la izquierda.
+- Mara deja un fósil vegetal si Hernán se interesa. Se puede bocetar desde el escritorio. Se redibujaron la pulsera y el croquis de la bitácora del campamento.
+- La estación tiene un receptor con dial, aguja y rejillas, y un cuaderno con lomo, hojas gastadas y rótulo. Mara pregunta por la caída, Hernán contesta con R y habla de cuadernos de los años 70. La línea de la Cruz del Sur queda hasta el horizonte. El fundido llega con treinta segundos caminando en ese rumbo.
+- La Luna conserva su posición durante la transición y muestra manchas más contrastadas. Se agregaron estrellas de Orión, Can Mayor y Sagitario. Se corrigió el disco opaco de Saturno y se reforzó el brillo del artefacto. La mano se queda arriba y se oscurece con el escenario al llegar a un arco.
+- El Museo del Uritorco cierra al oscurecer. La historia comechingona sigue un orden en el pasillo. Un parte del cauce, con una anotación sobre el receptor, ocupa el lugar de la maqueta. Se ajustaron las superficies de las vitrinas y las puertas de la heladera.
+- La travesía de la cumbre termina de vuelta en el puesto. El acceso directo del Día 32 también empieza con el mate.
 
 ## Pasada del recorte y el paisaje
 

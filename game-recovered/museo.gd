@@ -1,5 +1,6 @@
 extends RefCounted
 
+const Kit = preload("res://equipo_campo.gd")
 const Stone = preload("res://piedra_serrana.gd")
 const Refuge = preload("res://refugio.gd")
 const DISTANCE := 292.0
@@ -13,12 +14,13 @@ const STORIES := ["Bastón de Mando", "Vikingos en las sierras", "Luces sobre el
 const REPLICA_CAPTIONS := ["Réplica · Molienda", "Réplica · Hilado", "Réplica · Alfarería"]
 const STORY_CAPTIONS := ["Relato esotérico", "Hipótesis sin respaldo arqueológico", "Archivo de testimonios"]
 const LABELS = {
-	"Sala de las sierras": "Museo de sitio · Pueblos comechingones\n\nEl pasillo cuenta qué pasó con la tierra después de la conquista. En la sala de objetos se puede ver cómo se vivía y trabajaba en las sierras. Al fondo, la sala de relatos también reúne memoria de las comunidades de hoy.",
+	"Sala de objetos": "Objetos y técnicas de los pueblos comechingones.",
+	"Museo del Uritorco": "Museo del Uritorco\n\nEl pasillo recorre la historia de los pueblos comechingones. A los lados quedan las salas de objetos y de relatos.",
 	"Pueblos comechingones": "Los documentos coloniales usaron el nombre comechingones para referirse a poblaciones de las Sierras Centrales. Sus modos de vida variaban según el lugar y la época. Hoy hay comunidades comechingonas en Córdoba que se reconocen como parte de esa historia.",
 	"Vivir en las sierras": "En los sitios arqueológicos serranos aparecen instrumentos para moler, restos de plantas y fragmentos de vasijas. Un objeto encontrado junto al lugar donde se lo usó aporta más información que una pieza suelta. Las ilustraciones muestran usos posibles de las réplicas.",
 	"Sembrar en las sierras": "Antes de la conquista · Ilustración\n\nEn las Sierras Centrales se cultivaban maíz y zapallo. Según el lugar y la época, la siembra convivía con la caza y la recolección de frutos como el algarrobo. Los restos de plantas encontrados en los sitios ayudan a reconstruir qué se cultivaba y qué se juntaba.",
 	"Tierra y encomienda": "Siglos XVI a XVIII · Recreación ilustrada\n\nCon la conquista española llegaron las encomiendas, que exigían trabajo o tributo a los pueblos indígenas. Hubo traslados y disputas por la tierra. En los expedientes coloniales quedaron reclamos de comunidades que defendían los lugares donde vivían y sembraban.",
-	"Relatos del cerro": "La sala reúne testimonios y reconstrucciones sobre el Uritorco. En la entrada, una lámina recoge la historia reciente de las comunidades comechingonas. Cada ficha identifica qué se muestra y de dónde viene la información.",
+	"Relatos del cerro": "La sala reúne testimonios y reconstrucciones sobre el Uritorco. Cada ficha identifica qué se muestra y de dónde viene la información.",
 	"Memoria comechingona": "Comunidades de hoy · Ilustración\n\nEn la ciudad de Córdoba, la comunidad comechingona del Pueblo de La Toma reconstruye su historia con documentos y relatos de familia. La memoria del territorio también se transmite al recordar los nombres de los lugares y contar quiénes vivían allí.",
 	"Mortero y mano": "Réplica · Molienda\n\nSe golpeaba o frotaba el material con una piedra de mano sobre una cavidad. Moler podía servir para preparar alimentos y también otros materiales. El desgaste y los residuos que quedan en la piedra ayudan a investigar qué se molió.",
 	"Tortero": "Réplica · Hilado\n\nEl disco perforado se monta en un huso. Su peso sostiene el giro mientras se estira y se tuerce la fibra. En un hallazgo, la forma del disco y el contexto ayudan a reconocer la herramienta. El hilo rara vez se conserva.",
@@ -26,7 +28,7 @@ const LABELS = {
 	"Bastón de Mando": "Relato esotérico · Ilustración\n\nLa historia de un bastón oculto en el Uritorco circula en libros y testimonios del siglo XX. La pieza exhibida interpreta ese relato. Su procedencia arqueológica sigue sin establecerse.",
 	"Vikingos en las sierras": "Hipótesis sin respaldo arqueológico · Ilustración\n\nAlgunos autores atribuyeron marcas serranas a viajeros nórdicos. Para sostener esa atribución harían falta materiales fechados y hallados en contexto. Una semejanza visual puede aparecer entre pueblos que nunca se encontraron.",
 	"Luces sobre el cerro": "Archivo de testimonios · Ilustración\n\nLos relatos sobre luces en el Uritorco incluyen observaciones, fotografías y reconstrucciones. Registrar hora, rumbo y posición del observador permite comparar versiones y examinar posibles explicaciones.",
-	"Maqueta del arco": "Maqueta del arco · Reconstrucción de un dibujo anónimo\n\nLa ficha lleva fecha del 12 de julio. El dibujo muestra dos pilares, un dintel torcido y un cuerpo suspendido en el hueco. El margen de la hoja está arrancado."
+	"Parte del 12 de julio": "Parte del puesto · Archivo de testimonios"
 }
 
 static func center(valley, offset: float = SITE_OFFSET) -> Vector3:
@@ -37,6 +39,9 @@ static func center(valley, offset: float = SITE_OFFSET) -> Vector3:
 		for dz in [-HALF_DEPTH, 0.0, HALF_DEPTH]:
 			floor_height = maxf(floor_height, route.at(x + dx, DISTANCE + dz).y)
 	return Vector3(x, floor_height + 0.23, route.ORIGIN_Z - DISTANCE)
+
+static func night_closed(valley) -> bool:
+	return float(valley.sky_mat.get_shader_parameter("nightfall")) > 0.68
 
 static func under_roof(valley, at: Vector3) -> bool:
 	var center_z: float = valley.route.ORIGIN_Z - DISTANCE
@@ -85,12 +90,12 @@ static func build(valley):
 		lamp.omni_range = 8.0
 		lamp.light_energy = 0.73
 		valley.box(c + Vector3(0, 2.68, z), Vector3(0.48, 0.08, 0.32), "dcc9a4")
-	plaque(valley, c + Vector3(0, 2.32, -1.66), "Pueblos comechingones", 0.0, 2.55)
+	plaque(valley, c + Vector3(0, 2.32, -1.66), "Sala de objetos", 0.0, 2.15)
 	plaque(valley, c + Vector3(0, 2.49, 1.646), "Relatos del cerro", PI, 2.55)
-	plaque(valley, c + Vector3(-3.19, 1.47, -1.66), "Vivir en las sierras", 0.0, 2.1)
-	display_panel(valley, c + Vector3(HALF_WIDTH - 0.151, 1.65, -2.91), "Sembrar en las sierras", "historia", 0, -PI / 2.0, "Vida cotidiana antes de la conquista")
-	display_panel(valley, c + Vector3(-2.94, 1.65, 1.673), "Tierra y encomienda", "historia", 1, PI, "Trabajo, tributo y territorio")
-	display_panel(valley, c + Vector3(2.94, 1.65, 1.927), "Memoria comechingona", "historia", 2, 0.0, "Pueblo de La Toma · Córdoba")
+	plaque(valley, c + Vector3(-3.56, 2.48, -1.66), "Pueblos comechingones", 0.0, 2.82)
+	display_panel(valley, c + Vector3(-4.32, 1.40, -1.653), "Sembrar en las sierras", "historia", 0, 0.0, "Vida cotidiana antes de la conquista")
+	display_panel(valley, c + Vector3(-2.86, 1.40, -1.653), "Tierra y encomienda", "historia", 1, 0.0, "Trabajo, tributo y territorio")
+	display_panel(valley, c + Vector3(-1.88, 1.40, -1.653), "Memoria comechingona", "historia", 2, 0.0, "Pueblo de La Toma · Córdoba")
 	valley.box(c + Vector3(3.65, 0.44, -0.76), Vector3(2.3, 0.14, 0.49), "846b50", true, "Banco")
 	for x in [2.7, 4.58]:
 		valley.box(c + Vector3(x, 0.23, -0.76), Vector3(0.16, 0.46, 0.42), "6d5d51", true)
@@ -101,7 +106,11 @@ static func build(valley):
 		display_panel(valley, c + Vector3(x, 1.67, 6.85), STORIES[i], "relatos", i, PI, STORY_CAPTIONS[i])
 
 static func wall(valley, at: Vector3, size_m: Vector3):
-	valley.plaster(valley.box(at, size_m, "baaa90", true))
+	var surface: MeshInstance3D = valley.box(at, size_m, "b9aa94", true)
+	var c := center(valley)
+	var local := at - c
+	var inside := Vector3(-signf(local.x), 0, 0) if size_m.x < size_m.z else Vector3(0, 0, -signf(local.z))
+	Refuge.masonry(surface, inside)
 
 static func build_entrance(valley, c: Vector3):
 	var front := c + Vector3(-HALF_WIDTH, 0, 0)
@@ -121,7 +130,7 @@ static func build_entrance(valley, c: Vector3):
 	leaf.reparent(valley.museum_hinge)
 	var handle: MeshInstance3D = valley.box(front + Vector3(-0.09, 1.07, 0.64), Vector3(0.13, 0.08, 0.12), "a69a7b")
 	handle.reparent(valley.museum_hinge)
-	plaque(valley, front + Vector3(-0.14, 2.62, 0), "Sala de las sierras", -PI / 2.0, 2.6)
+	plaque(valley, front + Vector3(-0.14, 2.62, 0), "Museo del Uritorco", -PI / 2.0, 2.85)
 
 static func vitrine(valley, c: Vector3, index: int):
 	var title: String = REPLICAS[index]
@@ -129,6 +138,10 @@ static func vitrine(valley, c: Vector3, index: int):
 	plinth.material_override = Refuge.wood("74624e", true)
 	var liner: MeshInstance3D = valley.box(c + Vector3.UP * 0.75, Vector3(1.86, 0.035, 0.99), "afa18b")
 	liner.material_override = Refuge.cloth("8e8066", "b2a38a", 0.38)
+	for x in [-0.945, 0.945]:
+		valley.timber(valley.box(c + Vector3(x, 0.773, 0), Vector3(0.047, 0.027, 1.064), "7c6349"))
+	for z in [-0.513, 0.513]:
+		valley.timber(valley.box(c + Vector3(0, 0.774, z), Vector3(1.89, 0.032, 0.041), "8c7656"), true)
 	var cabinet: MeshInstance3D = valley.box(c + Vector3.UP * 1.03, Vector3(1.94, 0.56, 1.06), "a7bdb4", true, title)
 	var glass := StandardMaterial3D.new()
 	glass.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
@@ -156,10 +169,16 @@ static func vitrine(valley, c: Vector3, index: int):
 		1:
 			var spindle: MeshInstance3D = valley.box(base + Vector3(0, 0.15, 0), Vector3(0.021, 0.36, 0.027), "88674b")
 			spindle.rotation.z = -0.16
+			valley.timber(spindle)
 			var whorl := TorusMesh.new()
 			whorl.inner_radius = 0.023
 			whorl.outer_radius = 0.135
-			valley.prop(whorl, base + Vector3(0, 0.115, 0), "b18059")
+			valley.prop(whorl, base + Vector3(0, 0.115, 0), "b18059").material_override = Stone.paint("987453")
+			var spool := PackedVector3Array()
+			for turn in 52:
+				var angle := turn * 0.51
+				spool.append(spindle.position + Vector3(0.028 * cos(angle), 0.074 + 0.0011 * turn, 0.031 * sin(angle)))
+			Kit.cord(valley, spool, 0.0031, Refuge.cloth("b9a88c", "8e7c60", 0.58))
 			valley.stone(base + Vector3(0.34, 0.065, 0.11), Vector3(0.34, 0.13, 0.23), "d7c5a0")
 		2:
 			var pot := shaped_vessel([
@@ -207,9 +226,13 @@ static func shaped_vessel(profile: Array, depth_ratio: float, irregularity: floa
 static func dress_archive(valley):
 	var c := center(valley)
 	var base := c + Vector3(0, 0.83, 3.85)
-	valley.box(base - Vector3.UP * 0.42, Vector3(1.75, 0.83, 1.12), "71614c", true, "Maqueta del arco")
-	preload("res://estructuras.gd").arch(valley, base, 0.31)
-	plaque(valley, base + Vector3(0, -0.14, -0.58), "Maqueta del arco", PI, 1.55)
+	valley.timber(valley.box(base - Vector3.UP * 0.42, Vector3(1.75, 0.83, 1.12), "71614c", true, "Parte del 12 de julio"))
+	for sheet in 3:
+		var paper: MeshInstance3D = valley.box(base + Vector3((sheet - 1) * 0.25, 0.028 + sheet * 0.007, 0.02), Vector3(0.52, 0.013, 0.69), "beab8d", true, "Parte del 12 de julio")
+		paper.rotation.y = (sheet - 1) * 0.12
+		for line in 6:
+			Kit.block(paper, Vector3(-0.02, 0.008, -0.21 + line * 0.066), Vector3(0.32 - 0.032 * (line % 3), 0.0015, 0.005), Kit.material("746452"))
+	plaque(valley, base + Vector3(0, -0.14, -0.58), "Parte del 12 de julio", PI, 1.55)
 
 static func display_panel(valley, center_pos: Vector3, title: String, group: String, index: int, angle: float, caption: String):
 	var art_path := "res://museo/" + group + ".webp"

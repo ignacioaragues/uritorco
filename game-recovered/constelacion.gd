@@ -24,6 +24,14 @@ const STARS = [
 	["Gamma del Triángulo Austral", 15.315, -68.68, 2.89], ["Aspidiske · Carina", 9.285, -59.275, 2.25],
 	["Suhail · Vela", 9.133, -43.433, 2.21], ["Altair · Águila", 19.846, 8.868, 0.77],
 	["Vega · Lira", 18.615, 38.783, 0.03], ["Deneb · Cisne", 20.691, 45.280, 1.25],
+	["Betelgeuse · Orión", 5.919, 7.407, 0.45], ["Rigel · Orión", 5.242, -8.202, 0.13],
+	["Bellatrix · Orión", 5.418, 6.350, 1.64], ["Saiph · Orión", 5.796, -9.670, 2.06],
+	["Mintaka · Cinturón de Orión", 5.533, -0.299, 2.23], ["Alnilam · Cinturón de Orión", 5.603, -1.202, 1.69],
+	["Alnitak · Cinturón de Orión", 5.679, -1.943, 1.74], ["Adhara · Can Mayor", 6.977, -28.972, 1.50],
+	["Wezen · Can Mayor", 7.140, -26.393, 1.83], ["Mirzam · Can Mayor", 6.378, -17.956, 1.98],
+	["Kaus Australis · Sagitario", 18.403, -34.385, 1.79], ["Nunki · Sagitario", 18.921, -26.297, 2.05],
+	["Kaus Media · Sagitario", 18.350, -29.828, 2.70], ["Ascella · Sagitario", 19.043, -29.880, 2.60],
+	["Beta del Pavo", 20.749, -66.203, 3.42], ["Ankaa · Fénix", 0.438, -42.306, 2.40],
 ]
 
 const PLANETS = [["Júpiter", 16.71, -21.1, -2.16], ["Saturno", 19.32, -22.9, 0.55]]
@@ -57,7 +65,7 @@ static func sun_and_moon(day: int, dusk: float, dark: float) -> Array[Vector3]:
 	var tilt := deg_to_rad(4.2) * sin(TAU * (day - 4.0) / 27.2)
 	var moon_declination := asin(sin(tilt) * cos(AXIAL_TILT) + cos(tilt) * sin(AXIAL_TILT) * sin(moon_longitude))
 	var moon_ra := atan2(sin(moon_longitude) * cos(AXIAL_TILT) - tan(tilt) * sin(AXIAL_TILT), cos(moon_longitude))
-	return [horizontal(hour_angle, sun_declination), horizontal(hour_angle + sun_ra - moon_ra, moon_declination)]
+	return [horizontal(hour_angle, sun_declination), horizontal(sunset_angle + deg_to_rad(24.0) + sun_ra - moon_ra, moon_declination)]
 
 static func identify(look: Vector3, chapter: int, day: int, moon: Vector3) -> String:
 	if moon.y > 0.0 and look.distance_squared_to(moon) < MOON_RADIUS * MOON_RADIUS: return "Luna"

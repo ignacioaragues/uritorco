@@ -233,9 +233,9 @@ func _physics_process(delta):
 			local.z = clampf(local.z, bounds.position.y, bounds.end.y)
 			position = intro_center + local.rotated(Vector3.UP, intro_heading)
 	else:
-		var lateral: = lerpf(46, 354, smoothstep(0, 55, -76 - position.z))
-		position.x = clampf(position.x, -maxf(lateral, Creek.west_limit(position.z)), lateral)
-		position.z = clampf(position.z, -1049, Creek.LIMIT_Z)
+		var lateral: = lerpf(110, 354, smoothstep(0, 55, -76 - position.z))
+		position.x = clampf(position.x, -maxf(lateral, Creek.west_limit(position.z) + 43.0), lateral)
+		position.z = clampf(position.z, -1049, 182.0)
 	update_footfalls(position - previous, was_grounded, fall_speed)
 
 func update_footfalls(motion: Vector3, was_grounded: bool, fall_speed: float):

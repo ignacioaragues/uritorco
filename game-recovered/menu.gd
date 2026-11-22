@@ -211,6 +211,6 @@ func debug_login():
 
 func debug_scenes():
 	clear()
-	for chapter in [["intro", "Prólogo · Ruta"], ["arrival", "Noche 1 · Puesto"], ["2", "Día 2 · El arroyo"], ["7", "Día 7 · Alcance"], ["sighting", "Día 7 · Avistamiento"], ["dream7", "Noche 7 · Primer sueño"], ["25", "Día 25 · La quebrada"], ["dream25", "Noche 25 · La pieza"], ["27", "Día 27 · La cantera"], ["32", "Día 32 · La cumbre"], ["camp", "Día 32 · Campamento"], ["36", "Día 36 · La pasarela"], ["40", "Día 40 · El último día"], ["ultima_noche", "Última noche · Luces"], ["cueva", "Última noche · Cueva"], ["dream36", "Última noche · Los arcos"], ["41", "Día 41 · Museo"]]:
+	for chapter in [["intro", "Prólogo · Ruta"], ["arrival", "Noche 1 · Puesto"], ["2", "Día 2 · El arroyo"], ["7", "Día 7 · Alcance"], ["sighting", "Día 7 · Avistamiento"], ["dream7", "Noche 7 · Primer sueño"], ["25", "Día 25 · La quebrada"], ["dream25", "Noche 25 · La pieza"], ["27", "Día 27 · La cantera"], ["32", "Día 32 · La cumbre"], ["camp", "Día 32 · Campamento"], ["36", "Día 36 · La pasarela"], ["40", "Día 40 · El último día"], ["ultima_noche", "Última noche · Luces"], ["cueva", "Última noche · Cueva"], ["dream36", "Última noche · Los arcos"], ["41", "Día 41 · Museo"], ["41_pack", "Día 41 · Empacar"], ["41_close", "Día 41 · Camino · Máxima cercanía"]]:
 		action(chapter[1], func(): debug_requested.emit(chapter[0]))
 	action("Volver", home)

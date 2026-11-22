@@ -2,7 +2,7 @@
 
 Informe en orden de campaña para revisar el diálogo frase por frase. Incluye quién habla primero, cuándo se abre cada intercambio, qué puede elegir Hernán y qué cambia después. Las frases entre comillas son los textos del juego. Las acotaciones en cursiva describen lo que ocurre entre líneas.
 
-Para las charlas de sendero el jugador abre la radio con **R**. El nombre que figura en cada apertura indica quién dice la primera frase. La rueda cambia de respuesta, el clic confirma y Espacio avanza el diálogo. La bienvenida muestra la ayuda de rueda y clic. Los encargos principales se pueden abrir siempre que corresponda. Entre dos charlas opcionales tienen que pasar 12 metros y 8 segundos el Día 2, 15 metros y 8 segundos el Día 41, o 26 metros y 16 segundos en las demás jornadas. Cada charla cuenta una sola vez.
+Para las charlas de sendero el jugador abre la radio con **R**. El nombre que figura en cada apertura indica quién dice la primera frase. La rueda cambia de respuesta, el clic confirma y Espacio avanza el diálogo. Cada opción hablada muestra la primera frase de Hernán. Al confirmar, se muestran todas sus frases por separado, en el orden transcrito abajo. La bienvenida muestra la ayuda de rueda y clic. Los encargos principales se pueden abrir siempre que corresponda. Entre dos charlas opcionales tienen que pasar 12 metros y 8 segundos el Día 2, 15 metros y 8 segundos el Día 41, o 26 metros y 16 segundos en las demás jornadas. Cada charla cuenta una sola vez.
 
 **La visita a Mara requiere nueve de las quince charlas de cercanía.** Las opciones que suman están señaladas en el informe. Poner un límite cuando Mara pregunta por el padre o por Paula también puede sumar cercanía. La bienvenida, el parte, los mensajes de la cueva y las demás llamadas de misión quedan fuera del cálculo. Las charlas del Día 40 también quedan fuera. Los textos de Mara tienen un tono cálido y los de Hernán un tono verdoso suave.
 
@@ -29,7 +29,9 @@ Para las charlas de sendero el jugador abre la radio con **R**. El nombre que fi
 - **Opción 1, Hernán** · «Dormí de un tirón.»
   - **Mara** · «Menos mal. Esa cama tiene sus años.»
 - **Opción 2, Hernán** · «Todavía me estoy acostumbrando al puesto.»
-  - **Mara** · «A mí la primera noche me despertó hasta el viento.»
+  - **Mara** · «Es normal. El monte en realidad es más ruidoso que la ciudad, ¿viste?»
+- **Mara, en ambas** · «¿Estás listo para empezar a trabajar?»
+- **Hernán elige** «Sí, estoy listo.» o «Dale. Decime por dónde empiezo.»
 - **Mara, en ambas** · «Hoy me hacen falta dos datos. Salí por la tranquera y tomá la huella que rodea la cerca hacia el sur.»
 - **Mara** · «Fijate qué fecha tiene la chapa del poste en la bajada. Nos hablamos cuando la tengas.»
 
@@ -37,7 +39,7 @@ Para las charlas de sendero el jugador abre la radio con **R**. El nombre que fi
 
 **Empieza Hernán** al llamar después de leer la chapa. Intercambio fijo.
 
-- **Hernán** · «Acá abajo, debajo de la pintura, dice doce de julio.»
+- **Hernán** · «¿Mara? Lo encontré. Acá abajo de la pintura dice doce de julio.»
 - **Mara** · «Lo repusieron después de una crecida. Con esa fecha puedo buscar el parte viejo.»
 - **Mara** · «Seguí hasta el lecho de piedras. La regla está cerca de la curva. Pasame la lectura desde ahí.»
 
@@ -48,38 +50,32 @@ Para las charlas de sendero el jugador abre la radio con **R**. El nombre que fi
 - **Hernán** · «Mara, llegué a la regla. ¿Me copiás?»
 - **Mara** · «Sí. ¿Qué viste ahí abajo?»
 
-- **Opción 1, la lectura directa.** **Hernán** · «Mara, medí cero centímetros.»
-- **Opción 2, la mica.** **Hernán** · «Mara, ¿viste la mica que hay en el cruce? Cambia toda la piedra si te agachás.»
+- **Opción 1, la lectura directa.** **Hernán** · «Medí cero centímetros.»
+- **Opción 2, la mica.** **Hernán** · «¿Viste la mica que hay en el cruce? Cambia toda la piedra si te agachás.»
   - **Mara** · «A esa hora se ve bien. Si mañana vuelven las nubes, vas a tener que buscarla de nuevo. ¿Qué te dio la regla?»
   - **Hernán** · «Cero centímetros. Está seco.»
 - **Mara, en ambas** · «Anotado. Bastante trabajo por hoy. Podés terminar de acomodarte y dar un paseo si querés.»
 
-*En ambas variantes queda enviado el parte y empieza la cuenta de dos minutos hasta la noche. La elección de la mica cambia la apertura de la charla de las piedras.*
+*En ambas variantes queda enviado el parte y empieza la cuenta de dos minutos hasta la noche.*
 
-### Las piedras de la vuelta
+### Los fósiles
 
-**Charla opcional de cercanía.**
+**Charla opcional de cercanía.** Con R en el tramo medio de regreso desde el cauce, después de enviar el parte.
 
-**Disparador.** Con R en el tramo medio de regreso desde el cauce, después de enviar el parte.
+- **Hernán** · «Che, ¿por acá se encuentran fósiles? Estuve mirando las piedras del cauce.»
+- **Mara** · «En el granito, difícil. Pero de una cantera más abajo tengo una piedra con la impresión de una planta. Está en el cajón.»
+- **Opción 1, Hernán** · «¿Me la mostrás algún día?» *(suma cercanía)*
+  - **Mara** · «Te la mando con las pilas. Mirala de costado. Se le ven hasta las nervaduras.»
+- **Opción 2, Hernán** · «Voy a mirar mejor las capas cuando vuelva al cauce.»
+  - **Mara** · «Fijate en la piedra que se abre en láminas. Ahí a veces queda una impresión que parece hecha a lápiz.»
 
-**Empieza Hernán.** «Mara, ahora que vuelvo por la huella veo un brillo en las piedras. Desde arriba me habían parecido todas iguales.»
-- **Apertura alternativa.** Si habló de la mica en el parte, «Mara, pensé en la mica que te conté. A la vuelta cambió la luz y las piedras ya no brillaban igual.»
-
-- **Mara** · «Es la luz de la vuelta. Ahora les da de costado. ¿Te llamó la atención alguna en particular?»
-
-- **Opción 1, Hernán** · «¿Vos alguna vez te llevaste una de acá?» *(suma cercanía)*
-  - **Mara** · «Una blanca del cauce. La uso para sostener el mantel cuando abro la ventana.»
-  - **Mara** · «Tengo otra en el cajón. Te la mando con las pilas. Con el viento de arriba te va a servir para el mapa.»
-- **Opción 2, Hernán** · «Mañana quiero volver a verla a esta hora.»
-  - **Mara** · «Fijate desde qué lado te dio el sol. Si volvés por la misma huella, buscá la marca que hiciste en la regla.»
-
-La primera respuesta hace que el pisapapeles llegue con las pilas desde el Día 7.
+Desde el Día 7, la primera respuesta deja el fósil sobre el escritorio. Con E, Hernán lo boceta en su cuaderno.
 
 ### La primera noche después de trabajar
 
 **Empieza Hernán.** Llamada opcional desde el puesto cuando terminó de oscurecer. Intercambio fijo.
 
-- **Hernán** · «Mara, ¿me copiás? Se me pasó rapidísimo el día.»
+- **Hernán** · «Che, se me pasó rapidísimo el día.»
 - **Mara** · «Sí. A veces pasa muy rápido.»
 - **Hernán** · «Cuando volví pensé que todavía iba a tener tiempo de desarmar todo.»
 - **Mara** · «Dejalo para mañana. El primer parte ya está. Buenas noches, Hernán.»
@@ -132,8 +128,7 @@ La primera respuesta puede volver en la despedida.
 
 **Primero entra una voz cortada.** Se oye «…cruces…». Si el jugador abre la conversación, **Hernán** es el primero en hablar.
 
-- **Opción 1** · «Le contás a Mara lo que viste y oíste.»
-  - **Hernán** · «Vi dos destellos. Uno quedó por encima de la ladera. Y en el canal se cortó una voz, como si dijera «cruces».»
+- **Opción 1, Hernán** · «Vi dos destellos. Uno quedó por encima de la ladera. Y en el canal se cortó una voz, como si dijera «cruces».»
   - **Mara** · «Desde mi ventana veo la curva hasta el primer poste. Por ahí no pasó nadie mientras hablábamos.»
   - **Mara** · «Si una luz quedó arriba del filo, marcame desde dónde la viste. Lo de la voz lo podemos probar en la antena.»
 - **Opción 2** · «Anotás el rumbo para más tarde.»
@@ -143,14 +138,12 @@ La primera respuesta puede volver en la despedida.
 
 **Empieza Hernán.** Después del destello, se puede abrir la radio desde la antena.
 
-- **Hernán** · «Mara, estoy al pie del mástil. ¿Me copiás?»
+- **Hernán** · «Estoy al pie del mástil. ¿Me copiás?»
 - **Mara** · «Ahora sí te oigo. ¿Cómo me escuchás vos desde ahí?»
 
-- **Opción 1** · «Preguntarle cómo te copia.»
-  - **Hernán** · «¿Cómo me copiás desde el mástil?»
-  - **Mara** · «Ahora sí. Te oigo clarito.»
-- **Opción 2** · «Decirle que te quedás un rato.»
-  - **Hernán** · «Me quedo un rato en el mástil.»
+- **Opción 1, Hernán** · «Te oigo claro. Se fue la estática.»
+  - **Mara** · «Perfecto. Entonces el mástil está haciendo su trabajo.»
+- **Opción 2, Hernán** · «Me quedo un rato en el mástil.»
   - **Mara** · «Dale. Dejo la radio prendida.»
 - **Mara, en ambas si Hernán contó lo del abra** · «Desde la antena tu voz entra limpia. Guardá la hora de los destellos. Puedo preguntar si había alguien del otro lado.»
 
@@ -234,7 +227,7 @@ La primera respuesta abre una pregunta adicional en la charla del Día 27 y pued
 
 **Disparador.** Con R al bajar por el filo, una vez enviado el parte.
 
-**Empieza Hernán.** «Mara, anoche soñé que estaba en otro planeta. Saltaba y tardaba una eternidad en volver al suelo.»
+**Empieza Hernán.** «Anoche soñé que estaba en otro planeta. Saltaba y tardaba una eternidad en volver al suelo.»
 
 - **Mara** · «Ja. Te pegaron fuerte las historias de OVNIs. Eso es para los turistas. ¿Y después qué hiciste?»
 
@@ -249,12 +242,14 @@ La primera respuesta permite que Mara recuerde el dibujo en la despedida.
 
 ### Encargo del malacate
 
-**Empieza Mara.** La apertura recoge la decisión sobre la laja después de que Hernán confirma el encargo.
+**Empieza Mara.** Saluda y retoma la recomendación del Día 25 antes de dar el nuevo encargo.
 
+- **Mara** · «Buen día, Hernán.»
+- **Mara, si recomendó la vaguada** · «Les marqué el rodeo a los de mantenimiento. Ya llegaron al cable por ahí.»
+- **Mara, si recomendó la cuerda** · «Les avisé lo del escalón. Dejaron la carga abajo y subieron por turnos.»
+- **Mara** · «Tengo otro encargo para vos.»
 - **Mara** · «Hay una chapa suelta en el malacate. A cierta hora devuelve el sol hacia el puesto.»
 - **Hernán** · «Te copio. ¿Querés que la gire para probar el reflejo?»
-- **Mara, si recomendó la vaguada** · «Sí. Les marqué el rodeo a los de mantenimiento. Ya llegaron al cable por ahí.»
-- **Mara, si recomendó la cuerda** · «Sí. Les avisé lo del escalón. Dejaron la carga abajo y subieron por turnos.»
 - **Mara** · «Salí por la tranquera y doblá a la izquierda. Seguí el cable viejo hasta la chapa.»
 - **Hernán** · «Cuando la gire te aviso. Si la ves desde ahí, probamos si se apaga.»
 - **Mara** · «Sí, con este sol me da justo en la ventana. Es buen momento para probar.»
@@ -276,7 +271,7 @@ La primera respuesta permite que Mara recuerde el dibujo en la despedida.
   - **Mara, si Hernán le contó lo del padre** · «¿Lo extrañás mucho?»
   - **Hernán, si Mara pregunta** · «A veces estoy por contarle algo. Me acuerdo justo cuando ya abrí la boca.»
   - **Mara** · «Mi mamá murió hace unos años. Todavía saco dos tazas si pongo la pava medio dormida. Después guardo una.»
-- **Opción 2, Hernán** · «Te agradezco que me lo digas. Prefiero que quede ahí.»
+- **Opción 2, Hernán** · «Prefiero que quede ahí. Te agradezco que me lo digas.»
   - **Mara** · «Dale. Avisame cuando llegues al malacate.»
 
 ### Prueba del reflejo
@@ -293,9 +288,9 @@ La primera respuesta permite que Mara recuerde el dibujo en la despedida.
 - **Hernán** · «La chapa que giré sigue quieta. Ahora veo una luz más arriba, separada del sendero. ¿Vos la ves?»
 - **Hernán, si comparó los destellos en el libro** · «La chapa sigue quieta. Esta luz está más arriba y cae en otro rumbo que los destellos que marqué en el libro. ¿Vos la ves?»
 - **Mara** · «El reflejo de la chapa se apagó en mi ventana. Lo de arriba me lo tapa la ladera. ¿Desde dónde estás viendo esa otra luz?»
-- **Opción 1, Hernán** · «Desde el malacate. La chapa sigue quieta.»
+- **Opción 1, Hernán** · «La chapa sigue quieta. Estoy al lado del bastidor.»
   - **Mara** · «Anotala aparte entonces. Puede haber un foco de trabajo atrás del corte.»
-- **Opción 2, Hernán** · «Desde el malacate. Te paso el rumbo que acabo de anotar.»
+- **Opción 2, Hernán** · «Te paso el rumbo que acabo de anotar. Lo marqué desde el malacate.»
   - **Mara** · «Con ese rumbo la luz cae detrás del corte. Guardá también la hora.»
 - **Mara, si Hernán contó lo del abra** · «La otra vez eran dos destellos. Guardá los dos rumbos. Desde abajo se te mezcla todo en la misma ladera.»
 - **Mara, en ambas** · «Entre el ruido oí «todavía». Pensé que habías hablado vos.»
@@ -309,16 +304,16 @@ La primera respuesta permite que Mara recuerde el dibujo en la despedida.
 
 **Disparador.** Con R en el camino de vuelta del malacate, después del parte y cuando ya está oscuro.
 
-**Empieza Hernán.** «Mara, mirá hacia el sur si podés. Ya se ve la Cruz del Sur sobre la ladera.»
+**Empieza Hernán.** «Mirá hacia el sur si podés. Ya se ve la Cruz del Sur sobre la ladera.»
 
 - **Mara** · «Veo unas cuantas. ¿Cómo sabés cuáles son?»
 - **Hernán** · «Estudié astronomía. La Cruz del Sur fue de las primeras que aprendí a encontrar.»
 - **Mara** · «¿Astronomía, de verdad? Yo te pedí que me leyeras una regla. ¿Seguiste trabajando de eso?»
 
-- **Opción 1, Hernán** · «Pasaron cosas en casa. Al final fui dando clases y dejé la investigación.»
+- **Opción 1, Hernán** · «Dejé la investigación. Pasaron cosas en casa y al final fui dando clases.»
   - **Mara** · «Mirá vos. Yo con suerte me acuerdo de cuál es la del medio del cinturón.»
   - **Mara** · «Si te vuelvo a preguntar cuál es la Cruz del Sur, hacé de cuenta que soy alumna nueva.»
-- **Opción 2, Hernán** · «Pasaron cosas. A veces pienso que todavía me gustaría volver a trabajar mirando el cielo.» *(suma cercanía)*
+- **Opción 2, Hernán** · «Me gustaría volver a la investigación. En casa se complicaron las cosas y lo fui dejando.» *(suma cercanía)*
   - **Mara** · «Bueno, ahora ya sé a quién llamar cuando quiera entender lo que estoy mirando.»
   - **Mara** · «Y me vas a tener que mostrar cuál de las cuatro buscás primero.»
 
@@ -358,14 +353,13 @@ La primera respuesta permite que Mara recuerde el dibujo en la despedida.
 - **Hernán** · «Llegué al hito. No quedó nadie. Desde acá se ve que entre el camino y la muesca hay otro pliegue de sierra. La luz me sigue dejando dudas.»
 - **Mara** · «Pudo ser una linterna. Desde un sendero bastante más abajo también parecen flotar.»
 - **Mara, si Hernán pasó el rumbo del malacate** · «Marqué el rumbo que me diste. Atrás de la ladera hay gente caminando casi todas las noches. Una linterna de frente engaña a cualquiera.»
-- **Mara** · «Por hoy, con que llegues al banco del acceso alcanza.»
+- **Mara** · «Volvé al puesto para cerrar la travesía. Bajá por las pircas hasta el banco y seguí por la huella.»
 
 ### La voz de la bajada
 
 **Primero se oye un eco.** La radio da dos golpes y repite «hasta el banco» con una voz parecida a la de Hernán. Puede abrir la conversación **Hernán**.
 
-- **Opción 1** · «¿Eso lo dijiste vos?»
-  - **Hernán** · «¿Vos acabás de repetir «hasta el banco»?»
+- **Opción 1, Hernán** · «¿Vos acabás de repetir «hasta el banco»?»
   - **Mara** · «Lo dije antes. Ahora estaba esperando tu respuesta. Si lo volvés a oír, fijate si entra antes o después de que sueltes el botón.»
 - **Opción 2** · «Guardás la radio y empezás a bajar.»
   - *Hernán se queda con lo que oyó.*
@@ -384,10 +378,10 @@ La primera respuesta permite que Mara recuerde el dibujo en la despedida.
 - **Hernán** · «Supongo que nunca encontré el tiempo.»
 - **Mara** · «¿Y alguna chica? ¿Alguien con quien te hayan dado ganas? Si querés contarme.»
 
-- **Opción 1, Hernán** · «Hubo alguien. Paula. Estudiábamos juntos y se fue a Alemania. Hace tiempo que no hablamos.» *(suma cercanía)*
+- **Opción 1, Hernán** · «Se llama Paula. Estudiábamos juntos y se fue a Alemania. Hace tiempo que no hablamos.» *(suma cercanía)*
   - **Mara** · «Tenías ganas de hablarle, por cómo lo decís.»
   - **Mara** · «Bueno. Si un día te salen las palabras, mandale aunque sea una línea.»
-- **Opción 2, Hernán** · «Hubo alguien, sí. Por ahora prefiero dejarlo ahí.» *(suma cercanía)*
+- **Opción 2, Hernán** · «Prefiero dejarlo ahí por ahora. Hubo alguien, sí.» *(suma cercanía)*
   - **Mara** · «Entiendo. Perdón si te agarré de sorpresa. Podemos seguir hablando de otra cosa.»
 
 La primera respuesta es la primera mención de Paula en la radio. Habilita las alusiones de los Días 40 y 41.
@@ -400,8 +394,8 @@ La primera respuesta es la primera mención de Paula en la radio. Habilita las a
 
 **Empieza Mara.** «Cuando veas el banco ya estás fuera de la parte fea de la bajada. Si querés, me quedo un rato.»
 
-- **Opción 1, Hernán** · «Ya veo por dónde sigo. ¿Dónde te dejo la llave el último día?»
-  - **Mara** · «En el cajón del escritorio. Tengo una copia para el próximo relevo. Avisame al llegar al banco.»
+- **Opción 1, Hernán** · «Ya veo por dónde sigo. Acá abajo aflojó un poco el viento.»
+  - **Mara** · «Acá también paró. Si te agarra otra ráfaga, esperá al reparo de las piedras. Avisame cuando veas el puesto.»
 - **Opción 2, Hernán** · «Quedate un rato. Cada vez que suelto el botón vuelve a oírse el viento.» *(suma cercanía)*
   - **Mara** · «Dale. Yo sigo lavando unos platos. Cuando llegues me avisás.»
   - **Mara** · «En el próximo cajón te mando un tinto que tenía guardado. Abrilo cuando entregues la llave.»
@@ -474,9 +468,9 @@ La segunda respuesta hace que la botella de tinto aparezca en el puesto desde el
 
 **Empieza Mara.** «Probé el equipo de repuesto. En ese tramo se pisan dos frecuencias. Sigo sin ubicar la voz de la advertencia. ¿Ya ves la tranquera?»
 
-- **Opción 1, Hernán** · «Sí. ¿Te quedás conmigo hasta que entre al patio?» *(suma cercanía)*
+- **Opción 1, Hernán** · «¿Te quedás conmigo hasta que entre al patio?» *(suma cercanía)*
   - **Mara** · «Sí. Yo me quedo acá. Avisame cuando estés del otro lado de la verja.»
-- **Opción 2, Hernán** · «Sí, la veo. Si vuelve a entrar la voz, te anoto la hora.»
+- **Opción 2, Hernán** · «Veo la tranquera. Si vuelve a entrar la voz, te anoto la hora.»
   - **Mara** · «Dale. Yo voy a dejar anotada la hora que escuché el primer golpe.»
 
 Si antes retrocedió y ambos oyeron la voz de Hernán, Mara añade «Si se repite tu voz, dejá pasar un segundo antes de responder. Quiero saber cuánto tarda en volver.» La primera respuesta puede volver en la despedida.
@@ -514,10 +508,10 @@ Si antes retrocedió y ambos oyeron la voz de Hernán, Mara añade «Si se repit
 **Empieza Mara** en cualquier parte del mapa al cumplir cinco minutos de exploración.
 
 - **Mara** · «¿Me copiás? Te quería avisar lo del ómnibus de mañana.»
-- **Hernán** · «¿Lo espero en la banquina donde empieza la curva?»
+- **Hernán** · «¿Lo espero abajo en la ruta, después de la bajada?»
 - **Mara** · «Sí. Parate donde el chofer te vea desde antes de doblar.»
-- **Mara, con suficiente cercanía para la visita** · «De ahí sale una huella para abajo. Si te sobra un rato, podrías pasar a verme.»
-- **Mara, en las demás partidas** · «Si llegás antes, avisame por el tres. Voy a estar en el puesto de abajo.»
+- **Mara, con suficiente cercanía para la visita** · «En la bajada vas a ver una huella vecinal. Si te sobra un rato, podrías pasar a verme.»
+- **Mara, en las demás partidas** · «Avisame por el tres cuando salgas a la bajada. Voy a estar en el puesto de abajo.»
 - **Mara** · «Pará. ¿Vos también ves esas dos luces por encima del monte?»
 
 ### Seguir las luces o dejarlas ir
@@ -525,11 +519,11 @@ Si antes retrocedió y ambos oyeron la voz de Hernán, Mara añade «Si se repit
 **Empieza Mara.** Se abre al mirar las luces y confirmarlas con E.
 
 - **Mara** · «Desde acá ya se me taparon. ¿Para dónde fueron?»
-- **Opción 1, Hernán** · «Se van al monte. Las voy a seguir.»
+- **Opción 1, Hernán** · «Se van al monte y las voy a seguir.»
   - **Mara** · «Esperá. Llevá la linterna. Si dejás de ver el puesto, llamame.»
   - *Hernán sigue las luces. Una cartela lo lleva al exterior de la cueva. Esta ruta incluye el regreso por las estrellas y el último sueño.*
-- **Opción 2, Hernán** · «Se van al monte. Las dejo ir, Mara. Me voy a acostar.»
-  - **Mara** · «Está bien. Dejá las cosas cerca de la puerta para mañana. Te escucho desde la curva.»
+- **Opción 2, Hernán** · «Las dejo ir. Se van al monte. Me voy a acostar.»
+  - **Mara** · «Está bien. Dejá las cosas cerca de la puerta para mañana. Te escucho desde la bajada.»
   - *Hernán puede entrar y acostarse. Se anota la decisión y pasa al Día 41 sin el último sueño. El museo y la despedida siguen abiertos.*
 
 ### La boca de la cueva
@@ -554,14 +548,15 @@ Si antes retrocedió y ambos oyeron la voz de Hernán, Mara añade «Si se repit
 
 **Empieza Hernán.** La cuerda se corta durante el descenso. La llamada se dispara al aterrizar.
 
-- **Hernán** · «Se cortó la cuerda. Caí al fondo. Creo que puedo caminar, pero por acá no subo.»
+- **Mara, después de que Hernán cae** · «¿Hernán? Oí un golpe. ¿Estás bien?»
+- **Hernán, al contestar con R** · «Estoy bien. Se cortó la cuerda y caí al fondo. Por acá ya no puedo subir.»
 - **Mara** · «Quedate un segundo donde caíste. Cuando estés firme, alumbrá alrededor. Decime si ves por dónde sigue.»
 
 ### La estación y el receptor
 
 **Empieza Hernán.** Se habilita con R cerca de la estación después de pasar al menos a la segunda página del cuaderno. Se puede examinar antes el receptor y oír dos golpes.
 
-- **Hernán** · «Hay un receptor de radio y cuadernos del 75 y el 76. Anotaban las luces. El dial está marcado en el tres, como el nuestro.»
+- **Hernán** · «Hay un receptor de radio y cuadernos de los años 70. Anotaban las luces. El dial está marcado en el tres, como el nuestro.»
 - **Mara** · «¿Nuestro canal? Fijate si del receptor sale un cable. Si entra en otra galería, puede llevarte hacia afuera.»
 - **Hernán** · «Sí. Va pegado a la pared del fondo. Voy por ahí.»
 - **Mara** · «Dejá prendida la radio. Si perdés la señal, buscá por dónde corre el aire.»
@@ -595,16 +590,16 @@ Si antes retrocedió y ambos oyeron la voz de Hernán, Mara añade «Si se repit
 
 ### La puerta del puesto al volver
 
-**Empieza Hernán.** Después de reconocer la Cruz del Sur y seguir el destello, R está disponible frente al puesto. Intercambio fijo.
+**Empieza Hernán.** Después de reconocer la Cruz del Sur y caminar treinta segundos en la dirección que marca la línea hasta el horizonte, un fundido deja a Hernán frente al puesto. Ahí está disponible R. Intercambio fijo.
 
-- **Hernán** · «Mara, soy yo. Llegué bien al puesto. Mañana voy a necesitar otra brújula.»
+- **Hernán** · «Ya estoy en el puesto. Llegué bien.»
 - **Mara** · «¿Estás en la puerta? Te oigo claro ahora. Estuve esperando que volvieras a llamar.»
 - **Hernán** · «En el túnel dijiste que te había llegado mi voz de nuevo. ¿Qué escuchaste?»
 - **Mara** · «Tu «¿me copiás?». Volvió igualito unos segundos después de que soltaras el botón. Pensé que habías insistido.»
 - **Hernán** · «Yo lo dije una sola vez.»
 - **Mara** · «Capaz rebotó en algún equipo. Mañana lo hablamos. Ahora entrá en calor, Hernán.»
 
-*Tras la llamada se habilita la cama. En esta ruta, dormir sí lleva al último sueño.*
+*Tras la llamada se habilita la cama. En esta ruta, dormir lleva al último sueño. La brújula de repuesto está en el cajón derecho del escritorio y se puede recoger con E la mañana del Día 41.*
 
 ### La voz de los arcos
 
@@ -631,30 +626,34 @@ Si antes retrocedió y ambos oyeron la voz de Hernán, Mara añade «Si se repit
 
 ## Día 41 · La partida
 
+### Empacar y salir
+
+La mochila espera en el suelo. Al guardar el libro, los papeles, la postal y los dibujos juntos, Hernán puede abrir la puerta. El museo queda por el camino ascendente. La partida sigue por la bajada a la ruta.
+
 ### La última caminata
 
 **Charla opcional de cercanía.**
 
-**Disparador.** Con R después de dejar el puesto, en la huella hacia la parada y antes de llegar a la curva.
+**Disparador.** Con R después de dejar el puesto, en el primer tramo de la bajada a la ruta.
 
-**Empieza Hernán.** «Mara, ya salí. Me cuesta creer que sea la última vez que vengo por esta huella.»
-- **Apertura alternativa. Si Hernán mencionó a Paula y quedó registrado en la partida** · «Mara, salí con ganas de escribirle a Paula. Pero eso puede esperar. Ahora me cuesta creer que sea la última vez que vengo por esta huella.»
+**Empieza Hernán.** «Ya salí. Me cuesta creer que sea la última vez que vengo por esta huella.»
+- **Apertura alternativa. Si Hernán mencionó a Paula y quedó registrado en la partida** · «Salí con ganas de escribirle a Paula. Pero eso puede esperar. Ahora me cuesta creer que sea la última vez que vengo por esta huella.»
 
-- **Mara, en ambas aperturas** · «A la vuelta de la loma ya vas a ver la curva. ¿Sabés qué vas a hacer cuando llegues a casa?»
+- **Mara, en ambas aperturas** · «A la vuelta de la loma arranca la bajada. ¿Sabés qué vas a hacer cuando llegues a casa?»
 
 - **Opción 1, Hernán** · «Cuando llegue a casa voy a abrir la ventana y dejar todo en el bolso.»
-  - **Mara** · «El bolso puede esperar hasta mañana. Si te olvidaste algo, yo subo al puesto después.»
+  - **Mara** · «Si te olvidaste de algo, yo subo al puesto después.»
 - **Opción 2, Hernán** · «Creo que voy a salir a mirar el cielo desde la vereda. Hace mucho que no lo hago.» *(suma cercanía)*
   - **Mara** · «Ojalá esté despejado. Si llegás a ver la cruz, pensá que desde acá va a estar para el mismo lado.»
 
-### Primer llamado en la curva
+### Primer llamado en la bajada
 
-**Empieza Mara** si todavía está disponible la charla de la ventanilla. Se abre con R una vez que Hernán llega a la curva del ómnibus.
+**Empieza Mara** si todavía está disponible la charla de la ventanilla. Se abre con R a mitad de la bajada a la ruta.
 
 - **Mara** · «Estoy acá. ¿Cómo va esa última mañana?»
-- **«Charlar un rato.»** Abre la charla opcional de la ventanilla.
-- **«Despedirte antes del ómnibus.»** Pasa a la despedida.
-- **«Guardar la radio.»** Vuelve a la caminata.
+- **Hernán** · «¿Tenés un minuto para charlar?» Abre la charla opcional de la ventanilla.
+- **Hernán** · «Te llamaba para despedirme.» Pasa a la despedida.
+- **«Guardás la radio.»** Vuelve a la caminata.
 
 *Si la charla opcional ya se completó o todavía está activo el intervalo, R abre la despedida directamente.*
 
@@ -662,9 +661,9 @@ Si antes retrocedió y ambos oyeron la voz de Hernán, Mara añade «Si se repit
 
 **Charla opcional de cercanía.**
 
-**Disparador.** Con R al acercarse a la curva y al elegir «Charlar un rato.» si aparece el menú previo a la despedida.
+**Disparador.** Con R a mitad de la bajada y al elegir «¿Tenés un minuto para charlar?» si aparece el menú previo a la despedida.
 
-**Empieza Mara.** «Desde esa curva, el puesto se ve un rato más cuando arranca el ómnibus. Yo siempre lo busco entre los árboles.»
+**Empieza Mara.** «Si te das vuelta en la bajada, vas a ver el techo del puesto entre los árboles. Yo siempre lo busco desde ahí.»
 
 - **Opción 1, Hernán** · «Voy a sentarme del lado de la sierra.»
   - **Mara** · «Sentate adelante si hay lugar. De atrás a veces sólo se ve el polvo.»
@@ -675,11 +674,11 @@ Se puede terminar esta charla y volver a abrir la radio para despedirse.
 
 ### La despedida
 
-**Empieza Hernán** al llamar desde la curva, o al elegir despedirse en el llamado anterior.
+**Empieza Hernán** al llamar desde la bajada. Si viene de la elección «Te llamaba para despedirme.», Mara responde directamente.
 
-- **Hernán** · «Llegué a la curva, Mara. Te quería avisar antes de subir.»
-- **Mara, apertura habitual** · «Te escucho. Desde acá todavía no veo el ómnibus.»
-- **Mara, si Hernán vio el dibujo del museo** · «El dibujo que viste en el museo estaba entre los papeles del poste. Elvira nunca pudo averiguar de quién era.»
+- **Hernán** · «Ya estoy bajando a la ruta. Te quería avisar antes de irme.»
+- **Mara, apertura habitual** · «Te escucho. Todavía tenés tiempo de sobra para alcanzar el ómnibus.»
+- **Mara, si Hernán vio el dibujo del museo** · «Ese parte del museo quedó entre los papeles del cauce. Elvira nunca pudo averiguar quién lo firmó.»
 
 **Réplicas sobre la última noche**
 
@@ -702,7 +701,7 @@ Se puede terminar esta charla y volver a abrir la radio para despedirse.
 
 - **Hernán** · «Se me va a hacer raro guardar la radio.»
 - **Mara** · «A mí me va a costar dejar de buscar el canal tres.»
-- **Mara** · «Si querés pasar por casa antes de irte, salí por la huella de la curva. Es la puerta de madera con el buzón. Golpeá, que desde el fondo cuesta oír.»
+- **Mara** · «Si querés pasar por casa antes de irte, más abajo empieza una huella a mano izquierda. Es la puerta de madera con el buzón. Golpeá, que desde el fondo cuesta oír.»
 
 **Si Hernán todavía no reúne la cercanía para ir a la puerta**
 
@@ -712,15 +711,15 @@ Se puede terminar esta charla y volver a abrir la radio para despedirse.
 
 ### Las decisiones de partida
 
-**Se abre al terminar la despedida.** En pantalla, se ve el ómnibus doblar en la curva.
+La despedida termina a pie. El jugador continúa por el camino marcado en el mapa hasta el fundido.
 
-- **«Subís al ómnibus.»** Disponible siempre. El epílogo muestra a Hernán en el ómnibus, con el libro y la radio apagada en la mochila. Oye dos golpes secos.
-- **«Tomás el sendero y vas a golpear la puerta de Mara.»** Disponible con nueve charlas de cercanía. Hernán tiene que caminar hasta la casa y golpear con E. Mara queda fuera de escena. Del otro lado cruje una tabla.
+- **«Seguir hasta la parada del ómnibus.»** Disponible siempre. Al terminar la bajada, el fundido deja a Hernán en una parada de la ruta. Puede subir con E.
+- **«Tomar la huella hacia la casa de Mara.»** Disponible con nueve charlas de cercanía. El sendero vecinal sale a la izquierda. El fundido deja a Hernán ante la puerta y puede golpear con E. Mara queda fuera de escena y del otro lado cruje una tabla.
 - *Si Hernán preguntó «¿Papá…?» en el último sueño, el texto final recuerda la voz y las cuatro estrellas. En las otras rutas, Hernán piensa llevar el libro cuando vuelva a dar clase.*
 
 ## Cartas breves ligadas a las charlas
 
-- **Piedra de Mara.** Si Hernán le pregunta qué piedra se llevó del cauce, aparece con las pilas desde el Día 7. La nota dice «Para el mapa. La otra sigue en mi mesa. M.».
+- **La piedra de Mara.** Si Hernán se interesa por el fósil, aparece con las pilas desde el Día 7. Hernán puede bocetarlo con E en el escritorio.
 - **Botella de Mara.** Si le pide que se quede en línea al bajar de la cumbre, el tinto aparece en la repisa desde el Día 36. La nota dice «Para cuando entregues la llave. M.».
 
 Textos y condiciones del juego en [las charlas de sendero](game-recovered/charlas_mara.gd) y [el guion de las misiones](game-recovered/main.gd).

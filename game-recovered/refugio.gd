@@ -158,10 +158,12 @@ static func desk(parent: Node3D, drawers: Dictionary) -> StaticBody3D:
 	Kit.block(table, Vector3(0, 0.898, 0), Vector3(1.778, 0.011, 0.679), pine)
 	for x in [-0.397, 0.397]:
 		var label := "Cajón izquierdo" if x < 0.0 else "Cajón derecho"
-		var drawer := Kit.item(table, Vector3(x, 0.72, 0), label, Vector3(0, 0, -0.131), Vector3(0.75, 0.167, 0.39))
+		var drawer := Kit.item(table, Vector3(x, 0.72, 0), label, Vector3(0, 0, -0.305), Vector3(0.75, 0.165, 0.036))
 		drawers[label] = drawer
 		Kit.block(drawer, Vector3(0, 0, -0.305), Vector3(0.75, 0.165, 0.032), pine)
-		Kit.block(drawer, Vector3(0, -0.064, -0.10), Vector3(0.71, 0.018, 0.40), shadow)
+		var bottom := Kit.block(drawer, Vector3(0, -0.064, -0.10), Vector3(0.71, 0.018, 0.40), shadow)
+		bottom.create_convex_collision()
+		bottom.get_child(0).set_meta("item", label)
 		for side in [-0.35, 0.35]:
 			Kit.block(drawer, Vector3(side, -0.021, -0.10), Vector3(0.019, 0.114, 0.40), timber)
 		Kit.block(drawer, Vector3(0, -0.021, 0.101), Vector3(0.71, 0.107, 0.022), timber)
@@ -179,6 +181,43 @@ static func desk(parent: Node3D, drawers: Dictionary) -> StaticBody3D:
 				Kit.cylinder(drawer, Vector3(0.14, -0.038, z), 0.020, 0.020, 0.111, Kit.material("3f4b43", false, 0.47)).rotation.z = PI / 2.0
 				Kit.cylinder(drawer, Vector3(0.201, -0.038, z), 0.013, 0.014, 0.014, brass).rotation.z = PI / 2.0
 	return desk_items(parent)
+
+static func spare_compass(drawer: Node3D) -> StaticBody3D:
+	var compass := Kit.item(drawer, Vector3(-0.16, -0.054, -0.150), "Brújula de repuesto",
+		Vector3.UP * 0.029, Vector3(0.118, 0.026, 0.125))
+	compass.name = "Brújula de repuesto"
+	compass.collision_layer = 0
+	compass.collision_mask = 0
+	compass.rotation.y = -0.30
+	var brass := Kit.material("9c7944", false, 0.53)
+	var brass_edge := Kit.material("bc9859", false, 0.49)
+	var face := Kit.material("dfd1a9", false, 0.64)
+	var ink := Kit.material("504336")
+	var red := Kit.material("933e36")
+	Kit.cylinder(compass, Vector3.UP * 0.011, 0.054, 0.055, 0.022, brass)
+	Kit.cylinder(compass, Vector3.UP * 0.023, 0.055, 0.054, 0.005, brass_edge)
+	Kit.cylinder(compass, Vector3.UP * 0.025, 0.049, 0.049, 0.004, face)
+	Kit.cylinder(compass, Vector3.UP * 0.031, 0.0035, 0.0035, 0.005, brass)
+	for i in 16:
+		var angle := TAU * i / 16.0
+		var point := Vector3(sin(angle), 0.0, -cos(angle))
+		var mark := Kit.block(compass, Vector3.UP * 0.0273 + point * 0.044,
+			Vector3(0.0019, 0.0005, 0.007 if i % 4 == 0 else 0.0035), red if i == 0 else ink)
+		mark.rotation.y = -angle
+	var needle := SurfaceTool.new()
+	needle.begin(Mesh.PRIMITIVE_TRIANGLES)
+	needle.set_normal(Vector3.UP)
+	for sign_z in [-1.0, 1.0]:
+		var shoulder := Vector3(0.0044, 0.030, 0.0)
+		var point := Vector3(0.0, 0.030, sign_z * 0.033)
+		needle.add_vertex(shoulder * Vector3(sign_z, 1, 1))
+		needle.add_vertex(point)
+		needle.add_vertex(shoulder * Vector3(-sign_z, 1, 1))
+	var indicator := Kit.mesh_part(compass, needle.commit(), Vector3.ZERO, red)
+	indicator.rotation.y = 0.33
+	Kit.cord(compass, PackedVector3Array([Vector3(-0.009, 0.011, -0.048), Vector3(-0.012, 0.011, -0.061),
+		Vector3(0, 0.011, -0.069), Vector3(0.012, 0.011, -0.061), Vector3(0.009, 0.011, -0.048)]), 0.0028, brass_edge)
+	return compass
 
 static func desk_items(parent: Node3D) -> StaticBody3D:
 	var paper := Kit.material("e2d2ad")
@@ -216,9 +255,20 @@ static func map_weight(parent: Node3D) -> StaticBody3D:
 	var faces := Stone.surface()
 	var rng := RandomNumberGenerator.new()
 	rng.seed = 322
-	Stone.fragment(faces, Vector3.UP * 0.016, Vector3(0.149, 0.043, 0.106), 0.21, rng)
-	var pebble := Stone.finish(weight, faces, "Piedra chata")
-	pebble.material_override = Stone.paint("#c8c3b5")
+	Stone.fragment(faces, Vector3.UP * 0.016, Vector3(0.179, 0.036, 0.132), 0.10, rng, Callable(), Stone.LAJA_PROFILE)
+	var pebble := Stone.finish(weight, faces, "Laja con impresión vegetal")
+	pebble.material_override = Stone.paint("#9d8973")
+	var imprint := Kit.material("544837", false, 0.93)
+	var stem := PackedVector3Array()
+	for i in 9:
+		var t := float(i) / 8.0
+		stem.append(Vector3(lerpf(-0.051, 0.052, t), 0.051 + 0.002 * sin(t * 4.2), 0.011 - t * t * 0.028))
+		if i in [0, 8]: continue
+		for side in [-1, 1]:
+			var length := 0.031 * sin(PI * t) + 0.004
+			Kit.cord(weight, PackedVector3Array([stem[-1], stem[-1] + Vector3(0.008, 0, side * length * 0.55),
+				stem[-1] + Vector3(0.017, -0.001, side * length)]), 0.0011, imprint)
+	Kit.cord(weight, stem, 0.0015, imprint)
 	return weight
 
 static func wine_parcel(parent: Node3D, spot: Vector3) -> StaticBody3D:
@@ -401,7 +451,7 @@ static func floor_runner(parent: Node3D):
 	var threads := Kit.mesh_part(parent, fringe.commit(), Vector3(1.27, 0.037, 3.95), cloth("aa8f67", "b49a72", 0.24))
 	threads.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 
-static func closed_book(parent: Node3D, ribbon: bool):
+static func closed_book(parent: Node3D, ribbon: bool) -> StaticBody3D:
 	var book := Kit.item(parent, Vector3(-1.75, 1.731, 5.758), "Observar el Cielo", Vector3.UP * 0.033, Vector3(0.302, 0.066, 0.443))
 	book.name = "Observar el Cielo"
 	book.rotation = Vector3(-0.90, -0.04, 0)
@@ -423,12 +473,16 @@ static func closed_book(parent: Node3D, ribbon: bool):
 			Vector3(-0.074, 0.048, -0.247), Vector3(-0.070, 0.076, -0.268),
 		]), 0.019, Kit.material("536952", true))
 
-static func postcard(parent: Node3D):
+	return book
+
+static func postcard(parent: Node3D) -> StaticBody3D:
 	var card := Kit.item(parent, Vector3(2.20, 1.54, 5.857), "Postal de Paula", Vector3.ZERO, Vector3(0.23, 0.157, 0.024))
 	card.rotation = Vector3(0, PI, -0.08)
 	Kit.block(card, Vector3.ZERO, Vector3(0.220, 0.148, 0.006), Kit.material("d5bf9b"))
 	print_surface(card, Vector3.BACK * 0.0035, Vector2(0.216, 0.144), POSTCARD)
 	Kit.cylinder(card, Vector3(0, 0.067, 0.005), 0.006, 0.006, 0.009, Kit.material("a47e58")).rotation.x = PI / 2.0
+
+	return card
 
 static func wall_sketch(parent: Node3D, pos: Vector3, drawing: Texture2D, motif: int) -> Node3D:
 	var sheet := Node3D.new()
@@ -647,7 +701,7 @@ static func refrigerator(parent: Node3D) -> Dictionary:
 	bulb.visible = false
 
 	var doors: Dictionary = {}
-	for compartment in [["Heladera", 0.58, 0.98, 0.32], ["Freezer", 1.225, 0.283, -0.035]]:
+	for compartment in [["Heladera", 0.574, 0.964, 0.32], ["Freezer", 1.229, 0.281, -0.035]]:
 		var tag: String = compartment[0]
 		var center: float = compartment[1]
 		var height: float = compartment[2]
@@ -657,7 +711,10 @@ static func refrigerator(parent: Node3D) -> Dictionary:
 		doors[tag] = hinge
 		var door_leaf := Kit.item(hinge, Vector3(0.022, center, 0.32), tag, Vector3.ZERO, Vector3(0.101, height, 0.64))
 		Kit.block(door_leaf, Vector3(-0.04, 0, 0), Vector3(0.026, height - 0.030, 0.626), seal)
-		pad(door_leaf, Vector3(0.004, 0, 0), Vector3(0.091, height, 0.643), door, 0.19, true)
+		var half := height * 0.5
+		Kit.shell(door_leaf, [Vector4(-half, 0.001, 0.001, 0), Vector4(-half, 0.032, 0.307, 0),
+			Vector4(-half + 0.017, 0.045, 0.318, 0), Vector4(half - 0.017, 0.045, 0.318, 0),
+			Vector4(half, 0.032, 0.307, 0), Vector4(half, 0.001, 0.001, 0)], door, 0.21, true)
 		for z in [0.059, 0.214]:
 			Kit.block(door_leaf, Vector3(0.052, compartment[3], z), Vector3(0.054, 0.038, 0.029), steel)
 		Kit.block(door_leaf, Vector3(0.079, compartment[3], 0.136), Vector3(0.019, 0.034, 0.195), steel)

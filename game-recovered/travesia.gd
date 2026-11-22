@@ -46,7 +46,9 @@ static func elevation(x: float, d: float) -> float:
 	var t: = smoothstep(0, 65, d)
 	var roll: = 6.0 * sin(d / 63.0) + 4.0 * sin(x / 53.0 + d / 89.0)
 	var shoulder: = 20.0 * pow(clampf(absf(x - trail(d)) / 180.0, 0, 1), 2)
-	var lip: = 3.1 * smoothstep(169.8, 170.2, d) * (1.0 - smoothstep(9, 26, absf(x - trail(170)))) * (1.0 - smoothstep(180, 218, d))
+	var offset := x - trail(170)
+	var width := 64.0 if offset < 0.0 else 26.0
+	var lip: = 3.1 * smoothstep(169.8, 170.2, d) * (1.0 - smoothstep(10, width, absf(offset))) * (1.0 - smoothstep(180, 218, d))
 	var summit: = 45.0 * exp( - pow((x - 146.0) / 76.0, 2) - pow((d - 948.0) / 61.0, 2))
 	return summit + (0.136 * maxf(0, d) + roll + shoulder) * t + lip
 
@@ -128,6 +130,7 @@ func _ready():
 	Ladera.build(self)
 	signpost(at(trail(124) + 2, 124), "Filo por la laja  ↑\nRodeo por la vaguada  →")
 	build_laja_rope()
+	dress_laja_flank()
 	signpost(at(trail(CREST) + 1.68, CREST), "Filo del puesto", 0.0, false, true)
 	var foot := surface_point(trail(CREST) - 1.50, CREST)
 	var marker := Stone.surface()
@@ -149,6 +152,18 @@ func _ready():
 	signpost(Vector3(western_x_at(-27.0) - 1.8, 0.0, -27.0), "Cantera ↖", 0.0, true)
 	var west_sign := western_approach(1.0) + Vector3(2.0, 0.0, 0.0)
 	signpost(west_sign, "Puesto · senda del oeste")
+
+func dress_laja_flank():
+	var faces := Stone.surface()
+	var mineral := RandomNumberGenerator.new()
+	mineral.seed = 22695
+	for i in 8:
+		var d := 169.0 + mineral.randf_range(-0.53, 0.86)
+		var foot := surface_point(trail(170) - 16.0 - i * 5.4, d)
+		var span := Vector3(6.8, mineral.randf_range(3.0, 4.3), mineral.randf_range(3.3, 5.5))
+		var piece := Stone.fragment(faces, foot, span, mineral.randf_range(-0.22, 0.24), mineral, terrain_point, Stone.FRACTURE_PROFILE, true)
+		Stone.solid(self, foot, piece, "Paredón de la laja")
+	Stone.finish(self, faces, "Ladera quebrada de la laja")
 
 func laja_rope_route() -> Array[Vector3]:
 	var x := trail(170.0) - 0.64
@@ -315,6 +330,31 @@ func plant():
 	for variant in rocks.size():
 		var stones: Array[Transform3D] = rocks[variant]
 		scattered("Granito %d" % (variant + 1), rock_forms[variant].mesh, stones, granite)
+	dress_far_slopes()
+
+func dress_far_slopes():
+	var field: Array[Transform3D] = []
+	var scrub: Array[Transform3D] = []
+	var rock: Array[Transform3D] = []
+	var rng := RandomNumberGenerator.new()
+	rng.seed = 95250
+	var form := Stone.hillside_form(5)
+	for i in 950:
+		var d := rng.randf_range(35.0, 964.0)
+		var x := trail(d) + rng.randf_range(125.0, 307.0) * (-1.0 if i % 2 == 0 else 1.0)
+		if x < -351 or x > 351: continue
+		var foot := surface_point(x, d) - Vector3.UP * 0.055
+		var turn := Basis(Vector3.UP, rng.randf() * TAU)
+		var scale_m := rng.randf_range(0.72, 1.64)
+		if i % 7 == 0:
+			rock.append(bed_rock(foot, turn, Vector3(3.2, 1.7, 2.3) * scale_m, form.base))
+		elif i % 4 == 0:
+			scrub.append(Transform3D(turn.scaled_local(Vector3(2.8, 1.7, 2.8) * scale_m), foot + Vector3.UP * 0.7))
+		else:
+			field.append(Transform3D(turn.scaled_local(Vector3(2.0, 1.3, 1.8) * scale_m), foot))
+	scattered("Piedras de la ladera distante", form.mesh, rock, Stone.paint(), false)
+	scattered("Pastos de las lomas", Flora.herb_mesh([Vector4(0, 0, 0, 1.26)], Flora.Herb.PAJA), field, Flora.grass_material(), false)
+	scattered("Matorral de las lomas", Flora.crown_mesh(2.22, 9, 4), scrub, Flora.leaf_material("697151"), false)
 
 func bed_rock(foot: Vector3, turn: Basis, size_m: Vector3, base: PackedVector3Array) -> Transform3D:
 	var east := terrain_point(foot + Vector3.RIGHT * 0.75) - terrain_point(foot - Vector3.RIGHT * 0.75)

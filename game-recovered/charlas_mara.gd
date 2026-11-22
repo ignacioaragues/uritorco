@@ -3,7 +3,7 @@ extends RefCounted
 const Creek = preload("res://cauce.gd")
 const Museum = preload("res://museo.gd")
 const Trail = preload("res://travesia.gd")
-const LastNight = preload("res://final_night.gd")
+const Departure = preload("res://salida.gd")
 
 const VISIT_PERCENT := 60
 
@@ -21,11 +21,11 @@ const TOPICS = {
 		]
 	],
 	"piedras": [
-		0, "Mara, ahora que vuelvo por la huella veo un brillo en las piedras. Desde arriba me habían parecido todas iguales.",
-		["¿Vos alguna vez te llevaste una de acá?", "Mañana quiero volver a verla a esta hora."],
+		0, "Che, ¿por acá se encuentran fósiles? Estuve mirando las piedras del cauce.",
+		["¿Me la mostrás algún día?", "Voy a mirar mejor las capas cuando vuelva al cauce."],
 		[
-			["Una blanca del cauce. La uso para sostener el mantel cuando abro la ventana.", "Tengo otra en el cajón. Te la mando con las pilas. Con el viento de arriba te va a servir para el mapa."],
-			["Fijate desde qué lado te dio el sol. Si volvés por la misma huella, buscá la marca que hiciste en la regla."]
+			["Te la mando con las pilas. Mirala de costado. Se le ven hasta las nervaduras."],
+			["Fijate en la piedra que se abre en láminas. Ahí a veces queda una impresión que parece hecha a lápiz."]
 		]
 	],
 	"museo": [
@@ -53,7 +53,7 @@ const TOPICS = {
 		]
 	],
 	"sueno": [
-		0, "Mara, anoche soñé que estaba en otro planeta. Saltaba y tardaba una eternidad en volver al suelo.",
+		0, "Anoche soñé que estaba en otro planeta. Saltaba y tardaba una eternidad en volver al suelo.",
 		["Te vas a reír, pero traté de dibujarlo antes de que se me borrara.", "Entonces cobrame la excursión cuando baje."],
 		[
 			["Algún día me gustaría ver esos dibujos. A ver si en tu planeta también había que caminar tanto."],
@@ -70,15 +70,15 @@ const TOPICS = {
 	],
 	"duelo": [
 		0, "Me quedó dando vueltas una cosa que te pregunté el otro día.",
-		["Está bien, Mara. Podés preguntar.", "Te agradezco que me lo digas. Prefiero que quede ahí."],
+		["Está bien, Mara. Podés preguntar.", "Prefiero que quede ahí. Te agradezco que me lo digas."],
 		[
 			["Gracias. A mí a veces me cuesta saber cuándo seguir y cuándo dejar un silencio."],
 			["Dale. Avisame cuando llegues al malacate."]
 		]
 	],
 	"cable": [
-		1, "Mara, mirá hacia el sur si podés. Ya se ve la Cruz del Sur sobre la ladera.",
-		["Pasaron cosas en casa. Al final fui dando clases y dejé la investigación.", "Pasaron cosas. A veces pienso que todavía me gustaría volver a trabajar mirando el cielo."],
+		1, "Mirá hacia el sur si podés. Ya se ve la Cruz del Sur sobre la ladera.",
+		["Dejé la investigación. Pasaron cosas en casa y al final fui dando clases.", "Me gustaría volver a la investigación. En casa se complicaron las cosas y lo fui dejando."],
 		[
 			["Mirá vos. Yo con suerte me acuerdo de cuál es la del medio del cinturón.", "Si te vuelvo a preguntar cuál es la Cruz del Sur, hacé de cuenta que soy alumna nueva."],
 			["Bueno, ahora ya sé a quién llamar cuando quiera entender lo que estoy mirando.", "Y me vas a tener que mostrar cuál de las cuatro buscás primero."]
@@ -86,7 +86,7 @@ const TOPICS = {
 	],
 	"pircas": [
 		0, "Me quedé pensando en lo que hablamos el otro día. ¿Nunca pensaste en formar una familia?",
-		["Hubo alguien. Paula. Estudiábamos juntos y se fue a Alemania. Hace tiempo que no hablamos.", "Hubo alguien, sí. Por ahora prefiero dejarlo ahí."],
+		["Se llama Paula. Estudiábamos juntos y se fue a Alemania. Hace tiempo que no hablamos.", "Prefiero dejarlo ahí por ahora. Hubo alguien, sí."],
 		[
 			["Tenías ganas de hablarle, por cómo lo decís.", "Bueno. Si un día te salen las palabras, mandale aunque sea una línea."],
 			["Entiendo. Perdón si te agarré de sorpresa. Podemos seguir hablando de otra cosa."]
@@ -94,9 +94,9 @@ const TOPICS = {
 	],
 	"bajada": [
 		1, "Cuando veas el banco ya estás fuera de la parte fea de la bajada. Si querés, me quedo un rato.",
-		["Ya veo por dónde sigo. ¿Dónde te dejo la llave el último día?", "Quedate un rato. Cada vez que suelto el botón vuelve a oírse el viento."],
+		["Ya veo por dónde sigo. Acá abajo aflojó un poco el viento.", "Quedate un rato. Cada vez que suelto el botón vuelve a oírse el viento."],
 		[
-			["En el cajón del escritorio. Tengo una copia para el próximo relevo. Avisame al llegar al banco."],
+			["Acá también paró. Si te agarra otra ráfaga, esperá al reparo de las piedras. Avisame cuando veas el puesto."],
 			["Dale. Yo sigo lavando unos platos. Cuando llegues me avisás.", "En el próximo cajón te mando un tinto que tenía guardado. Abrilo cuando entregues la llave."]
 		]
 	],
@@ -110,22 +110,22 @@ const TOPICS = {
 	],
 	"ventana": [
 		0, "Probé el equipo de repuesto. En ese tramo se pisan dos frecuencias. Sigo sin ubicar la voz de la advertencia. ¿Ya ves la tranquera?",
-		["Sí. ¿Te quedás conmigo hasta que entre al patio?", "Sí, la veo. Si vuelve a entrar la voz, te anoto la hora."],
+		["¿Te quedás conmigo hasta que entre al patio?", "Veo la tranquera. Si vuelve a entrar la voz, te anoto la hora."],
 		[
 			["Sí. Yo me quedo acá. Avisame cuando estés del otro lado de la verja."],
 			["Dale. Yo voy a dejar anotada la hora que escuché el primer golpe."]
 		]
 	],
 	"regreso": [
-		1, "Mara, ya salí. Me cuesta creer que sea la última vez que vengo por esta huella.",
+		1, "Ya salí. Me cuesta creer que sea la última vez que vengo por esta huella.",
 		["Cuando llegue a casa voy a abrir la ventana y dejar todo en el bolso.", "Creo que voy a salir a mirar el cielo desde la vereda. Hace mucho que no lo hago."],
 		[
-			["El bolso puede esperar hasta mañana. Si te olvidaste algo, yo subo al puesto después."],
+			["Si te olvidaste de algo, yo subo al puesto después."],
 			["Ojalá esté despejado. Si llegás a ver la cruz, pensá que desde acá va a estar para el mismo lado."]
 		]
 	],
 	"ultima_curva": [
-		1, "Desde esa curva, el puesto se ve un rato más cuando arranca el ómnibus. Yo siempre lo busco entre los árboles.",
+		1, "Si te das vuelta en la bajada, vas a ver el techo del puesto entre los árboles. Yo siempre lo busco desde ahí.",
 		["Voy a sentarme del lado de la sierra.", "Voy a extrañar más que la vista. Vos también me vas a hacer falta."],
 		[
 			["Sentate adelante si hay lugar. De atrás a veces sólo se ve el polvo."],
@@ -134,10 +134,8 @@ const TOPICS = {
 	]
 }
 
-static func opening(topic: String, answered: Dictionary, mica_told: bool, abra_told: bool, paula_told: bool) -> String:
+static func opening(topic: String, answered: Dictionary, abra_told: bool, paula_told: bool) -> String:
 	match topic:
-		"piedras":
-			if mica_told: return "Mara, pensé en la mica que te conté. A la vuelta cambió la luz y las piedras ya no brillaban igual."
 		"antena":
 			if abra_told: return "Dejé la luz y la voz en renglones separados, como me las contaste. Quedate un segundo en la antena. ¿Probamos hasta dónde llega el canal?"
 		"duelo":
@@ -146,7 +144,7 @@ static func opening(topic: String, answered: Dictionary, mica_told: bool, abra_t
 			if not answered.has("cielo") and not answered.has("duelo"):
 				return "Ya falta poco para que bajes. Siempre te pregunto del trabajo. ¿Nunca pensaste en formar una familia?"
 		"regreso":
-			if paula_told: return "Mara, salí con ganas de escribirle a Paula. Pero eso puede esperar. Ahora me cuesta creer que sea la última vez que vengo por esta huella."
+			if paula_told: return "Salí con ganas de escribirle a Paula. Pero eso puede esperar. Ahora me cuesta creer que sea la última vez que vengo por esta huella."
 	return TOPICS[topic][1]
 
 static func farewell_memory(answered: Dictionary) -> String:
@@ -191,9 +189,9 @@ static func available(stage: int, position: Vector3, bedtime: bool, sighting: bo
 		18:
 			if near(position, Vector3(1.0, 0.0, -10.0), 25.0): topic = "ventana"
 		19:
-			if near(position, Vector3(4.0, 0.0, -30.0), 13.0):
+			if near(position, Vector3(21.0, 0.0, -3.0), 13.0):
 				topic = "regreso"
-			elif near(position, LastNight.STOP, 13.0):
+			elif near(position, Departure.RADIO_STOP, 13.0):
 				topic = "ultima_curva"
 	return topic if not answered.has(topic) else ""
 

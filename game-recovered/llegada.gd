@@ -94,8 +94,8 @@ static func reached_exit(index: int, local: Vector3) -> bool:
 	var cut := 25.0 if index >= 6 else 18.0
 	return local.z < -cut and absf(local.x - track_x(index, -local.z)) < 3.0
 
-static func left_fragment(local: Vector3) -> bool:
-	return absf(local.x) > 24.0 or local.z > 9.6 or local.z < -33.0
+static func left_fragment(local: Vector3, index := -1) -> bool:
+	return absf(local.x) > (30.0 if index in [1, 5] else 24.0) or local.z > 9.6 or local.z < -33.0
 
 static func safe_saved_position(index: int, position: Vector3, action_done: bool) -> Vector3:
 	var local := local_position(index, position)
@@ -348,24 +348,15 @@ static func dress_log_edge(v, center: Vector3):
 	var understory := RandomNumberGenerator.new()
 	understory.seed = 84191
 	for side: float in [-1.0, 1.0]:
-		var thicket := StaticBody3D.new()
-		thicket.name = "Ramas del borde este" if side > 0.0 else "Ramas del borde oeste"
-		v.add_child(thicket)
-		thicket.position = center
 		for segment in 32:
 			var distance := -12.0 + segment * 1.48
 			var boundary := log_verge(side, distance)
 			var plant := boundary + Vector3(side * rng.randf_range(0.34, 0.59), 0, rng.randf_range(-0.30, 0.30))
 			Flora.tree(v, ground.call(center + plant), Flora.Kind.PIQUILLIN, rng.randf_range(1.39, 1.82), rng.randf() * TAU, 0.62)
-			var next := log_verge(side, distance + 1.48)
-			var offset := next - boundary
-			var branch_barrier := BoxShape3D.new()
-			branch_barrier.size = Vector3(0.61, 2.16, offset.length() + 0.17)
-			var hit := CollisionShape3D.new()
-			hit.shape = branch_barrier
-			thicket.add_child(hit)
-			hit.position = surface_point(1, (boundary + next) * 0.5) + Vector3.UP * 1.04
-			hit.rotation.y = atan2(offset.x, offset.z)
+			if segment % 3 in [0, 1]:
+				var stone_at: Vector3 = ground.call(center + boundary + Vector3(side * 0.47, 0, rng.randf_range(-0.20, 0.20)))
+				var fragment := Stone.fragment(rocks, stone_at, Vector3(1.44, 0.73 + 0.36 * rng.randf(), 1.10), rng.randf() * TAU, rng, ground, Stone.LAJA_PROFILE)
+				Stone.solid(v, stone_at, fragment, "Piedra bajo el matorral")
 			var understory_foot: Vector3 = ground.call(center + boundary + Vector3(side * understory.randf_range(-0.22, 0.27), 0, understory.randf_range(-0.45, 0.48)))
 			scrub.append(Vector4(understory_foot.x, understory_foot.y - 0.045, understory_foot.z, understory.randf_range(1.18, 1.68)))
 			if segment % 3 == 0:
@@ -379,12 +370,27 @@ static func dress_log_edge(v, center: Vector3):
 			for tuft in 3:
 				var foot: Vector3 = ground.call(center + boundary + Vector3(side * rng.randf_range(-0.45, 1.58), 0, rng.randf_range(-0.69, 0.69)))
 				roots.append(Vector4(foot.x, foot.y - 0.046, foot.z, rng.randf_range(0.49, 1.29)))
+	for side in [-1.0, 1.0]:
+		for i in 43:
+			var d := rng.randf_range(-17.0, 61.0)
+			var x: float = track_x(1, d) + side * rng.randf_range(5.5, 36.0)
+			var foot: Vector3 = ground.call(center + Vector3(x, 0, -d))
+			if i % 3 == 0:
+				var kind: Flora.Kind = [Flora.Kind.TALA, Flora.Kind.MOLLE, Flora.Kind.ESPINILLO][i % 9 / 3]
+				Flora.tree(v, foot, kind, rng.randf_range(0.89, 1.42), rng.randf() * TAU)
+			elif i % 3 == 1:
+				var boulder := Stone.fragment(rocks, foot, Vector3(2.9, 1.55, 2.1) * rng.randf_range(0.68, 1.42),
+					rng.randf() * TAU, rng, ground, Stone.OUTCROP_PROFILE, true)
+				Stone.solid(v, foot, boulder, "Piedra detrás del monte")
+			for k in 4:
+				var root: Vector3 = ground.call(foot + Vector3(rng.randf_range(-2.0, 2.0), 0, rng.randf_range(-2.0, 2.0)))
+				roots.append(Vector4(root.x, root.y - 0.055, root.z, rng.randf_range(0.65, 1.34)))
 	Flora.grass_batch(v, roots)
 	Flora.herb_batch(v, scrub, Flora.Herb.ROMERILLO)
 	Stone.finish(v, rocks, "Piedras entre la vegetación")
 
 static func log_verge(side: float, distance: float) -> Vector3:
-	var brush := 2.07 + 0.13 * sin(distance * 0.72) + 0.14 * sin(distance * 0.24 + side)
+	var brush := 2.65 + 0.28 * sin(distance * 0.72) + 0.39 * sin(distance * 0.24 + side)
 	return Vector3(track_x(1, distance) + side * brush, 0.0, -distance)
 
 static func build_bridge(v, center: Vector3):
@@ -422,11 +428,11 @@ static func bridge_depth(pos: Vector3) -> float:
 
 static func build_laja(v, center: Vector3):
 	var rows := [
-		[Vector3(-6.70, -0.12, -10.32), Vector3(6.70, -0.12, -10.32)],
-		[Vector3(-6.70, 0.74, -10.43), Vector3(6.70, 0.75, -10.47)],
-		[Vector3(-6.70, 1.43, -10.72), Vector3(6.70, 1.43, -10.72)],
-		[Vector3(-6.70, 1.42, LEDGE_BACK), Vector3(6.70, 1.42, LEDGE_BACK)],
-		[Vector3(-6.70, -0.12, LEDGE_TOE), Vector3(6.70, -0.12, LEDGE_TOE)]
+		[Vector3(-35.0, -0.12, -10.32), Vector3(6.70, -0.12, -10.32)],
+		[Vector3(-35.0, 0.74, -10.43), Vector3(6.70, 0.75, -10.47)],
+		[Vector3(-35.0, 1.43, -10.72), Vector3(6.70, 1.43, -10.72)],
+		[Vector3(-35.0, 1.42, LEDGE_BACK), Vector3(6.70, 1.42, LEDGE_BACK)],
+		[Vector3(-35.0, -0.12, LEDGE_TOE), Vector3(6.70, -0.12, LEDGE_TOE)]
 	]
 	for row in rows:
 		row[0] = raised_ledge(row[0])
@@ -455,7 +461,7 @@ static func build_laja(v, center: Vector3):
 	loop.rotation.x = 0.68
 
 static func ledge_face(rows: Array) -> ArrayMesh:
-	const COLUMNS := 53
+	const COLUMNS := 157
 	const STEPS_PER_ROW := 4
 	var surface := SurfaceTool.new()
 	surface.begin(Mesh.PRIMITIVE_TRIANGLES)
@@ -489,8 +495,8 @@ static func dress_laja_shoulders(v, center: Vector3):
 	rng.seed = 53091
 	var ground := func(at: Vector3) -> Vector3: return center + surface_point(5, at - center)
 	for side: float in [-1.0, 1.0]:
-		for index in 6:
-			var x := side * (2.16 + index * 1.38)
+		for index in (22 if side < 0.0 else 6):
+			var x := side * (2.16 + index * 1.52)
 			var d := 9.58 + 0.31 * sin(index * 1.66 + side)
 			var foot: Vector3 = ground.call(center + Vector3(x, 0, -d)) - Vector3.UP * 0.19
 			var span := Vector3(2.25, 2.04, 2.01) * rng.randf_range(0.87, 1.17)
