@@ -20,6 +20,8 @@ const DAYS := {
 		"sun": 1.00, "light": Color("#fff0d9"), "sky": Color("#648fb2"), "rim": Color("#cbdbd8")},
 	36: {"cloud": Vector2(0.46, 0.24), "mist": 0.0043, "cirrus": 0.12, "wind": 0.44,
 		"sun": 0.79, "light": Color("#d6dee0"), "sky": Color("#748694"), "rim": Color("#b5bfbe")},
+	40: {"cloud": Vector2(0.17, 0.08), "mist": 0.0020, "cirrus": 0.25, "wind": 0.20,
+		"sun": 0.94, "light": Color("#ffe3bf"), "sky": Color("#7099b4"), "rim": Color("#d7cfb9")},
 	41: {"cloud": Vector2(0.33, 0.13), "mist": 0.0040, "cirrus": 0.44, "wind": 0.09,
 		"sun": 0.82, "light": Color("#f4dfc1"), "sky": Color("#9aaab0"), "rim": Color("#e9d6c4")},
 }

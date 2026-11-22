@@ -4,6 +4,8 @@ const Kit = preload("res://equipo_campo.gd")
 const Refuge = preload("res://refugio.gd")
 const Stone = preload("res://piedra_serrana.gd")
 const Flora = preload("res://flora.gd")
+const Finds = preload("res://exploracion.gd")
+const Visual = preload("res://hallazgo_visual.gd")
 const BOOK := "Cuaderno del campamento"
 const TRIPOD := "Trípode vacío"
 const CRATE_TOP := 0.48
@@ -21,7 +23,58 @@ static func build(valley, camp_point: Vector3) -> MeshInstance3D:
 	shelter(camp, ground)
 	crate(camp, ground)
 	field_gear(camp, ground)
+	fire_ring(camp, ground)
 	return notebook(camp)
+
+static func fire_ring(camp: Node3D, ground: Callable):
+	var spot: Vector3 = ground.call(Vector3(-5.1, 0, 1.4))
+	var fire := Kit.item(camp, spot, "Fogata apagada", Vector3.UP * 0.14, Vector3(0.86, 0.24, 0.86))
+	fire.collision_layer = 2
+	fire.collision_mask = 0
+	var ash := Kit.material("373531")
+	var wood := Refuge.wood("43382e")
+	var rng := RandomNumberGenerator.new()
+	rng.seed = 32407
+	var ash_surface := SurfaceTool.new()
+	ash_surface.begin(Mesh.PRIMITIVE_TRIANGLES)
+	var ash_rim := PackedVector3Array()
+	for i in 13:
+		var angle := TAU * i / 13.0
+		ash_rim.append(ground.call(spot + Vector3(cos(angle), 0, sin(angle)) * rng.randf_range(0.25, 0.40)))
+	for i in ash_rim.size():
+		for vertex in [spot, ash_rim[i], ash_rim[(i + 1) % ash_rim.size()]]:
+			ash_surface.add_vertex(vertex + Vector3.UP * 0.013)
+	ash_surface.generate_normals()
+	Kit.mesh_part(camp, ash_surface.commit(), Vector3.ZERO, ash)
+	var stones := Stone.surface()
+	for i in 8:
+		var angle := TAU * i / 8.0 + rng.randf_range(-0.14, 0.14)
+		var at: Vector3 = ground.call(spot + Vector3(cos(angle), 0, sin(angle)) * rng.randf_range(0.42, 0.52))
+		Stone.fragment(stones, at, Vector3(rng.randf_range(0.24, 0.36), rng.randf_range(0.09, 0.20), 0.26), angle, rng, ground)
+	Stone.finish(camp, stones, "Piedras tiznadas de la fogata").material_override = Stone.paint("6e685d")
+	for i in 6:
+		var direction := Vector3(cos(i * 2.4), 0, sin(i * 2.4))
+		var start: Vector3 = ground.call(spot - direction * rng.randf_range(0.09, 0.26))
+		var end: Vector3 = ground.call(spot + direction * rng.randf_range(0.16, 0.33))
+		pipe(camp, start + Vector3.UP * (0.03 + i * 0.009), end + Vector3.UP * 0.026, rng.randf_range(0.022, 0.044), 0.017, wood)
+	var edge: Vector3 = ground.call(spot + Vector3(0, 0, 0.55))
+	var band := Kit.item(camp, edge + Vector3.UP * 0.065, "Pulsera de excursión", Vector3.UP * 0.03, Vector3(0.23, 0.13, 0.15))
+	band.collision_layer = 2
+	band.collision_mask = 0
+	band.set_meta("find_id", Finds.CAMP_BAND)
+	band.add_to_group("field_finds")
+	var paper := Kit.material("c9b590", true)
+	var blue := Kit.material("3c6465")
+	var loop := PackedVector3Array([Vector3(-0.12, 0.01, 0.04), Vector3(-0.07, 0.008, -0.05),
+		Vector3(0.075, 0.009, -0.041), Vector3(0.093, 0.026, 0.035), Vector3(-0.044, 0.030, 0.058)])
+	for i in loop.size() - 1:
+		var from := loop[i]
+		var to := loop[i + 1]
+		var strip := Kit.block(band, (from + to) * 0.5, Vector3(0.029, 0.004, from.distance_to(to) + 0.006), paper)
+		strip.rotation.y = atan2(to.x - from.x, to.z - from.z)
+	var stamp := Kit.block(band, Vector3(0.074, 0.022, -0.005), Vector3(0.019, 0.005, 0.037), blue)
+	stamp.rotation.y = 0.24
+	Visual.glint(band, Vector3.UP * 0.07, Color("#d9c1a4"))
 
 static func pipe(parent: Node3D, from: Vector3, to: Vector3, base: float, tip: float, finish: Material) -> MeshInstance3D:
 	var bar := Kit.cylinder(parent, (from + to) * 0.5, base, tip, from.distance_to(to), finish)

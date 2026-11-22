@@ -39,13 +39,18 @@ func _ready():
 	hide()
 
 func display(kind: String, caption: String, footer: Variant, teach_selection := false):
+	var voice := caption.get_slice(" · ", 0) if caption.begins_with("Mara · ") or caption.begins_with("Hernán · ") else ""
 	speaker.text = "RADIO"
 	if reveal: reveal.kill()
 	line.text = caption
 	if kind == "talk":
 		var parts := caption.split("\n\n", true, 1)
-		speaker.text = parts[0].to_upper() + "   /   RADIO"
+		voice = parts[0]
+		speaker.text = voice.to_upper() + "   /   RADIO"
 		line.text = parts[1]
+	var person := voice.to_lower()
+	speaker.add_theme_color_override("font_color", Color("#a9c3b8") if person == "hernán" else Color("#e5c287"))
+	line.add_theme_color_override("font_color", Color("#dce9e4") if person == "hernán" else (Color("#f3e2d2") if person == "mara" else Color.WHITE))
 	line.visible_characters = -1
 	if kind == "talk":
 		line.visible_characters = 0

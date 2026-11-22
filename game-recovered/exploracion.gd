@@ -8,9 +8,11 @@ const Trail = preload("res://travesia.gd")
 const Kit = preload("res://equipo_campo.gd")
 const VISITOR := "visitante"
 const SIGHT := "visor"
+const CAMP_BAND := "pulsera_campamento"
 const SKETCHES := {
 	VISITOR: preload("res://hallazgo_visitante.webp"),
 	SIGHT: preload("res://hallazgo_visor.webp"),
+	CAMP_BAND: preload("res://hallazgo_pulsera.webp"),
 }
 
 const EAST = [Vector2(4.3, -16.4), Vector2(10.6, -17.3), Vector2(16.5, -12.8),
@@ -39,6 +41,7 @@ const FINDS = {
 	"lata": [7, "Croquis en una lata", Vector2(-47.6, -473), "En la subida al abra, detrás de una piedra. Dentro de la lata quedó un croquis doblado. Dos líneas cruzan una ladera. El papel se rompe justo donde se juntan."],
 	VISITOR: [8, "Miniatura del visitante", Vector2(-158.05, 89.7), "La encontré en una hendidura, aguas abajo de la pasarela. Tiene tres patas y una lente en la cabeza. La marca del molde sigue en el costado. Dibujé la figura como estaba, mirando al agua."],
 	SIGHT: [9, "Visor de latón", Vector2(113.5, -879.8), "Ya lejos de la huella de la cumbre vi un parapeto de piedras. Entre dos lajas había un aro de latón con vidrio ahumado. Al mirar por la muesca se ve una sola parte del cielo."],
+	CAMP_BAND: [10, "Pulsera de excursión", Vector2(39.76, -1013.58), "La saqué de debajo de una piedra de la fogata. Todavía se lee «salida nocturna». Se despegó por el cierre. Dibujé la vuelta que hacía el papel."],
 }
 
 # Inclinación, rumbo y altura sobre el terreno. El lado abierto queda fuera de la huella (+Z local).
@@ -112,7 +115,7 @@ static func build(valley):
 	stone.finish(valley, rock_faces, "Pircas de las lajas y el mollar")
 	dress_outcrops(valley)
 	for id in FINDS:
-		dress_find(valley, id)
+		if id != CAMP_BAND: dress_find(valley, id)
 	var vegetation := [
 		[Flora.Kind.MOLLE, 42, 16, 1.65], [Flora.Kind.MOLLE, 33, 16, 1.55],
 		[Flora.Kind.MOLLE, 42, 24, 1.42], [Flora.Kind.MOLLE, 37, 28, 1.1],

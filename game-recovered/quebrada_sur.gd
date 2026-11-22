@@ -3,6 +3,7 @@ extends RefCounted
 const Creek = preload("res://cauce.gd")
 const Flora = preload("res://flora.gd")
 const Stone = preload("res://piedra_serrana.gd")
+const Kit = preload("res://equipo_campo.gd")
 const LOG := 0.18
 const LEDGE := 0.64
 
@@ -120,6 +121,29 @@ static func dress_ledge(valley):
 
 static func mark_position() -> Vector3:
 	return ground(Creek.crossing_point(1.0)) + Vector3(1.02, 0.77, 0.92)
+
+static func glimpse(valley: Node3D) -> Node3D:
+	var figure := Node3D.new()
+	figure.name = "Figura del otro lado"
+	valley.add_child(figure)
+	figure.position = ground(Creek.crossing_point(1.0) + Vector3(-1.66, 0, 17.4))
+	figure.rotation.y = -0.18
+	var shade := StandardMaterial3D.new()
+	shade.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	shade.albedo_color = Color("#171d20")
+	Kit.shell(figure, [
+		Vector4(0.48, 0.18, 0.11, -0.048), Vector4(0.92, 0.22, 0.15, -0.01),
+		Vector4(1.34, 0.25, 0.145, 0.012), Vector4(1.46, 0.095, 0.092, 0.004)
+	], shade, 0.62, true)
+	var head := SphereMesh.new()
+	head.radius = 0.111
+	head.height = 0.27
+	head.radial_segments = 9
+	head.rings = 5
+	Kit.mesh_part(figure, head, Vector3(-0.018, 1.57, 0.004), shade)
+	for x in [-0.094, 0.094]:
+		Kit.cylinder(figure, Vector3(x, 0.36, 0.0), 0.064, 0.102, 0.73, shade).rotation.z = x * 0.59
+	return figure
 
 static func dress_bridge(valley, rng: RandomNumberGenerator):
 	var bank := ground(Creek.crossing_point(1.0))

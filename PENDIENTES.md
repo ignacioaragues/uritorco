@@ -6,6 +6,12 @@ Al cierre de cada pasada se actualizan los puntos resueltos y se conserva lo que
 
 ### Resuelto
 
+- [x] Pasar la muerte del padre de Hernán a julio. La propuesta de trabajo llega un tiempo después.
+- [x] Aclarar el ascenso del Día 25 desde el primer parte y ajustar las conversaciones de los Días 2, 7, 25 y 27. Hernán puede contar lo del padre en el filo. El regreso del malacate abre la charla sobre astronomía.
+- [x] Darle al Día 32 un encargo sobre turistas que entraron sin permiso. La fogata y el trípode tienen observaciones por radio y se puede encontrar una pulsera para el cuaderno. Hernán puede mencionar a Paula más tarde, en la bajada.
+- [x] Revisar las tres ramas del parte de la pasarela y mostrar una figura lejana al apagar la linterna. Usar tonos distintos para el texto de cada voz de la radio.
+- [x] Abrir el Día 40 afuera y de día. La tarde dura cinco minutos activos y el avistamiento se dispara al oscurecer, también lejos del puesto. La despedida retoma las luces.
+
 - [x] Colgar progresivamente los croquis del puente, el cauce, los avistamientos y la cumbre en la pared del puesto. El del puente se puede consultar en el diario enseguida y se cuelga en la tercera jornada, el Día 7.
 - [x] Activar las luces y la cueva la noche anterior a la partida. En «Elegir escena» hay accesos directos a «Última noche · Luces», «Última noche · Cueva» y «Última noche · Los arcos».
 - [x] Mantener los dos primeros sueños de 2:30 de exploración. El tercero ocurre si Hernán sigue las luces y se cierra con la conversación de la voz.
@@ -53,6 +59,12 @@ Al cierre de cada pasada se actualizan los puntos resueltos y se conserva lo que
 - [x] Darles materiales y siluetas distintas a los tres sueños. El primero tiene placas azules fracturadas, el segundo terrazas cobrizas y el tercero crestas de obsidiana y arcos erosionados. Las formaciones cercanas son sólidas y dejan pasos abiertos hacia los seis hallazgos.
 - [x] Conectar las lajas con la bajada al cauce y abrir un atajo del este a la vuelta del mollar. Las dos huellas están señalizadas y se dibujan en la hoja local, centrada en el refugio. Se recorrieron los enlaces con el mapa de mano abierto.
 
+## Pasada de la radio y el último día
+
+- El guion reúne los disparadores, las opciones y los recuerdos que vuelven en la despedida. La puerta de Mara exige nueve de quince charlas de cercanía. El Día 40 llama con variaciones según esa cercanía y según si Hernán mencionó a Paula. [Guion completo](DIALOGOS_MARA.md)
+- En «Elegir escena», «Día 40 · El último día» arranca con la tarde libre. «Última noche · Luces» entra directo a la llamada que precede al avistamiento.
+- El paso del tiempo y la llamada de la tarde quedan guardados en las partidas. Los objetos del campamento conservan si Hernán los vio y si le pasó el detalle a Mara.
+
 ## Pasada del prólogo y los papeles del escritorio
 
 - La parada enseña un control por vez. La vista se mueve con el mouse desde el inicio. Mirar habilita F1. F1 muestra «E · recogé tu mochila». Levantarla habilita caminar y presenta WASD. Las ocho microescenas empiezan con los pies a ras de su terreno.
@@ -87,7 +99,7 @@ Al cierre de cada pasada se actualizan los puntos resueltos y se conserva lo que
 
 - La mochila de la parada tiene una cubierta cerrada y más fondo. Se conserva la recogida con E o clic. El tronco atraviesa un sendero entre molles, talas y piquillines. La laja tiene un frente continuo y bloques a ambos flancos. Se comprobaron el salto, la trepada con cuerda y los intentos de rodear los dos obstáculos.
 - Hernán puede caminar y mover la vista durante el fundido hasta que aparece el recuerdo. B se enseña en el puente y Tab se anuncia en la microescena siguiente para consultar el croquis.
-- Hernán y su padre miran la Cruz del Sur. Puede copiarla o pedirle que escriba su nombre en el libro. En el apagón puede sentarse en el cordón y dejar que se le acostumbren los ojos. El padre muere en los primeros días de septiembre y el trabajo llega unas dos semanas después.
+- Hernán y su padre miran la Cruz del Sur. Puede copiarla o pedirle que escriba su nombre en el libro. En el apagón puede sentarse en el cordón y dejar que se le acostumbren los ojos. El padre muere en los primeros días de septiembre y el trabajo llega unas dos semanas después. La pasada de la radio cambió la muerte a julio y dejó abierta la fecha de la oferta.
 - El campamento tiene una lona con costuras, tensores y estacas, un trípode con abrazaderas, un cajón de tablas, el termo y una manta enrollada. E abre la bitácora. Las flechas muestran las dos horas y el croquis de la muesca. El encargo avanza al leer la bitácora y la observación queda guardada.
 - Hernán puede mover la vista durante la radio. La rueda cambia la respuesta y el clic la confirma.
 - El baño exterior tiene tablas, ventilación y un asiento de letrina. La garrafa se conecta a la hornalla a través de la pared. Los dos cajones del escritorio y los tres gabinetes se abren por separado con E. La heladera tiene un cajón y luz interior, y el freezer conserva su puerta independiente.
@@ -129,7 +141,7 @@ Al cierre de cada pasada se actualizan los puntos resueltos y se conserva lo que
 - **Parada.** El abrigo queda junto a la banquina. Hernán arranca mirando la ruta. Puede girar y levantar la mochila con E o clic desde donde está. Después se habilita la caminata hacia la huella lateral. Las partidas viejas guardadas antes de recoger la mochila abren con la posición nueva.
 - **Cartelería.** Los textos, flechas y el pictograma del ómnibus se dibujan en la cara esmaltada. Se revisó el cartel de la parada de costado y de cerca. Los carteles de orientación se leen en el paisaje. Las interacciones del encargo quedan en el banco, la antena y los hitos.
 - **Ritmo y audio del prólogo.** El fundido entre paisaje y recuerdo dura 1,35 segundos. Se recorrieron las ocho microescenas con ese fundido.
-- **Recuerdos.** A los 13 su papá le regala a Hernán su primer telescopio. Se turnan para mirar Saturno y su papá le señala Titán junto a los anillos. Hernán puede preguntarle si cree que hay vida o decirle que quiere ser el primero en llegar a Titán. La respuesta se lee antes de volver al sendero. Su papá muere en los primeros días de septiembre y la oferta de trabajo llega un par de semanas después, antes de la llegada del 1 de octubre.
+- **Recuerdos.** A los 13 su papá le regala a Hernán su primer telescopio. Se turnan para mirar Saturno y su papá le señala Titán junto a los anillos. Hernán puede preguntarle si cree que hay vida o decirle que quiere ser el primero en llegar a Titán. La respuesta se lee antes de volver al sendero. Su papá muere en los primeros días de septiembre y la oferta de trabajo llega un par de semanas después, antes de la llegada del 1 de octubre. La pasada de la radio cambió la muerte a julio y dejó abierta la fecha de la oferta.
 - **Cantera y cumbre.** La huella del cable está pintada en el suelo. Los postes quedan al costado. Se sumaron afloramientos y vegetación en las orillas. Las piedras tienen grano mineral discreto y tonos grises, ocres y levemente rosados. Se comprobaron los apoyos y las colisiones de 657 rocas de la travesía y se recorrieron el cable y la cumbre en ambos sentidos.
 - **Cartografía.** El Día 27 usa una lámina fija con la Senda del Oeste, el carrete, el empalme y el malacate. La del Día 32 comparte el refugio, el banco del acceso, la senda de las pircas, el campamento y la cumbre. Las dos se mantienen al volver. La bajada de la cumbre actualiza la marca del siguiente tramo dentro de su hoja.
 
@@ -268,7 +280,7 @@ Al cierre de cada pasada se actualizan los puntos resueltos y se conserva lo que
 
 Esta lista reconstruye el estado informado del proyecto editable. La exportación anterior se comprobó por separado.
 
-- **Prólogo.** Ocho microescenas con recuerdos e interacciones propias. La ruta empieza frente a la parada, la mochila se recoge con E o clic, y los tramos siguientes incluyen tronco, puente, brújula, mapa, cuerda, linterna y una caminata final. F1 muestra el objetivo por unos segundos. «Clic para seguir» espera unos cuatro segundos. Paula y la muerte del padre de Hernán en septiembre figuran en los recuerdos.
+- **Prólogo.** Ocho microescenas con recuerdos e interacciones propias. La ruta empieza frente a la parada, la mochila se recoge con E o clic, y los tramos siguientes incluyen tronco, puente, brújula, mapa, cuerda, linterna y una caminata final. F1 muestra el objetivo por unos segundos. «Clic para seguir» espera unos cuatro segundos. Paula y la muerte del padre de Hernán en julio figuran en los recuerdos.
 - **Refugio.** Mara da la bienvenida la primera noche. La mochila se deja en el suelo, y el libro y las pertenencias aparecen al día siguiente. Hay silla, escritorio al lado de la cama, calendario que tacha fechas, cerca con tranquera y puerta de baño. La postal vieja de Paula ocupa la pared. Con E se levanta o se deja y con X se da vuelta. El libro tiene tapa, guarda y lámina de la Cruz del Sur. La guarda y la cinta dependen de las decisiones del prólogo.
 - **Días y rutinas.** El Día 2 se habla con Mara después de medir el cauce y se puede pasar el parte de día. El primer sueño tiene su propio despertar y una anotación. El mate abre el Día 32. Al guardarlo, la mano baja y vuelve con la radio.
 - **Cumbre y mapa.** Los mojones apoyan en la malla. Se probó toda la bajada hasta el banco del acceso, donde E cierra la travesía. El Día 36 retoma en el refugio. Las láminas fijas tienen puntos cardinales y marca de objetivo. Hay ramales hacia el mirador, la cantera, la quebrada y la cumbre.

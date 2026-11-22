@@ -7,7 +7,7 @@ const LastNight = preload("res://final_night.gd")
 
 const VISIT_PERCENT := 60
 
-const HERNAN_STARTS := ["piedras", "vaguada", "cable", "regreso"]
+const HERNAN_STARTS := ["piedras", "vaguada", "sueno", "cable", "regreso"]
 const RESERVED_ANSWERS := ["cielo", "pircas"]
 
 # Respuesta de cercanía, apertura, respuestas de Hernán y réplicas de Mara.
@@ -29,11 +29,11 @@ const TOPICS = {
 		]
 	],
 	"museo": [
-		0, "Si entrás al museo, fijate en las fichas. La letra chiquita es de Elvira. Le toca cambiar los papeles cada vez que entra agua.",
-		["¿Querés que le mande saludos de tu parte?", "Decile que valió la pena dejar la puerta abierta."],
+		0, "¿Ya estás cerca del museo? Hay una sala sobre los comechingones. Si tenés tiempo, entrá antes de seguir.",
+		["No sé nada de los comechingones. ¿Qué hay adentro?", "¿Son los que, según dicen, tuvieron contacto con extraterrestres?"],
 		[
-			["Decile que por fin le devolví la llave. Va a entender.", "Las primeras fichas las copiamos juntas en la cocina. Yo escribía los títulos porque se veían mejor desde el pasillo."],
-			["Se lo digo. Hay semanas en que sólo entra ella, a ver si la humedad levantó otra esquina."]
+			["Vasijas, piedras de moler y un dibujo de cómo eran las casas. Acá vivían mucho antes de que llegaran los españoles."],
+			["Los que dicen eso venden excursiones. Entrá y fijate en las cosas que dejaron. Hay bastante para mirar sin ponerles un OVNI arriba."]
 		]
 	],
 	"antena": [
@@ -45,47 +45,55 @@ const TOPICS = {
 		]
 	],
 	"vaguada": [
-		0, "Mara, llegué a la laja. Desde acá se ve una huella por abajo.",
-		["¿La conocés? Desde el sendero no se ve dónde vuelve a subir.", "Mi viejo siempre me decía que antes de bajar mirara por dónde iba a volver."],
+		0, "Llegué al cartel de la laja. Las dos huellas suben. ¿Cuál tengo que mirar?",
+		["Voy por el rodeo. ¿Dónde se vuelven a juntar?", "Voy a probar la cuerda. Desde acá parece firme."],
 		[
-			["La aprendí llevando una batería. Había llovido y no me daban las manos para la cuerda.", "Cuando dejes de ver el agua, buscá las marcas claras del otro lado. Por ahí vuelve la huella."],
-			["Buen consejo. Desde abajo vas a ver una laja casi blanca. La salida está al costado."]
+			["Seguí el desvío de la derecha. Rodea el resalte y vuelve a la huella principal más arriba. Fijate si se puede hacer con las manos ocupadas."],
+			["Probala sin apuro. Si para subir necesitás las dos manos, eso ya nos dice algo sobre llevar herramientas."]
 		]
 	],
 	"sueno": [
-		0, "¿Te está dando para dormir ahí arriba? Los primeros días a mí me despertaba el ruido de la chapa.",
-		["Soñé con un cielo que no conocía. Dibujé las estrellas para ver si después me acordaba.", "Duermo de a ratos. Lo demás prefiero dejármelo para mí."],
+		0, "Mara, anoche soñé que estaba en otro planeta. Saltaba y tardaba una eternidad en volver al suelo.",
+		["Te vas a reír, pero traté de dibujarlo antes de que se me borrara.", "Entonces cobrame la excursión cuando baje."],
 		[
-			["¿Te quedó algún dibujo que puedas reconocer de noche?", "Guardalo. A veces al día siguiente uno ya empieza a acordarse de otra cosa."],
-			["Sí, claro. Si necesitás algo para la cama, hay otra frazada en el puesto de abajo."]
+			["Algún día me gustaría ver esos dibujos. A ver si en tu planeta también había que caminar tanto."],
+			["Si volvés con un dibujo, te hago precio. En serio, algún día me gustaría verlo."]
 		]
 	],
 	"cielo": [
-		0, "Hace días que te quiero preguntar algo. ¿Por qué aceptaste venir al puesto?",
-		["Mi viejo murió en septiembre. Mirábamos el cielo juntos. Pensé que acá iba a poder levantar la vista de nuevo.", "Necesitaba salir un tiempo de casa. Por ahora prefiero contarte hasta ahí."],
+		0, "Decime una cosa. ¿Cómo fue que terminaste acá arriba? ¿Perdiste una apuesta?",
+		["Mi viejo murió en julio. Me ofrecieron el puesto un tiempo después. Me hizo bien tener algo que hacer.", "Fue una buena excusa para salir de casa. Por ahora prefiero contarte hasta ahí."],
 		[
-			["Ah, Hernán. No sabía.", "Si salís a mirar algún día y querés compañía, dejame el canal abierto. No hace falta que hablemos."],
-			["Está bien. Gracias por decirme hasta dónde.", "Si un día te sirve quedarte en línea un rato, avisame."]
+			["Ah. No sabía. Gracias por decírmelo.", "¿Me avisás cuando llegues al hito? Yo sigo acá."],
+			["Está bien. Nos queda bastante cerro para hablar de otra cosa."]
+		]
+	],
+	"duelo": [
+		0, "Me quedó dando vueltas una cosa que te pregunté el otro día.",
+		["Está bien, Mara. Podés preguntar.", "Te agradezco que me lo digas. Prefiero que quede ahí."],
+		[
+			["Gracias. A mí a veces me cuesta saber cuándo seguir y cuándo dejar un silencio."],
+			["Dale. Avisame cuando llegues al malacate."]
 		]
 	],
 	"cable": [
-		1, "Mara, estoy bajando junto al cable. Con el viento parece que alguien estuviera afinando una cuerda.",
-		["Lo marqué junto al poste, por si tienen que volver a tensarlo.", "¿Escuchás el cable desde ahí? Quedate un segundo en silencio conmigo."],
+		1, "Mara, mirá hacia el sur si podés. Ya se ve la Cruz del Sur sobre la ladera.",
+		["Pasaron cosas en casa. Al final fui dando clases y dejé la investigación.", "Pasaron cosas. A veces pienso que todavía me gustaría volver a trabajar mirando el cielo."],
 		[
-			["Gracias. Deciles a los de mantenimiento que miren el anclaje del lado del corte."],
-			["Ahí. Entró un poquito al final de lo que dijiste.", "Había días que yo subía sin radio para oír cómo cambiaba eso con el viento. Después me fui acostumbrando a llevarla prendida."]
+			["Mirá vos. Yo con suerte me acuerdo de cuál es la del medio del cinturón.", "Si te vuelvo a preguntar cuál es la Cruz del Sur, hacé de cuenta que soy alumna nueva."],
+			["Bueno, ahora ya sé a quién llamar cuando quiera entender lo que estoy mirando.", "Y me vas a tener que mostrar cuál de las cuatro buscás primero."]
 		]
 	],
 	"pircas": [
-		0, "Desde que viniste hablamos más de cómo volver al puesto que de qué vas a hacer cuando te vayas. ¿Hay alguien a quien quieras ver?",
-		["Pensé en escribirle a Paula. Hace mucho que no hablamos y todavía me encuentro guardándole cosas para contarle.", "Todavía no sé. Prefiero llegar a casa y ver qué me pasa."],
+		0, "Me quedé pensando en lo que hablamos el otro día. ¿Nunca pensaste en formar una familia?",
+		["Hubo alguien. Paula. Estudiábamos juntos y se fue a Alemania. Hace tiempo que no hablamos.", "Hubo alguien, sí. Por ahora prefiero dejarlo ahí."],
 		[
-			["¿Ella sabe que estás en el cerro?", "Si algún día le escribís, contale una de esas cosas que le guardaste. Lo demás puede esperar."],
-			["Sí. Hay cosas que se piensan mejor cuando ya bajaste.", "Avisame cuando pases las pircas. Si querés, el otro tramo lo hacemos con el canal abierto."]
+			["Tenías ganas de hablarle, por cómo lo decís.", "Bueno. Si un día te salen las palabras, mandale aunque sea una línea."],
+			["Entiendo. Perdón si te agarré de sorpresa. Podemos seguir hablando de otra cosa."]
 		]
 	],
 	"bajada": [
-		1, "Cuando veas el banco ya estás fuera de la parte fea de la bajada. Tengo el equipo al lado. Si querés, me quedo.",
+		1, "Cuando veas el banco ya estás fuera de la parte fea de la bajada. Si querés, me quedo un rato.",
 		["Ya veo por dónde sigo. ¿Dónde te dejo la llave el último día?", "Quedate un rato. Cada vez que suelto el botón vuelve a oírse el viento."],
 		[
 			["En el cajón del escritorio. Tengo una copia para el próximo relevo. Avisame al llegar al banco."],
@@ -132,10 +140,11 @@ static func opening(topic: String, answered: Dictionary, mica_told: bool, abra_t
 			if mica_told: return "Mara, pensé en la mica que te conté. A la vuelta cambió la luz y las piedras ya no brillaban igual."
 		"antena":
 			if abra_told: return "Dejé la luz y la voz en renglones separados, como me las contaste. Quedate un segundo en la antena. ¿Probamos hasta dónde llega el canal?"
-		"cielo":
-			if answered.get("sueno", -1) == 0: return "Me quedé pensando en lo que dibujaste del sueño. ¿Qué fue lo que te hizo aceptar este trabajo, Hernán?"
+		"duelo":
+			if not answered.has("cielo"): return "Estos días me di cuenta de que nunca te pregunté si te está haciendo bien el puesto."
 		"pircas":
-			if answered.get("cielo", -1) == 0: return "La otra vez me contaste por qué viniste al puesto. Ahora que falta poco, ¿hay alguien a quien tengas ganas de ver al bajar?"
+			if not answered.has("cielo") and not answered.has("duelo"):
+				return "Ya falta poco para que bajes. Siempre te pregunto del trabajo. ¿Nunca pensaste en formar una familia?"
 		"regreso":
 			if paula_told: return "Mara, salí con ganas de escribirle a Paula. Pero eso puede esperar. Ahora me cuesta creer que sea la última vez que vengo por esta huella."
 	return TOPICS[topic][1]
@@ -150,7 +159,7 @@ static func farewell_memory(answered: Dictionary) -> String:
 	if answered.get("cauce", -1) == 1:
 		return "Me acuerdo de cuando me pediste que te acompañara hasta el cruce. A mí también me vino bien oír a alguien del otro lado."
 	if answered.get("museo", -1) == 0:
-		return "A Elvira le conté que te habías fijado en las fichas. Me hizo prometer que iba a pasar por el museo a tomar mate."
+		return "Si volvés al museo, fijate en las fichas de las casas. Me acordé de lo que hablamos por radio."
 	return ""
 
 static func available(stage: int, position: Vector3, bedtime: bool, sighting: bool, answered: Dictionary) -> String:
@@ -167,16 +176,16 @@ static func available(stage: int, position: Vector3, bedtime: bool, sighting: bo
 				topic = "antena"
 		8:
 			if on_ridge(position, 164.0, 49.0): topic = "vaguada"
+			elif on_ridge(position, 342.0, 52.0): topic = "cielo"
 		9:
 			if bedtime and on_ridge(position, 596.0, 91.0): topic = "sueno"
 		10:
-			if near(position, Trail.quarry_point(Trail.WEST_JOIN), 47.0): topic = "cielo"
+			if near(position, Trail.quarry_point(Trail.WEST_JOIN), 56.0): topic = "duelo"
 		12:
 			if near(position, Trail.quarry_point(0.72), 45.0): topic = "cable"
-		13:
-			if near(position, Trail.ascent_point(0.28), 94.0): topic = "pircas"
 		15:
-			if near(position, Trail.ascent_point(0.60), 86.0): topic = "bajada"
+			if near(position, Trail.summit_point(0.82), 52.0): topic = "pircas"
+			elif near(position, Trail.ascent_point(0.53), 73.0): topic = "bajada"
 		16:
 			if near(position, Creek.crossing_point(0.42), 24.0): topic = "lluvia"
 		18:
@@ -203,13 +212,16 @@ static func seconds_between_calls(day: int) -> float:
 static func near(position: Vector3, center: Vector3, radius: float) -> bool:
 	return Vector2(position.x - center.x, position.z - center.z).length_squared() < radius * radius
 
-static func can_visit(answered: Dictionary) -> bool:
+static func closeness(answered: Dictionary) -> int:
 	var connected := 0
 	for topic in TOPICS:
 		var answer: int = answered.get(topic, -1)
 		if answer == TOPICS[topic][0] or (answer == 1 and topic in RESERVED_ANSWERS):
 			connected += 1
-	return connected * 100 >= TOPICS.size() * VISIT_PERCENT
+	return connected
+
+static func can_visit(answered: Dictionary) -> bool:
+	return closeness(answered) * 100 >= TOPICS.size() * VISIT_PERCENT
 
 static func saved_replies(state: Dictionary) -> Dictionary:
 	var replies: Dictionary = state.get("trail_replies", {}).duplicate()
