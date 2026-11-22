@@ -149,12 +149,14 @@ static func dress_outcrops(valley):
 	var south_path := Creek.crossing_trace()
 	var faces := Stone.surface()
 	var roots: Array[Vector4] = []
+	var scrub: Array[Vector4] = []
 	# Las lajas del mismo afloramiento mantienen la dirección de la fractura.
 	for site: Vector4 in [Vector4(-49.8, -19.6, -0.78, 1.00), Vector4(-54.7, -10.6, -0.61, 1.18),
 		Vector4(-60.1, 1.5, -0.75, 0.88), Vector4(56.8, 19.0, 0.34, 0.91)]:
 		var center := Vector2(site.x, site.y)
 		var along := Vector2.from_angle(-site.z)
 		var across := along.orthogonal()
+		var outer := across * (-1.0 if site.x < 0.0 else 1.0)
 		for fragment in 3:
 			var origin := center + along * ((fragment - 0.88) * 1.96 * site.w) + across * ((fragment - 0.6) * 0.78)
 			var size_m := Vector3(6.2, 2.13, 3.6) if fragment == 0 else Vector3(5.1, 0.94 - 0.14 * fragment, 2.8)
@@ -164,15 +166,23 @@ static func dress_outcrops(valley):
 				continue
 			var foot := Creek.surface_point(Vector3(origin.x, 0.0, origin.y)) - Vector3.UP * 0.20
 			var profile := Stone.OUTCROP_PROFILE if fragment == 0 else Stone.LAJA_PROFILE
-			var rock := Stone.fragment(faces, foot, size_m, site.z + rng.randf_range(-0.08, 0.08), rng, Creek.surface_point, profile)
+			var rock := Stone.fragment(faces, foot, size_m, site.z + rng.randf_range(-0.08, 0.08), rng, Creek.surface_point, profile, true)
 			Stone.solid(outcrops, foot, rock, "Laja de la ladera")
+			if fragment == 0:
+				Stone.scree(faces, foot, Vector3(outer.y, 0.0, -outer.x), size_m.z, Creek.surface_point, rng)
 		for tuft in 17:
 			var origin := center + along * rng.randf_range(-5.5, 5.5) + across * rng.randf_range(-3.6, 3.6)
 			if clearance(origin) < 1.4 or Creek.near_south_path(origin, south_path, 1.6): continue
 			var foot := Creek.surface_point(Vector3(origin.x, 0.0, origin.y)) - Vector3.UP * 0.055
 			roots.append(Vector4(foot.x, foot.y, foot.z, rng.randf_range(0.54, 1.06)))
+		for tuft in 13:
+			var origin := center + outer * rng.randf_range(2.1, 4.6) + along * rng.randf_range(-4.7, 3.9)
+			if clearance(origin) < 2.0 or Creek.trail_distance(origin) < 2.0 or Creek.near_south_path(origin, south_path, 2.4): continue
+			var foot := Creek.surface_point(Vector3(origin.x, 0.0, origin.y)) - Vector3.UP * 0.06
+			scrub.append(Vector4(foot.x, foot.y, foot.z, rng.randf_range(0.56, 1.09)))
 	Stone.finish(outcrops, faces, "Lajas y fracturas").material_override = Stone.paint("898072")
 	Flora.grass_batch(outcrops, roots)
+	Flora.herb_batch(outcrops, scrub, Flora.Herb.ROMERILLO)
 
 static func dress_scrub(valley):
 	var rng := RandomNumberGenerator.new()

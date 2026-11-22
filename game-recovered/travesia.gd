@@ -7,7 +7,6 @@ const Kit = preload("res://equipo_campo.gd")
 const Flora = preload("res://flora.gd")
 const Stone = preload("res://piedra_serrana.gd")
 const SCATTER_CELL_SIZE := 144.0
-const HILLSIDE_STONE_SHAPES := 5
 
 const ORIGIN_Z: = -76.0
 const WEST_START_Z := -22.0
@@ -229,12 +228,14 @@ func scattered(label: String, mesh: Mesh, transforms: Array[Transform3D], materi
 
 func plant():
 	var grass: Array[Transform3D] = []
+	var tussocks: Array[Transform3D] = []
+	var low_scrub: Array[Transform3D] = []
 	var shrubs: Array[Transform3D] = []
 	var open_crowns: Array[Transform3D] = []
 	var stems: Array[Transform3D] = []
 	var rocks: Array[Array] = []
 	var rock_forms: Array[Dictionary] = []
-	for variant in HILLSIDE_STONE_SHAPES:
+	for variant in Stone.HILLSIDE_FORMS.size():
 		var stones: Array[Transform3D] = []
 		rocks.append(stones)
 		rock_forms.append(Stone.hillside_form(variant))
@@ -282,7 +283,7 @@ func plant():
 				stems.append(Transform3D(limb_turn.scaled_local(Vector3(0.13 * scale_m, limb.length(), 0.12 * scale_m)), (fork + branch_tip) * 0.5))
 		elif i % 8 == 0:
 			var dims := Vector3(2.1, 1.8, 2.4) * scale_m
-			var variant := (i / 8) % HILLSIDE_STONE_SHAPES
+			var variant := (i / 8) % rock_forms.size()
 			var form := rock_forms[variant]
 			var pose := bed_rock(pos, turn, dims, form.base)
 			rocks[variant].append(pose)
@@ -290,9 +291,18 @@ func plant():
 			for vertex: Vector3 in form.vertices: hull.append(pose * vertex)
 			Stone.solid(solids, pose.origin, hull, "Granito")
 		else:
-			var spread := Vector3(1.20, 0.92, 1.20) * scale_m
-			grass.append(Transform3D(turn.scaled_local(spread), pos - Vector3.UP * 0.045))
+			var cover := sin(x * 0.18 + d * 0.074) + 0.64 * cos(x * 0.27 - d * 0.041)
+			var foot := pos - Vector3.UP * 0.055
+			if cover > 0.26 and i % 3 == 0:
+				var placement := Transform3D(turn.scaled_local(Vector3(1.13, 0.93, 1.13) * scale_m), foot)
+				if d > CREST - 88.0: tussocks.append(placement)
+				else: low_scrub.append(placement)
+			else:
+				var spread := Vector3(1.20, 0.92, 1.20) * scale_m * lerpf(0.61, 1.1, smoothstep(-1.45, 0.85, cover))
+				grass.append(Transform3D(turn.scaled_local(spread), foot))
 	scattered("Pastos serranos", Flora.grass_mesh([Vector4(0, 0, 0, 1.18)]), grass, Flora.grass_material(), false)
+	scattered("Matas del filo", Flora.herb_mesh([Vector4(0, 0, 0, 1.08)], Flora.Herb.PAJA), tussocks, Flora.grass_material(), false)
+	scattered("Romerillos de ladera", Flora.herb_mesh([Vector4(0, 0, 0, 1.0)], Flora.Herb.ROMERILLO), low_scrub, Flora.grass_material(), false)
 	scattered("Copas bajas", Flora.crown_mesh(0.4), shrubs, Flora.leaf_material("65744d"))
 	scattered("Copas abiertas", Flora.crown_mesh(2.5), open_crowns, Flora.leaf_material("7e8755"))
 	var bark := CylinderMesh.new()

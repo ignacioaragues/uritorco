@@ -37,23 +37,36 @@ static func build(valley):
 static func dress_verge(parent: Node3D, route):
 	var rng := RandomNumberGenerator.new()
 	rng.seed = 27031
+	var talus_rng := RandomNumberGenerator.new()
+	talus_rng.seed = 252701
 	var ground := Callable(route, "terrain_point")
 	var faces := Stone.surface()
 	var tufts: Array[Vector4] = []
 	var scrub: Array[Vector4] = []
+	var dry_grass: Array[Vector4] = []
 	for i in range(20):
 		var t := 0.07 + i * 0.046
-		if minf(absf(t - route.WEST_JOIN), minf(absf(t - REEL_AT), minf(absf(t - SPLICE_AT), absf(t - FACE_AT)))) < 0.023:
-			continue
 		var at: Vector3 = route.quarry_point(t)
 		var side: Vector3 = route.quarry_side(t)
 		var margin_left := -1.0 if i % 3 == 0 else 1.0
-		var foot: Vector3 = ground.call(at + side * margin_left * rng.randf_range(4.0, 10.8))
+		var outward := side * margin_left
+		var heading := Vector3(outward.z, 0.0, -outward.x)
+		for blade in talus_rng.randi_range(5, 10):
+			var verge := at - outward * talus_rng.randf_range(3.4, 7.8)
+			verge += heading * talus_rng.randf_range(-2.3, 4.1)
+			var root: Vector3 = ground.call(verge) - Vector3.UP * 0.050
+			dry_grass.append(Vector4(root.x, root.y, root.z, talus_rng.randf_range(0.69, 1.28)))
+		if minf(absf(t - route.WEST_JOIN), minf(absf(t - REEL_AT), minf(absf(t - SPLICE_AT), absf(t - FACE_AT)))) < 0.023:
+			continue
+		var foot: Vector3 = ground.call(at + outward * rng.randf_range(4.0, 10.8))
 		if i % 3 != 1:
 			var width := rng.randf_range(1.2, 3.0)
 			var size_m := Vector3(width, width * rng.randf_range(0.31, 0.68), width * 0.73)
-			var mass := Stone.fragment(faces, foot, size_m, rng.randf() * TAU, rng, ground)
+			var turn := atan2(-heading.z, heading.x) + rng.randf_range(-0.34, 0.34)
+			var profile := Stone.FRACTURE_PROFILE if i % 3 == 0 else Stone.LAJA_PROFILE
+			var mass := Stone.fragment(faces, foot, size_m, turn, talus_rng, ground, profile, true)
 			Stone.solid(parent, foot, mass, "Granito de la cantera")
+			Stone.scree(faces, foot, heading, width, ground, talus_rng)
 		for blade in rng.randi_range(6, 14):
 			var jitter := Vector3(rng.randf_range(-1.7, 1.7), 0, rng.randf_range(-2.8, 2.8))
 			var tuft: Vector3 = ground.call(foot + jitter) - Vector3.UP * 0.05
@@ -69,6 +82,7 @@ static func dress_verge(parent: Node3D, route):
 	Stone.finish(parent, faces, "Afloramientos junto al cable")
 	Flora.grass_batch(parent, tufts)
 	Flora.herb_batch(parent, scrub, Flora.Herb.ROMERILLO)
+	Flora.herb_batch(parent, dry_grass, Flora.Herb.PAJA)
 
 static func roadside(parent: Node3D, route, progress: float, offset: float) -> Node3D:
 	var center: Vector3 = route.quarry_point(progress)

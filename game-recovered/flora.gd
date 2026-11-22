@@ -10,6 +10,8 @@ const PALETTES = [
 	["514e3a", "67694e", "7c7957", "a49773"],
 ]
 const BRUSH = preload("res://follaje.gdshader")
+static var crown_forms: Array[Mesh] = []
+static var blossom_form: SphereMesh
 
 static func tree(parent: Node3D, foot: Vector3, kind: Kind, size: float, angle: float, horizontal_scale := 1.0):
 	var tree_root := Node3D.new()
@@ -77,12 +79,16 @@ static func branch(parent: Node3D, start: Vector3, end: Vector3, base: float, ti
 	if solid: instance.create_convex_collision()
 
 static func crown(parent: Node3D, rng: RandomNumberGenerator, center: Vector3, size: Vector3, tint: String, angle: float):
-	var mesh := SphereMesh.new()
-	mesh.radial_segments = 9
-	mesh.rings = 5
+	if crown_forms.is_empty():
+		for phase in [0.38, 1.82, 3.90]:
+			crown_forms.append(crown_mesh(phase, 10, 5))
+		blossom_form = SphereMesh.new()
+		blossom_form.radial_segments = 9
+		blossom_form.rings = 5
+	var pattern := rng.randf_range(0.0, 27.0)
 	var leaf := MeshInstance3D.new()
-	leaf.mesh = mesh
-	leaf.material_override = leaf_material(tint, rng.randf_range(0.0, 27.0))
+	leaf.mesh = blossom_form if size.x < 0.13 else crown_forms[int(pattern) % crown_forms.size()]
+	leaf.material_override = leaf_material(tint, pattern)
 	parent.add_child(leaf)
 	leaf.position = center
 	leaf.rotation = Vector3(rng.randf_range(-0.2, 0.2), angle, rng.randf_range(-0.27, 0.27))
@@ -103,10 +109,10 @@ static func bark_material() -> ShaderMaterial:
 	material.set_shader_parameter("irregular", true)
 	return material
 
-static func crown_mesh(phase: float) -> ArrayMesh:
+static func crown_mesh(phase: float, segments := 12, rings := 6) -> ArrayMesh:
 	var source := SphereMesh.new()
-	source.radial_segments = 12
-	source.rings = 6
+	source.radial_segments = segments
+	source.rings = rings
 	var arrays := source.get_mesh_arrays()
 	var vertices: PackedVector3Array = arrays[Mesh.ARRAY_VERTEX]
 	for index in vertices.size():
@@ -114,7 +120,8 @@ static func crown_mesh(phase: float) -> ArrayMesh:
 		var axis := vertex.normalized()
 		var lobes := sin(axis.x * 5.2 + phase + axis.z * 2.1) * cos(axis.z * 4.5 - axis.y * 2.3)
 		var fringe := sin(axis.y * 8.0 + axis.x * 5.4 - phase) * cos(axis.z * 7.3 + axis.x * 2.5)
-		vertices[index] = vertex * (0.94 + 0.18 * lobes + 0.087 * fringe) + Vector3(axis.y * 0.048, axis.x * 0.041, 0.0)
+		var sweep := 0.79 + 0.21 * smoothstep(-0.85, 0.42, axis.y)
+		vertices[index] = vertex * (sweep + 0.22 * lobes + 0.089 * fringe) + Vector3(axis.y * 0.064, axis.x * 0.057, axis.y * 0.042)
 	arrays[Mesh.ARRAY_VERTEX] = vertices
 	var lobed := ArrayMesh.new()
 	lobed.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, arrays)
@@ -134,6 +141,9 @@ static func plant_batch(parent: Node3D, mesh: ArrayMesh, label: String):
 
 static func herb_batch(parent: Node3D, roots: Array[Vector4], kind: Herb):
 	if roots.is_empty(): return
+	plant_batch(parent, herb_mesh(roots, kind), ["Cortaderas", "Pajonal de altura", "Romerillos"][kind])
+
+static func herb_mesh(roots: Array[Vector4], kind: Herb) -> ArrayMesh:
 	var surface := SurfaceTool.new()
 	surface.begin(Mesh.PRIMITIVE_TRIANGLES)
 	var rng := RandomNumberGenerator.new()
@@ -144,7 +154,7 @@ static func herb_batch(parent: Node3D, roots: Array[Vector4], kind: Herb):
 			shrub_sprigs(surface, rng, foot, patch.w)
 		else:
 			tussock(surface, rng, foot, patch.w, kind == Herb.CORTADERA)
-	plant_batch(parent, surface.commit(), ["Cortaderas", "Pajonal de altura", "Romerillos"][kind])
+	return surface.commit()
 
 static func ribbon(surface: SurfaceTool, start: Vector3, bend: Vector3, end: Vector3, side: Vector3, width: float, bottom: Color, top: Color, middle_width := 0.67):
 	var points := [start - side * width, start + side * width, bend - side * width * middle_width, bend + side * width * middle_width, end]

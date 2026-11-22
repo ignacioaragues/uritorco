@@ -5,10 +5,12 @@ uniform bool colored_mesh = true;
 uniform float bedding = 0.0;
 varying vec3 rock_position;
 varying vec3 local_rock;
+varying float up_face;
 
 void vertex() {
 	rock_position = (MODEL_MATRIX * vec4(VERTEX, 1.0)).xyz;
 	local_rock = VERTEX;
+	up_face = normalize(MODEL_NORMAL_MATRIX * NORMAL).y;
 }
 
 float mineral_cell(vec3 p) {
@@ -31,15 +33,22 @@ float mineral_noise(vec3 p) {
 void fragment() {
 	vec3 p = rock_position;
 	float resolution = max(length(dFdx(p)), length(dFdy(p)));
-	float weathering = mineral_noise(p * 1.4);
-	float broad = mineral_noise(p * 6.6 + vec3(2.7, 6.1, -1.4));
-	float aggregate = mineral_noise(p * 59.0);
+	float weathering = mineral_noise(p * vec3(1.2, 1.7, 1.2));
+	float broad = mineral_noise(p * 5.2 + vec3(2.7, 6.1, -1.4) + weathering * 1.3);
+	float aggregate = mineral_noise(p * 53.0 + vec3(broad * 2.8, weathering * 2.0, broad * 1.9));
 	float resolved = 1.0 - smoothstep(0.008, 0.041, resolution);
-	float flecks = resolved * (0.16 * smoothstep(0.62, 0.91, aggregate) - 0.20 * (1.0 - smoothstep(0.10, 0.31, aggregate)));
+	float flecks = resolved * (0.062 * smoothstep(0.66, 0.88, aggregate) - 0.080 * (1.0 - smoothstep(0.10, 0.37, aggregate)));
 	vec3 paint = colored_mesh ? COLOR.rgb : stone_tint.rgb;
-	vec3 stone = paint * (0.90 + 0.115 * weathering + 0.105 * broad + flecks);
-	float patina = smoothstep(0.53, 0.86, 0.66 * weathering + 0.34 * broad);
-	stone = mix(stone, paint * vec3(0.87, 0.92, 0.77), patina * 0.62);
+	vec3 stone = paint * (0.86 + 0.16 * weathering + 0.105 * broad + flecks);
+	float oxidized = smoothstep(0.48, 0.81, weathering);
+	stone = mix(stone, stone * vec3(1.12, 0.98, 0.84), oxidized * 0.57);
+	float patches = mineral_noise(p * 3.7 + vec3(7.2, -2.8, 3.9));
+	float lichen = smoothstep(0.58, 0.85, 0.61 * patches + 0.24 * weathering + 0.15 * broad);
+	stone = mix(stone, stone * vec3(0.73, 0.79, 0.64), lichen * 0.62 * smoothstep(0.05, 0.78, up_face));
+	float fault = dot(p, vec3(0.37, 1.72, -0.39)) + 0.34 * weathering + 0.13 * broad;
+	float seam = 1.0 - smoothstep(0.006, 0.030, abs(fract(fault + 0.5) - 0.5));
+	float interruptions = smoothstep(0.48, 0.77, 0.66 * patches + 0.34 * weathering);
+	stone = mix(stone, paint * vec3(1.35, 1.29, 1.19), seam * interruptions * 0.37 * (1.0 - smoothstep(0.013, 0.059, resolution)));
 	if (bedding > 0.0) {
 		float x = local_rock.x;
 		float height = local_rock.y + 0.09 * sin(x * 2.1) + 0.025 * sin(x * 7.8 + local_rock.z);

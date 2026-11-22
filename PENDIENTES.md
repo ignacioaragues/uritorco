@@ -6,6 +6,8 @@ Al cierre de cada pasada se actualizan los puntos resueltos y se conserva lo que
 
 ### Resuelto
 
+- [x] Rehacer el recorte del Día 27 como una nota de Clarín de 2011. El titular le atribuye el hallazgo a la científica argentina Paula Soria. La foto en gris la muestra con el equipo alemán de Heidelberg y el texto describe su análisis astrométrico.
+- [x] Variar los perfiles de granito y las copas del monte. Agregar desprendimientos chicos junto a las lajas y al cable, con romerillos en las laderas y matas más altas camino al filo.
 - [x] Pasar la muerte del padre de Hernán a julio. La propuesta de trabajo llega un tiempo después.
 - [x] Aclarar el ascenso del Día 25 desde el primer parte y ajustar las conversaciones de los Días 2, 7, 25 y 27. Hernán puede contar lo del padre en el filo. El regreso del malacate abre la charla sobre astronomía.
 - [x] Darle al Día 32 un encargo sobre turistas que entraron sin permiso. La fogata y el trípode tienen observaciones por radio y se puede encontrar una pulsera para el cuaderno. Hernán puede mencionar a Paula más tarde, en la bajada.
@@ -58,6 +60,12 @@ Al cierre de cada pasada se actualizan los puntos resueltos y se conserva lo que
 - [x] Afinar el arte del prólogo. La huella tiene distintos tonos de tierra y ripio, con piedras y pastos agrupados en los márgenes. La parada tiene chapas remachadas y el puente, tablones separados con clavos visibles. La cuerda pasa por delante de la laja y por encima del borde hasta el anclaje. La trepada queda al atardecer y la noche entra en el tramo de la linterna.
 - [x] Darles materiales y siluetas distintas a los tres sueños. El primero tiene placas azules fracturadas, el segundo terrazas cobrizas y el tercero crestas de obsidiana y arcos erosionados. Las formaciones cercanas son sólidas y dejan pasos abiertos hacia los seis hallazgos.
 - [x] Conectar las lajas con la bajada al cauce y abrir un atajo del este a la vuelta del mollar. Las dos huellas están señalizadas y se dibujan en la hoja local, centrada en el refugio. Se recorrieron los enlaces con el mapa de mano abierto.
+
+## Pasada del recorte y el paisaje
+
+- El recorte ficticio del viernes 12 de agosto de 2011 se levanta y se vuelve a dejar con E. Tiene una foto grupal en gris, un epígrafe que nombra a Paula Soria y al equipo y dos columnas con el procedimiento del hallazgo.
+- Los siete perfiles del granito van de bloques redondeados a lajas quebradas. Las piedras tienen vetas discontinuas y algo de pátina en las caras expuestas. Los fragmentos más chicos se agrupan al pie de afloramientos de las lomas y del camino del cable.
+- Las copas cercanas comparten tres formas irregulares. Los claros, los romerillos y las matas altas se alternan en el ascenso. Se comprobaron 657 bloques con colisión y el espacio libre en el camino del cable.
 
 ## Pasada de la radio y el último día
 
