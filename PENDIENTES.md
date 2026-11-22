@@ -64,6 +64,11 @@ Al cierre de cada pasada se actualizan los puntos resueltos y se conserva lo que
 - [x] Darles materiales y siluetas distintas a los tres sueños. El primero tiene placas azules fracturadas, el segundo terrazas cobrizas y el tercero crestas de obsidiana y arcos erosionados. Las formaciones cercanas son sólidas y dejan pasos abiertos hacia los seis hallazgos.
 - [x] Conectar las lajas con la bajada al cauce y abrir un atajo del este a la vuelta del mollar. Las dos huellas están señalizadas y se dibujan en la hoja local, centrada en el refugio. Se recorrieron los enlaces con el mapa de mano abierto.
 
+## Pasada del jardín y la carrocería
+
+- El puesto de Mara tiene dos canteros de piedra con flores, una cerca de madera con paso central y cuatro pinos plantados alrededor. El fundido deja a Hernán frente al jardín. Desde ahí puede caminar hasta la puerta y golpear con E.
+- El ómnibus tiene una carrocería curva, pasos de rueda, paragolpes y marcos de vidrio con esquinas redondeadas. Se comprobó que las cuatro ruedas apoyen sobre la ruta de la parada del prólogo.
+
 ## Pasada de los escenarios de la despedida
 
 - Los dos ramales terminan con un fundido en la caminata. Con la pantalla negra se abre la parada del prólogo o el puesto de Mara, que tiene su propio terreno, sendero y sierras al fondo.

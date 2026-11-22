@@ -3,6 +3,7 @@ shader_type spatial;
 uniform vec4 enamel : source_color = vec4(0.64, 0.61, 0.47, 1.0);
 uniform float axle_height = 0.0;
 uniform float exposure = 1.0;
+uniform bool coach_livery = false;
 varying vec3 panel_point;
 
 float hash_cell(vec3 p) {
@@ -36,7 +37,12 @@ void fragment() {
 	float dust = (1.0 - smoothstep(0.33, 1.50, h + 0.23 * streaks)) * (0.31 + 0.33 * patches);
 	float chipped = smoothstep(0.68, 0.85, 0.61 * streaks + 0.39 * grain)
 		* (0.36 + dust * 0.64) * resolved;
-	vec3 faded = enamel.rgb * (0.87 + 0.15 * patches + 0.085 * streaks + 0.10 * (grain - 0.5) * resolved);
+	vec3 pigment = enamel.rgb;
+	if (coach_livery) {
+		float lower = 1.0 - smoothstep(1.20, 1.23, h);
+		pigment = mix(pigment, vec3(0.49, 0.275, 0.224), lower);
+	}
+	vec3 faded = pigment * (0.87 + 0.15 * patches + 0.085 * streaks + 0.10 * (grain - 0.5) * resolved);
 	vec3 oxidized = vec3(0.25, 0.18, 0.12) * (0.71 + 0.29 * grain);
 	vec3 painted = mix(faded, oxidized, exposure * chipped);
 	ALBEDO = mix(painted, vec3(0.32, 0.27, 0.19), dust * 0.49 * exposure);
