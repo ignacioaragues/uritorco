@@ -183,7 +183,7 @@ La primera respuesta puede volver en la despedida.
 
 **Empieza Hernán.** «Llegué al cartel de la laja. Las dos huellas suben. ¿Cuál tengo que mirar?»
 
-- **Mara** · «Suben las dos. A la derecha la subida es más larga, pero te salteás el escalón de laja.»
+- **Mara** · «Suben las dos. Por la vaguada hay un tronco caído. Si lo pasás, te ahorrás la cuerda.»
 
 - **Opción 1, Hernán** · «Voy por el rodeo. ¿Dónde se vuelven a juntar?» *(suma cercanía)*
   - **Mara** · «Seguí el desvío de la derecha. Rodea el resalte y vuelve a la huella principal más arriba. Fijate si se puede hacer con las manos ocupadas.»

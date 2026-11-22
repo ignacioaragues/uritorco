@@ -75,9 +75,13 @@ Al cierre de cada pasada se actualizan los puntos resueltos y se conserva lo que
 
 ### Pendientes del texto pegado
 
-- Revisar los espacios vacíos que se ven desde las alturas y ajustar la luz de las demás jornadas según el momento de cada encargo.
-- Hacer más fáciles de encontrar los cactus, el zorro y los cuises. Repartir más lagartos y cuises tras los primeros dibujos y sumar un ave que se pueda dibujar, con su croquis generado.
-- Darle un costo al rodeo por la vaguada, como un tronco caído, y extender el paredón de la laja hacia el oeste para bloquear los atajos al nivel superior.
+- Revisar los claros restantes fuera del corredor serrano y ajustar la luz de las demás jornadas según el momento de cada encargo.
+- Repartir más lagartos y cuises tras los primeros dibujos y sumar un ave que se pueda dibujar, con su croquis generado.
+## Pasada del chofer y la vaguada
+
+- El chofer tiene proporciones adultas, con las manos en el volante y los pies sobre el piso de la cabina. La ventanilla opuesta se abre al paisaje.
+- La vaguada tiene un tronco caído que se puede saltar o rodear. El reborde de la laja continúa hacia el oeste y se sembraron piedras y vegetación en ambas laderas exteriores del corredor.
+- Hay grupos de cactus cerca de huellas frecuentadas. El zorro tarda un poco más en cruzar y los cuises salen a comer antes de que Hernán esté encima.
 
 ## Pasada del libro de Elvira y los finales
 

@@ -17,7 +17,7 @@ const CACTUS_SITES := [Vector2(-45.6, -19.6), Vector2(-35.0, -32.0),
 const FOX_START := Vector2(18.1, -2.6)
 const FOX_END := Vector2(30.2, -7.1)
 const FOX_MID := (FOX_START + FOX_END) * 0.5
-const FOX_CROSS_SECONDS := 3.3
+const FOX_CROSS_SECONDS := 4.25
 const NATURAL_TARGET_DISTANCE := 13.0
 const TEGU_REST_ANGLE := -2.89
 const CAVY_CREEK := Vector2(-20.45, 31.0)
@@ -83,8 +83,12 @@ func dress_flora():
 	var stones := Stone.surface()
 	var rng := RandomNumberGenerator.new()
 	rng.seed = 4052
-	for i in CACTUS_SITES.size():
-		var site: Vector2 = CACTUS_SITES[i]
+	var sites := CACTUS_SITES.duplicate()
+	var cauce := Creek.trail_point(0.43)
+	sites.append(Vector2(cauce.x + 1.65, cauce.z + 1.15))
+	sites.append(Vector2(5.4, -17.8))
+	for i in sites.size():
+		var site: Vector2 = sites[i]
 		var rotation := -0.30 + i * 1.67
 		for bud in 2 + (i + 1) % 2:
 			var cluster := Vector2(-0.30 * bud, 0.16 * sin(bud * 2.7)).rotated(rotation)
@@ -169,12 +173,12 @@ func advance_fox(delta: float, player_xz: Vector2, active: bool):
 		fox_armed = true
 		fox.hide()
 		return
-	if fox_armed and distance < 11.2:
+	if fox_armed and distance < 13.6:
 		fox_armed = false
 		fox_clock = 0.0
 	if fox_clock < 0.0: return
 	fox_clock += delta
-	var u := (fox_clock - 0.30) / FOX_CROSS_SECONDS
+	var u := (fox_clock - 0.72) / FOX_CROSS_SECONDS
 	if u < 0.0: return
 	if u >= 1.0:
 		fox_clock = -1.0
@@ -233,7 +237,7 @@ func advance_cavies(delta: float, player_xz: Vector2, creek: bool, active: bool)
 	if not active or distance > 18.0:
 		reset_cavies()
 		return
-	if (not cavies[0].visible and distance > 11.0) or cavy_bolt >= 1.65: return
+	if (not cavies[0].visible and distance > 14.0) or cavy_bolt >= 1.65: return
 	var shelter := CAVY_REFUGE_CREEK if creek else CAVY_REFUGE_LAJAS
 	cavy_idle += delta
 	if cavy_bolt < 0.0 and distance <= 2.40:

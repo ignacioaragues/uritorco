@@ -47,8 +47,12 @@ static func elevation(x: float, d: float) -> float:
 	var roll: = 6.0 * sin(d / 63.0) + 4.0 * sin(x / 53.0 + d / 89.0)
 	var shoulder: = 20.0 * pow(clampf(absf(x - trail(d)) / 180.0, 0, 1), 2)
 	var offset := x - trail(170)
-	var width := 64.0 if offset < 0.0 else 26.0
-	var lip: = 3.1 * smoothstep(169.8, 170.2, d) * (1.0 - smoothstep(10, width, absf(offset))) * (1.0 - smoothstep(180, 218, d))
+	var escarpment := 1.0 if offset < 0.0 else 1.0 - smoothstep(10, 26, offset)
+	var face := 169.7 + 2.9 * sin(minf(offset + 12.0, 0.0) / 23.0)
+	var lip := 3.1 * smoothstep(169.8, 170.2, d) * escarpment * (1.0 - smoothstep(180, 218, d))
+	if offset < -16.0:
+		var west_lip := (3.65 + 0.46 * sin(x / 12.0)) * smoothstep(face - 0.20, face + 0.20, d) * (1.0 - smoothstep(190, 241, d))
+		lip = lerpf(lip, west_lip, smoothstep(16.0, 26.0, -offset))
 	var summit: = 45.0 * exp( - pow((x - 146.0) / 76.0, 2) - pow((d - 948.0) / 61.0, 2))
 	return summit + (0.136 * maxf(0, d) + roll + shoulder) * t + lip
 
@@ -108,6 +112,8 @@ static func make_ground_material(route_to_creek: PackedVector2Array, mara_start:
 func _ready():
 	rng.seed = 853
 	for i in range(-1, 246): ground_rows.append(i * 4.0)
+	for i in range(660, 697):
+		if i % 16 != 0: ground_rows.append(i * 0.25)
 	ground_rows.append(169.8)
 	ground_rows.append(170.2)
 	ground_rows.sort()
@@ -131,6 +137,7 @@ func _ready():
 	signpost(at(trail(124) + 2, 124), "Filo por la laja  ↑\nRodeo por la vaguada  →")
 	build_laja_rope()
 	dress_laja_flank()
+	build_detour_deadfall()
 	signpost(at(trail(CREST) + 1.68, CREST), "Filo del puesto", 0.0, false, true)
 	var foot := surface_point(trail(CREST) - 1.50, CREST)
 	var marker := Stone.surface()
@@ -157,13 +164,31 @@ func dress_laja_flank():
 	var faces := Stone.surface()
 	var mineral := RandomNumberGenerator.new()
 	mineral.seed = 22695
-	for i in 8:
-		var d := 169.0 + mineral.randf_range(-0.53, 0.86)
-		var foot := surface_point(trail(170) - 16.0 - i * 5.4, d)
+	for i in 26:
+		var offset := -16.0 - i * 6.1
+		var d := 168.8 + 2.9 * sin((offset + 12.0) / 23.0) + mineral.randf_range(-0.42, 0.39)
+		var foot := surface_point(trail(170) + offset, d)
 		var span := Vector3(6.8, mineral.randf_range(3.0, 4.3), mineral.randf_range(3.3, 5.5))
 		var piece := Stone.fragment(faces, foot, span, mineral.randf_range(-0.22, 0.24), mineral, terrain_point, Stone.FRACTURE_PROFILE, true)
 		Stone.solid(self, foot, piece, "Paredón de la laja")
 	Stone.finish(self, faces, "Ladera quebrada de la laja")
+
+func build_detour_deadfall():
+	var distance := 159.5
+	var center := detour(distance)
+	var root := surface_point(center - 3.4, distance - 2.0) + Vector3.UP * 0.24
+	var tip := surface_point(center + 3.5, distance + 1.8) + Vector3.UP * 0.13
+	var bark := Flora.bark_material()
+	var trunk := Kit.cylinder(self, root.lerp(tip, 0.5), 0.34, 0.19, root.distance_to(tip), bark)
+	trunk.name = "Tronco caído de la vaguada"
+	trunk.basis = Basis(Quaternion(Vector3.UP, root.direction_to(tip)))
+	trunk.create_trimesh_collision()
+	var break_wood := Kit.cylinder(self, tip, 0.176, 0.13, 0.11, Kit.material("9f8063"))
+	break_wood.basis = trunk.basis
+	for side in [-1.0, 1.0]:
+		var collar := root.lerp(tip, 0.25 if side < 0.0 else 0.77)
+		var branch_end := collar + Vector3(-0.42, 0.32, side * 1.27)
+		Flora.branch(self, collar, branch_end, 0.12, 0.043, true)
 
 func laja_rope_route() -> Array[Vector3]:
 	var x := trail(170.0) - 0.64
@@ -260,9 +285,12 @@ func plant():
 	var solids := Node3D.new()
 	solids.name = "Troncos y rocas del valle"
 	add_child(solids)
-	for i in range(7600):
-		var d: = rng.randf_range(8, FAR)
-		var x: = trail(d) + rng.randf_range(-120, 120)
+	for i in 9550:
+		var d := rng.randf_range(8, FAR)
+		var x := trail(d) + rng.randf_range(-120, 120)
+		if i >= 7600:
+			x = trail(d) + rng.randf_range(120.0, 300.0) * (-1.0 if i % 2 == 0 else 1.0)
+			if absf(x) > HALF_WIDTH - 7.0: continue
 		var west_t := inverse_lerp(WEST_START_Z, quarry_point(WEST_JOIN).z, ORIGIN_Z - d)
 		if west_t < 1.0 and absf(x - western_approach(west_t).x) < 3.8: continue
 		if d > QUARRY_START and d < QUARRY_END and absf(x - quarry_point(inverse_lerp(QUARRY_START, QUARRY_END, d)).x) < 3.5: continue

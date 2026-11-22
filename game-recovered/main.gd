@@ -1250,7 +1250,7 @@ func start_trail_chat(topic: String):
 	var lines: Array = [hernan(opening)] if topic in Mara.HERNAN_STARTS else [opening]
 	match topic:
 		"piedras": lines.append("En el granito, difícil. Pero de una cantera más abajo tengo una piedra con la impresión de una planta. Está en el cajón.")
-		"vaguada": lines.append("Suben las dos. A la derecha la subida es más larga, pero te salteás el escalón de laja.")
+		"vaguada": lines.append("Suben las dos. Por la vaguada hay un tronco caído. Si lo pasás, te ahorrás la cuerda.")
 		"sueno": lines.append("Ja. Te pegaron fuerte las historias de OVNIs. Eso es para los turistas. ¿Y después qué hiciste?")
 		"duelo":
 			lines.append(hernan("¿Qué cosa?"))
