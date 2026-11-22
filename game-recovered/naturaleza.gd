@@ -29,13 +29,13 @@ const CAVY_LAJAS := Vector2(-22.0, -28.75)
 const CAVY_REFUGE_CREEK := Vector2(3.18, 0.80)
 const CAVY_REFUGE_LAJAS := Vector2(-1.38, -3.0)
 const ENTRIES := {
-	CHINGOLO: ["Chingolo", "Se erizó al oírme. Alcancé a dibujarle las rayas de la cabeza, el pico corto y el cuello color ladrillo."],
 	FOX: ["Zorro gris pampeano", "Cruzó la huella del mollar al trote. Alcancé a ver el lomo gris y, antes de que se metiera en los arbustos, la punta negra de la cola."],
 	TEGU: ["Lagarto overo", "Se calentaba sobre una laja de la orilla. Tenía manchas claras entre las bandas oscuras y una cola larga que casi tocaba el suelo."],
 	REED: ["Cortadera", "Las hojas largas se arquean hasta el suelo. De cerca, cada penacho está hecho de ramitas finas. Dibujé la mata entera para acordarme de su forma."],
 	CAVY: ["Cuis moro", "Había dos comiendo al borde de la huella. Uno levantó la cabeza un momento. Alcancé a ver la raya clara arriba del ojo antes de que se metiera entre los pastos."],
 	ESPINILLO: ["Espinillo en flor", "De lejos, las flores parecen motitas de polen. De cerca se ven las hojitas de a pares. Dibujé dos espinas que salen juntas de la rama."],
 	CACTUS: ["Cactus serrano", "Apenas sobresale del suelo. Desde arriba, las costillas se abren como los gajos de una naranja. Dibujé cómo salen las espinas en grupos."],
+	CHINGOLO: ["Chingolo", "Se erizó al oírme. Alcancé a dibujarle las rayas de la cabeza, el pico corto y el cuello color ladrillo."],
 }
 const SKETCHES := {
 	CHINGOLO: "res://naturaleza_chingolo.webp",

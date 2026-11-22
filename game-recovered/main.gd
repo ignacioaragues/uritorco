@@ -3245,7 +3245,8 @@ func restore(data: Dictionary):
 	valley.restore_light(maxf(saved_dusk, saved_night), saved_night)
 	var seconds := 0.0 if legacy_abra else float(data.get("light_left", 0.0))
 	if seconds > 0.01 and data.get("light_target") == "night":
-		var old_dusk := maxf(0.1, seconds - (Climate.STORM_RETURN_NIGHT - Climate.STORM_RETURN_DUSK)) if stage == 18 else 14.0
+		# Los guardados anteriores tenían 30 segundos entre el fin del ocaso y la noche cerrada.
+		var old_dusk := maxf(0.1, seconds - 30.0) if stage == 18 else 14.0
 		var dusk_left := maxf(0.1, float(data.get("dusk_left", old_dusk)))
 		valley.night(seconds, dusk_left)
 	elif seconds > 0.01 and data.get("light_target") == "dusk":
