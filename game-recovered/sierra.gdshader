@@ -24,6 +24,8 @@ uniform float storm_amount = 0.0;
 uniform float cirrus_amount = 0.32;
 uniform float valley_mist = 0.0;
 
+const float SUN_DISC_RADIUS = 0.019;
+
 float cloud_hash(vec2 p) {
 	vec3 q = fract(vec3(p.xyx) * 0.1031);
 	q += dot(q, q.yzx + 33.33);
@@ -176,13 +178,13 @@ void sky(){
 	float from_sun = length(EYEDIR - daylight_dir);
 	float above_skyline = smoothstep(-0.18, 0.20, daylight_dir.y);
 	float solar_glow = (exp(-from_sun * from_sun * 39.0) * 0.24 + exp(-from_sun * from_sun * 194.0) * 0.24) * above_skyline;
-	float sun_edge = (1.0 - smoothstep(0.017, 0.021, from_sun)) * smoothstep(-0.019, 0.008, EYEDIR.y);
-	float center_glow = 1.0 - smoothstep(0.003, 0.019, from_sun);
+	float sun_edge = (1.0 - smoothstep(SUN_DISC_RADIUS - 0.002, SUN_DISC_RADIUS + 0.002, from_sun)) * smoothstep(-0.019, 0.008, EYEDIR.y);
+	float center_glow = 1.0 - smoothstep(0.003, SUN_DISC_RADIUS, from_sun);
 	daytime += mix(vec3(1.0,0.91,0.72), vec3(1.0,0.58,0.30), dusk) * (solar_glow + sun_edge * (0.84 + 0.67 * center_glow));
 	if (moon_dir.y > -moon_radius && EYEDIR.y > -0.008) {
 		float phase = 0.5 - 0.5 * dot(daylight_dir, moon_dir);
 		float moonlight = smoothstep(0.015, 0.085, phase) * smoothstep(-0.008, 0.048, EYEDIR.y);
-		float apparent_radius = moon_radius * mix(0.126, 1.0, smoothstep(0.64, 1.0, nightfall));
+		float apparent_radius = mix(SUN_DISC_RADIUS, moon_radius, smoothstep(0.64, 1.0, nightfall));
 		earth = disc(EYEDIR,moon_dir,daylight_dir,apparent_radius,vec3(1.28,1.21,1.10),earth,moonlight,1.0);
 		daytime = disc(EYEDIR,moon_dir,daylight_dir,apparent_radius,vec3(1.03,1.06,1.10),daytime,daylight_moon * moonlight * (0.39 + dusk * 0.19),dusk * 0.12);
 	}

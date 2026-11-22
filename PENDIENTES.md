@@ -53,6 +53,10 @@ Al cierre de cada pasada se actualizan los puntos resueltos y se conserva lo que
 - [x] Darles materiales y siluetas distintas a los tres sueños. El primero tiene placas azules fracturadas, el segundo terrazas cobrizas y el tercero crestas de obsidiana y arcos erosionados. Las formaciones cercanas son sólidas y dejan pasos abiertos hacia los seis hallazgos.
 - [x] Conectar las lajas con la bajada al cauce y abrir un atajo del este a la vuelta del mollar. Las dos huellas están señalizadas y se dibujan en la hoja local, centrada en el refugio. Se recorrieron los enlaces con el mapa de mano abierto.
 
+## Pasada del tamaño de la luna
+
+- La luna de tarde usa el mismo diámetro aparente que el disco solar, unos 2,2 grados en el juego. Las fases se conservan y la luna recupera el tamaño nocturno a medida que oscurece.
+
 ## Pasada del prólogo y el campamento
 
 - La mochila de la parada tiene una cubierta cerrada y más fondo. Se conserva la recogida con E o clic. El tronco atraviesa un sendero entre molles, talas y piquillines. La laja tiene un frente continuo y bloques a ambos flancos. Se comprobaron el salto, la trepada con cuerda y los intentos de rodear los dos obstáculos.
@@ -252,6 +256,7 @@ Esta lista reconstruye el estado informado del proyecto editable. La exportació
 
 - **Diálogos con Mara.** Auditar toda la campaña en orden, incluidas las variantes. Revisar quién inicia las llamadas, cuánto tiempo pasa entre charlas y cómo retoman decisiones y hechos previos. Graduar cuándo Hernán puede contar lo del padre y lo de Paula, dar lugar a que se reserve cosas y comprobar que el camino a la despedida se sostiene con esa progresión.
 - **Arte.** Cotejar el acabado de las rocas con más fotos del cerro y seguir afinando los objetos de cerca, la vegetación y las lomadas de fondo en los sectores secundarios.
+- **Flora del Uritorco.** Cotejar registros del cerro para ubicar cactus chicos en laderas secas y sumar plantas en flor al cuaderno. El espinillo en flor es un candidato para aprovechar el modelo existente. Verificar la época de los frutos de tala y piquillín antes de sumar una recolección acotada. Considerar un frutal cultivado cerca del puesto o de una casa abandonada.
 - **Fauna.** Buscar registros de observación del Uritorco para afinar el reparto por ambientes y contrastar la presencia local de las especies elegidas con referencias de las sierras cordobesas.
 - **Prueba de campaña.** Cronometrar una primera partida de principio a fin con alguien que esté descubriendo los caminos.
 - **Windows.** Probar la campaña y el audio de la exportación en un equipo con Windows.
