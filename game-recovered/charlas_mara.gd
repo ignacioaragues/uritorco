@@ -7,121 +7,151 @@ const LastNight = preload("res://final_night.gd")
 
 const VISIT_PERCENT := 60
 
-# Respuesta que genera cercanía, pregunta, opciones de Hernán y réplicas de Mara.
+const HERNAN_STARTS := ["piedras", "vaguada", "cable", "regreso"]
+const RESERVED_ANSWERS := ["cielo", "pircas"]
+
+# Respuesta de cercanía, apertura, respuestas de Hernán y réplicas de Mara.
 const TOPICS = {
 	"cauce": [
-		1, "¿Cómo te está tratando el camino?",
-		["Se agradece el silencio.", "Me vendría bien un poco de charla."],
+		1, "La semana pasada te largué con dos encargos encima. Hoy vamos con más tiempo. ¿Cómo te está tratando el camino?",
+		["Por ahora me viene bien el silencio. Te aviso cuando llegue.", "Me vendría bien que me acompañes hasta el cruce."],
 		[
-			["Te entiendo. Hay días que bajo por ahí para escuchar los pasos."],
-			["Te acompaño un rato. Cuando doble la huella, fijate en las piedras claras del cauce."]
+			["Dale. Dejo el equipo en el canal. Cuando llegues dejame un clic, así sé que estás del otro lado."],
+			["Dale. Contame si ya pasaste las lajas.", "Si tardás en volver a llamar, me quedo en el canal un rato."]
 		]
 	],
 	"piedras": [
-		0, "De chica llevaba una piedra de cada caminata. Una vez volví con tantas que tuve que dejar el agua para cerrar la mochila.",
-		["«¿Todavía guardás alguna?»", "«Hoy casi me traigo una de acá»."],
+		0, "Mara, ahora que vuelvo por la huella veo un brillo en las piedras. Desde arriba me habían parecido todas iguales.",
+		["¿Vos alguna vez te llevaste una de acá?", "Mañana quiero volver a verla a esta hora."],
 		[
-			["Una blanca y chata. La uso para que no se me vuele el mantel.", "Tengo otra parecida. Te la mando con las pilas. A vos te vendrá bien para sujetar el mapa."],
-			["Fijate si te vuelve a llamar la atención mañana. A veces es la luz de ese momento."]
+			["Una blanca del cauce. La uso para sostener el mantel cuando abro la ventana.", "Tengo otra en el cajón. Te la mando con las pilas. Con el viento de arriba te va a servir para el mapa."],
+			["Fijate desde qué lado te dio el sol. Si volvés por la misma huella, buscá la marca que hiciste en la regla."]
 		]
 	],
 	"museo": [
-		0, "Si vas por el museo, probá la puerta. El de la llave se fue al pueblo. Acá decidimos llamarlo horario corrido.",
-		["«¿Venías mucho al museo?»", "«Con razón le falta el cartel de horarios»."],
+		0, "Si entrás al museo, fijate en las fichas. La letra chiquita es de Elvira. Le toca cambiar los papeles cada vez que entra agua.",
+		["¿Querés que le mande saludos de tu parte?", "Decile que valió la pena dejar la puerta abierta."],
 		[
-			["Mi vieja me traía cuando llovía. Había un mortero que podías tocar.", "Un día nos dejaron encerradas. Mi vieja siguió leyendo las fichas hasta que volvieron."],
-			["Sí, ése me lo llevé yo para que no se lo llevara el viento.", "Ahora está abajo de una pata de mi mesa. Horario corrido, mesa firme."]
+			["Decile que por fin le devolví la llave. Va a entender.", "Las primeras fichas las copiamos juntas en la cocina. Yo escribía los títulos porque se veían mejor desde el pasillo."],
+			["Se lo digo. Hay semanas en que sólo entra ella, a ver si la humedad levantó otra esquina."]
 		]
 	],
 	"antena": [
-		1, "Mi vieja me enseñó a usar esa antena. La primera vez me hizo llamar desde el cerro para preguntarle qué había de comer.",
-		["«¿Y qué había?»", "«¿Te quedaste sin saber qué decir?»"],
+		1, "Antes de que bajes de la antena, ¿hacemos una prueba? Quiero saber en qué parte de la vuelta se pierde tu voz.",
+		["Te aviso si vuelve a cortarse.", "Dejá el volumen como está. Te voy diciendo desde dónde te hablo."],
 		[
-			["Sopa. Yo esperaba que me dijera que se escuchaba clarito. Me dijo que no dejara enfriar la sopa."],
-			["Le di al botón y me quedé muda. La oí decir «tomate tu tiempo». Eso me dio más vergüenza todavía."]
+			["Dale. Si te falla una vez, esperá unos segundos antes de repetir."],
+			["Eso me sirve. Cuando cambiaron el mástil, me tocó hacer esa caminata sola. Es raro hablarle al aparato cuando del otro lado nadie puede decirte si te oye."]
 		]
 	],
 	"vaguada": [
 		0, "Mara, llegué a la laja. Desde acá se ve una huella por abajo.",
-		["«¿Quién te mostró la otra vuelta?»", "«Mi viejo me decía que mirara dónde pisa el agua»."],
+		["¿La conocés? Desde el sendero no se ve dónde vuelve a subir.", "Mi viejo siempre me decía que antes de bajar mirara por dónde iba a volver."],
 		[
-			["Una vecina que subía con una bolsa de pan en cada mano. Yo estaba juntando coraje frente a la cuerda. Me gritó desde arriba."],
-			["En eso tenía razón. Cuando vuelve el agua, las huellas que quedan son las que aprendiste a ver."]
+			["La aprendí llevando una batería. Había llovido y no me daban las manos para la cuerda.", "Cuando dejes de ver el agua, buscá las marcas claras del otro lado. Por ahí vuelve la huella."],
+			["Buen consejo. Desde abajo vas a ver una laja casi blanca. La salida está al costado."]
 		]
 	],
 	"sueno": [
-		0, "Hoy me desperté antes que el despertador. Me quedé escuchando los pájaros y cuando sonó ya no sabía de qué lado venía el ruido.",
-		["«Yo soñé con un cielo que no conocía».", "«Todavía me despierto buscando la ventana de casa»."],
+		0, "¿Te está dando para dormir ahí arriba? Los primeros días a mí me despertaba el ruido de la chapa.",
+		["Soñé con un cielo que no conocía. Dibujé las estrellas para ver si después me acordaba.", "Duermo de a ratos. Lo demás prefiero dejármelo para mí."],
 		[
-			["¿Te acordás de alguna parte? A mí me sirve dibujar una sola cosa, aunque sea una esquina."],
-			["Me pasó cuando me mudé acá. Una mañana abrí la cortina y me sorprendió que la sierra siguiera en el mismo lugar."]
+			["¿Te quedó algún dibujo que puedas reconocer de noche?", "Guardalo. A veces al día siguiente uno ya empieza a acordarse de otra cosa."],
+			["Sí, claro. Si necesitás algo para la cama, hay otra frazada en el puesto de abajo."]
 		]
 	],
 	"cielo": [
-		0, "Te iba a preguntar hace días. ¿Qué te trajo al puesto, Hernán?",
-		["«Mi viejo murió en septiembre. Mirábamos el cielo juntos. Cuando me ofrecieron venir, pensé que acá iba a poder volver a mirarlo».", "«Necesitaba pasar un tiempo lejos de casa. El trabajo apareció justo»."],
+		0, "Hace días que te quiero preguntar algo. ¿Por qué aceptaste venir al puesto?",
+		["Mi viejo murió en septiembre. Mirábamos el cielo juntos. Pensé que acá iba a poder levantar la vista de nuevo.", "Necesitaba salir un tiempo de casa. Por ahora prefiero contarte hasta ahí."],
 		[
-			["No sabía. Gracias por contármelo.", "Si alguna noche salís a mirar y querés compañía, avisame. Puedo dejar el canal abierto."],
-			["Entiendo. ¿Te viene haciendo bien estar acá?", "Eso me lo podés contestar otro día. El cable sigue por el lado de la sombra."]
+			["Ah, Hernán. No sabía.", "Si salís a mirar algún día y querés compañía, dejame el canal abierto. No hace falta que hablemos."],
+			["Está bien. Gracias por decirme hasta dónde.", "Si un día te sirve quedarte en línea un rato, avisame."]
 		]
 	],
 	"cable": [
-		1, "Mara, estoy junto al cable. Con el viento parece una cuerda de guitarra.",
-		["«Desde acá lo escucho distinto».", "«¿Tocás la guitarra?»"],
+		1, "Mara, estoy bajando junto al cable. Con el viento parece que alguien estuviera afinando una cuerda.",
+		["Lo marqué junto al poste, por si tienen que volver a tensarlo.", "¿Escuchás el cable desde ahí? Quedate un segundo en silencio conmigo."],
 		[
-			["Algún día me gustaría oírlo desde donde estás vos. Siempre me doy vuelta antes de llegar al corte."],
-			["Tres acordes. Los aprendí para una canción y, cuando me salió, me dio pena tocar otra."]
+			["Gracias. Deciles a los de mantenimiento que miren el anclaje del lado del corte."],
+			["Ahí. Entró un poquito al final de lo que dijiste.", "Había días que yo subía sin radio para oír cómo cambiaba eso con el viento. Después me fui acostumbrando a llevarla prendida."]
 		]
 	],
 	"pircas": [
-		0, "Cada vez falta menos para que bajes. ¿Hay alguien a quien tengas ganas de ver cuando vuelvas?",
-		["«Pensé en escribirle a Paula. Hace mucho que no hablamos y a veces me sorprendo guardándole cosas para contarle».", "«Todavía no pensé qué voy a hacer cuando baje»."],
+		0, "Desde que viniste hablamos más de cómo volver al puesto que de qué vas a hacer cuando te vayas. ¿Hay alguien a quien quieras ver?",
+		["Pensé en escribirle a Paula. Hace mucho que no hablamos y todavía me encuentro guardándole cosas para contarle.", "Todavía no sé. Prefiero llegar a casa y ver qué me pasa."],
 		[
-			["¿Te pasa que te acordás justo cuando ves algo que le gustaría?", "Si al final le escribís, capaz podés empezar por una de esas cosas."],
-			["Está bien. Todavía te quedan días. Avisame cuando pases las pircas y te digo cuánto falta."]
+			["¿Ella sabe que estás en el cerro?", "Si algún día le escribís, contale una de esas cosas que le guardaste. Lo demás puede esperar."],
+			["Sí. Hay cosas que se piensan mejor cuando ya bajaste.", "Avisame cuando pases las pircas. Si querés, el otro tramo lo hacemos con el canal abierto."]
 		]
 	],
 	"bajada": [
-		1, "Ya debe darte la sombra. Bajá tranquilo. El primer día que salí de ahí me apuré tanto que llegué con dos piedras adentro de la bota.",
-		["«¿Dónde te dejo la llave el último día?»", "«¿Me dejás la radio abierta un rato?»"],
+		1, "Cuando veas el banco ya estás fuera de la parte fea de la bajada. Tengo el equipo al lado. Si querés, me quedo.",
+		["Ya veo por dónde sigo. ¿Dónde te dejo la llave el último día?", "Quedate un rato. Cada vez que suelto el botón vuelve a oírse el viento."],
 		[
-			["Podés dejarla en el cajón del escritorio. Acá en el puesto tengo una copia para el próximo relevo."],
-			["Sí. Estoy lavando los platos del puesto. Si escuchás que se cae algo, seguí caminando.", "Vos avisame cuando veas el banco.", "Con el próximo cajón te mando algo. Guardalo para cuando termines el turno."]
+			["En el cajón del escritorio. Tengo una copia para el próximo relevo. Avisame al llegar al banco."],
+			["Dale. Yo sigo lavando unos platos. Cuando llegues me avisás.", "En el próximo cajón te mando un tinto que tenía guardado. Abrilo cuando entregues la llave."]
 		]
 	],
 	"lluvia": [
-		0, "Cuando llueve así saco las macetas del alero. Siempre me acuerdo de una que mi vieja ponía afuera en la primera lluvia de noviembre.",
-		["«¿Qué tenía plantado?»", "«En casa poníamos una olla bajo la gotera»."],
+		0, "Si te llega a tapar la lluvia, frená donde puedas apoyar bien los dos pies. La última vez perdí un guante por apurarme en esa bajada.",
+		["Puedo esperar acá. ¿Me avisás si escuchás algo de la pasarela?", "Veo bien las pircas. Te llamo desde la orilla."],
 		[
-			["Malvones. Dejó uno en una lata de duraznos. Esa lata duró más que todas las macetas buenas."],
-			["Acá uso una palangana. Cuando empieza a llenarse cambia el sonido. Así me doy cuenta de que tengo que vaciarla."]
+			["Sí. Desde acá oigo el agua en el techo nada más. Si cambia algo, te doy dos llamados cortos."],
+			["Dale. Probá la radio antes de asomarte al agua. Si se corta, volvé por donde viniste."]
 		]
 	],
 	"ventana": [
-		0, "Probé el otro equipo. Hay una frecuencia cerca que se mete en la nuestra cuando llueve. Lo que oíste diciendo «no cruces» todavía no sé de dónde salió. ¿Ya ves la tranquera?",
-		["«Sí. ¿Me dejás el canal abierto hasta que entre?»", "«Ya la veo. Te aviso desde el patio»."],
+		0, "Probé el equipo de repuesto. En ese tramo se pisan dos frecuencias. Sigo sin ubicar la voz de la advertencia. ¿Ya ves la tranquera?",
+		["Sí. ¿Te quedás conmigo hasta que entre al patio?", "Sí, la veo. Si vuelve a entrar la voz, te anoto la hora."],
 		[
-			["Sí. Por acá ya paró. Me quedo hasta que me digas que llegaste."],
-			["Dale. Si vuelve a entrar esa voz, decime la hora. La voy a anotar de este lado."]
+			["Sí. Yo me quedo acá. Avisame cuando estés del otro lado de la verja."],
+			["Dale. Yo voy a dejar anotada la hora que escuché el primer golpe."]
 		]
 	],
 	"regreso": [
-		1, "¿Qué es lo primero que vas a hacer cuando llegues a casa?",
-		["«Abrir la ventana de mi pieza».", "«Volver a mirar el cielo desde la vereda»."],
+		1, "Mara, ya salí. Me cuesta creer que sea la última vez que vengo por esta huella.",
+		["Cuando llegue a casa voy a abrir la ventana y dejar todo en el bolso.", "Creo que voy a salir a mirar el cielo desde la vereda. Hace mucho que no lo hago."],
 		[
-			["La primera noche que volví al pueblo dormí con la ventana abierta. Quería ver si de día me acordaba del ruido de los árboles."],
-			["Si encontrás las cuatro de la cruz, avisame otro día. Yo voy a mirar desde acá."]
+			["El bolso puede esperar hasta mañana. Si te olvidaste algo, yo subo al puesto después."],
+			["Ojalá esté despejado. Si llegás a ver la cruz, pensá que desde acá va a estar para el mismo lado."]
 		]
 	],
 	"ultima_curva": [
-		1, "Los días que voy al pueblo me siento del lado de la ventanilla. En la última curva todavía se ve un pedazo de la sierra.",
-		["«Voy a buscar ese asiento».", "«No sé si me dan ganas de mirar»."],
+		1, "Desde esa curva, el puesto se ve un rato más cuando arranca el ómnibus. Yo siempre lo busco entre los árboles.",
+		["Voy a sentarme del lado de la sierra.", "Voy a extrañar más que la vista. Vos también me vas a hacer falta."],
 		[
-			["El vidrio suele estar sucio. Con el puño del buzo alcanza para hacerte un huequito."],
-			["Entonces llevá el libro a mano. Si querés, después me contás qué página te tocó en la última curva."]
+			["Sentate adelante si hay lugar. De atrás a veces sólo se ve el polvo."],
+			["A mí también me va a faltar oírte llegar. Hoy dejé la radio prendida un rato antes de que salieras."]
 		]
 	]
 }
+
+static func opening(topic: String, answered: Dictionary, mica_told: bool, abra_told: bool, paula_told: bool) -> String:
+	match topic:
+		"piedras":
+			if mica_told: return "Mara, pensé en la mica que te conté. A la vuelta cambió la luz y las piedras ya no brillaban igual."
+		"antena":
+			if abra_told: return "Dejé la luz y la voz en renglones separados, como me las contaste. Quedate un segundo en la antena. ¿Probamos hasta dónde llega el canal?"
+		"cielo":
+			if answered.get("sueno", -1) == 0: return "Me quedé pensando en lo que dibujaste del sueño. ¿Qué fue lo que te hizo aceptar este trabajo, Hernán?"
+		"pircas":
+			if answered.get("cielo", -1) == 0: return "La otra vez me contaste por qué viniste al puesto. Ahora que falta poco, ¿hay alguien a quien tengas ganas de ver al bajar?"
+		"regreso":
+			if paula_told: return "Mara, salí con ganas de escribirle a Paula. Pero eso puede esperar. Ahora me cuesta creer que sea la última vez que vengo por esta huella."
+	return TOPICS[topic][1]
+
+static func farewell_memory(answered: Dictionary) -> String:
+	if answered.get("cielo", -1) == 0:
+		return "Desde que me contaste lo de tu viejo, alguna noche dejé el equipo al lado de la ventana. Por si salías a mirar y te daban ganas de llamar."
+	if answered.get("ventana", -1) == 0:
+		return "El día de la crecida no apagué el equipo hasta que llegaste a la tranquera. Lo habría dejado prendido toda la noche."
+	if answered.get("sueno", -1) == 0:
+		return "Llevate el cuaderno en el bolso de mano. Si te acordás de esas estrellas otra vez, así lo tenés cerca."
+	if answered.get("cauce", -1) == 1:
+		return "Me acuerdo de cuando me pediste que te acompañara hasta el cruce. A mí también me vino bien oír a alguien del otro lado."
+	if answered.get("museo", -1) == 0:
+		return "A Elvira le conté que te habías fijado en las fichas. Me hizo prometer que iba a pasar por el museo a tomar mate."
+	return ""
 
 static func available(stage: int, position: Vector3, bedtime: bool, sighting: bool, answered: Dictionary) -> String:
 	var topic := ""
@@ -167,13 +197,17 @@ static func distance_between_calls(day: int) -> float:
 		41: return 15.0
 		_: return 26.0
 
+static func seconds_between_calls(day: int) -> float:
+	return 8.0 if day in [2, 41] else 16.0
+
 static func near(position: Vector3, center: Vector3, radius: float) -> bool:
 	return Vector2(position.x - center.x, position.z - center.z).length_squared() < radius * radius
 
 static func can_visit(answered: Dictionary) -> bool:
 	var connected := 0
 	for topic in TOPICS:
-		if answered.get(topic, -1) == TOPICS[topic][0]:
+		var answer: int = answered.get(topic, -1)
+		if answer == TOPICS[topic][0] or (answer == 1 and topic in RESERVED_ANSWERS):
 			connected += 1
 	return connected * 100 >= TOPICS.size() * VISIT_PERCENT
 

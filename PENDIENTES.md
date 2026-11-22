@@ -53,6 +53,15 @@ Al cierre de cada pasada se actualizan los puntos resueltos y se conserva lo que
 - [x] Darles materiales y siluetas distintas a los tres sueños. El primero tiene placas azules fracturadas, el segundo terrazas cobrizas y el tercero crestas de obsidiana y arcos erosionados. Las formaciones cercanas son sólidas y dejan pasos abiertos hacia los seis hallazgos.
 - [x] Conectar las lajas con la bajada al cauce y abrir un atajo del este a la vuelta del mollar. Las dos huellas están señalizadas y se dibujan en la hoja local, centrada en el refugio. Se recorrieron los enlaces con el mapa de mano abierto.
 
+## Pasada de los diálogos con Mara
+
+- El [informe completo](DIALOGOS_MARA.md) tiene el disparador, la apertura, las respuestas y sus efectos para cada charla.
+- Se revisaron en orden las catorce charlas opcionales, los partes principales y la despedida. De la llegada al Día 7 predominan el trabajo, el camino y la señal. Hernán también toma la iniciativa al volver por el cauce, al mirar la vaguada, al bajar junto al cable y al salir por última vez.
+- En las respuestas de la radio aparece primero lo que dice Hernán y después la réplica. Los partes del poste, el malacate, la cumbre y la crecida siguen los detalles que Hernán comparte. El tema de la mica y el relato del abra solo vuelven si se hablaron.
+- Hernán puede insinuar un asunto personal en el Día 25, hablar del padre en el Día 27 y mencionar a Paula en la subida del Día 32. También puede poner un límite a lo que cuenta. Mara lo respeta y la conversación puede sumar cercanía.
+- Las charlas opcionales requieren una pausa de 8 o 16 segundos de juego según la jornada, además de caminar entre llamadas. Los partes obligatorios se pueden abrir cuando corresponden. El intervalo y la mención de Paula quedan guardados.
+- La despedida separa lo ocurrido la última noche del recuerdo personal que corresponde a las charlas previas. La invitación a la puerta sigue pidiendo nueve de catorce respuestas de cercanía, el mínimo entero que supera el 60 %.
+
 ## Pasada del Sector 08 y los sueños
 
 - Después del avistamiento, Hernán le dice a Mara si va a seguir las luces. Si decide quedarse, puede acostarse y llegar al Día 41 sin el último sueño. El museo y la despedida siguen disponibles.
@@ -263,7 +272,6 @@ Esta lista reconstruye el estado informado del proyecto editable. La exportació
 
 ## Todavía pendiente
 
-- **Diálogos con Mara.** Auditar toda la campaña en orden, incluidas las variantes. Revisar quién inicia las llamadas, cuánto tiempo pasa entre charlas y cómo retoman decisiones y hechos previos. Graduar cuándo Hernán puede contar lo del padre y lo de Paula, dar lugar a que se reserve cosas y comprobar que el camino a la despedida se sostiene con esa progresión.
 - **Arte.** Cotejar el acabado de las rocas con más fotos del cerro y seguir afinando los objetos de cerca, la vegetación y las lomadas de fondo en los sectores secundarios.
 - **Flora del Uritorco.** Cotejar registros del cerro para ubicar cactus chicos en laderas secas y sumar plantas en flor al cuaderno. El espinillo en flor es un candidato para aprovechar el modelo existente. Verificar la época de los frutos de tala y piquillín antes de sumar una recolección acotada. Considerar un frutal cultivado cerca del puesto o de una casa abandonada.
 - **Fauna.** Buscar registros de observación del Uritorco para afinar el reparto por ambientes y contrastar la presencia local de las especies elegidas con referencias de las sierras cordobesas.
