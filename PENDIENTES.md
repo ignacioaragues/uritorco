@@ -53,6 +53,12 @@ Al cierre de cada pasada se actualizan los puntos resueltos y se conserva lo que
 - [x] Darles materiales y siluetas distintas a los tres sueños. El primero tiene placas azules fracturadas, el segundo terrazas cobrizas y el tercero crestas de obsidiana y arcos erosionados. Las formaciones cercanas son sólidas y dejan pasos abiertos hacia los seis hallazgos.
 - [x] Conectar las lajas con la bajada al cauce y abrir un atajo del este a la vuelta del mollar. Las dos huellas están señalizadas y se dibujan en la hoja local, centrada en el refugio. Se recorrieron los enlaces con el mapa de mano abierto.
 
+## Pasada de las lomas y los escondites
+
+- Dos lomadas del acceso pasan a formar parte de la malla caminable. El terreno tiene un estribo más al oeste, con lajas que siguen la inclinación y apoyan sobre el piso. Las piedras sueltas del acceso tienen caras fracturadas y bases asentadas. El mapa usa las cotas nuevas.
+- Un guardado en una parte del acceso que ganó altura vuelve a quedar a ras del suelo. Se comprobaron el acceso, la vuelta del oeste, el atajo del mollar y los recorridos hacia la pasarela y la cantera.
+- Hay dos escondites apartados de los recorridos de los encargos. Guardan una miniatura del visitante y un visor de latón, con modelos 3D y dibujos propios. E los recoge, C abre sus fichas en Coleccionables y el mapa guarda sus siluetas en la lámina que corresponde.
+
 ## Pasada del pastizal
 
 - Dos cuises moros aparecen en el pasto corto junto a la bajada al cauce el Día 2. En jornadas posteriores se los puede encontrar al costado del sendero de las lajas. Comen a poca distancia uno del otro y se meten entre los pastos altos cuando Hernán se acerca. Se resguardan con lluvia fuerte y de noche. [Ficha de SAREM](https://doi.org/10.31687/SaremLR.19.332)

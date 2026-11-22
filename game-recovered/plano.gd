@@ -385,13 +385,18 @@ func draw_finds(limits: Rect2):
 			if clear_of(Rect2(candidate - radius, picture), occupied):
 				badge = candidate
 				break
-		var index: int = entry[0]
-		var src := Rect2(Vector2(index % COLUMNS, index / COLUMNS) * tile, tile)
 		var bounds := Rect2(badge - radius, picture)
 		occupied.append(bounds)
 		markers.draw_line(mark, mark.lerp(badge, 0.60), Color("#6e655098"), 0.75, true)
 		markers.draw_circle(badge, 12.0, Color("#f5deb566" if seen else "#f8d78b80"), true, -1, true)
-		markers.draw_texture_rect_region(ATLAS_EARTH, bounds, src, Color.WHITE if seen else Color(1, 1, 1, 0.76))
+		var tint := Color.WHITE if seen else Color(1, 1, 1, 0.76)
+		var sketch: Texture2D = Exploration.SKETCHES.get(id)
+		if sketch:
+			markers.draw_texture_rect(sketch, bounds, false, tint)
+		else:
+			var index: int = entry[0]
+			var src := Rect2(Vector2(index % COLUMNS, index / COLUMNS) * tile, tile)
+			markers.draw_texture_rect_region(ATLAS_EARTH, bounds, src, tint)
 
 func projection_z() -> float:
 	if arrival_sheet >= 0: return Arrival.origin(arrival_sheet).z

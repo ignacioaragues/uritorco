@@ -76,7 +76,28 @@ static func outer_height(x: float, z: float) -> float:
 	var outskirts := maxf(smoothstep(56.0, 150.0, width), smoothstep(166.0, 280.0, z))
 	var hills := (5.4 + 4.0 * sin(x * 0.018 + z * 0.019) + 3.7 * sin(z * 0.031 - x * 0.021))
 	hills *= smoothstep(-72.0, 8.0, z)
-	return lerpf(height(x, z), hills, outskirts)
+	return lerpf(height(x, z), hills, outskirts) + access_relief(x, z)
+
+static func access_relief(x: float, z: float) -> float:
+	var at := Vector2(x, z)
+	if x > -47.0 and x < -16.0 and z > -66.0 and z < -24.0:
+		return spur(at, Vector2(-29.4, -40.4), Vector2(14.6, 10.2), Vector2(0.32, 0.9474), 2.85) \
+			+ spur(at, Vector2(-34.7, -50.5), Vector2(12.6, 8.7), Vector2(0.23, 0.9732), 1.28)
+	if x > 18.0 and x < 55.0 and z > -38.0 and z < -10.0:
+		return spur(at, Vector2(31.6, -23.9), Vector2(12.6, 9.1), Vector2(0.83, -0.5578), 2.08) \
+			+ spur(at, Vector2(44.0, -22.6), Vector2(9.7, 6.4), Vector2(0.972, 0.235), 1.13)
+	if x > -85.0 and x < -45.0 and z > -39.0 and z < 23.0:
+		return spur(at, Vector2(-60.2, -6.7), Vector2(23.0, 12.7), Vector2(0.36, 0.9329), 3.9) \
+			+ spur(at, Vector2(-70.3, -21.4), Vector2(13.6, 9.8), Vector2(0.41, 0.9121), 2.16)
+	return 0.0
+
+static func spur(at: Vector2, center: Vector2, span: Vector2, axis: Vector2, peak: float) -> float:
+	var offset := at - center
+	var along := offset.dot(axis) / span.x
+	var across := offset.dot(axis.orthogonal()) / span.y
+	across += 0.15 * along * along
+	var bank := 1.0 - smoothstep(0.08, 1.0, Vector2(along, across).length())
+	return peak * bank * (0.96 + 0.15 * along - 0.10 * across)
 
 static func surface_point(at: Vector3) -> Vector3:
 	# Use the same cells and diagonal as the visible terrain and its collider.
@@ -143,6 +164,7 @@ static func build_ground(valley, material: ShaderMaterial):
 				surface.add_index(index)
 	surface.generate_normals()
 	var ground := MeshInstance3D.new()
+	ground.name = "Terreno del puesto y la quebrada"
 	ground.mesh = surface.commit()
 	ground.material_override = material
 	valley.add_child(ground)

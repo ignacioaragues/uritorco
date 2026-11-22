@@ -117,43 +117,9 @@ func _ready():
 	# Se conserva la distribución de piedras de las partidas anteriores.
 	for sample in 79 * 2: rng.randf()
 	build_distant_ridges()
-	for i in range(24):
-		var z: = rng.randf_range(-80, 4)
-		var side: = -1 if i % 2 == 0 else 1
-		var x: = path_x(z) + side * rng.randf_range(17, 35)
-		var size_m := Vector3(rng.randf_range(12, 21), rng.randf_range(4, 9), rng.randf_range(10, 22))
-		if z > -36.0 and Creek.trail_distance(Vector2(x, z)) < size_m.x + 5.0: continue
-		if z < -13.0 and absf(x - route.eastern_x_at(z)) < size_m.x + 5.0: continue
-		if absf(x - LastNight.DOOR.x) < size_m.x + 5.0 and absf(z - LastNight.DOOR.z + 3.0) < size_m.z + 5.0: continue
-		if z < route.WEST_START_Z + size_m.z and absf(x - route.western_x_at(z)) < size_m.x + 7.0: continue
-		if (LastNight.door_path_distance(x, z) < maxf(size_m.x, size_m.z) * 0.6 + 4.0
-			or Exploration.clearance(Vector2(x, z)) < maxf(size_m.x, size_m.z) * 0.6 + 2.5):
-			# Se conserva el sorteo de orientación para las piedras siguientes.
-			rng.randf()
-			continue
-		var knoll := stone(Creek.surface_point(Vector3(x, 0, z)) - Vector3.UP * 1.0, size_m, "837f65", true)
-		knoll.material_override = Stone.paint("837f65")
-	var tufts: Array[Vector4] = []
-	for i in range(160):
-		var z: = rng.randf_range(-84, 10)
-		var x: = rng.randf_range(-45, 45)
-		if abs(x - path_x(z)) < 4.8 or (abs(x) < 12.5 and z > -15.5): continue
-		if Creek.trail_distance(Vector2(x, z)) < 4.0: continue
-		if z < -17.0 and absf(x - route.eastern_x_at(z)) < 4.0: continue
-		if absf(x - LastNight.DOOR.x) < 6.0 and absf(z - LastNight.DOOR.z + 2.0) < 8.0: continue
-		if z < route.WEST_START_Z + 1.0 and absf(x - route.western_x_at(z)) < 5.0: continue
-		var k: = rng.randf_range(0.5, 2.1)
-		if i % 3 == 0:
-			if LastNight.door_path_distance(x, z) < 5.5 or Exploration.clearance(Vector2(x, z)) < 1.8 * k + 1.6:
-				rng.randf()
-			else:
-				var grounded := Creek.surface_point(Vector3(x, 0, z)) - Vector3.UP * 0.02
-				var rock := stone(grounded, Vector3(2.2, 1.4, 1.8) * k, "928678", true)
-				rock.material_override = preload("res://piedra_serrana.gd").paint("928678")
-		elif Exploration.clearance(Vector2(x, z)) >= 1.0:
-			tufts.append(Vector4(x, Creek.height(x, z) - 0.05, z, k))
-	Flora.grass_batch(self, tufts)
-	for sample in 24: rng.randf()
+	# Se saltan los sorteos de las lomadas que ahora forman parte del terreno.
+	for sample in 122: rng.randf()
+	dress_access_stones()
 
 	Refuge.masonry(box(Vector3(0, 1.4, 6), Vector3(7, 2.8, 0.22), "a79679", true), Vector3.FORWARD)
 	Refuge.masonry(box(Vector3(-3.5, 1.4, 2.8), Vector3(0.22, 2.8, 6.5), "998975", true), Vector3.RIGHT)
@@ -506,6 +472,34 @@ func morning():
 	env.fog_enabled = true
 	restore_light(0.0, 0.0)
 
+
+func dress_access_stones():
+	var tufts: Array[Vector4] = []
+	var stones := Stone.surface()
+	var mineral_rng := RandomNumberGenerator.new()
+	mineral_rng.seed = 41894
+	for i in range(160):
+		var z: = rng.randf_range(-84, 10)
+		var x: = rng.randf_range(-45, 45)
+		if abs(x - path_x(z)) < 4.8 or (abs(x) < 12.5 and z > -15.5): continue
+		if Creek.trail_distance(Vector2(x, z)) < 4.0: continue
+		if z < -17.0 and absf(x - route.eastern_x_at(z)) < 4.0: continue
+		if absf(x - LastNight.DOOR.x) < 6.0 and absf(z - LastNight.DOOR.z + 2.0) < 8.0: continue
+		if z < route.WEST_START_Z + 1.0 and absf(x - route.western_x_at(z)) < 5.0: continue
+		var k: = rng.randf_range(0.5, 2.1)
+		var foot := Creek.surface_point(Vector3(x, 0, z))
+		if i % 3 == 0:
+			var turn := rng.randf() * TAU
+			if LastNight.door_path_distance(x, z) < 5.5 or Exploration.clearance(Vector2(x, z)) < 1.8 * k + 1.6:
+				continue
+			var profile := Stone.OUTCROP_PROFILE if i % 2 == 0 else Stone.LAJA_PROFILE
+			var shape := Stone.fragment(stones, foot, Vector3(2.24, 0.79, 1.82) * k, turn, mineral_rng, Creek.surface_point, profile)
+			Stone.solid(self, foot, shape, "Piedra del acceso")
+		elif Exploration.clearance(Vector2(x, z)) >= 1.0:
+			tufts.append(Vector4(x, foot.y - 0.05, z, k))
+	Flora.grass_batch(self, tufts)
+	Stone.finish(self, stones, "Piedras asentadas del acceso")
+	for sample in 24: rng.randf()
 
 func rock_banks():
 	var faces := Stone.surface()

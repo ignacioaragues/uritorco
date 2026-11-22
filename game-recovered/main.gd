@@ -950,7 +950,9 @@ func toggle_journal_section():
 			if not found_collectibles.has(id): continue
 			var entry: Array = listings[id]
 			var place := "Sueño %d" % entry[4] if dream else "Día %d" % found_collectibles[id]
-			journal_pages.append({"title": entry[1], "text": place + " · " + entry[3], "drawing": entry[0], "dream": dream})
+			var note := {"title": entry[1], "text": place + " · " + entry[3], "drawing": entry[0], "dream": dream}
+			if not dream and Exploration.SKETCHES.has(id): note["sketch"] = Exploration.SKETCHES[id]
+			journal_pages.append(note)
 	if found_collectibles.has(CaveRunes.ID):
 		journal_pages.append({"title": CaveRunes.TITLE, "text": "Última noche · Cueva\n\n" + CaveRunes.NOTE, "sketch": CaveRunes.sketch()})
 	show_journal_page()
@@ -2515,6 +2517,9 @@ func restore(data: Dictionary):
 	if stage >= 0 and absf(north_distance - 96.0) < 8.8:
 		var ground: Vector3 = valley.route.surface_point(player.position.x, north_distance)
 		player.position.y = maxf(player.position.y, ground.y + 0.048)
+	if stage >= 0 and data.mode == "walk" and Creek.access_relief(player.position.x, player.position.z) > 0.01:
+		var ground := Creek.surface_point(player.position)
+		if player.position.y < ground.y - 0.035: player.position.y = ground.y + 0.048
 	player.camera.rotation.x = data.pitch
 	valley.configure_sky(data.chapter)
 	valley.morning()

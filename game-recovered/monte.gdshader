@@ -151,6 +151,16 @@ void fragment() {
 	vec3 schist = mix(vec3(0.24, 0.22, 0.17), vec3(0.39, 0.35, 0.282),
 		smoothstep(0.13, 0.78, outcrop + layers * 0.11 + (rubble - 0.5) * 0.42));
 	ground = mix(ground, schist, broken_stone * 0.82 * (1.0 - exposed) * (1.0 - ascent));
+	if (p.x > -87.0 && p.x < 58.0 && p.y > -67.0 && p.y < 25.0) {
+		float west_hill = 1.0 - smoothstep(0.45, 1.0, length((p - vec2(-31.0, -43.0)) / vec2(17.0, 22.0)));
+		float east_hill = 1.0 - smoothstep(0.42, 1.0, length((p - vec2(37.0, -24.0)) / vec2(18.0, 15.0)));
+		float lajas = 1.0 - smoothstep(0.28, 1.0, length((p - vec2(-58.0, -9.0)) / vec2(26.0, 32.0)));
+		float slopes = max(max(west_hill, east_hill), lajas) * (1.0 - max(exposed, smoothstep(0.15, 0.60, local_trails)));
+		float streak = outcrop * 0.67 + rubble * 0.26 + layers * 0.09;
+		float weathered = smoothstep(0.21, 0.78, streak) * smoothstep(0.05, 0.33, grade) * slopes;
+		ground *= 1.0 + slopes * ((outcrop - 0.45) * 0.18 + (rubble - 0.51) * 0.09);
+		ground = mix(ground, schist, weathered * 0.63);
+	}
 	vec3 shale = mix(vec3(0.302, 0.287, 0.217), vec3(0.381, 0.347, 0.287), highland);
 	ground = mix(ground, shale, (0.25 + highland * 0.32) * stony * ascent_shoulder * (1.0 - exposed));
 	vec3 ascent_soil = mix(vec3(0.392, 0.303, 0.199), vec3(0.43, 0.375, 0.295), highland);

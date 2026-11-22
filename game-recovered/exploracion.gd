@@ -5,6 +5,13 @@ const Flora = preload("res://flora.gd")
 const Stone = preload("res://piedra_serrana.gd")
 const Creek = preload("res://cauce.gd")
 const Trail = preload("res://travesia.gd")
+const Kit = preload("res://equipo_campo.gd")
+const VISITOR := "visitante"
+const SIGHT := "visor"
+const SKETCHES := {
+	VISITOR: preload("res://hallazgo_visitante.webp"),
+	SIGHT: preload("res://hallazgo_visor.webp"),
+}
 
 const EAST = [Vector2(4.3, -16.4), Vector2(10.6, -17.3), Vector2(16.5, -12.8),
 	Vector2(22.4, -6.8), Vector2(29, 0.9), Vector2(36.2, 7.4), Vector2(39.4, 12.4)]
@@ -29,7 +36,9 @@ const FINDS = {
 	"negativo": [4, "Negativo velado", Vector2(42.6, -0.6), "En el borde del mollar, contra la luz. Uno de los cuadros tiene dos manchas. La mayor podría ser una raya de la película. Dibujé también las perforaciones."],
 	"cinta": [5, "Casete rajado", Vector2(-201.8, -574.4), "Entre el cable y la cantera, detrás de unas lajas. La caja se abre por una esquina. Hay cinta entre los dos carretes. Al margen de la etiqueta, alguien escribió «canal libre»."],
 	"placa": [6, "Chapa perforada", Vector2(14, 46), "Asomaba por debajo de una laja en la vuelta por el sur. Los agujeros tienen rebaba de un solo lado. Si la levanto hacia el cielo, parecen un grupo de estrellas. Cambia por completo al girarla."],
-	"lata": [7, "Croquis en una lata", Vector2(-47.6, -473), "En la subida al abra, detrás de una piedra. Dentro de la lata quedó un croquis doblado. Dos líneas cruzan una ladera. El papel se rompe justo donde se juntan."]
+	"lata": [7, "Croquis en una lata", Vector2(-47.6, -473), "En la subida al abra, detrás de una piedra. Dentro de la lata quedó un croquis doblado. Dos líneas cruzan una ladera. El papel se rompe justo donde se juntan."],
+	VISITOR: [8, "Miniatura del visitante", Vector2(-158.05, 89.7), "La encontré en una hendidura, aguas abajo de la pasarela. Tiene tres patas y una lente en la cabeza. La marca del molde sigue en el costado. Dibujé la figura como estaba, mirando al agua."],
+	SIGHT: [9, "Visor de latón", Vector2(113.5, -879.8), "Ya lejos de la huella de la cumbre vi un parapeto de piedras. Entre dos lajas había un aro de latón con vidrio ahumado. Al mirar por la muesca se ve una sola parte del cielo."],
 }
 
 # Inclinación, rumbo y altura sobre el terreno. El lado abierto queda fuera de la huella (+Z local).
@@ -42,11 +51,13 @@ const FIND_POSES := {
 	"cinta": Vector3(0.17, -0.80, -0.008),
 	"placa": Vector3(0.17, 0.62, 0.022),
 	"lata": Vector3(-0.12, -1.27, 0.004),
+	VISITOR: Vector3(0.015, 1.10, 0.025),
+	SIGHT: Vector3(-0.11, -0.35, 0.024),
 }
 
 static func ground(point: Vector2, route) -> Vector3:
 	if point.y < -72.0: return route.surface_point(point.x, Trail.ORIGIN_Z - point.y)
-	return Creek.point(point.x, point.y)
+	return Creek.surface_point(Vector3(point.x, 0.0, point.y))
 
 static func path_point(path: Array, progress: float) -> Vector2:
 	var step := clampf(progress, 0.0, 1.0) * (path.size() - 1)
@@ -99,6 +110,7 @@ static func build(valley):
 		var base := Creek.surface_point(foot + Vector3(across * 1.2, 0, 0.16))
 		stone.cairn(valley, rock_faces, base, Creek.surface_point, rock_rng)
 	stone.finish(valley, rock_faces, "Pircas de las lajas y el mollar")
+	dress_outcrops(valley)
 	for id in FINDS:
 		dress_find(valley, id)
 	var vegetation := [
@@ -124,6 +136,40 @@ static func build(valley):
 			Flora.tree(valley, Creek.surface_point(Vector3(at.x, 0.0, at.y)), plant[0], plant[3], at.x * 0.71)
 	dress_verges(valley)
 	dress_scrub(valley)
+
+static func dress_outcrops(valley):
+	var outcrops := Node3D.new()
+	outcrops.name = "Afloramientos de las lomas"
+	valley.add_child(outcrops)
+	var rng := RandomNumberGenerator.new()
+	rng.seed = 61036
+	var south_path := Creek.crossing_trace()
+	var faces := Stone.surface()
+	var roots: Array[Vector4] = []
+	# Las lajas del mismo afloramiento mantienen la dirección de la fractura.
+	for site: Vector4 in [Vector4(-49.8, -19.6, -0.78, 1.00), Vector4(-54.7, -10.6, -0.61, 1.18),
+		Vector4(-60.1, 1.5, -0.75, 0.88), Vector4(56.8, 19.0, 0.34, 0.91)]:
+		var center := Vector2(site.x, site.y)
+		var along := Vector2.from_angle(-site.z)
+		var across := along.orthogonal()
+		for fragment in 3:
+			var origin := center + along * ((fragment - 0.88) * 1.96 * site.w) + across * ((fragment - 0.6) * 0.78)
+			var size_m := Vector3(6.2, 2.13, 3.6) if fragment == 0 else Vector3(5.1, 0.94 - 0.14 * fragment, 2.8)
+			size_m *= site.w * rng.randf_range(0.86, 1.13)
+			var margin := maxf(size_m.x, size_m.z) * 0.57 + 1.75
+			if clearance(origin) < margin or Creek.trail_distance(origin) < margin or Creek.near_south_path(origin, south_path, margin):
+				continue
+			var foot := Creek.surface_point(Vector3(origin.x, 0.0, origin.y)) - Vector3.UP * 0.20
+			var profile := Stone.OUTCROP_PROFILE if fragment == 0 else Stone.LAJA_PROFILE
+			var rock := Stone.fragment(faces, foot, size_m, site.z + rng.randf_range(-0.08, 0.08), rng, Creek.surface_point, profile)
+			Stone.solid(outcrops, foot, rock, "Laja de la ladera")
+		for tuft in 17:
+			var origin := center + along * rng.randf_range(-5.5, 5.5) + across * rng.randf_range(-3.6, 3.6)
+			if clearance(origin) < 1.4 or Creek.near_south_path(origin, south_path, 1.6): continue
+			var foot := Creek.surface_point(Vector3(origin.x, 0.0, origin.y)) - Vector3.UP * 0.055
+			roots.append(Vector4(foot.x, foot.y, foot.z, rng.randf_range(0.54, 1.06)))
+	Stone.finish(outcrops, faces, "Lajas y fracturas").material_override = Stone.paint("898072")
+	Flora.grass_batch(outcrops, roots)
 
 static func dress_scrub(valley):
 	var rng := RandomNumberGenerator.new()
@@ -224,8 +270,10 @@ static func dress_find(valley, id: String):
 			piece(root, lid, Vector3(-0.23, 0.022, 0.035), "8b8267")
 			var paper := slab(root, Vector3(0.17, 0.015, 0.18), Vector3(0.11, 0.16, -0.025), "c5b589")
 			paper.rotation.x = -0.36
+		8: make_visitor(root)
+		9: make_sight(root)
 
-	var glint_height: float = [0.054, 0.14, 0.15, 0.42, 0.063, 0.083, 0.048, 0.19][entry[0]]
+	var glint_height: float = [0.054, 0.14, 0.15, 0.42, 0.063, 0.083, 0.048, 0.19, 0.245, 0.165][entry[0]]
 	Visual.glint(root, Vector3(0.07, glint_height, 0.08), Color("#e2c29a"))
 	var target := StaticBody3D.new()
 	target.collision_layer = 2
@@ -236,6 +284,8 @@ static func dress_find(valley, id: String):
 	var hitbox := BoxShape3D.new()
 	hitbox.size = Vector3(0.66, 0.20, 0.46)
 	if id == "vasija": hitbox.size = Vector3(0.47, 0.43, 0.47)
+	if id == VISITOR: hitbox.size = Vector3(0.33, 0.32, 0.27)
+	if id == SIGHT: hitbox.size = Vector3(0.49, 0.24, 0.33)
 	var shape := CollisionShape3D.new()
 	shape.shape = hitbox
 	target.add_child(shape)
@@ -271,6 +321,15 @@ static func dress_hideout(site: Node3D, route, id: String, index: int):
 			stones = [[Vector2(0.14, -0.55), Vector3(1.74, 0.56, 1.13), 0.12]]
 		"lata":
 			stones = [[Vector2(-0.03, -1.09), Vector3(1.67, 0.94, 1.38), -0.26]]
+		VISITOR:
+			stones = [[Vector2(-0.73, -0.60), Vector3(1.30, 0.92, 1.31), -0.28],
+				[Vector2(0.80, -0.72), Vector3(1.43, 0.76, 1.28), 0.20],
+				[Vector2(0.06, -1.39), Vector3(2.32, 1.00, 1.09), 0.08]]
+			shrubs = [[Vector2(-1.58, -0.64), Flora.Kind.PIQUILLIN, 0.88]]
+		SIGHT:
+			stones = [[Vector2(-0.03, -1.62), Vector3(3.39, 0.99, 1.63), -0.25],
+				[Vector2(-1.31, -0.24), Vector3(1.56, 0.67, 0.94), -0.34],
+				[Vector2(1.05, -0.66), Vector3(1.79, 0.45, 1.21), 0.07]]
 	var anchors := Callable(route, "terrain_point")
 	var rng := RandomNumberGenerator.new()
 	rng.seed = 709 + 29 * index
@@ -288,6 +347,56 @@ static func dress_hideout(site: Node3D, route, id: String, index: int):
 		var foot := bed_at(site, route, Vector2(x, rng.randf_range(-1.25, 0.40)))
 		tufts.append(Vector4(foot.x, foot.y - 0.045, foot.z, rng.randf_range(0.35, 0.78)))
 	Flora.grass_batch(site, tufts)
+
+static func make_visitor(root: Node3D):
+	var pewter := Kit.material("817764", false, 0.69)
+	var dark := Kit.material("594e44", false, 0.74)
+	var lens := Kit.material("343d3d", false, 0.41)
+	Kit.shell(root, [Vector4(0.0, 0.10, 0.081, 0), Vector4(0.012, 0.105, 0.085, 0),
+		Vector4(0.034, 0.090, 0.068, 0), Vector4(0.036, 0.01, 0.01, 0)], dark, 0.79)
+	for foot in 3:
+		var angle := foot * TAU / 3.0 + 0.52
+		var reach := Vector3(cos(angle), 0.0, sin(angle))
+		Kit.cord(root, PackedVector3Array([reach * 0.093 + Vector3.UP * 0.036,
+			reach * 0.071 + Vector3.UP * 0.065, reach * 0.022 + Vector3.UP * 0.125]), 0.010, pewter)
+	Kit.shell(root, [Vector4(0.083, 0.036, 0.023, 0), Vector4(0.13, 0.050, 0.033, -0.004),
+		Vector4(0.197, 0.034, 0.024, -0.012), Vector4(0.213, 0.015, 0.014, -0.012)], pewter, 0.88)
+	for rib in 3:
+		Kit.cylinder(root, Vector3(0, 0.126 + rib * 0.014, -0.003 - rib * 0.002), 0.052 - rib * 0.003, 0.049 - rib * 0.003, 0.006, dark).scale.z = 0.71
+	for side in [-1.0, 1.0]:
+		var fin := PrismMesh.new()
+		fin.size = Vector3(0.042, 0.061, 0.012)
+		Kit.mesh_part(root, fin, Vector3(side * 0.054, 0.161, -0.008), pewter).rotation.z = side * 0.47
+	Kit.cylinder(root, Vector3(0, 0.219, -0.012), 0.018, 0.015, 0.036, dark)
+	var crescent := PackedVector3Array()
+	for i in 15:
+		var a := lerpf(-1.13, 1.13, i / 14.0)
+		crescent.append(Vector3(sin(a) * 0.10, 0.315 - 0.076 * cos(a), -0.010 - 0.011 * absf(sin(a))))
+	Kit.cord(root, crescent, 0.015, pewter)
+	var socket := Kit.cylinder(root, Vector3(0, 0.254, 0.006), 0.024, 0.024, 0.022, dark)
+	socket.rotation.x = PI * 0.5
+	socket.scale.x = 1.26
+	var glass := Kit.cylinder(root, Vector3(0, 0.254, 0.022), 0.018, 0.016, 0.009, lens)
+	glass.rotation.x = PI * 0.5
+	glass.scale.x = 1.27
+
+static func make_sight(root: Node3D):
+	var brass := Kit.material("977949", false, 0.69)
+	var dark := Kit.material("655039", false, 0.74)
+	var leather := Kit.material("655042", true)
+	var smoked := Kit.material("5d6059", false, 0.41)
+	var ring := lathe([Vector2(0.093, 0.008), Vector2(0.119, 0.008), Vector2(0.130, 0.032),
+		Vector2(0.123, 0.067), Vector2(0.119, 0.078), Vector2(0.093, 0.078), Vector2(0.093, 0.008)], 22)
+	Kit.mesh_part(root, ring, Vector3(-0.039, 0.015, 0), brass)
+	Kit.cylinder(root, Vector3(-0.039, 0.065, 0), 0.097, 0.094, 0.016, smoked)
+	Kit.block(root, Vector3(0.125, 0.035, 0), Vector3(0.149, 0.050, 0.067), dark)
+	Kit.block(root, Vector3(0.156, 0.062, 0), Vector3(0.097, 0.019, 0.058), brass).rotation.z = -0.064
+	for rivet in [0.097, 0.174]:
+		Kit.cylinder(root, Vector3(rivet, 0.073, 0.000), 0.009, 0.008, 0.009, dark)
+	for tooth in [-0.020, 0.020]:
+		Kit.block(root, Vector3(-0.039 + tooth, 0.107, -0.110), Vector3(0.015, 0.038, 0.022), dark)
+	Kit.belt(root, PackedVector3Array([Vector3(0.180, 0.034, 0.019), Vector3(0.217, 0.023, 0.068),
+		Vector3(0.194, 0.010, 0.12), Vector3(0.107, 0.007, 0.134), Vector3(0.077, 0.015, 0.092)]), 0.020, leather)
 
 static func bed_at(site: Node3D, route, offset: Vector2) -> Vector3:
 	var flat := site.to_global(Vector3(offset.x, 0, offset.y))

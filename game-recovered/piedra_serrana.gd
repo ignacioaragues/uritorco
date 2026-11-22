@@ -3,6 +3,9 @@ extends RefCounted
 const FINISH = preload("res://piedra_serrana.gdshader")
 const SIDES := 8
 const PALETTE := ["#978f86", "#a09a90", "#9b9288", "#ac9c91", "#8a857c"]
+const BLOCK_PROFILE := [Vector2(-0.12, 0.86), Vector2(0.23, 1.0), Vector2(0.70, 0.80), Vector2(0.94, 0.49)]
+const LAJA_PROFILE := [Vector2(-0.28, 0.88), Vector2(0.16, 1.0), Vector2(0.72, 0.91), Vector2(0.91, 0.74)]
+const OUTCROP_PROFILE := [Vector2(-0.27, 0.89), Vector2(0.15, 1.0), Vector2(0.58, 0.84), Vector2(0.90, 0.55)]
 
 static func surface() -> SurfaceTool:
 	var stone := SurfaceTool.new()
@@ -41,14 +44,14 @@ static func hillside_form(variant: int) -> Dictionary:
 	faces.generate_normals()
 	return {"mesh": faces.commit(), "vertices": vertices, "base": vertices.slice(0, SIDES)}
 
-static func fragment(faces: SurfaceTool, at: Vector3, size: Vector3, turn: float, rng: RandomNumberGenerator, ground := Callable()) -> PackedVector3Array:
+static func fragment(faces: SurfaceTool, at: Vector3, size: Vector3, turn: float, rng: RandomNumberGenerator,
+		ground := Callable(), profile: Array = BLOCK_PROFILE) -> PackedVector3Array:
 	var vertices := PackedVector3Array()
 	var radii := PackedFloat32Array()
 	var heights := PackedFloat32Array()
 	for side in SIDES:
 		radii.append(rng.randf_range(0.82, 1.07))
 		heights.append(rng.randf_range(-0.12, 0.09))
-	var profile := [Vector2(-0.12, 0.86), Vector2(0.23, 1.0), Vector2(0.70, 0.80), Vector2(0.94, 0.49)]
 	for ring in profile.size():
 		for side in SIDES:
 			var angle := TAU * side / SIDES
