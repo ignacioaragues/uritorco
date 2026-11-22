@@ -67,17 +67,86 @@ static func bus(valley) -> Vector3:
 	stop.add_child(label)
 	label.position = Vector3(0, 1.86, -2.19)
 	var vehicle: Vector3 = valley.route.terrain_point(start + Vector3(3.0, 0.0, 1.1))
-	var bus_body := Kit.item(valley, vehicle, "Subir al ómnibus", Vector3.UP * 1.55, Vector3(7.35, 2.82, 2.4))
-	var paint := Kit.material("b3af8f", false, 0.67)
-	var dark := Kit.material("405152", false, 0.48)
-	var red := Kit.material("875548")
-	var rubber := Kit.material("353432")
-	Kit.block(bus_body, Vector3.UP * 1.72, Vector3(7.32, 2.16, 2.37), paint)
-	Kit.block(bus_body, Vector3.UP * 0.91, Vector3(7.36, 0.37, 2.40), red)
-	Kit.block(bus_body, Vector3(3.67, 1.98, 0), Vector3(0.026, 0.68, 1.95), dark)
+	coach(valley, vehicle)
+	return valley.route.terrain_point(start + Vector3(7.98, 0, -1.05)) + Vector3.UP * 0.08
+
+static func coach(valley, vehicle: Vector3):
+	var shell := Kit.item(valley, vehicle, "Subir al ómnibus", Vector3.UP * 1.55, Vector3(7.39, 2.82, 2.41))
+	var paint := bodywork("c0b598", vehicle.y, 0.92)
+	var burgundy := bodywork("884f43", vehicle.y, 0.96)
+	var aluminum := bodywork("8d8d81", vehicle.y, 0.68)
+	var rubber := Kit.material("3e3b35")
+	var glass := Kit.tinted_glass("536463")
+	var floor_heat := Kit.material("514841", false, 0.77)
+	Kit.block(shell, Vector3.UP * 1.68, Vector3(7.32, 2.12, 2.36), paint)
+	Kit.block(shell, Vector3.UP * 0.91, Vector3(7.38, 0.39, 2.41), burgundy)
+	Kit.block(shell, Vector3.UP * 1.22, Vector3(7.37, 0.044, 2.39), aluminum)
+	Kit.block(shell, Vector3.UP * 2.74, Vector3(7.19, 0.15, 2.28), paint)
+	Kit.block(shell, Vector3.UP * 2.835, Vector3(7.06, 0.055, 1.98), paint)
 	for side in [-1.0, 1.0]:
+		Kit.block(shell, Vector3(0, 2.651, side * 1.186), Vector3(7.20, 0.068, 0.065), aluminum)
+		Kit.block(shell, Vector3(0, 0.655, side * 1.17), Vector3(7.23, 0.095, 0.075), floor_heat)
 		for i in 7:
-			Kit.block(bus_body, Vector3(-2.88 + 0.96 * i, 2.02, side * 1.19), Vector3(0.79, 0.68, 0.021), dark)
+			var window := Vector3(-2.88 + 0.96 * i, 2.06, side * 1.184)
+			Kit.block(shell, window, Vector3(0.86, 0.79, 0.031), rubber)
+			Kit.block(shell, window + Vector3.BACK * side * 0.018, Vector3(0.749, 0.678, 0.025), glass)
+			Kit.block(shell, window + Vector3(0, -0.123, side * 0.033), Vector3(0.751, 0.023, 0.023), aluminum)
 		for x in [-2.44, 2.31]:
-			Kit.cylinder(bus_body, Vector3(x, 0.47, side * 1.08), 0.50, 0.50, 0.31, rubber).rotation.x = PI * 0.5
-	return valley.route.terrain_point(start + Vector3(0.35, 0, -0.74)) + Vector3.UP * 0.08
+			var hub := Vector3(x, 0.46, side * 1.093)
+			var axle := Kit.cylinder(shell, hub, 0.48, 0.48, 0.33, rubber)
+			axle.rotation.x = PI * 0.5
+			Kit.cylinder(shell, hub + Vector3.BACK * side * 0.18,
+				0.254, 0.254, 0.044, aluminum).rotation.x = PI * 0.5
+			Kit.cylinder(shell, hub + Vector3.BACK * side * 0.21,
+				0.136, 0.136, 0.046, floor_heat).rotation.x = PI * 0.5
+			for lug in 6:
+				var angle := TAU * lug / 6
+				Kit.block(shell, hub + Vector3(cos(angle) * 0.171, sin(angle) * 0.171, side * 0.211),
+					Vector3(0.035, 0.034, 0.023), aluminum)
+		coach_label(shell, Vector3(-0.57, 1.45, side * 1.188), 0 if side > 0 else PI, 0.0028, "CAPILLA DEL MONTE")
+	front_and_rear(shell, aluminum, rubber, glass)
+
+static func front_and_rear(shell: Node3D, aluminum: Material, rubber: Material, glass: Material):
+	for side in [-1.0, 1.0]:
+		var end: float = side * 3.68
+		Kit.block(shell, Vector3(end, 2.10, 0), Vector3(0.055, 0.83, 2.07), rubber)
+		Kit.block(shell, Vector3(end + side * 0.035, 2.10, 0), Vector3(0.025, 0.72, 1.965), glass)
+		Kit.block(shell, Vector3(end + side * 0.052, 2.10, 0), Vector3(0.029, 0.75, 0.052), aluminum)
+		Kit.block(shell, Vector3(end, 0.766, 0), Vector3(0.19, 0.142, 2.42), aluminum)
+		var lamp := Kit.material("d9c594" if side > 0 else "874c3e", false, 0.36)
+		for edge in [-0.83, 0.83]:
+			var lamp_position := Vector3(end + side * 0.025, 1.112, edge)
+			Kit.cylinder(shell, lamp_position, 0.167, 0.167, 0.073, aluminum).rotation.z = PI * 0.5
+			Kit.cylinder(shell, lamp_position + Vector3.RIGHT * side * 0.045, 0.136, 0.136, 0.053, lamp).rotation.z = PI * 0.5
+		var plate := Kit.material("c8bb9f")
+		Kit.block(shell, Vector3(end + side * 0.06, 0.911, 0), Vector3(0.036, 0.132, 0.36), plate)
+	var grille := Kit.material("534d41", false, 0.62)
+	Kit.block(shell, Vector3(3.721, 1.118, 0), Vector3(0.06, 0.288, 1.03), grille)
+	for level in 5:
+		Kit.block(shell, Vector3(3.761, 1.01 + 0.05 * level, 0), Vector3(0.025, 0.019, 0.96), aluminum)
+	for side in [-1.0, 1.0]:
+		var wiper := Kit.block(shell, Vector3(3.745, 1.927, side * 0.496),
+			Vector3(0.016, 0.024, 0.59), rubber)
+		wiper.rotation.x = side * 0.23
+		Kit.block(shell, Vector3(3.38, 2.286, side * 1.32), Vector3(0.038, 0.042, 0.33), aluminum)
+		Kit.block(shell, Vector3(3.36, 2.31, side * 1.464), Vector3(0.098, 0.239, 0.135), rubber)
+	coach_label(shell, Vector3(3.67, 2.624, 0), PI * 0.5, 0.0017, "CAPILLA DEL MONTE")
+
+static func bodywork(tint: String, height: float, exposure: float) -> ShaderMaterial:
+	var material := ShaderMaterial.new()
+	material.shader = preload("res://chapa_omnibus.gdshader")
+	material.set_shader_parameter("enamel", Color(tint))
+	material.set_shader_parameter("axle_height", height)
+	material.set_shader_parameter("exposure", exposure)
+	return material
+
+static func coach_label(parent: Node3D, point: Vector3, yaw: float, size: float, content: String):
+	var label := Label3D.new()
+	label.text = content
+	label.font_size = 45
+	label.pixel_size = size
+	label.outline_size = 0
+	label.modulate = Color("#754b3e")
+	parent.add_child(label)
+	label.position = point
+	label.rotation.y = yaw

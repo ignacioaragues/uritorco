@@ -23,36 +23,41 @@ static func masonry(wall: MeshInstance3D, inner_face: Vector3):
 static func roof(parent: Node3D):
 	const WIDTH := 7.85
 	const DEPTH := 7.82
-	const COLUMNS := 424
-	const AMPLITUDE := 0.017
 	var rafters := Node3D.new()
 	rafters.name = "Cubierta del puesto"
 	parent.add_child(rafters)
 	rafters.position = ROOF_CENTER
 	rafters.rotation.x = -ROOF_PITCH
 	Kit.block(rafters, Vector3(0, -0.076, 0), Vector3(WIDTH - 0.22, 0.118, DEPTH - 0.24), wood("625349", true))
+	var sheet := roof_sheet(rafters, WIDTH, DEPTH, Vector3.ZERO)
+	sheet.create_trimesh_collision()
+
+static func roof_sheet(parent: Node3D, width: float, depth: float, offset: Vector3) -> MeshInstance3D:
+	const AMPLITUDE := 0.017
+	var columns := ceili(width * 54.0)
 	var surface := SurfaceTool.new()
 	surface.begin(Mesh.PRIMITIVE_TRIANGLES)
 	for side in range(2):
-		var along := side * DEPTH
-		for column in range(COLUMNS + 1):
-			var across := WIDTH * column / COLUMNS
+		var along := side * depth
+		for column in range(columns + 1):
+			var across := width * column / columns
 			var phase := TAU * across / ROOF_WAVE
 			var slope := TAU * AMPLITUDE / ROOF_WAVE * cos(phase)
 			surface.set_normal(Vector3(-slope, 1.0, 0.0).normalized())
 			surface.set_uv(Vector2(across, along))
-			surface.add_vertex(Vector3(across - WIDTH * 0.5, AMPLITUDE * sin(phase), along - DEPTH * 0.5))
-	for column in COLUMNS:
-		var back := column + COLUMNS + 1
+			surface.add_vertex(Vector3(across - width * 0.5, AMPLITUDE * sin(phase), along - depth * 0.5))
+	for column in columns:
+		var back := column + columns + 1
 		for index in [column, column + 1, back, column + 1, back + 1, back]:
 			surface.add_index(index)
 	var zinc := ShaderMaterial.new()
 	zinc.shader = preload("res://chapa_puesto.gdshader")
 	zinc.set_shader_parameter("wave_width", ROOF_WAVE)
-	var sheet := Kit.mesh_part(rafters, surface.commit(), Vector3.ZERO, zinc)
+	zinc.set_shader_parameter("sheet_depth", depth)
+	var sheet := Kit.mesh_part(parent, surface.commit(), offset, zinc)
 	sheet.name = "Chapa acanalada"
 	sheet.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_DOUBLE_SIDED
-	sheet.create_trimesh_collision()
+	return sheet
 
 static func wood(color: String, across := false) -> ShaderMaterial:
 	var finish := ShaderMaterial.new()

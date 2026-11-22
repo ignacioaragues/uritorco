@@ -1068,9 +1068,11 @@ func aimed_nature() -> String:
 	return valley.nature.aimed(player.camera, player, nature_notes)
 
 func record_nature(id: String):
+	if nature_notes.has(id): return
 	nature_notes[id] = calendar_day()
 	collect_notice = Natural.ENTRIES[id][0] + " · Anotado en Flora y fauna (N)"
 	collect_notice_seconds = 4.0
+	hint.text = collect_notice
 	save_game(true, "walk")
 
 func toggle_nature_section():
@@ -2880,7 +2882,7 @@ func place_departure_scene(destination: String):
 		mode = "mara_door"
 	else:
 		player.position = Departure.bus(valley)
-		player.rotation.y = PI
+		player.rotation.y = 2.04
 		mode = "departure_bus"
 	player.camera.rotation = Vector3.ZERO
 	departure_scene = destination

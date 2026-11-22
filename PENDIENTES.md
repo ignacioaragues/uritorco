@@ -66,7 +66,9 @@ Al cierre de cada pasada se actualizan los puntos resueltos y se conserva lo que
 
 ## Pasada de flora y laderas
 
-- Cuatro espinillos en flor crecen en distintos claros, y diez cactus bajos se reparten en cuatro colonias entre lajas. Se puede dibujar cualquier ejemplar con E. Se guarda un croquis por tipo, con fecha, en «Flora y fauna». Los dos dibujos se cuelgan en el puesto a partir de la siguiente jornada y se guardan con los demás el último día.
+- Cuatro espinillos en flor crecen en distintos claros, y diez cactus bajos se reparten en cuatro colonias entre lajas. Se puede dibujar cualquier ejemplar con E. El croquis de cada tipo se guarda con su fecha en «Flora y fauna». Al dibujarlo desaparece la E en todos los ejemplares del mismo tipo, incluso al cargar. Los dibujos se cuelgan en el puesto a partir de la siguiente jornada y se guardan con los demás el último día.
+- El espinillo, la cortadera y el cactus tienen ilustraciones generadas al carboncillo, con fondo transparente. Las notas describen las plantas sin fijar el lugar del hallazgo.
+- El puesto de Mara tiene zócalo de piedra, revoque gastado, chapa acanalada y una puerta con tablas y herrajes. El ómnibus tiene chapa pintada con polvo en la parte baja, molduras, vidrios tintados, faros y ruedas con mazas. Al llegar a la parada se ve en tres cuartos.
 - Los afloramientos del borde tienen alturas escalonadas, lajas bajas y fragmentos al pie. En las lomas crecen grupos de paja y romerillo. Se bajó el brillo de la piedra clara y se hicieron más visibles el grano mineral, las manchas de líquenes y las vetas cortas. Las fotos del filo y las laderas sirvieron de referencia para combinar la piedra con el pastizal. [Fotos del Desafío UTU](https://github.com/gmonserrat25/desafio-utu/tree/ab3999af10fddd6b116bf622a99ef0d4bcb0fd05/assets/img)
 - Se revisaron el zorro gris pampeano de los arbustales y el cuis moro de los pastizales contra las fichas regionales. Las fichas incluyen Córdoba en la distribución de ambos. [Zorro gris pampeano](https://doi.org/10.31687/SaremLR.19.127) · [Cuis moro](https://doi.org/10.31687/SaremLR.19.332)
 

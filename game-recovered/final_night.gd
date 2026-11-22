@@ -6,6 +6,7 @@ const Flora = preload("res://flora.gd")
 const CaveRunes = preload("res://piedra_cueva.gd")
 const Structures = preload("res://estructuras.gd")
 const Stone = preload("res://piedra_serrana.gd")
+const Refuge = preload("res://refugio.gd")
 const DREAM_BOUNDS := Rect2(-73.0, -144.0, 146.0, 177.0)
 const DREAM_ARCH_SITES := [Vector2(-44, -24), Vector2(44, -52), Vector2(-32, -108), Vector2(40, -128)]
 const DREAM_ARCH_ENTRIES := [Vector2(-35, -9), Vector2(38, -36), Vector2(-41, -89), Vector2(53, -112)]
@@ -470,20 +471,53 @@ static func build_cave_approach(v):
 	Stone.finish(v, scree, "Piedras al pie de la boca")
 
 static func build_door(v, at: Vector3):
+	var tint := "b8ab93"
+	var frame := Refuge.wood("655743")
+	var dark_wood := Refuge.wood("574536", true)
+	var zinc_trim := Kit.material("716e59", false, 0.56)
 	for side in [-1, 1]:
-		v.plaster(v.box(at + Vector3(side * 1.97, 1.32, -4.8), Vector3(2.65, 2.64, 0.24), "b09d80", true))
-		v.plaster(v.box(at + Vector3(side * 3.22, 1.32, -7.25), Vector3(0.24, 2.64, 5.05), "a9967d", true))
+		mara_wall(v, at + Vector3(side * 1.97, 0, -4.8), Vector3(2.65, 2.64, 0.24), tint)
+		mara_wall(v, at + Vector3(side * 3.22, 0, -7.25), Vector3(0.24, 2.64, 5.05), "a49a81")
 		var roof: MeshInstance3D = v.box(at + Vector3(side * 1.73, 2.79, -7.25), Vector3(3.71, 0.17, 5.6), "6d5849")
 		roof.rotation.z = -side * 0.13
-	v.plaster(v.box(at + Vector3(0, 1.32, -9.78), Vector3(6.52, 2.64, 0.24), "a9967d", true))
-	v.plaster(v.box(at + Vector3(0, 2.46, -4.8), Vector3(1.29, 0.37, 0.24), "b09d80", true))
-	v.timber(v.box(at + Vector3(0, 1.12, -4.74), Vector3(1.29, 2.24, 0.14), "705342", true, "Puerta de Mara"))
-	v.box(at + Vector3(0.42, 1.12, -4.65), Vector3(0.12, 0.065, 0.06), "a08d68")
-	v.box(at + Vector3(0, 0.073, -4.36), Vector3(1.68, 0.146, 0.91), "8d806d", true)
-	v.box(at + Vector3(-2.0, 1.48, -4.655), Vector3(1.24, 0.91, 0.07), "695744")
-	v.box(at + Vector3(-2.0, 1.48, -4.608), Vector3(1.09, 0.77, 0.025), "596566")
-	v.box(at + Vector3(-2.0, 1.48, -4.587), Vector3(0.045, 0.80, 0.018), "8b795f")
-	v.box(at + Vector3(0.88, 1.06, -4.63), Vector3(0.30, 0.25, 0.18), "75634f")
+		var sheet := Refuge.roof_sheet(roof, 3.71, 5.6, Vector3.UP * 0.091)
+		sheet.material_override.set_shader_parameter("zinc", Color("999386"))
+		sheet.material_override.set_shader_parameter("old_zinc", Color("767875"))
+		Kit.block(roof, Vector3(0, -0.035, 2.78), Vector3(3.65, 0.128, 0.11), dark_wood)
+	mara_wall(v, at + Vector3(0, 0, -9.78), Vector3(6.52, 2.64, 0.24), "a49a81")
+	Kit.block(v, at + Vector3(0, 3.15, -7.25), Vector3(0.25, 0.065, 5.64), zinc_trim)
+	v.plaster(v.box(at + Vector3(0, 2.46, -4.8), Vector3(1.29, 0.37, 0.24), tint, true))
+	var door: MeshInstance3D = v.box(at + Vector3(0, 1.12, -4.75), Vector3(1.29, 2.24, 0.14), "554535", true, "Puerta de Mara")
+	var boards := [Refuge.wood("82634e"), Refuge.wood("785a48"), Refuge.wood("6d5747")]
+	for i in 7:
+		Kit.block(door, Vector3((i - 3.0) * 0.164, 0, 0.072),
+			Vector3(0.157, 2.16, 0.027), boards[i % boards.size()])
+	for side in [-1.0, 1.0]:
+		Kit.block(door, Vector3(side * 0.59, 0, 0.082), Vector3(0.098, 2.24, 0.14), frame)
+		Kit.block(door, Vector3(0, side * 0.88, 0.093), Vector3(1.08, 0.098, 0.042), dark_wood)
+	Kit.block(door, Vector3(0, 1.09, 0.088), Vector3(1.29, 0.12, 0.105), frame)
+	Kit.block(door, Vector3(0.448, -0.01, 0.096), Vector3(0.086, 0.198, 0.021), zinc_trim)
+	Kit.block(door, Vector3(0.412, 0.024, 0.132), Vector3(0.13, 0.033, 0.065), zinc_trim)
+	var step: MeshInstance3D = v.box(at + Vector3(0, 0.073, -4.36), Vector3(1.68, 0.146, 0.91), "8d806d", true)
+	step.material_override = Stone.paint("807569")
+	var window := at + Vector3(-2.0, 1.48, -4.655)
+	Kit.block(v, window, Vector3(1.30, 0.94, 0.09), frame)
+	Kit.block(v, window + Vector3(0, 0.02, 0.055), Vector3(1.10, 0.75, 0.025), Kit.tinted_glass("6c7673"))
+	Kit.block(v, window + Vector3(0, 0.02, 0.071), Vector3(0.065, 0.81, 0.031), frame)
+	Kit.block(v, window + Vector3(0, -0.441, 0.06), Vector3(1.40, 0.077, 0.20), Stone.paint("938473"))
+	Kit.block(v, at + Vector3(0.88, 1.06, -4.60), Vector3(0.30, 0.25, 0.18), zinc_trim)
+	Kit.block(v, at + Vector3(0.88, 1.11, -4.505), Vector3(0.215, 0.027, 0.013), Kit.material("453c32"))
+
+static func mara_wall(v, foot: Vector3, size: Vector3, tint: String):
+	var wall: MeshInstance3D = v.box(foot + Vector3.UP * size.y * 0.5, size, tint, true)
+	v.plaster(wall)
+	wall.material_override.set_shader_parameter("wall_base", foot.y)
+	wall.material_override.set_shader_parameter("weather", 1.0)
+	var foundation: MeshInstance3D = v.box(foot + Vector3.UP * 0.255,
+		Vector3(size.x + 0.022, 0.53, size.z + 0.022), "897a68")
+	Refuge.masonry(foundation, Vector3.ZERO)
+	foundation.material_override.set_shader_parameter("dark_stone", Color("746d60"))
+	foundation.material_override.set_shader_parameter("light_stone", Color("a29784"))
 
 static func dream_x(variant: int, distance: float) -> float:
 	match variant:

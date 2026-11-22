@@ -12,6 +12,12 @@ static func material(tint: String, cloth := false, roughness := 0.83) -> ShaderM
 	finish.set_shader_parameter("roughness", roughness)
 	return finish
 
+static func tinted_glass(tint: String) -> ShaderMaterial:
+	var finish := ShaderMaterial.new()
+	finish.shader = preload("res://vidrio_tenido.gdshader")
+	finish.set_shader_parameter("tint", Color(tint))
+	return finish
+
 static func mesh_part(parent: Node3D, mesh: Mesh, offset: Vector3, finish: Material) -> MeshInstance3D:
 	var piece := MeshInstance3D.new()
 	piece.mesh = mesh

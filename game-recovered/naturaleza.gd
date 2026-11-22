@@ -27,10 +27,10 @@ const CAVY_REFUGE_LAJAS := Vector2(-1.38, -3.0)
 const ENTRIES := {
 	FOX: ["Zorro gris pampeano", "Cruzó la huella del mollar al trote. Alcancé a ver el lomo gris y, antes de que se metiera en los arbustos, la punta negra de la cola."],
 	TEGU: ["Lagarto overo", "Se calentaba sobre una laja de la orilla. Tenía manchas claras entre las bandas oscuras y una cola larga que casi tocaba el suelo."],
-	REED: ["Cortadera", "Las hojas se doblan hacia el agua. De cerca, cada penacho está hecho de ramitas finas. Dibujé la mata entera para acordarme de su forma."],
+	REED: ["Cortadera", "Las hojas largas se arquean hasta el suelo. De cerca, cada penacho está hecho de ramitas finas. Dibujé la mata entera para acordarme de su forma."],
 	CAVY: ["Cuis moro", "Había dos comiendo al borde de la huella. Uno levantó la cabeza un momento. Alcancé a ver la raya clara arriba del ojo antes de que se metiera entre los pastos."],
 	ESPINILLO: ["Espinillo en flor", "De lejos, las flores parecen motitas de polen. De cerca se ven las hojitas de a pares. Dibujé dos espinas que salen juntas de la rama."],
-	CACTUS: ["Cactus entre las lajas", "Estaba al ras del suelo, donde se juntan dos piedras. Desde arriba, las costillas se abren como los gajos de una naranja. Dibujé las espinas de costado."],
+	CACTUS: ["Cactus serrano", "Apenas sobresale del suelo. Desde arriba, las costillas se abren como los gajos de una naranja. Dibujé cómo salen las espinas en grupos."],
 }
 const SKETCHES := {
 	FOX: "res://naturaleza_zorro.webp",
