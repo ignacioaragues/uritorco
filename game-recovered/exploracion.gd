@@ -149,6 +149,7 @@ static func dress_outcrops(valley):
 	var south_path := Creek.crossing_trace()
 	var faces := Stone.surface()
 	var roots: Array[Vector4] = []
+	var tussocks: Array[Vector4] = []
 	var scrub: Array[Vector4] = []
 	# Las lajas del mismo afloramiento mantienen la dirección de la fractura.
 	for site: Vector4 in [Vector4(-49.8, -19.6, -0.78, 1.00), Vector4(-54.7, -10.6, -0.61, 1.18),
@@ -170,11 +171,16 @@ static func dress_outcrops(valley):
 			Stone.solid(outcrops, foot, rock, "Laja de la ladera")
 			if fragment == 0:
 				Stone.scree(faces, foot, Vector3(outer.y, 0.0, -outer.x), size_m.z, Creek.surface_point, rng)
-		for tuft in 17:
-			var origin := center + along * rng.randf_range(-5.5, 5.5) + across * rng.randf_range(-3.6, 3.6)
+		for tuft in 43:
+			var origin := center + along * rng.randf_range(-6.9, 6.9) + across * rng.randf_range(-5.2, 5.2)
 			if clearance(origin) < 1.4 or Creek.near_south_path(origin, south_path, 1.6): continue
 			var foot := Creek.surface_point(Vector3(origin.x, 0.0, origin.y)) - Vector3.UP * 0.055
-			roots.append(Vector4(foot.x, foot.y, foot.z, rng.randf_range(0.54, 1.06)))
+			var dimensions := rng.randf_range(0.55, 1.11)
+			var tuft_position := Vector4(foot.x, foot.y, foot.z, dimensions)
+			if tuft % 3 == 0 and absf((origin - center).dot(across)) > 2.0:
+				tussocks.append(tuft_position)
+			else:
+				roots.append(tuft_position)
 		for tuft in 13:
 			var origin := center + outer * rng.randf_range(2.1, 4.6) + along * rng.randf_range(-4.7, 3.9)
 			if clearance(origin) < 2.0 or Creek.trail_distance(origin) < 2.0 or Creek.near_south_path(origin, south_path, 2.4): continue
@@ -182,6 +188,7 @@ static func dress_outcrops(valley):
 			scrub.append(Vector4(foot.x, foot.y, foot.z, rng.randf_range(0.56, 1.09)))
 	Stone.finish(outcrops, faces, "Lajas y fracturas").material_override = Stone.paint("898072")
 	Flora.grass_batch(outcrops, roots)
+	Flora.herb_batch(outcrops, tussocks, Flora.Herb.PAJA)
 	Flora.herb_batch(outcrops, scrub, Flora.Herb.ROMERILLO)
 
 static func dress_scrub(valley):

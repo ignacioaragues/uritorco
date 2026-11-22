@@ -8,6 +8,12 @@ const FOX := "zorro"
 const TEGU := "overo"
 const REED := "cortadera"
 const CAVY := "cuis"
+const ESPINILLO := "espinillo"
+const CACTUS := "cactus"
+const ESPINILLO_SITES := [Vector3(32.5, 1.02, -0.5), Vector3(-28.6, 0.92, -32.4),
+	Vector3(-16.6, 1.13, 41.8), Vector3(7.0, 0.89, 39.4)]
+const CACTUS_SITES := [Vector2(-45.6, -19.6), Vector2(-35.0, -32.0),
+	Vector2(50.2, 5.7), Vector2(-57.0, 31.8)]
 const FOX_START := Vector2(18.1, -2.6)
 const FOX_END := Vector2(30.2, -7.1)
 const FOX_MID := (FOX_START + FOX_END) * 0.5
@@ -23,18 +29,24 @@ const ENTRIES := {
 	TEGU: ["Lagarto overo", "Se calentaba sobre una laja de la orilla. Tenía manchas claras entre las bandas oscuras y una cola larga que casi tocaba el suelo."],
 	REED: ["Cortadera", "Las hojas se doblan hacia el agua. De cerca, cada penacho está hecho de ramitas finas. Dibujé la mata entera para acordarme de su forma."],
 	CAVY: ["Cuis moro", "Había dos comiendo al borde de la huella. Uno levantó la cabeza un momento. Alcancé a ver la raya clara arriba del ojo antes de que se metiera entre los pastos."],
+	ESPINILLO: ["Espinillo en flor", "De lejos, las flores parecen motitas de polen. De cerca se ven las hojitas de a pares. Dibujé dos espinas que salen juntas de la rama."],
+	CACTUS: ["Cactus entre las lajas", "Estaba al ras del suelo, donde se juntan dos piedras. Desde arriba, las costillas se abren como los gajos de una naranja. Dibujé las espinas de costado."],
 }
 const SKETCHES := {
 	FOX: "res://naturaleza_zorro.webp",
 	TEGU: "res://naturaleza_overo.webp",
 	REED: "res://naturaleza_cortadera.webp",
 	CAVY: "res://naturaleza_cuis.webp",
+	ESPINILLO: "res://naturaleza_espinillo.webp",
+	CACTUS: "res://naturaleza_cactus.webp",
 }
 
 var fox: Node3D
 var tegu: Node3D
 var tegu_home := Vector3.ZERO
 var reed_foot := Vector3.ZERO
+var espinillo_focus: Array[Vector3] = []
+var cactus_focus: Array[Vector3] = []
 var day_seen := 0
 var fox_clock := -1.0
 var fox_armed := true
@@ -60,6 +72,32 @@ func _ready():
 	reset_cavies()
 	dress_pastizal(CAVY_CREEK, CAVY_REFUGE_CREEK, 2097)
 	dress_pastizal(CAVY_LAJAS, CAVY_REFUGE_LAJAS, 2781)
+	dress_flora()
+
+func dress_flora():
+	for i in ESPINILLO_SITES.size():
+		var site: Vector3 = ESPINILLO_SITES[i]
+		var root := ground(Vector2(site.x, site.z))
+		Flora.tree(self, root, Flora.Kind.ESPINILLO, site.y, 0.62 + i * 1.63, 1.07, true)
+		espinillo_focus.append(root + Vector3(-0.49, 1.76, 0.20) * site.y)
+	var stones := Stone.surface()
+	var rng := RandomNumberGenerator.new()
+	rng.seed = 4052
+	for i in CACTUS_SITES.size():
+		var site: Vector2 = CACTUS_SITES[i]
+		var rotation := -0.30 + i * 1.67
+		for bud in 2 + (i + 1) % 2:
+			var cluster := Vector2(-0.30 * bud, 0.16 * sin(bud * 2.7)).rotated(rotation)
+			var at := ground(site + cluster)
+			var size := (1.10 - 0.25 * bud) * rng.randf_range(0.83, 1.13)
+			Flora.cactus(self, at, size, rng.randf() * TAU)
+			cactus_focus.append(at + Vector3.UP * 0.18 * size)
+		for offset in [Vector2(-1.10, 0.28), Vector2(-0.45, -0.53)]:
+			var foot := ground(site + offset.rotated(rotation))
+			var cut := Stone.fragment(stones, foot - Vector3.UP * 0.06,
+				Vector3(1.12, 0.23, 0.71), 0.67 + rotation, rng, Creek.surface_point, Stone.LAJA_PROFILE)
+			Stone.solid(self, foot, cut, "Laja del cactus")
+	Stone.finish(self, stones, "Lajas chicas")
 
 func dress_bank():
 	const ROCK_X := -31.6
@@ -238,6 +276,12 @@ func aimed(camera: Camera3D, player: CharacterBody3D, observations: Dictionary) 
 	if not observations.has(CAVY):
 		for cavy in cavies:
 			samples.append([CAVY, cavy.global_position + Vector3.UP * 0.076, 0.18, cavy.visible, 7.2])
+	if not observations.has(ESPINILLO):
+		for point in espinillo_focus:
+			samples.append([ESPINILLO, to_global(point), 0.82, day_seen >= 2, 7.0])
+	if not observations.has(CACTUS):
+		for point in cactus_focus:
+			samples.append([CACTUS, to_global(point), 0.24, true, 4.4])
 	for observation in samples:
 		var id: String = observation[0]
 		if observations.has(id) or not observation[3]: continue
@@ -255,7 +299,7 @@ func next_day_sketches(valley: Node3D, observations: Dictionary, day: int):
 		if observations.has(id) and int(observations[id]) < day and not drawings_on_wall.has(id):
 			var texture := load(SKETCHES[id]) as Texture2D
 			if texture:
-				var place := Vector3(-0.30 + 0.50 * index, 1.10, 5.85)
+				var place := Vector3(-0.30 + 0.50 * (index % 4), 1.10 - 0.35 * floorf(index * 0.25), 5.85)
 				var paper := preload("res://refugio.gd").wall_sketch(valley, place, texture, -1)
 				paper.name = "Dibujo de " + ENTRIES[id][0]
 				drawings_on_wall[id] = paper

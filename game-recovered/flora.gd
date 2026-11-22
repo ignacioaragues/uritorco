@@ -13,7 +13,7 @@ const BRUSH = preload("res://follaje.gdshader")
 static var crown_forms: Array[Mesh] = []
 static var blossom_form: SphereMesh
 
-static func tree(parent: Node3D, foot: Vector3, kind: Kind, size: float, angle: float, horizontal_scale := 1.0):
+static func tree(parent: Node3D, foot: Vector3, kind: Kind, size: float, angle: float, horizontal_scale := 1.0, in_bloom := false):
 	var tree_root := Node3D.new()
 	parent.add_child(tree_root)
 	tree_root.position = foot
@@ -62,6 +62,66 @@ static func tree(parent: Node3D, foot: Vector3, kind: Kind, size: float, angle: 
 				for petal in 3:
 					var spread := Vector3(0.064 * petal, 0.055 * sin(petal * 1.6), 0.047 * petal)
 					crown(tree_root, rng, flower + spread, Vector3(0.108, 0.086, 0.111), palette[3], turn)
+			if in_bloom:
+				for bud in 5:
+					var outward := direction.rotated(Vector3.UP, (bud - 2.0) * 0.39)
+					var bloom := center + outward * base_size.x * (0.37 + 0.06 * (bud % 3))
+					bloom.y += base_size.y * (0.25 - 0.13 * (bud % 3))
+					var diameter := rng.randf_range(0.064, 0.102)
+					crown(tree_root, rng, bloom, Vector3(diameter, diameter * 0.96, diameter),
+						["e6bf52", "d4a041", "eec974"][bud % 3], turn)
+
+static func cactus(parent: Node3D, foot: Vector3, size: float, angle: float):
+	var stem := SurfaceTool.new()
+	stem.begin(Mesh.PRIMITIVE_TRIANGLES)
+	const RIBS := 11
+	const SIDES := RIBS * 6
+	var radii := PackedFloat32Array([0.38, 0.74, 0.97, 1.0, 0.94, 0.76, 0.49, 0.17, 0.018])
+	var points := PackedVector3Array()
+	for band in radii.size():
+		for side in SIDES:
+			var turn := TAU * side / SIDES
+			var rib := pow(0.5 + 0.5 * cos(turn * RIBS), 1.4)
+			var radius := radii[band] * (0.18 + 0.048 * rib)
+			points.append(Vector3(cos(turn) * radius, band * 0.041 - 0.023, sin(turn) * radius))
+	for band in radii.size() - 1:
+		for side in SIDES:
+			var a := band * SIDES + side
+			var b := band * SIDES + (side + 1) % SIDES
+			for vertex in [a, b, a + SIDES, b, b + SIDES, a + SIDES]:
+				var bright := 0.18 + 0.17 * cos(TAU * vertex / 6.0) + 0.32 * float(band) / radii.size()
+				stem.set_color(Color("385042").lerp(Color("758455"), bright))
+				stem.add_vertex(points[vertex])
+	stem.index()
+	stem.generate_normals()
+	var plant := Node3D.new()
+	parent.add_child(plant)
+	plant.position = foot
+	plant.rotation.y = angle
+	var body := MeshInstance3D.new()
+	body.mesh = stem.commit()
+	body.material_override = grass_material()
+	plant.add_child(body)
+	var needles := SurfaceTool.new()
+	needles.begin(Mesh.PRIMITIVE_TRIANGLES)
+	var dark := Color("#5a4736")
+	var straw := Color("#9a8d6c")
+	for rib in RIBS:
+		var turn := TAU * rib / RIBS
+		var out := Vector3(cos(turn), 0.0, sin(turn))
+		var across := Vector3(-out.z, 0.0, out.x)
+		for band in [2, 4, 6]:
+			var start := points[band * SIDES + rib * 6] - out * 0.003
+			for spine in 5:
+				var tilt := (spine - 2.0) * 0.82
+				var reach := (across * sin(tilt) + Vector3.UP * cos(tilt)) * (0.034 + 0.004 * (spine % 2))
+				ribbon(needles, start, start + out * 0.024 + reach * 0.42,
+					start + out * 0.017 + reach, across, 0.0033, dark, straw, 0.5)
+	var spine_mesh := MeshInstance3D.new()
+	spine_mesh.mesh = needles.commit()
+	spine_mesh.material_override = body.material_override
+	plant.add_child(spine_mesh)
+	plant.scale = Vector3.ONE * size
 
 static func branch(parent: Node3D, start: Vector3, end: Vector3, base: float, tip: float, solid := false):
 	var mesh := CylinderMesh.new()

@@ -655,7 +655,7 @@ func update_packing(packed: Array, packing: bool):
 		packed_bag = FieldKit.backpack(self, Vector3(1.56, 0.26, 5.05), "Mochila")
 		packed_bag.rotation = Vector3(-1.32, 0.27, 0.0)
 		packed_bag.collision_layer = 0
-		drawings_hit = FieldKit.item(self, Vector3(0.39, 1.59, 5.805), "Dibujos", Vector3.ZERO, Vector3(1.91, 0.42, 0.080))
+		drawings_hit = FieldKit.item(self, Vector3(0.39, 1.21, 5.805), "Dibujos", Vector3.ZERO, Vector3(1.98, 1.23, 0.080))
 		drawings_hit.collision_mask = 0
 	if not packing: return
 	packed_bag.visible = packed.size() < 4

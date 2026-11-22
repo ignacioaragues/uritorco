@@ -64,6 +64,12 @@ Al cierre de cada pasada se actualizan los puntos resueltos y se conserva lo que
 - [x] Darles materiales y siluetas distintas a los tres sueños. El primero tiene placas azules fracturadas, el segundo terrazas cobrizas y el tercero crestas de obsidiana y arcos erosionados. Las formaciones cercanas son sólidas y dejan pasos abiertos hacia los seis hallazgos.
 - [x] Conectar las lajas con la bajada al cauce y abrir un atajo del este a la vuelta del mollar. Las dos huellas están señalizadas y se dibujan en la hoja local, centrada en el refugio. Se recorrieron los enlaces con el mapa de mano abierto.
 
+## Pasada de flora y laderas
+
+- Cuatro espinillos en flor crecen en distintos claros, y diez cactus bajos se reparten en cuatro colonias entre lajas. Se puede dibujar cualquier ejemplar con E. Se guarda un croquis por tipo, con fecha, en «Flora y fauna». Los dos dibujos se cuelgan en el puesto a partir de la siguiente jornada y se guardan con los demás el último día.
+- Los afloramientos del borde tienen alturas escalonadas, lajas bajas y fragmentos al pie. En las lomas crecen grupos de paja y romerillo. Se bajó el brillo de la piedra clara y se hicieron más visibles el grano mineral, las manchas de líquenes y las vetas cortas. Las fotos del filo y las laderas sirvieron de referencia para combinar la piedra con el pastizal. [Fotos del Desafío UTU](https://github.com/gmonserrat25/desafio-utu/tree/ab3999af10fddd6b116bf622a99ef0d4bcb0fd05/assets/img)
+- Se revisaron el zorro gris pampeano de los arbustales y el cuis moro de los pastizales contra las fichas regionales. Las fichas incluyen Córdoba en la distribución de ambos. [Zorro gris pampeano](https://doi.org/10.31687/SaremLR.19.127) · [Cuis moro](https://doi.org/10.31687/SaremLR.19.332)
+
 ## Pasada de la despedida, el Sector 08 y el monte
 
 - El Día 41 empieza con la mochila en el suelo. Libro, papeles, postal y dibujos se guardan con clic o E. La bajada señalizada y sus dos ramales llevan al ómnibus o a la puerta de Mara tras la despedida por radio. «Elegir escena» incluye «Día 41 · Empacar» y «Día 41 · Camino · Máxima cercanía».
@@ -314,7 +320,7 @@ Esta lista reconstruye el estado informado del proyecto editable. La exportació
 ## Todavía pendiente
 
 - **Arte.** Cotejar el acabado de las rocas con más fotos del cerro y seguir afinando los objetos de cerca, la vegetación y las lomadas de fondo en los sectores secundarios.
-- **Flora del Uritorco.** Cotejar registros del cerro para ubicar cactus chicos en laderas secas y sumar plantas en flor al cuaderno. El espinillo en flor es un candidato para aprovechar el modelo existente. Verificar la época de los frutos de tala y piquillín antes de sumar una recolección acotada. Considerar un frutal cultivado cerca del puesto o de una casa abandonada.
+- **Flora del Uritorco.** Cotejar registros de campo para precisar qué cactus crecen en el cerro. Verificar la época de los frutos de tala y piquillín antes de sumar una recolección acotada. Considerar un frutal cultivado cerca del puesto o de una casa abandonada.
 - **Fauna.** Buscar registros de observación del Uritorco para afinar el reparto por ambientes y contrastar la presencia local de las especies elegidas con referencias de las sierras cordobesas.
 - **Prueba de campaña.** Cronometrar una primera partida de principio a fin con alguien que esté descubriendo los caminos.
 - **Windows.** Probar la campaña y el audio de la exportación en un equipo con Windows.
