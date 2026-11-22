@@ -107,7 +107,7 @@ static func brace(parent: Node3D, foot: Vector3, joint: Vector3, thickness: floa
 	var leg := Kit.block(parent, (foot + joint) * 0.5, Vector3(thickness, foot.distance_to(joint), thickness), finish)
 	leg.quaternion = Quaternion(Vector3.UP, foot.direction_to(joint))
 
-static func pad(parent: Node3D, center: Vector3, size: Vector3, finish: Material, corners := 0.32) -> MeshInstance3D:
+static func pad(parent: Node3D, center: Vector3, size: Vector3, finish: Material, corners := 0.32, outward := false) -> MeshInstance3D:
 	var x := size.x * 0.5
 	var y := size.y * 0.5
 	var z := size.z * 0.5
@@ -115,7 +115,7 @@ static func pad(parent: Node3D, center: Vector3, size: Vector3, finish: Material
 		Vector4(-y, 0.001, 0.001, 0), Vector4(-y * 0.98, x * 0.88, z * 0.90, 0),
 		Vector4(-y * 0.46, x, z, 0), Vector4(y * 0.32, x, z, 0),
 		Vector4(y * 0.89, x * 0.91, z * 0.92, 0), Vector4(y, 0.001, 0.001, 0),
-	], finish, corners)
+	], finish, corners, outward)
 	cushion.position = center
 	return cushion
 
@@ -129,8 +129,8 @@ static func print_surface(parent: Node3D, pos: Vector3, size: Vector2, image: Te
 	picture.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	return picture
 
-static func desk(parent: Node3D) -> StaticBody3D:
-	var table := Kit.item(parent, Vector3(2.55, 0, 2.35), "", Vector3.UP * 0.45, Vector3(1.8, 0.90, 0.7))
+static func desk(parent: Node3D, drawers: Dictionary) -> StaticBody3D:
+	var table := Kit.item(parent, Vector3(2.55, 0, 2.35), "", Vector3(0, 0.871, 0.008), Vector3(1.80, 0.069, 0.70))
 	var timber := wood("735340")
 	var pine := wood("aa805c", true)
 	var worn_edge := wood("886548", true)
@@ -138,20 +138,37 @@ static func desk(parent: Node3D) -> StaticBody3D:
 	var shadow := Kit.material("4f3d32")
 	for x in [-0.79, 0.79]:
 		for z in [-0.25, 0.25]:
+			Kit.item(table, Vector3(x * 1.02, 0.421, z * 1.04), "", Vector3.ZERO, Vector3(0.096, 0.84, 0.096))
 			brace(table, Vector3(x * 1.03, 0.024, z * 1.07), Vector3(x, 0.82, z), 0.088, timber)
 		Kit.block(table, Vector3(x, 0.76, 0), Vector3(0.077, 0.17, 0.56), timber)
 		Kit.block(table, Vector3(x, 0.20, 0), Vector3(0.05, 0.082, 0.55), timber)
 	Kit.block(table, Vector3(0, 0.71, 0.23), Vector3(1.58, 0.23, 0.07), timber)
-	Kit.block(table, Vector3(0, 0.714, -0.26), Vector3(1.57, 0.197, 0.086), shadow)
+	Kit.block(table, Vector3(0, 0.636, -0.03), Vector3(1.57, 0.035, 0.52), shadow)
+	Kit.block(table, Vector3(0, 0.722, -0.05), Vector3(0.035, 0.16, 0.54), timber)
 	Kit.block(table, Vector3(0, 0.87, 0), Vector3(1.80, 0.06, 0.70), worn_edge)
 	Kit.block(table, Vector3(0, 0.898, 0), Vector3(1.778, 0.011, 0.679), pine)
 	for x in [-0.397, 0.397]:
-		pad(table, Vector3(x, 0.72, -0.305), Vector3(0.755, 0.165, 0.032), pine)
-		Kit.cord(table, PackedVector3Array([
-			Vector3(x - 0.067, 0.73, -0.325), Vector3(x - 0.052, 0.713, -0.349),
-			Vector3(x - 0.035, 0.705, -0.357), Vector3(x + 0.035, 0.705, -0.357),
-			Vector3(x + 0.052, 0.713, -0.349), Vector3(x + 0.067, 0.73, -0.325),
+		var label := "Cajón izquierdo" if x < 0.0 else "Cajón derecho"
+		var drawer := Kit.item(table, Vector3(x, 0.72, 0), label, Vector3(0, 0, -0.131), Vector3(0.75, 0.167, 0.39))
+		drawers[label] = drawer
+		Kit.block(drawer, Vector3(0, 0, -0.305), Vector3(0.75, 0.165, 0.032), pine)
+		Kit.block(drawer, Vector3(0, -0.064, -0.10), Vector3(0.71, 0.018, 0.40), shadow)
+		for side in [-0.35, 0.35]:
+			Kit.block(drawer, Vector3(side, -0.021, -0.10), Vector3(0.019, 0.114, 0.40), timber)
+		Kit.block(drawer, Vector3(0, -0.021, 0.101), Vector3(0.71, 0.107, 0.022), timber)
+		Kit.cord(drawer, PackedVector3Array([
+			Vector3(-0.067, 0.01, -0.325), Vector3(-0.052, -0.007, -0.349),
+			Vector3(-0.035, -0.015, -0.357), Vector3(0.035, -0.015, -0.357),
+			Vector3(0.052, -0.007, -0.349), Vector3(0.067, 0.01, -0.325),
 		]), 0.007, brass)
+		if x < 0.0:
+			var paper := Kit.material("cabb96")
+			Kit.block(drawer, Vector3(-0.132, -0.045, -0.144), Vector3(0.222, 0.021, 0.163), paper).rotation.y = 0.12
+			Kit.cylinder(drawer, Vector3(0.142, -0.041, -0.23), 0.006, 0.006, 0.146, Kit.material("946831")).rotation.z = PI / 2.0
+		else:
+			for z in [-0.21, -0.154]:
+				Kit.cylinder(drawer, Vector3(0.14, -0.038, z), 0.020, 0.020, 0.111, Kit.material("3f4b43", false, 0.47)).rotation.z = PI / 2.0
+				Kit.cylinder(drawer, Vector3(0.201, -0.038, z), 0.013, 0.014, 0.014, brass).rotation.z = PI / 2.0
 	return desk_items(parent)
 
 static func desk_items(parent: Node3D) -> StaticBody3D:
@@ -300,7 +317,7 @@ static func mug(parent: Node3D, pos: Vector3):
 	Kit.cylinder(cup, Vector3.UP * 0.062, 0.048, 0.048, 0.003, Kit.material("584031", false, 0.68))
 
 static func chair(parent: Node3D):
-	var seat := Kit.item(parent, Vector3(2.42, 0, 1.61), "", Vector3.UP * 0.46, Vector3(0.44, 0.085, 0.42))
+	var seat := Kit.item(parent, Vector3(2.55, 0, 1.64), "", Vector3.UP * 0.46, Vector3(0.44, 0.085, 0.42))
 	seat.rotation.y = -0.14
 	var finish := wood("946d50")
 	var cross := wood("b48b64", true)
@@ -453,12 +470,7 @@ static func exterior_equipment(parent: Node3D, flag_foot: Vector3, cylinder_foot
 		Kit.cylinder(flag_pole, Vector3.UP * height, 0.038, 0.038, 0.019, steel)
 	var gold := Kit.material("c9994f")
 
-	var tank := Kit.item(parent, cylinder_foot, "", Vector3.UP * 0.34, Vector3(0.36, 0.68, 0.36))
-	var enamel := Kit.material("a58260", false, 0.72)
-	Kit.cylinder(tank, Vector3.UP * 0.07, 0.135, 0.147, 0.11, steel)
-	Kit.cylinder(tank, Vector3.UP * 0.35, 0.157, 0.161, 0.48, enamel)
-	Kit.cylinder(tank, Vector3.UP * 0.60, 0.090, 0.157, 0.13, enamel)
-	Kit.cylinder(tank, Vector3.UP * 0.70, 0.045, 0.056, 0.08, gold)
+	gas_connection(parent, cylinder_foot, steel, gold)
 
 	var solar := Node3D.new()
 	parent.add_child(solar)
@@ -472,6 +484,44 @@ static func exterior_equipment(parent: Node3D, flag_foot: Vector3, cylinder_foot
 		for row in 4:
 			Kit.block(solar, Vector3((column - 2) * 0.22, 0.044, (row - 1.5) * 0.177), Vector3(0.211, 0.016, 0.166), cell)
 	return weave
+
+static func gas_connection(parent: Node3D, foot: Vector3, steel: Material, brass: Material):
+	var tank := Kit.item(parent, foot, "", Vector3.UP * 0.35, Vector3(0.37, 0.70, 0.37))
+	tank.name = "Garrafa y conexión"
+	var enamel := Kit.material("a58260", false, 0.72)
+	var dark := Kit.material("59544c")
+	Kit.block(tank, Vector3(0, 0.029, 0), Vector3(0.48, 0.064, 0.44), Kit.material("857766"))
+	Kit.cylinder(tank, Vector3.UP * 0.084, 0.136, 0.143, 0.061, dark)
+	Kit.shell(tank, [
+		Vector4(0.11, 0.114, 0.114, 0), Vector4(0.151, 0.158, 0.158, 0),
+		Vector4(0.24, 0.169, 0.169, 0), Vector4(0.518, 0.169, 0.169, 0),
+		Vector4(0.571, 0.155, 0.155, 0), Vector4(0.622, 0.101, 0.101, 0),
+		Vector4(0.636, 0.050, 0.050, 0), Vector4(0.637, 0.001, 0.001, 0),
+	], enamel, 1.0, true)
+	Kit.cylinder(tank, Vector3.UP * 0.352, 0.170, 0.170, 0.012, Kit.material("907057"))
+	for x in [-0.090, 0.090]:
+		Kit.block(tank, Vector3(x, 0.685, 0), Vector3(0.023, 0.109, 0.115), enamel)
+	Kit.cord(tank, PackedVector3Array([
+		Vector3(-0.09, 0.729, -0.056), Vector3(-0.064, 0.745, -0.073), Vector3(0.064, 0.745, -0.073),
+		Vector3(0.097, 0.726, -0.050), Vector3(0.097, 0.726, 0.050), Vector3(0.065, 0.744, 0.073),
+		Vector3(-0.063, 0.744, 0.073), Vector3(-0.09, 0.729, 0.056),
+	]), 0.013, enamel)
+	Kit.cylinder(tank, Vector3.UP * 0.658, 0.022, 0.026, 0.054, brass)
+	Kit.cylinder(tank, Vector3.UP * 0.695, 0.040, 0.040, 0.016, Kit.material("8c5140"))
+	Kit.cylinder(tank, Vector3(0.125, 0.661, 0.009), 0.051, 0.051, 0.025, steel)
+	Kit.block(tank, Vector3(0.069, 0.661, 0.01), Vector3(0.064, 0.028, 0.028), brass)
+	var entry := Vector3(-3.637, 0.503, 3.21)
+	Kit.cord(parent, PackedVector3Array([
+		foot + Vector3(0.163, 0.661, 0.013), foot + Vector3(0.227, 0.66, 0.04),
+		foot + Vector3(0.298, 0.61, 0.12), entry + Vector3(-0.063, 0, -0.53),
+		entry + Vector3(-0.056, 0, -0.098), entry + Vector3(-0.039, 0, -0.033), entry,
+	]), 0.014, dark)
+	for z in [2.80, 3.02, 3.18]:
+		Kit.block(parent, Vector3(-3.676, entry.y, z), Vector3(0.066, 0.035, 0.019), steel)
+	var sleeve := Kit.cylinder(parent, entry, 0.048, 0.048, 0.036, steel)
+	sleeve.rotation.z = PI / 2.0
+	var inner := Vector3(-3.38, entry.y, entry.z)
+	Kit.cord(parent, PackedVector3Array([inner, inner + Vector3(0.16, 0, 0), Vector3(-3.213, 0.93, 3.17), Vector3(-3.181, 1.02, 3.17)]), 0.010, brass)
 
 static func cutting(parent: Node3D):
 	var clipping := Kit.item(parent, Vector3(3.165, 0.905, 2.505), "Recorte de astronomía", Vector3.UP * 0.014, Vector3(0.33, 0.030, 0.24))
@@ -499,18 +549,41 @@ static func cutting(parent: Node3D):
 		for side in [-1.0, 1.0]:
 			Kit.cylinder(cell, Vector3.UP * side * 0.043, 0.0174, 0.0174, 0.008, cell_cap)
 
-static func kitchenette(parent: Node3D):
-	var cabinet := Kit.item(parent, Vector3(-3, 0, 3.6), "", Vector3.UP * 0.48, Vector3(0.77, 0.95, 2.2))
+static func kitchenette(parent: Node3D, doors: Dictionary):
+	var cabinet := Kit.item(parent, Vector3(-3, 0, 3.6), "", Vector3(-0.035, 0.48, 0), Vector3(0.647, 0.95, 2.18))
 	var timber := wood("746555")
 	var panel := wood("8b745d")
 	var iron := Kit.material("625c51", false, 0.57)
 	var enamel := Kit.material("ada696", false, 0.72)
-	Kit.block(cabinet, Vector3(-0.04, 0.49, 0), Vector3(0.65, 0.80, 2.19), timber)
-	Kit.block(cabinet, Vector3(-0.053, 0.062, 0), Vector3(0.64, 0.11, 2.15), iron)
-	for z in [-0.72, 0, 0.72]:
-		Kit.block(cabinet, Vector3(0.335, 0.455, z), Vector3(0.075, 0.68, 0.70), panel)
-		Kit.block(cabinet, Vector3(0.377, 0.456, z), Vector3(0.012, 0.542, 0.59), timber)
-		Kit.block(cabinet, Vector3(0.393, 0.731, z), Vector3(0.039, 0.035, 0.145), iron)
+	Kit.block(cabinet, Vector3(-0.328, 0.49, 0), Vector3(0.064, 0.81, 2.18), timber)
+	Kit.block(cabinet, Vector3(-0.036, 0.069, 0), Vector3(0.66, 0.11, 2.18), iron)
+	Kit.block(cabinet, Vector3(-0.021, 0.153, 0), Vector3(0.68, 0.048, 2.18), panel)
+	for z in [-1.066, -0.36, 0.36, 1.066]:
+		Kit.block(cabinet, Vector3(-0.026, 0.55, z), Vector3(0.66, 0.80, 0.039), timber)
+	for compartment in [["Gabinete de ollas", -0.72], ["Gabinete de tazas", 0.0], ["Gabinete de limpieza", 0.72]]:
+		var label: String = compartment[0]
+		var z: float = compartment[1]
+		var pivot := Node3D.new()
+		cabinet.add_child(pivot)
+		pivot.position = Vector3(0.323, 0, z - 0.342)
+		doors[label] = pivot
+		var door := Kit.item(pivot, Vector3(0.022, 0.535, 0.342), label, Vector3.ZERO, Vector3(0.054, 0.711, 0.675))
+		Kit.block(door, Vector3.ZERO, Vector3(0.054, 0.711, 0.675), panel)
+		Kit.block(door, Vector3(0.029, 0, 0), Vector3(0.012, 0.575, 0.550), timber)
+		Kit.block(door, Vector3(0.050, 0.246, 0.215), Vector3(0.041, 0.028, 0.126), iron)
+		for y in [-0.24, 0.24]:
+			Kit.block(door, Vector3(-0.020, y, -0.306), Vector3(0.041, 0.058, 0.053), iron)
+	Kit.cylinder(cabinet, Vector3(-0.047, 0.251, -0.737), 0.135, 0.151, 0.154, iron)
+	Kit.cylinder(cabinet, Vector3(-0.047, 0.335, -0.737), 0.141, 0.145, 0.024, enamel)
+	Kit.cylinder(cabinet, Vector3(-0.047, 0.358, -0.737), 0.026, 0.021, 0.027, iron)
+	Kit.block(cabinet, Vector3(-0.035, 0.484, 0), Vector3(0.53, 0.038, 0.64), panel)
+	for z in [-0.123, 0.116]:
+		mug(cabinet, Vector3(-0.017, 0.503, z))
+	for y in [0.183, 0.204, 0.225]:
+		Kit.cylinder(cabinet, Vector3(0.021, y, -0.01), 0.100, 0.121, 0.024, enamel)
+	Kit.cylinder(cabinet, Vector3(0.045, 0.280, 0.77), 0.054, 0.050, 0.208, Kit.material("72806b"))
+	Kit.cylinder(cabinet, Vector3(0.045, 0.400, 0.77), 0.023, 0.023, 0.037, enamel)
+	Kit.block(cabinet, Vector3(0.069, 0.195, 0.543), Vector3(0.123, 0.036, 0.094), Kit.material("9e895f"))
 	Kit.block(cabinet, Vector3(0, 0.968, -0.445), Vector3(0.82, 0.054, 1.36), enamel)
 	Kit.block(cabinet, Vector3(0, 0.968, 0.962), Vector3(0.82, 0.054, 0.326), enamel)
 	for x in [-0.335, 0.335]:
@@ -564,6 +637,22 @@ static func refrigerator(parent: Node3D) -> Dictionary:
 	Kit.cylinder(fridge, Vector3(-0.085, 0.527, 0.13), 0.024, 0.046, 0.026, bottle)
 	Kit.cylinder(fridge, Vector3(-0.085, 0.548, 0.13), 0.023, 0.023, 0.020, steel)
 	Kit.cylinder(fridge, Vector3(0.028, 0.63, -0.14), 0.047, 0.048, 0.10, Kit.material("9a8b60"))
+	Kit.block(fridge, Vector3(0.015, 0.172, 0), Vector3(0.414, 0.075, 0.465), seal)
+	Kit.block(fridge, Vector3(0.022, 0.214, 0), Vector3(0.42, 0.025, 0.474), liner)
+	Kit.block(fridge, Vector3(0.217, 0.185, 0), Vector3(0.018, 0.044, 0.165), steel)
+	Kit.block(fridge, Vector3(0.003, 1.099, -0.098), Vector3(0.33, 0.017, 0.22), steel)
+	for x in [-0.098, -0.021, 0.056, 0.133]:
+		Kit.block(fridge, Vector3(x, 1.118, -0.098), Vector3(0.009, 0.027, 0.205), liner)
+	Kit.block(fridge, Vector3(-0.109, 1.15, 0.13), Vector3(0.153, 0.089, 0.115), Kit.material("b5b4a8", false, 0.84)).rotation.y = -0.12
+	Kit.block(fridge, Vector3(0.084, 0.997, 0.174), Vector3(0.19, 0.037, 0.105), liner)
+	var bulb := OmniLight3D.new()
+	fridge.add_child(bulb)
+	bulb.position = Vector3(0.201, 0.966, 0.168)
+	bulb.omni_range = 0.75
+	bulb.omni_attenuation = 1.25
+	bulb.light_color = Color("fce0af")
+	bulb.light_energy = 0.48
+	bulb.visible = false
 
 	var doors: Dictionary = {}
 	for compartment in [["Heladera", 0.58, 0.98, 0.32], ["Freezer", 1.225, 0.283, -0.035]]:
@@ -576,13 +665,17 @@ static func refrigerator(parent: Node3D) -> Dictionary:
 		doors[tag] = hinge
 		var door_leaf := Kit.item(hinge, Vector3(0.022, center, 0.32), tag, Vector3.ZERO, Vector3(0.101, height, 0.64))
 		Kit.block(door_leaf, Vector3(-0.04, 0, 0), Vector3(0.026, height - 0.030, 0.626), seal)
-		Kit.block(door_leaf, Vector3(0.005, 0, 0), Vector3(0.072, height, 0.64), door)
-		Kit.block(door_leaf, Vector3(0.051, compartment[3], 0.137), Vector3(0.051, 0.042, 0.215), steel)
+		pad(door_leaf, Vector3(0.004, 0, 0), Vector3(0.091, height, 0.643), door, 0.19, true)
+		for z in [0.059, 0.214]:
+			Kit.block(door_leaf, Vector3(0.052, compartment[3], z), Vector3(0.054, 0.038, 0.029), steel)
+		Kit.block(door_leaf, Vector3(0.079, compartment[3], 0.136), Vector3(0.019, 0.034, 0.195), steel)
 		Kit.item(fridge, Vector3(0.247, center, 0), tag, Vector3.ZERO, Vector3(0.052, height - 0.043, 0.55)).collision_layer = 2
 		if tag == "Heladera":
+			hinge.set_meta("interior_light", bulb)
 			for y in [-0.31, -0.014]:
 				Kit.block(door_leaf, Vector3(-0.066, y, 0), Vector3(0.067, 0.035, 0.52), liner)
 				Kit.block(door_leaf, Vector3(-0.097, y + 0.036, 0), Vector3(0.015, 0.070, 0.52), liner)
+			Kit.block(door_leaf, Vector3(0.05, 0.32, -0.132), Vector3(0.014, 0.044, 0.103), steel)
 	for z in [-0.24, 0.24]:
 		Kit.block(fridge, Vector3(0.17, 0.037, z), Vector3(0.10, 0.074, 0.10), seal)
 	for vent in 5:
@@ -596,6 +689,79 @@ static func refrigerator(parent: Node3D) -> Dictionary:
 	motor.position.y = 0.43
 	motor.play()
 	return doors
+
+static func privy(parent: Node3D, center: Vector3) -> Node3D:
+	var shed := Node3D.new()
+	shed.name = "Baño exterior"
+	parent.add_child(shed)
+	shed.position = center
+	var boards := [wood("86735e"), wood("8d7963"), wood("796957")]
+	var trim := wood("685c50")
+	var deck := wood("9e856b", true)
+	var tin := Kit.material("74786c", false, 0.67)
+	var steel := Kit.material("514d45", false, 0.48)
+	var rim := Kit.material("c5b9a0", false, 0.69)
+	var dark := Kit.material("34332b")
+	for side in [-1, 1]:
+		var wall := Kit.item(shed, Vector3(side * 0.819, 1.124, 0), "", Vector3.ZERO, Vector3(0.083, 2.24, 1.78))
+		for i in 10:
+			Kit.block(wall, Vector3(0, 0, -0.804 + i * 0.179), Vector3(0.084, 2.24, 0.175), boards[(i + 2 * side + 10) % 3])
+		for y in [-0.88, 0.65]:
+			Kit.block(wall, Vector3(side * -0.052, y, 0), Vector3(0.055, 0.088, 1.79), trim)
+	var back := Kit.item(shed, Vector3(0, 1.125, 0.875), "", Vector3.ZERO, Vector3(1.65, 2.25, 0.085))
+	for i in 10:
+		Kit.block(back, Vector3(-0.743 + i * 0.165, 0, 0), Vector3(0.162, 2.25, 0.086), boards[(2 * i) % 3])
+	var floor := Kit.item(shed, Vector3(0, 0.012, 0), "", Vector3.ZERO, Vector3(1.63, 0.051, 1.80))
+	for i in 10:
+		Kit.block(floor, Vector3(0, 0, -0.804 + i * 0.179), Vector3(1.62, 0.051, 0.175), deck)
+	for x in [-0.782, 0.782]:
+		Kit.block(shed, Vector3(x, 1.13, -0.891), Vector3(0.095, 2.27, 0.115), trim)
+	Kit.block(shed, Vector3(0, 2.173, -0.879), Vector3(1.54, 0.18, 0.081), trim)
+	Kit.block(shed, Vector3(0, 2.178, -0.922), Vector3(0.31, 0.11, 0.013), dark)
+	for y in [2.142, 2.178, 2.214]:
+		Kit.block(shed, Vector3(0, y, -0.932), Vector3(0.309, 0.014, 0.034), tin).rotation.x = 0.3
+	var roof := Node3D.new()
+	shed.add_child(roof)
+	roof.position.y = 2.291
+	roof.rotation.x = 0.055
+	Kit.block(roof, Vector3.ZERO, Vector3(1.89, 0.055, 2.09), tin)
+	for i in 16:
+		Kit.block(roof, Vector3(-0.895 + i * 0.119, 0.030, 0), Vector3(0.038, 0.018, 2.08), tin)
+	Kit.cylinder(shed, Vector3(0.52, 2.38, 0.60), 0.053, 0.050, 0.37, steel)
+	Kit.cylinder(shed, Vector3(0.52, 2.576, 0.60), 0.079, 0.065, 0.027, tin)
+
+	var hinge := Node3D.new()
+	shed.add_child(hinge)
+	hinge.position = Vector3(-0.744, 0, -0.917)
+	var door := Kit.item(hinge, Vector3(0.744, 1.06, 0), "Puerta del baño", Vector3.ZERO, Vector3(1.482, 2.047, 0.061))
+	for i in 9:
+		Kit.block(door, Vector3(-0.656 + i * 0.164, 0, 0), Vector3(0.161, 2.047, 0.061), boards[i % 3])
+	for y in [-0.63, 0.67]:
+		Kit.block(door, Vector3(0, y, 0.046), Vector3(1.44, 0.084, 0.043), trim)
+		Kit.block(door, Vector3(-0.639, y, -0.039), Vector3(0.23, 0.059, 0.022), steel)
+	brace(door, Vector3(-0.64, -0.58, 0.046), Vector3(0.64, 0.60, 0.046), 0.065, trim)
+	Kit.block(door, Vector3(0.606, -0.045, -0.058), Vector3(0.184, 0.043, 0.070), steel)
+	Kit.block(door, Vector3(0.61, -0.052, 0.064), Vector3(0.174, 0.031, 0.078), steel)
+
+	var bench := Kit.item(shed, Vector3(0, 0.277, 0.53), "", Vector3.ZERO, Vector3(1.57, 0.494, 0.59))
+	Kit.block(bench, Vector3(0, 0, -0.269), Vector3(1.57, 0.49, 0.052), trim)
+	for x in [-0.542, 0.542]:
+		Kit.block(bench, Vector3(x, 0.245, 0), Vector3(0.488, 0.051, 0.59), deck)
+	for z in [-0.253, 0.253]:
+		Kit.block(bench, Vector3(0, 0.245, z), Vector3(0.60, 0.051, 0.125), deck)
+	Kit.cylinder(bench, Vector3(0, 0.18, 0), 0.205, 0.220, 0.009, dark)
+	Kit.shell(bench, [
+		Vector4(0.267, 0.242, 0.212, 0), Vector4(0.28, 0.250, 0.22, 0), Vector4(0.318, 0.239, 0.213, 0),
+		Vector4(0.322, 0.179, 0.15, 0), Vector4(0.308, 0.164, 0.133, 0), Vector4(0.265, 0.164, 0.133, 0),
+	], rim, 0.84, true)
+	var roller := Vector3(0.739, 0.84, 0.36)
+	Kit.cylinder(shed, roller, 0.071, 0.071, 0.12, rim).rotation.x = PI / 2.0
+	Kit.cylinder(shed, roller + Vector3(0, 0, -0.061), 0.024, 0.024, 0.007, dark).rotation.x = PI / 2.0
+	Kit.block(shed, roller + Vector3(-0.067, -0.047, 0), Vector3(0.008, 0.085, 0.112), rim).rotation.z = -0.14
+	Kit.block(shed, Vector3(-0.524, 1.23, 0.73), Vector3(0.41, 0.037, 0.225), trim)
+	Kit.cylinder(shed, Vector3(-0.53, 1.332, 0.70), 0.035, 0.033, 0.171, Kit.material("8b9a86"))
+	Kit.cylinder(shed, Vector3(-0.53, 1.43, 0.70), 0.019, 0.019, 0.025, steel)
+	return hinge
 
 static func refrigerator_hum() -> AudioStreamWAV:
 	const RATE := 11025

@@ -47,7 +47,7 @@ static func item(parent: Node3D, at: Vector3, label: String, hit_center: Vector3
 	hit.position = hit_center
 	return body
 
-static func shell(parent: Node3D, profile: Array[Vector4], finish: Material, softness := 0.62) -> MeshInstance3D:
+static func shell(parent: Node3D, profile: Array[Vector4], finish: Material, softness := 0.62, outward := false) -> MeshInstance3D:
 	var vertices := PackedVector3Array()
 	for ring in profile:
 		for i in SIDES:
@@ -56,9 +56,9 @@ static func shell(parent: Node3D, profile: Array[Vector4], finish: Material, sof
 			var z := sin(angle)
 			vertices.append(Vector3(signf(x) * pow(absf(x), softness) * ring.y,
 				ring.x, ring.w + signf(z) * pow(absf(z), softness) * ring.z))
-	return mesh_part(parent, rings(vertices, SIDES), Vector3.ZERO, finish)
+	return mesh_part(parent, rings(vertices, SIDES, outward), Vector3.ZERO, finish)
 
-static func rings(vertices: PackedVector3Array, width: int) -> ArrayMesh:
+static func rings(vertices: PackedVector3Array, width: int, outward := false) -> ArrayMesh:
 	var surface := SurfaceTool.new()
 	surface.begin(Mesh.PRIMITIVE_TRIANGLES)
 	for vertex in vertices: surface.add_vertex(vertex)
@@ -66,7 +66,8 @@ static func rings(vertices: PackedVector3Array, width: int) -> ArrayMesh:
 		for i in width:
 			var a := row * width + i
 			var b := row * width + (i + 1) % width
-			for index in [a, a + width, b, b, a + width, b + width]:
+			var indices := [a, b, a + width, b, b + width, a + width] if outward else [a, a + width, b, b, a + width, b + width]
+			for index in indices:
 				surface.add_index(index)
 	surface.generate_normals()
 	return surface.commit()
@@ -97,7 +98,7 @@ static func belt(parent: Node3D, points: PackedVector3Array, width: float, finis
 	mesh_part(parent, surface.commit(), Vector3.ZERO, finish)
 
 static func backpack(parent: Node3D, at: Vector3, label: String) -> StaticBody3D:
-	var pack := item(parent, at, label, Vector3(0, -0.013, 0.025), Vector3(0.50, 0.57, 0.39))
+	var pack := item(parent, at, label, Vector3(0, -0.002, 0.015), Vector3(0.53, 0.60, 0.45))
 	var canvas := material("626b50", true)
 	var gusset := material("788064", true)
 	var flap := material("868263", true)
@@ -108,17 +109,17 @@ static func backpack(parent: Node3D, at: Vector3, label: String) -> StaticBody3D
 	var metal := material("716d65", false, 0.44)
 
 	shell(pack, [
-		Vector4(-0.301, 0.005, 0.004, 0),
-		Vector4(-0.293, 0.185, 0.107, 0),
-		Vector4(-0.265, 0.227, 0.134, 0),
-		Vector4(-0.177, 0.252, 0.161, -0.008),
-		Vector4(0.010, 0.262, 0.171, -0.011),
-		Vector4(0.143, 0.241, 0.156, -0.014),
-		Vector4(0.223, 0.203, 0.146, -0.012),
+		Vector4(-0.301, 0.0, 0.0, 0),
+		Vector4(-0.293, 0.185, 0.128, -0.009),
+		Vector4(-0.265, 0.227, 0.152, -0.013),
+		Vector4(-0.177, 0.252, 0.182, -0.025),
+		Vector4(0.010, 0.262, 0.195, -0.026),
+		Vector4(0.143, 0.241, 0.174, -0.024),
+		Vector4(0.223, 0.203, 0.154, -0.019),
 		Vector4(0.267, 0.155, 0.115, -0.015),
 		Vector4(0.294, 0.069, 0.065, -0.02),
-		Vector4(0.299, 0.005, 0.004, -0.02),
-	], canvas)
+		Vector4(0.299, 0.0, 0.0, -0.02),
+	], canvas, 0.62, true)
 	shell(pack, [
 		Vector4(-0.259, 0.03, 0.018, 0.149),
 		Vector4(-0.244, 0.159, 0.061, 0.164),
@@ -126,7 +127,7 @@ static func backpack(parent: Node3D, at: Vector3, label: String) -> StaticBody3D
 		Vector4(-0.119, 0.184, 0.087, 0.171),
 		Vector4(-0.071, 0.146, 0.063, 0.166),
 		Vector4(-0.056, 0.03, 0.012, 0.167),
-	], gusset)
+	], gusset, 0.62, true)
 	shell(pack, [
 		Vector4(0.105, 0.034, 0.012, 0.12),
 		Vector4(0.124, 0.179, 0.035, 0.113),
@@ -134,7 +135,7 @@ static func backpack(parent: Node3D, at: Vector3, label: String) -> StaticBody3D
 		Vector4(0.217, 0.19, 0.065, 0.086),
 		Vector4(0.270, 0.163, 0.082, 0.011),
 		Vector4(0.304, 0.041, 0.030, 0.006),
-	], flap)
+	], flap, 0.62, true)
 
 	var zipper := PackedVector3Array([
 		Vector3(-0.176, -0.145, 0.223), Vector3(-0.152, -0.107, 0.243), Vector3(-0.112, -0.114, 0.253),

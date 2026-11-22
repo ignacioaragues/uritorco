@@ -7,6 +7,7 @@ const FieldKit = preload("res://equipo_campo.gd")
 const Refuge = preload("res://refugio.gd")
 const Creek = preload("res://cauce.gd")
 const Cable = preload("res://camino_del_cable.gd")
+const Camp = preload("res://campamento.gd")
 const LastNight = preload("res://final_night.gd")
 const Birds = preload("res://aves.gd")
 const South = preload("res://quebrada_sur.gd")
@@ -141,7 +142,7 @@ func _ready():
 	box(Vector3(0, 2.795, 2.76), Vector3(7.19, 0.16, 6.66), "73614d", true)
 	var fascia := box(Vector3(0, 2.825, -0.52), Vector3(7.27, 0.20, 0.092), "665648")
 	fascia.material_override = Refuge.wood("665648", true)
-	desk_note = Refuge.desk(self)
+	desk_note = Refuge.desk(self, desk_drawers)
 	desk_radio = FieldKit.desk_radio(self, Vector3(2.64, 0.90, 2.42))
 	desk_radio.rotation.y = PI + 0.24
 	desk_portable = desk_radio.get_node("Transceptor")
@@ -724,21 +725,9 @@ func strange_sky(variant: int):
 	tween.tween_property(sun, "light_color", [Color("#c0e3ed"), Color("#eabd94"), Color("#dfcbe9")][palette], 2.0)
 
 func kitchen_and_privy():
-	Refuge.kitchenette(self)
+	Refuge.kitchenette(self, cabinet_doors)
 	fridge_doors = Refuge.refrigerator(self)
-	var center := Vector3(8.0, 0.0, 7.35)
-	for side in [-1, 1]:
-		timber(box(center + Vector3(side * 0.82, 1.12, 0), Vector3(0.09, 2.24, 1.75), "897660", true))
-	timber(box(center + Vector3(0, 1.12, 0.84), Vector3(1.65, 2.24, 0.1), "87725a", true))
-	box(center + Vector3(0, 2.29, 0), Vector3(1.9, 0.09, 2.08), "72786e", true).rotation.x = 0.06
-	privy_hinge = Node3D.new()
-	add_child(privy_hinge)
-	privy_hinge.position = center + Vector3( - 0.79, 0, - 0.86)
-	var panel: = box(center + Vector3(0, 1.05, - 0.86), Vector3(1.54, 2.1, 0.08), "72614c", true, "Puerta del baño")
-	timber(panel)
-	panel.reparent(privy_hinge)
-	box(center + Vector3(0, 0.25, 0.35), Vector3(0.84, 0.5, 0.66), "9d886a", true)
-	stone(center + Vector3(0, 0.51, 0.35), Vector3(0.34, 0.025, 0.4), "49463e")
+	privy_hinge = Refuge.privy(self, Vector3(8.0, 0.0, 7.35))
 
 var quarry_plate: MeshInstance3D
 
@@ -811,46 +800,7 @@ func place_descent_sign(foot: Vector3, uphill: Vector3, caption: String):
 var camp_log: MeshInstance3D
 
 func dress_camp():
-	var camp: Vector3 = route.terrain_point(route.camp_point())
-	var tripod: Vector3 = route.terrain_point(camp + Vector3(2.1, 0.0, -0.8))
-	var pivot := tripod + Vector3.UP * 1.08
-	for offset in [Vector2( - 0.44, - 0.24), Vector2(0.44, - 0.24), Vector2(0, 0.55)]:
-		var foot: Vector3 = route.terrain_point(tripod + Vector3(offset.x, 0, offset.y)) - Vector3.UP * 0.065
-		var leg := box((foot + pivot) * 0.5, Vector3(0.046, 0.046, foot.distance_to(pivot)), "676761", true, "Trípode vacío")
-		leg.look_at(pivot)
-	box(pivot, Vector3(0.29, 0.063, 0.24), "424745", true, "Trípode vacío")
-	var tarp: Vector3 = route.terrain_point(camp + Vector3(-2.6, 0, -0.35))
-	var pitch := Basis.from_euler(Vector3(0.44, 0.22, 0.15))
-	var tarp_center := tarp + Vector3.UP * 0.48
-	var lift := 0.0
-	for x in [-1.25, 0.0, 1.25]:
-		for z in [-0.725, 0.0, 0.725]:
-			var edge := tarp_center + pitch * Vector3(x, 0, z)
-			lift = maxf(lift, route.terrain_point(edge).y - edge.y + 0.18)
-	tarp_center.y += lift
-	box(tarp_center, Vector3(2.5, 0.035, 1.45), "aba385").basis = pitch
-	for x in [-1.10, 1.10]:
-		for z in [-0.60, 0.60]:
-			ground_support(tarp_center + pitch * Vector3(x, -0.012, z), 0.05, 0.05, "757366")
-	for offset in [Vector2( - 0.44, 0.4), Vector2( - 0.17, 0.65), Vector2(0.1, 0.62), Vector2(0.44, 0.47)]:
-		var foot: Vector3 = route.terrain_point(tarp + Vector3(offset.x, 0, offset.y))
-		stone(foot + Vector3.UP * 0.04, Vector3(0.27, 0.22, 0.25), "77716a")
-	ground_support(camp + Vector3.UP * 0.48, 0.87, 0.64, "6c6455")
-	camp_log = box(camp + Vector3.UP * 0.51, Vector3(0.4, 0.058, 0.32), "b2a383", true, "Cuaderno del campamento")
-	camp_log.rotation.y = 0.19
-	var stop := Vector3(0.54, 0, -0.08)
-	var thermos: Vector3 = route.terrain_point(camp + stop)
-	var jar := FieldKit.item(self, thermos, "", Vector3.UP * 0.19, Vector3(0.145, 0.38, 0.145))
-	var bottle := FieldKit.material("57706a", false, 0.63)
-	var collar := FieldKit.material("aba794", false, 0.55)
-	FieldKit.cylinder(jar, Vector3.UP * 0.16, 0.069, 0.074, 0.30, bottle)
-	FieldKit.cylinder(jar, Vector3.UP * 0.32, 0.050, 0.068, 0.034, bottle)
-	FieldKit.cylinder(jar, Vector3.UP * 0.36, 0.054, 0.054, 0.051, collar)
-	FieldKit.cord(jar, PackedVector3Array([Vector3(0.045, 0.278, 0), Vector3(0.094, 0.258, 0),
-		Vector3(0.105, 0.194, 0), Vector3(0.070, 0.161, 0)]), 0.012, collar)
-	var bag_foot: Vector3 = route.terrain_point(tarp + Vector3(-0.58, 0, 0.4))
-	FieldKit.backpack(self, bag_foot, "").rotation.y = -0.85
-
+	camp_log = Camp.build(self, route.camp_point())
 
 var storm_water: MeshInstance3D
 var archive_dressed := false
@@ -863,6 +813,8 @@ func dress_day36():
 	storm_water.visible = weather_day == 36
 
 var fridge_doors: Dictionary = {}
+var cabinet_doors: Dictionary = {}
+var desk_drawers: Dictionary = {}
 var yard_hinge: Node3D
 var privy_hinge: Node3D
 var museum_hinge: Node3D
@@ -894,11 +846,17 @@ func build_yard_fence():
 		stile.reparent(yard_hinge)
 
 func swing_side_door(node: Node3D):
-	if not node or node.has_meta("swinging"): return
-	node.set_meta("swinging", true)
-	var open: = not bool(node.get_meta("open", false))
-	node.set_meta("open", open)
-	var swing: = create_tween()
 	var opening := 2.06 if node == yard_hinge else 1.62
-	swing.tween_property(node, "rotation:y", opening if open else 0.0, 0.38)
-	swing.tween_callback( func(): node.remove_meta("swinging"))
+	move_fitting(node, "rotation:y", opening)
+
+func move_fitting(node: Node3D, property: NodePath, extent: float):
+	if not node or node.has_meta("fitting_motion"): return
+	node.set_meta("fitting_motion", true)
+	var open := not bool(node.get_meta("open", false))
+	node.set_meta("open", open)
+	if node.has_meta("interior_light"):
+		node.get_meta("interior_light").visible = open
+	var movement := create_tween()
+	movement.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+	movement.tween_property(node, property, extent if open else 0.0, 0.38)
+	movement.tween_callback(func(): node.remove_meta("fitting_motion"))

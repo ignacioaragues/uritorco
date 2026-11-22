@@ -182,7 +182,7 @@ void sky(){
 	if (moon_dir.y > -moon_radius && EYEDIR.y > -0.008) {
 		float phase = 0.5 - 0.5 * dot(daylight_dir, moon_dir);
 		float moonlight = smoothstep(0.015, 0.085, phase) * smoothstep(-0.008, 0.048, EYEDIR.y);
-		float apparent_radius = moon_radius * mix(0.43, 1.0, smoothstep(0.42, 0.96, nightfall));
+		float apparent_radius = moon_radius * mix(0.126, 1.0, smoothstep(0.64, 1.0, nightfall));
 		earth = disc(EYEDIR,moon_dir,daylight_dir,apparent_radius,vec3(1.28,1.21,1.10),earth,moonlight,1.0);
 		daytime = disc(EYEDIR,moon_dir,daylight_dir,apparent_radius,vec3(1.03,1.06,1.10),daytime,daylight_moon * moonlight * (0.39 + dusk * 0.19),dusk * 0.12);
 	}

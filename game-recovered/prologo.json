@@ -4,12 +4,12 @@
   "lines": [
    "Tenés 6 años. Tu papá llega con un paquete escondido abajo del pulóver.",
    "Adentro hay un libro para chicos. Se llama Observar el Cielo. Lo apoyás en sus rodillas y pasás las hojas con las dos manos.",
-   "Tu papá tantea la guarda con el pulgar. Todavía no dice de quién es."
+   "Salen a la vereda con el libro. Tu papá te señala cuatro estrellas. Las miran juntos y las buscás en la lámina de la Cruz del Sur."
   ],
   "options": [
    {
-    "label": "Le pedís que lo deje en tu mesa de luz.",
-    "keepsake": "Esa noche el lomo cruje cuando volvés a abrir el libro en la cama."
+    "label": "Copiás la Cruz del Sur.",
+    "keepsake": "La copiás a lápiz en una hoja. Levantás la vista otra vez para ubicar la estrella de abajo."
    },
    {
     "label": "Le pedís que escriba tu nombre.",
@@ -29,8 +29,8 @@
     "keepsake": "Desde la tapia ves cómo la franja se pierde detrás del tanque de agua."
    },
    {
-    "label": "Le alcanzás el libro a la vecina.",
-    "keepsake": "La vecina se pone los anteojos de leer para mirar la Vía Láctea."
+    "label": "Te sentás en el cordón y esperás que se te acostumbren los ojos.",
+    "keepsake": "Al rato distinguís estrellas donde antes veías una mancha. Desde el cordón todavía se oyen las voces de los vecinos."
    }
   ]
  },
@@ -127,7 +127,7 @@
  {
   "key": "puesto",
   "lines": [
-   "Tenés 31 años. Tu papá muere en la segunda semana de septiembre. El jueves siguiente te despertás a las seis, como si todavía tuvieras que llevarlo al hospital.",
+   "Tenés 31 años. Tu papá muere en los primeros días de septiembre. El jueves siguiente te despertás a las seis, como si todavía tuvieras que llevarlo al hospital.",
    "Un par de semanas después te llama una compañera de las salidas de campo. Buscan a alguien para cuidar un puesto en las sierras: revisar senderos, medir el cauce, pasar el parte por radio.",
    "Te vendría bien vivir lejos de esa cocina una temporada. Aceptás el relevo y les avisás a tus alumnos cuándo vas a volver. Al armar el bolso, levantás Observar el Cielo de la mesa de luz."
   ],

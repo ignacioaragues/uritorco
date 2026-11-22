@@ -23,6 +23,7 @@ func _ready():
 	style.content_margin_bottom = 12
 	add_theme_stylebox_override("panel", style)
 	var stack: = VBoxContainer.new()
+	stack.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(stack)
 	stack.add_theme_constant_override("separation", 4)
 	for label in [speaker, line, options]:
@@ -37,7 +38,7 @@ func _ready():
 	options.add_theme_color_override("font_color", Color("#d5dcd3"))
 	hide()
 
-func display(kind: String, caption: String, footer: Variant, mobile := false):
+func display(kind: String, caption: String, footer: Variant):
 	speaker.text = "RADIO"
 	if reveal: reveal.kill()
 	line.text = caption
@@ -51,10 +52,9 @@ func display(kind: String, caption: String, footer: Variant, mobile := false):
 		reveal = create_tween()
 		reveal.tween_property(line, "visible_characters", line.text.length(), maxf(0.32, line.text.length() / 34.0))
 		reveal.tween_callback(func(): line.visible_characters = -1)
-	choices.present(footer if footer is Array else [], mobile)
-	var show_cursor_help: bool = mobile and footer is Array
-	options.visible = footer is String or show_cursor_help
-	options.text = "Alt · cursor" if show_cursor_help else (footer if footer is String else "")
+	choices.present(footer if footer is Array else [], true)
+	options.visible = footer is String or footer is Array
+	options.text = "Rueda · cambiar respuesta     Clic · confirmar" if footer is Array else (footer if footer is String else "")
 	show()
 	offset_left = 0
 	offset_right = 0

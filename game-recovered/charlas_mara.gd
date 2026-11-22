@@ -42,7 +42,7 @@ const TOPICS = {
 		]
 	],
 	"vaguada": [
-		0, "Tenés dos huellas ahí. La vuelta por abajo la aprendí tarde. Antes me empecinaba con la laja hasta cuando estaba mojada.",
+		0, "Mara, llegué a la laja. Desde acá se ve una huella por abajo.",
 		["«¿Quién te mostró la otra vuelta?»", "«Mi viejo me decía que mirara dónde pisa el agua»."],
 		[
 			["Una vecina que subía con una bolsa de pan en cada mano. Yo estaba juntando coraje frente a la cuerda. Me gritó desde arriba."],
@@ -58,15 +58,15 @@ const TOPICS = {
 		]
 	],
 	"cielo": [
-		0, "¿Ya encontraste el cable? La última vez que fui se veía bien entre las piedras. Te iba a preguntar algo. ¿Mirabas el cielo antes de venir acá?",
-		["«Lo miraba con mi viejo. Desde que murió me cuesta un poco».", "«Estudié astronomía. Hace rato que miro más papel que cielo»."],
+		0, "Te iba a preguntar hace días. ¿Qué te trajo al puesto, Hernán?",
+		["«Mi viejo murió en septiembre. Mirábamos el cielo juntos. Cuando me ofrecieron venir, pensé que acá iba a poder volver a mirarlo».", "«Necesitaba pasar un tiempo lejos de casa. El trabajo apareció justo»."],
 		[
-			["Podés contarme de él si te dan ganas. A mí me gustaba escuchar a mi vieja reconocer pájaros.", "Ahora reconozco alguno. A veces me encuentro por decirle cuál es."],
-			["Entonces te voy a pedir un favor. Desde el patio de casa siempre veo una estrella y nunca sé cómo se llama.", "Algún día te la señalo. Por radio terminaría señalándote media sierra."]
+			["No sabía. Gracias por contármelo.", "Si alguna noche salís a mirar y querés compañía, avisame. Puedo dejar el canal abierto."],
+			["Entiendo. ¿Te viene haciendo bien estar acá?", "Eso me lo podés contestar otro día. El cable sigue por el lado de la sombra."]
 		]
 	],
 	"cable": [
-		1, "Una vez me tocó subir a revisar el cable con viento. Entre las rocas sonaba como una cuerda de guitarra tirante.",
+		1, "Mara, estoy junto al cable. Con el viento parece una cuerda de guitarra.",
 		["«Desde acá lo escucho distinto».", "«¿Tocás la guitarra?»"],
 		[
 			["Algún día me gustaría oírlo desde donde estás vos. Siempre me doy vuelta antes de llegar al corte."],
@@ -74,11 +74,11 @@ const TOPICS = {
 		]
 	],
 	"pircas": [
-		0, "En esa subida hay una pirca que armé con mi hermano. De chicos jugábamos a dejar la piedra más chiquita bien arriba.",
-		["«¿Siguen subiendo juntos?»", "«Yo le voy a dejar una al lado»."],
+		0, "Cada vez falta menos para que bajes. ¿Hay alguien a quien tengas ganas de ver cuando vuelvas?",
+		["«Pensé en escribirle a Paula. Hace mucho que no hablamos y a veces me sorprendo guardándole cosas para contarle».", "«Todavía no pensé qué voy a hacer cuando baje»."],
 		[
-			["Ahora vive en el pueblo. Cuando viene a verme, nos quedamos hablando en el patio y se nos hace tarde."],
-			["Haceme un favor. Si ves una verde, dejala donde está. Fue la única que encontré de ese color."]
+			["¿Te pasa que te acordás justo cuando ves algo que le gustaría?", "Si al final le escribís, capaz podés empezar por una de esas cosas."],
+			["Está bien. Todavía te quedan días. Avisame cuando pases las pircas y te digo cuánto falta."]
 		]
 	],
 	"bajada": [
@@ -126,12 +126,12 @@ const TOPICS = {
 static func available(stage: int, position: Vector3, bedtime: bool, sighting: bool, answered: Dictionary) -> String:
 	var topic := ""
 	match stage:
-		4:
-			if near(position, Creek.trail_point(0.91), 13.0): topic = "cauce"
 		5:
-			if bedtime and near(position, Creek.trail_point(0.53), 18.0): topic = "piedras"
+			if near(position, Creek.trail_point(0.53), 18.0): topic = "piedras"
 		7:
-			if on_ridge(position, Museum.DISTANCE, 33.0):
+			if on_ridge(position, 142.0, 33.0):
+				topic = "cauce"
+			elif on_ridge(position, Museum.DISTANCE, 33.0):
 				topic = "museo"
 			elif sighting and bedtime and on_ridge(position, 389.0, 27.0):
 				topic = "antena"

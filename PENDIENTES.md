@@ -6,7 +6,7 @@ Al cierre de cada pasada se actualizan los puntos resueltos y se conserva lo que
 
 ### Resuelto
 
-- [x] Colgar progresivamente los croquis del puente, el cauce, los avistamientos y la cumbre en la pared de la cabaña.
+- [x] Colgar progresivamente los croquis del puente, el cauce, los avistamientos y la cumbre en la pared del puesto. El del puente se puede consultar en el diario enseguida y se cuelga en la tercera jornada, el Día 7.
 - [x] Activar las luces y la cueva la noche anterior a la partida. En «Elegir escena» hay accesos directos a «Última noche · Luces», «Última noche · Cueva» y «Última noche · Los arcos».
 - [x] Mantener tres sueños. En los dos primeros se despierta tras 2:30 de exploración y en el tercero al terminar la conversación de la voz.
 - [x] Alargar el trayecto del último sueño, retirar los cuerpos flotantes entre los pilares y abrir una conversación al acercarse a cada uno de los cuatro arcos. Los diálogos pasan de una indicación extraña a un recuerdo que Hernán reconoce.
@@ -53,6 +53,17 @@ Al cierre de cada pasada se actualizan los puntos resueltos y se conserva lo que
 - [x] Darles materiales y siluetas distintas a los tres sueños. El primero tiene placas azules fracturadas, el segundo terrazas cobrizas y el tercero crestas de obsidiana y arcos erosionados. Las formaciones cercanas son sólidas y dejan pasos abiertos hacia los seis hallazgos.
 - [x] Conectar las lajas con la bajada al cauce y abrir un atajo del este a la vuelta del mollar. Las dos huellas están señalizadas y se dibujan en la hoja local, centrada en el refugio. Se recorrieron los enlaces con el mapa de mano abierto.
 
+## Pasada del prólogo y el campamento
+
+- La mochila de la parada tiene una cubierta cerrada y más fondo. Se conserva la recogida con E o clic. El tronco atraviesa un sendero entre molles, talas y piquillines. La laja tiene un frente continuo y bloques a ambos flancos. Se comprobaron el salto, la trepada con cuerda y los intentos de rodear los dos obstáculos.
+- Hernán puede caminar y mover la vista durante el fundido hasta que aparece el recuerdo. B se enseña en el puente y Tab se anuncia en la microescena siguiente para consultar el croquis.
+- Hernán y su padre miran la Cruz del Sur. Puede copiarla o pedirle que escriba su nombre en el libro. En el apagón puede sentarse en el cordón y dejar que se le acostumbren los ojos. El padre muere en los primeros días de septiembre y el trabajo llega unas dos semanas después.
+- El campamento tiene una lona con costuras, tensores y estacas, un trípode con abrazaderas, un cajón de tablas, el termo y una manta enrollada. E abre la bitácora. Las flechas muestran las dos horas y el croquis de la muesca. El encargo avanza al leer la bitácora y la observación queda guardada.
+- Hernán puede mover la vista durante la radio. La rueda cambia la respuesta y el clic la confirma.
+- El baño exterior tiene tablas, ventilación y un asiento de letrina. La garrafa se conecta a la hornalla a través de la pared. Los dos cajones del escritorio y los tres gabinetes se abren por separado con E. La heladera tiene un cajón y luz interior, y el freezer conserva su puerta independiente.
+- La luna de tarde baja a alrededor de 1,2 grados de diámetro en el cielo. Conserva las fases y el tamaño nocturno.
+- El Día 2 Hernán puede sacar el tema de la mica al pasar el parte. Después quedan dos minutos jugables para la vuelta y se hace de noche, con una llamada opcional desde el puesto. Mara le pregunta por el camino el Día 7. El Día 27 puede preguntarle qué lo trajo al puesto, y el Día 32 hay una primera oportunidad para hablar de Paula. Hernán puede reservarse ambas historias.
+
 ## Pasada de las lomas y los escondites
 
 - Dos lomadas del acceso pasan a formar parte de la malla caminable. El terreno tiene un estribo más al oeste, con lajas que siguen la inclinación y apoyan sobre el piso. Las piedras sueltas del acceso tienen caras fracturadas y bases asentadas. El mapa usa las cotas nuevas.
@@ -88,7 +99,7 @@ Al cierre de cada pasada se actualizan los puntos resueltos y se conserva lo que
 - **Parada.** El abrigo queda junto a la banquina. Hernán arranca mirando la ruta. Puede girar y levantar la mochila con E o clic desde donde está. Después se habilita la caminata hacia la huella lateral. Las partidas viejas guardadas antes de recoger la mochila abren con la posición nueva.
 - **Cartelería.** Los textos, flechas y el pictograma del ómnibus se dibujan en la cara esmaltada. Se revisó el cartel de la parada de costado y de cerca. Los carteles de orientación se leen en el paisaje. Las interacciones del encargo quedan en el banco, la antena y los hitos.
 - **Ritmo y audio del prólogo.** El fundido entre paisaje y recuerdo dura 1,35 segundos. Se recorrieron las ocho microescenas con ese fundido.
-- **Recuerdos.** A los 13 su papá le regala a Hernán su primer telescopio. Se turnan para mirar Saturno y su papá le señala Titán junto a los anillos. Hernán puede preguntarle si cree que hay vida o decirle que quiere ser el primero en llegar a Titán. La respuesta se lee antes de volver al sendero. Su papá muere en la segunda semana de septiembre y la oferta de trabajo llega un par de semanas después, antes de la llegada del 1 de octubre.
+- **Recuerdos.** A los 13 su papá le regala a Hernán su primer telescopio. Se turnan para mirar Saturno y su papá le señala Titán junto a los anillos. Hernán puede preguntarle si cree que hay vida o decirle que quiere ser el primero en llegar a Titán. La respuesta se lee antes de volver al sendero. Su papá muere en los primeros días de septiembre y la oferta de trabajo llega un par de semanas después, antes de la llegada del 1 de octubre.
 - **Cantera y cumbre.** La huella del cable está pintada en el suelo. Los postes quedan al costado. Se sumaron afloramientos y vegetación en las orillas. Las piedras tienen grano mineral discreto y tonos grises, ocres y levemente rosados. Se comprobaron los apoyos y las colisiones de 657 rocas de la travesía y se recorrieron el cable y la cumbre en ambos sentidos.
 - **Cartografía.** El Día 27 usa una lámina fija con la Senda del Oeste, el carrete, el empalme y el malacate. La del Día 32 comparte el refugio, el banco del acceso, la senda de las pircas, el campamento y la cumbre. Las dos se mantienen al volver. La bajada de la cumbre actualiza la marca del siguiente tramo dentro de su hoja.
 
@@ -239,6 +250,7 @@ Esta lista reconstruye el estado informado del proyecto editable. La exportació
 
 ## Todavía pendiente
 
+- **Diálogos con Mara.** Auditar toda la campaña en orden, incluidas las variantes. Revisar quién inicia las llamadas, cuánto tiempo pasa entre charlas y cómo retoman decisiones y hechos previos. Graduar cuándo Hernán puede contar lo del padre y lo de Paula, dar lugar a que se reserve cosas y comprobar que el camino a la despedida se sostiene con esa progresión.
 - **Arte.** Cotejar el acabado de las rocas con más fotos del cerro y seguir afinando los objetos de cerca, la vegetación y las lomadas de fondo en los sectores secundarios.
 - **Fauna.** Buscar registros de observación del Uritorco para afinar el reparto por ambientes y contrastar la presencia local de las especies elegidas con referencias de las sierras cordobesas.
 - **Prueba de campaña.** Cronometrar una primera partida de principio a fin con alguien que esté descubriendo los caminos.

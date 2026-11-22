@@ -89,7 +89,7 @@ func fit_page():
 	sheet.scale = Vector2.ONE * factor
 	sheet.position = (size - PAGE_SIZE * factor) * 0.5
 
-func display(entry: Dictionary, index: int, total: int, active_section: Section, sections := true):
+func display(entry: Dictionary, index: int, total: int, active_section: Section, sections := true, exit_hint := "Tab · guardar"):
 	var collection := active_section == Section.COLLECTION
 	var motif: int = entry.get("drawing", -1)
 	var dream := bool(entry.get("dream", false))
@@ -117,7 +117,7 @@ func display(entry: Dictionary, index: int, total: int, active_section: Section,
 	section.text = "C · Diario" if collection else "C · Coleccionables"
 	nature.visible = sections
 	nature.text = "N · Diario" if active_section == Section.NATURE else "N · Flora y fauna"
-	footer.text = "Tab · guardar"
+	footer.text = exit_hint
 	if total > 1:
 		footer.text = "← / → · hojear (%d/%d)     " % [index + 1, total] + footer.text
 	fit_page()
