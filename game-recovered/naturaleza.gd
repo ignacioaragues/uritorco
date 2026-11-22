@@ -83,8 +83,8 @@ func _ready():
 	chingolo.hide()
 	var perch_base := ground(BIRD_PERCH)
 	bird_perch = perch_base + Vector3(-0.28, 0.81, -0.09)
-	Flora.branch(self, perch_base - Vector3.UP * 0.08, perch_base + Vector3(-0.10, 0.73, -0.02), 0.044, 0.017, true)
-	Flora.branch(self, perch_base + Vector3(-0.10, 0.68, -0.02), bird_perch + Vector3(-0.24, -0.024, 0.035), 0.022, 0.007)
+	Flora.branch(self, perch_base - Vector3.UP * 0.08, perch_base + Vector3(-0.10, 0.79, -0.09), 0.044, 0.017, true)
+	Flora.branch(self, perch_base + Vector3(-0.10, 0.79, -0.09), bird_perch + Vector3(-0.24, -0.006, 0.0), 0.022, 0.007)
 	var first := models.make_cavy(self)
 	var second := first.duplicate() as Node3D
 	add_child(second)
