@@ -2052,10 +2052,10 @@ func _unhandled_key_input(event):
 			stage = 18
 			storm_return_seconds = 0.0
 			bedtime = true
-			valley.night(Climate.STORM_RETURN_NIGHT, Climate.STORM_RETURN_DUSK)
+			valley.return_night(Climate.STORM_RETURN_NIGHT, Climate.STORM_RETURN_DUSK)
 			walk()
 		elif after == "summit_home":
-			valley.night(SUMMIT_NIGHT_SECONDS, 45.0)
+			valley.return_night(SUMMIT_NIGHT_SECONDS, 45.0)
 			radio.play_knocks()
 			radio_choices("summit_echo", "Soltás el botón. La radio da dos golpes secos. Después se oye «hasta el banco». La frase es de Mara. La voz suena como la tuya.", ["¿Vos acabás de repetir «hasta el banco»?", "Guardás la radio y empezás a bajar."])
 		elif after == "summit_echo_done":
@@ -2066,7 +2066,7 @@ func _unhandled_key_input(event):
 			bedtime = true
 			field_note += " Día 27 · En el malacate vi una luz por encima del corte con la chapa quieta."
 			if quarry_reply == 1: field_note += " Dejé anotados el rumbo y la hora junto al croquis."
-			valley.night(QUARRY_NIGHT_SECONDS, 35.0)
+			valley.return_night(QUARRY_NIGHT_SECONDS, 35.0)
 			walk()
 			save_game(true, "walk")
 		elif after == "last_call":
@@ -2131,7 +2131,7 @@ func _unhandled_key_input(event):
 		elif after == "filo":
 			route_reported = true
 			bedtime = true
-			valley.night(RIDGE_NIGHT_SECONDS, 52.0)
+			valley.return_night(RIDGE_NIGHT_SECONDS, 52.0)
 			walk()
 			save_game(true, "walk")
 		elif after == "reception_done":
@@ -3144,6 +3144,7 @@ func save_game(automatic: bool, resume_mode: String) -> bool:
 	var data = {"version": 1, "slot": slot, "title": title, "state": state, "mode": resume_mode, "pose": player.transform, "pitch": player.camera.rotation.x, "paragraph": recall.paragraph, "chapter": valley.sky_chapter, "museum_offset": Museum.SITE_OFFSET, "south_crossing": true, "stop_verge": Arrival.STOP_LAYOUT, "rain": rain_strength, "light_target": valley.light_target, "light_left": valley.remaining_light_transition(), "door": valley.door_open, "book": valley.book_unpacked, "night": valley.sky_mat.get_shader_parameter("nightfall"), "dusk": valley.sky_mat.get_shader_parameter("dusk"), "music": score.position_of("prologo")}
 	data["curtains_open"] = valley.curtains_open
 	data["dusk_left"] = valley.remaining_dusk_transition()
+	data["nightfall_delay"] = valley.remaining_nightfall_delay()
 	return Saves.write(slot, automatic, data)
 
 func restore(data: Dictionary):
@@ -3248,7 +3249,7 @@ func restore(data: Dictionary):
 		# Los guardados anteriores tenían 30 segundos entre el fin del ocaso y la noche cerrada.
 		var old_dusk := maxf(0.1, seconds - 30.0) if stage == 18 else 14.0
 		var dusk_left := maxf(0.1, float(data.get("dusk_left", old_dusk)))
-		valley.night(seconds, dusk_left)
+		valley.night(seconds, dusk_left, float(data.get("nightfall_delay", 0.0)))
 	elif seconds > 0.01 and data.get("light_target") == "dusk":
 		valley.sunset(seconds)
 	elif stage == 7 and day7_dusk and not second_sighting and saved_night < 1.0:

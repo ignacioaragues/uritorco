@@ -287,6 +287,7 @@ var exterior_light := true
 var light_target := ""
 var light_duration := 0.0
 var dusk_duration_seconds := 0.0
+var nightfall_delay_seconds := 0.0
 
 func set_sun_phase(dusk: float, dark: float):
 	sky_mat.set_shader_parameter("dusk", dusk)
@@ -299,13 +300,20 @@ func sunset(duration: float = 5.0):
 	dusk_duration_seconds = duration
 	tween.tween_method(func(v): sky_mat.set_shader_parameter("dusk", v), float(sky_mat.get_shader_parameter("dusk")), 1.0, duration)
 
-func night(duration: float = 6.0, dusk_duration: float = 14.0):
+func return_night(duration: float, dusk_duration: float):
+	var dusk: float = sky_mat.get_shader_parameter("dusk")
+	var delay := dusk_duration * 0.42 * (1.0 - dusk)
+	night(duration, dusk_duration, delay)
+
+func night(duration: float = 6.0, dusk_duration: float = 14.0, nightfall_delay: float = 0.0):
 	exterior_light = true
 	var tween := transition()
 	light_target = "night"
 	light_duration = duration
 	dusk_duration_seconds = minf(duration, dusk_duration)
-	tween.tween_method(func(v): sky_mat.set_shader_parameter("nightfall", v), float(sky_mat.get_shader_parameter("nightfall")), 1.0, duration)
+	nightfall_delay_seconds = clampf(nightfall_delay, 0.0, maxf(0.0, duration - 0.01))
+	tween.tween_method(func(v): sky_mat.set_shader_parameter("nightfall", v),
+		float(sky_mat.get_shader_parameter("nightfall")), 1.0, duration - nightfall_delay_seconds).set_delay(nightfall_delay_seconds)
 	tween.tween_method(func(v): sky_mat.set_shader_parameter("dusk", v), float(sky_mat.get_shader_parameter("dusk")), 1.0, dusk_duration_seconds)
 
 func remaining_light_transition() -> float:
@@ -313,6 +321,10 @@ func remaining_light_transition() -> float:
 
 func remaining_dusk_transition() -> float:
 	return maxf(0.0, dusk_duration_seconds - lighting.get_total_elapsed_time()) if lighting and lighting.is_running() else 0.0
+
+func remaining_nightfall_delay() -> float:
+	if light_target != "night" or not lighting or not lighting.is_running(): return 0.0
+	return maxf(0.0, nightfall_delay_seconds - lighting.get_total_elapsed_time())
 
 func restore_light(dusk: float, dark: float):
 	if lighting and lighting.is_valid(): lighting.kill()

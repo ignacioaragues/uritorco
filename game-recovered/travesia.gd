@@ -359,6 +359,7 @@ func plant():
 		var stones: Array[Transform3D] = rocks[variant]
 		scattered("Granito %d" % (variant + 1), rock_forms[variant].mesh, stones, granite)
 	dress_far_slopes()
+	dress_summit_verges()
 
 func dress_far_slopes():
 	var field: Array[Transform3D] = []
@@ -383,6 +384,26 @@ func dress_far_slopes():
 	scattered("Piedras de la ladera distante", form.mesh, rock, Stone.paint(), false)
 	scattered("Pastos de las lomas", Flora.herb_mesh([Vector4(0, 0, 0, 1.26)], Flora.Herb.PAJA), field, Flora.grass_material(), false)
 	scattered("Matorral de las lomas", Flora.crown_mesh(2.22, 9, 4), scrub, Flora.leaf_material("697151"), false)
+
+func dress_summit_verges():
+	var roots: Array[Vector4] = []
+	var random := RandomNumberGenerator.new()
+	random.seed = 9151
+	for i in 39:
+		var progress := lerpf(0.65, 0.986, i / 38.0) + random.randf_range(-0.005, 0.005)
+		var trail_position := summit_point(progress)
+		var along := summit_point(progress + 0.007) - summit_point(progress - 0.007)
+		var side := Vector2(along.z, -along.x).normalized()
+		for group in 5:
+			var sign := -1.0 if group % 2 == 0 else 1.0
+			var offset := side * random.randf_range(3.2, 18.0) * sign
+			for sprig in 3:
+				var shift := Vector2(random.randf_range(-1.0, 1.0), random.randf_range(-1.0, 1.0))
+				var point := Vector2(trail_position.x, trail_position.z) + offset + shift
+				var ground := terrain_point(Vector3(point.x, 0, point.y))
+				if ground.y > trail_position.y + 7.0 or ground.y < trail_position.y - 11.0: continue
+				roots.append(Vector4(ground.x, ground.y - 0.05, ground.z, random.randf_range(0.44, 1.03)))
+	Flora.herb_batch(self, roots, Flora.Herb.PAJA)
 
 func bed_rock(foot: Vector3, turn: Basis, size_m: Vector3, base: PackedVector3Array) -> Transform3D:
 	var east := terrain_point(foot + Vector3.RIGHT * 0.75) - terrain_point(foot - Vector3.RIGHT * 0.75)

@@ -73,9 +73,12 @@ Al cierre de cada pasada se actualizan los puntos resueltos y se conserva lo que
 - La base y la pasarela del museo tienen textura de piedra. El cuaderno del Sector 08 lleva el título impreso dentro de una etiqueta. Mara pregunta por la caída desde la radio que Hernán tiene guardada. El trazo de la Cruz del Sur llega al polo y luego baja hasta el horizonte. Hernán puede caminar durante el fundido del regreso.
 - El primer sueño se abre con un parpadeo y Hernán empieza mirando en sentido opuesto a Saturno.
 
-### Pendientes del texto pegado
+## Pasada del valle exterior y la luz de regreso
 
-- Revisar los claros restantes fuera del corredor serrano.
+- El valle exterior tiene manchas de pajonal, romerillo y matorral que acompañan el relieve. Se reforzó el pajonal junto al filo, con paso libre por las huellas y el cauce.
+- En los regresos de los Días 25, 27, 32 y 36 el cielo toma primero el color del ocaso. La noche entra de a poco después de ese tramo y termina en el mismo tiempo previsto para cada jornada.
+- Al guardar durante el primer tramo, se conserva el tiempo hasta que empieza a oscurecer. Los guardados anteriores conservan su fase de luz.
+
 ## Pasada de fauna y anocheceres
 
 - El chingolo se posa en una rama cerca de la huella. Se puede dibujar con E. El croquis generado tiene fondo transparente y aparece en Flora y fauna y, más adelante, en la pared del puesto.

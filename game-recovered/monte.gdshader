@@ -176,6 +176,11 @@ void fragment() {
 	}
 	vec3 shale = mix(vec3(0.302, 0.287, 0.217), vec3(0.381, 0.347, 0.287), highland);
 	ground = mix(ground, shale, (0.25 + highland * 0.32) * stony * ascent_shoulder * (1.0 - exposed));
+	float outer = max(smoothstep(45.0, 96.0, abs(p.x)), smoothstep(96.0, 162.0, p.y));
+	float scrub_cover = sin(p.x * 0.042 + p.y * 0.030 + cos(p.y * 0.041)) * sin(p.y * 0.065 - p.x * 0.024);
+	float meadow = smoothstep(-0.12, 0.67, scrub_cover * 0.64 + (outcrop - 0.45) * 0.88);
+	float ground_veil = outer * (1.0 - max(exposed, ascent)) * (1.0 - broken_stone * 0.69) * (1.0 - highland * 0.43);
+	ground = mix(ground, ground * vec3(0.83, 1.06, 0.84), meadow * ground_veil * 0.63);
 	vec3 ascent_soil = mix(vec3(0.392, 0.303, 0.199), vec3(0.43, 0.375, 0.295), highland);
 	ground = mix(ground, ascent_soil, ascent * 0.88);
 	ground = mix(ground, mix(vec3(0.42, 0.32, 0.22), vec3(0.50, 0.40, 0.29), rubble), cable_trail * 0.91);

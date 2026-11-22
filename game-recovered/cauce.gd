@@ -224,6 +224,40 @@ static func dress(valley, field_trail_clearance: Callable):
 			var shape := Stone.fragment(faces, foot, size_m, mineral_rng.randf() * TAU, mineral_rng, surface_point)
 			Stone.solid(valley, foot, shape, "Afloramiento de la quebrada")
 	Stone.finish(valley, faces, "Granito del cauce")
+	dress_outer_slopes(valley, south_path, field_trail_clearance)
+
+static func dress_outer_slopes(valley, south_path: PackedVector2Array, clearance: Callable):
+	var random := RandomNumberGenerator.new()
+	random.seed = 58612
+	var paja: Array[Transform3D] = []
+	var romerillo: Array[Transform3D] = []
+	var brush: Array[Transform3D] = []
+	for column in range(-335, 336, 19):
+		for row in range(28, 465, 21):
+			var center := Vector2(column, row) + Vector2(random.randf_range(-8.0, 8.0), random.randf_range(-8.0, 8.0))
+			if absf(center.x) < 68.0 and center.y < 139.0: continue
+			var cover := sin(center.x * 0.042 + center.y * 0.030 + cos(center.y * 0.041)) * sin(center.y * 0.065 - center.x * 0.024)
+			var count := 11 if cover > 0.16 else 4
+			for i in count:
+				var point := center + Vector2(random.randf_range(-12.0, 12.0), random.randf_range(-10.0, 10.0))
+				if absf(point.x) > 352.0 or (absf(point.x) < 58.0 and point.y < 125.0): continue
+				if trail_distance(point) < 4.0 or clearance.call(point) < 4.4: continue
+				if near_south_path(point, south_path, 5.0): continue
+				if point.y < 108.0 and absf(point.y - channel_z(point.x)) < 7.0: continue
+				var foot := surface_point(Vector3(point.x, 0, point.y)) - Vector3.UP * 0.055
+				var turn := Basis(Vector3.UP, random.randf() * TAU)
+				var size := random.randf_range(0.60, 1.32)
+				if i % 5 == 0 and cover > 0.16:
+					var scale_m := Vector3(1.8, 1.05, 1.5) * size
+					brush.append(Transform3D(turn.scaled_local(scale_m), foot + Vector3.UP * (0.25 * size)))
+				elif i % 3 == 0:
+					romerillo.append(Transform3D(turn.scaled_local(Vector3(1.2, 0.91, 1.22) * size), foot))
+				else:
+					paja.append(Transform3D(turn.scaled_local(Vector3(1.24, 0.9, 1.24) * size), foot))
+	var route = valley.route
+	route.scattered("Pajonal del valle exterior", Flora.herb_mesh([Vector4(0, 0, 0, 1.1)], Flora.Herb.PAJA), paja, Flora.grass_material(), false)
+	route.scattered("Romerillo del valle exterior", Flora.herb_mesh([Vector4(0, 0, 0, 1.0)], Flora.Herb.ROMERILLO), romerillo, Flora.grass_material(), false)
+	route.scattered("Matorral del valle exterior", Flora.crown_mesh(1.32, 9, 4), brush, Flora.leaf_material("697251"), false)
 
 static func near_south_path(at: Vector2, path: PackedVector2Array, margin: float) -> bool:
 	for index in range(path.size() - 1):
