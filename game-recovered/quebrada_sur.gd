@@ -68,7 +68,7 @@ static func dress_banks(valley):
 				var rise := maxf(ground(foot + Vector3.BACK * 0.6).y, ground(foot + Vector3.FORWARD * 0.6).y) - foot.y
 				if rise > 0.36: continue
 				roots.append(Vector4(x, foot.y - 0.085, z, rng.randf_range(0.66, 1.18)))
-		Flora.herb_batch(valley, roots, Flora.Herb.CORTADERA)
+		valley.nature.plant_reeds(roots)
 
 static func ground(at: Vector3) -> Vector3:
 	return Creek.surface_point(at)

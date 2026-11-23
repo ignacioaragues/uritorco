@@ -10,7 +10,7 @@ const TEGU := "overo"
 const REED := "cortadera"
 const CAVY := "cuis"
 const CHINGOLO := "chingolo"
-const BIRD_PERCH := Vector2(-23.0, 42.0)
+const BIRD_PERCH_DISTANCE := 94.0
 const CAVY_LATER := [Vector2(19.0, -9.4), Vector2(-33.8, 50.1)]
 const TEGU_LATER := [Vector2(-31.4, -8.3), Vector2(-22.4, 57.4)]
 const ESPINILLO := "espinillo"
@@ -56,7 +56,6 @@ var tegu_outcrops: Array[Vector3] = []
 var chingolo: Node3D
 var bird_perch := Vector3.ZERO
 var bird_flight := -1.0
-var reed_foot := Vector3.ZERO
 var reed_focus: Array[Vector3] = []
 var near_trail_tegu := Vector3.ZERO
 var espinillo_focus: Array[Vector3] = []
@@ -86,7 +85,8 @@ func _ready():
 		tegu_outcrops.append(build_basking_rock(site))
 	chingolo = models.make_chingolo(self)
 	chingolo.hide()
-	var perch_base := ground(BIRD_PERCH)
+	var perch_x := Trail.trail(BIRD_PERCH_DISTANCE) + 3.6
+	var perch_base: Vector3 = get_parent().route.surface_point(perch_x, BIRD_PERCH_DISTANCE)
 	bird_perch = perch_base + Vector3(-0.28, 0.81, -0.09)
 	Flora.branch(self, perch_base - Vector3.UP * 0.08, perch_base + Vector3(-0.10, 0.79, -0.09), 0.044, 0.017, true)
 	Flora.branch(self, perch_base + Vector3(-0.10, 0.79, -0.09), bird_perch + Vector3(-0.24, -0.006, 0.0), 0.022, 0.007)
@@ -153,19 +153,23 @@ func dress_bank():
 	tegu.position = tegu_home
 	tegu.rotation.y = TEGU_REST_ANGLE
 
-	reed_foot = ground(Vector2(REED_X, Creek.channel_z(REED_X) - 7.2))
-	dress_reed(reed_foot)
+	dress_reed(ground(Vector2(REED_X, Creek.channel_z(REED_X) - 7.2)))
 	var trail := Creek.trail_point(0.82)
 	dress_reed(ground(Vector2(trail.x - 3.00, trail.z + 0.70)))
 
 func dress_reed(root: Vector3):
-	reed_focus.append(root + Vector3.UP * 0.90)
-	reed_focus.append(root + Vector3.UP * 0.46)
 	var tuft: Array[Vector4] = []
 	for offset in [Vector3.ZERO, Vector3(-0.77, 0, -0.18), Vector3(0.48, 0, 0.53)]:
 		var at := Creek.surface_point(root + offset)
 		tuft.append(Vector4(at.x, at.y - 0.08, at.z, 1.15 if offset == Vector3.ZERO else 0.74))
-	Flora.herb_batch(self, tuft, Flora.Herb.CORTADERA)
+	plant_reeds(tuft)
+
+func plant_reeds(roots: Array[Vector4]):
+	Flora.herb_batch(self, roots, Flora.Herb.CORTADERA)
+	for patch in roots:
+		var foot := Vector3(patch.x, patch.y, patch.z)
+		reed_focus.append(foot + Vector3.UP * (0.52 * patch.w))
+		reed_focus.append(foot + Vector3.UP * (1.21 * patch.w))
 
 func build_basking_rock(site: Vector2) -> Vector3:
 	var base := ground(site) - Vector3.UP * 0.08
@@ -235,7 +239,7 @@ func advance(delta: float, day: int, player_position: Vector3, dark: float, rain
 		current_cavy_site = cavy_site
 		reset_cavies()
 	advance_cavies(delta, player_xz, cavy_site, day >= 2 and rain < 0.30 and dark < 0.39)
-	advance_chingolo(delta, player_position, day >= 2 and rain < 0.25 and dark < 0.36)
+	advance_chingolo(delta, player_position, day >= 7 and rain < 0.25 and dark < 0.36)
 
 func advance_chingolo(delta: float, listener: Vector3, active: bool):
 	var distance := bird_perch.distance_to(listener)
@@ -374,7 +378,9 @@ func aimed(camera: Camera3D, player: CharacterBody3D, observations: Dictionary) 
 	]
 	if not observations.has(REED):
 		for point in reed_focus:
-			samples.append([REED, to_global(point), 0.88, true, 8.0])
+			var world_point := to_global(point)
+			if head.distance_squared_to(world_point) <= 81.0:
+				samples.append([REED, world_point, 0.88, true, 8.0])
 	if not observations.has(CAVY):
 		for cavy in cavies:
 			samples.append([CAVY, cavy.global_position + Vector3.UP * 0.076, 0.39, cavy.visible, 9.6])

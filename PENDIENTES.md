@@ -395,7 +395,7 @@ Esta lista reconstruye el estado informado del proyecto editable. La exportació
 - La escena del tronco tiene una mata de molles, talas y piquillines a ambos lados. Los troncos y las copas de la mata bloquean el paso lateral. El aviso de Tab dice «Abrí el diario».
 - El primer llamado de Mara llega un minuto después de entrar al puesto. Las respuestas breves de Hernán como «Sí. Recién llego.» caben en un solo mensaje.
 - La bandera queda baja y quieta al llegar. El Día 2 se puede izar con E y la tela empieza a ondear arriba del mástil. En las jornadas posteriores aparece izada.
-- El chingolo se posa en una rama durante la bajada al cauce, lejos del puesto.
+- Desde el Día 7, el chingolo se posa en una rama durante la subida al abra. Todas las cortaderas se pueden dibujar con E hasta registrar la especie en Flora y fauna.
 - El anclaje de la cuerda se apoya sobre la malla de la laja. La linterna acompaña el fundido y se oculta al llegar a negro.
 
 ## Todavía pendiente
