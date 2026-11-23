@@ -29,7 +29,7 @@ const TOPICS = {
 		]
 	],
 	"museo": [
-		0, "¿Ya estás cerca del museo? Hay una sala sobre los comechingones. Si tenés tiempo, entrá antes de seguir.",
+		0, "¿Ya estás cerca del museo? En el pasillo hay una muestra sobre los comechingones. Si tenés tiempo, entrá antes de seguir.",
 		["No sé nada de los comechingones. ¿Qué hay adentro?", "¿Son los que, según dicen, tuvieron contacto con extraterrestres?"],
 		[
 			["Vasijas, piedras de moler y un dibujo de cómo eran las casas. Acá vivían mucho antes de que llegaran los españoles."],
@@ -97,7 +97,7 @@ const TOPICS = {
 		["Ya veo por dónde sigo. Acá abajo aflojó un poco el viento.", "Quedate un rato. Cada vez que suelto el botón vuelve a oírse el viento."],
 		[
 			["Acá también paró. Si te agarra otra ráfaga, esperá al reparo de las piedras. Avisame cuando veas el puesto."],
-			["Dale. Yo sigo lavando unos platos. Cuando llegues me avisás.", "En el próximo cajón te mando un tinto que tenía guardado. Abrilo cuando entregues la llave."]
+			["Dale. Yo sigo lavando unos platos. Cuando llegues me avisás.", "En el próximo cajón te mando un tinto que tenía guardado. Abrilo cuando llegues a casa."]
 		]
 	],
 	"lluvia": [
@@ -120,7 +120,7 @@ const TOPICS = {
 		1, "Voy al museo. Me cuesta creer que sea la última vez que subo por esta huella.",
 		["Todavía no me acostumbré a despedirme de los lugares.", "Creo que voy a salir a mirar el cielo desde la vereda. Hace mucho que no lo hago."],
 		[
-			["Si te olvidaste de algo, yo subo al puesto después."],
+			["A mí siempre me cuesta la última caminata. Una se acostumbra a mirar las mismas cosas."],
 			["Ojalá esté despejado. Si llegás a ver la cruz, pensá que desde acá va a estar para el mismo lado."]
 		]
 	],
@@ -165,7 +165,7 @@ static func farewell_memory(answered: Dictionary) -> String:
 	if answered.get("cauce", -1) == 1:
 		return "Me acuerdo de cuando me pediste que te acompañara hasta el cruce. A mí también me vino bien oír a alguien del otro lado."
 	if answered.get("museo", -1) == 0:
-		return "Si volvés al museo, fijate en las fichas de las casas. Me acordé de lo que hablamos por radio."
+		return "Hoy, cuando nombraste el museo, me acordé de lo que hablamos de las casas. Me gustó que preguntaras por eso."
 	return ""
 
 static func available(stage: int, position: Vector3, bedtime: bool, sighting: bool, answered: Dictionary, book_taken := false) -> String:

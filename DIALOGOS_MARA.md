@@ -113,7 +113,7 @@ La segunda respuesta puede volver como recuerdo en la despedida.
 
 **Disparador.** Con R al pasar cerca del museo durante el encargo de la antena. Se puede abrir en el camino, antes de entrar.
 
-**Empieza Mara.** «¿Ya estás cerca del museo? Hay una sala sobre los comechingones. Si tenés tiempo, entrá antes de seguir.»
+**Empieza Mara.** «¿Ya estás cerca del museo? En el pasillo hay una muestra sobre los comechingones. Si tenés tiempo, entrá antes de seguir.»
 
 - **Opción 1, Hernán** · «No sé nada de los comechingones. ¿Qué hay adentro?» *(suma cercanía)*
   - **Mara** · «Vasijas, piedras de moler y un dibujo de cómo eran las casas. Acá vivían mucho antes de que llegaran los españoles.»
@@ -398,7 +398,7 @@ La primera respuesta es la primera mención de Paula en la radio. Habilita las a
   - **Mara** · «Acá también paró. Si te agarra otra ráfaga, esperá al reparo de las piedras. Avisame cuando veas el puesto.»
 - **Opción 2, Hernán** · «Quedate un rato. Cada vez que suelto el botón vuelve a oírse el viento.» *(suma cercanía)*
   - **Mara** · «Dale. Yo sigo lavando unos platos. Cuando llegues me avisás.»
-  - **Mara** · «En el próximo cajón te mando un tinto que tenía guardado. Abrilo cuando entregues la llave.»
+  - **Mara** · «En el próximo cajón te mando un tinto que tenía guardado. Abrilo cuando llegues a casa.»
 
 La segunda respuesta hace que la botella de tinto aparezca en el puesto desde el Día 36.
 
@@ -646,7 +646,7 @@ Si antes retrocedió y ambos oyeron la voz de Hernán, Mara añade «Si se repit
 - **Apertura alternativa, si habló de Paula** · «Salí con ganas de escribirle a Paula. Pero eso puede esperar. Ahora me cuesta creer que sea la última vez que vengo por esta huella.»
 - **Mara** · «Desde el museo se ve todo el valle. ¿Sabés qué vas a hacer cuando llegues a casa?»
 - **Opción 1, Hernán** · «Todavía no me acostumbré a despedirme de los lugares.»
-  - **Mara** · «Si te olvidaste de algo, yo subo al puesto después.»
+  - **Mara** · «A mí siempre me cuesta la última caminata. Una se acostumbra a mirar las mismas cosas.»
 - **Opción 2, Hernán** · «Creo que voy a salir a mirar el cielo desde la vereda. Hace mucho que no lo hago.» *(suma cercanía)*
   - **Mara** · «Ojalá esté despejado. Si llegás a ver la cruz, pensá que desde acá va a estar para el mismo lado.»
 
@@ -690,7 +690,7 @@ Al abrir el libro del banco y guardarlo, se habilita la bajada en el terreno y e
 2. **Si le pidió compañía en la crecida** · «El día de la crecida no apagué el equipo hasta que llegaste a la tranquera. Lo habría dejado prendido toda la noche.»
 3. **Si le habló del dibujo del otro planeta** · «Llevate el cuaderno en el bolso de mano. Si te acordás de esas estrellas otra vez, así lo tenés cerca.»
 4. **Si le pidió compañía hasta el cruce del Día 7** · «Me acuerdo de cuando me pediste que te acompañara hasta el cruce. A mí también me vino bien oír a alguien del otro lado.»
-5. **Si preguntó por los comechingones** · «Si volvés al museo, fijate en las fichas de las casas. Me acordé de lo que hablamos por radio.»
+5. **Si preguntó por los comechingones** · «Hoy, cuando nombraste el museo, me acordé de lo que hablamos de las casas. Me gustó que preguntaras por eso.»
 
 *Si no se dio ninguna de esas conversaciones, Mara pasa al cierre de la despedida.*
 
