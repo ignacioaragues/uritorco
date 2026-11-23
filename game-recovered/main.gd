@@ -158,7 +158,7 @@ var book_view = preload("res://libro.gd").new()
 var postcard_view = preload("res://postal.gd").new()
 var held_desk_paper: StaticBody3D
 var rain_strength := 0.0
-var storm_return_seconds := 0.0
+var storm_home_reported := false
 var mist_strength := 0.0
 var rain_view := CPUParticles3D.new()
 var rain_material := ShaderMaterial.new()
@@ -629,7 +629,7 @@ func _process(delta):
 			hint.text = "M · guardar la hoja"
 	radio_hint.visible = mode in ["walk", "map"] and radio_available()
 	if radio_hint.visible:
-		radio_hint.text = "R   ·   Charlá con Mara" if not at_departure_stop() and not night_patio_ready() and not mission_radio_available() else "R   ·   Mara"
+		radio_hint.text = "R   ·   Charlá con Mara" if not at_departure_stop() and not storm_patio_ready() and not mission_radio_available() else "R   ·   Mara"
 	if mode in ["walk", "map"] and stage == 8 and not awaiting_call and crossing_note.is_empty():
 		record_filo_route()
 	if mode in ["walk", "map"] and stage >= 10 and not branch_found:
@@ -779,11 +779,9 @@ func setup_rain():
 
 func update_weather(day: int, delta: float, in_museum: bool):
 	var position: Vector3 = player.position
-	if stage == 18 and mode in ["walk", "map"] and player.intro_center == Vector3.ZERO:
-		storm_return_seconds = minf(Climate.STORM_CLEAR_SECONDS, storm_return_seconds + delta)
-	var target_rain := Climate.rain(stage, position, storm_return_seconds)
+	var target_rain := Climate.rain(stage, position, last_night)
 	var target_mist := Climate.local_mist(day, position)
-	if stage in [16, 17] and valley.weather_day != 36:
+	if day == 36 and valley.weather_day != 36:
 		rain_strength = target_rain
 	rain_strength = move_toward(rain_strength, target_rain, delta * (0.095 if target_rain > rain_strength else 0.075))
 	mist_strength = move_toward(mist_strength, target_mist, delta * 0.0013)
@@ -895,11 +893,12 @@ func objective() -> String:
 		return "Seguí la huella principal hasta el puesto."
 	if stage == 12 and player.position.z < -20.0: return "Volvé junto al cable y seguí el sendero oeste hasta la tranquera."
 	if stage == 18 and night_home == 1: return "R · Avisale a Mara que llegaste."
-	if stage == 18 and not last_night and night_home == 0 and (player.position.z < -14.0 or player.position.z > 9.0 or absf(player.position.x) > 10.0):
-		return "Volvé por las pircas. En el cruce podés volver por la loma o bajar al poste para tomar la huella del puesto."
+	if stage == 18 and not last_night and not storm_home_reported:
+		if player.position.z < -14.0 or player.position.z > 9.0 or absf(player.position.x) > 10.0:
+			return "Volvé por las pircas. En el cruce podés volver por la loma o bajar al poste para tomar la huella del puesto."
+		return "R · Avisale a Mara desde el patio del puesto." if storm_patio_ready() else "Salí al patio y avisale a Mara que llegaste."
 	if stage == 15 and not (bedtime and player.position.z > -12.0):
 		return "Volvé al puesto por las pircas del acceso."
-	if night_patio_ready(): return "R · Llamá a Mara desde el patio del puesto."
 	if bedtime: return "Cuando quieras terminar el día, acercate a la cama y tocá E."
 	if pending_return: return "Volvé a pie al puesto y usá la radio junto a la entrada."
 	if stage == 10: return "Tomá el sendero oeste al salir de la tranquera. Al encontrar el cable, seguilo hasta el malacate."
@@ -1078,15 +1077,12 @@ func toggle_journal_section():
 		open_journal()
 		return
 	journal_section = Diary.Section.COLLECTION
-	journal_page = 0
 	var total := Exploration.FINDS.size() + Alien.FINDS.size() + 1
 	var introduction := "%d de %d anotados.\n\nHallazgos del cerro y de los sueños." % [found_collectibles.size(), total]
 	if not found_collectibles.is_empty():
 		introduction += " Pasá la hoja para ver los dibujos y las notas."
 	journal_pages = [{"title": "Coleccionables", "text": introduction}]
-	var discoveries := found_collectibles.keys()
-	discoveries.reverse()
-	for id in discoveries:
+	for id in found_collectibles:
 		if id == CaveRunes.ID:
 			journal_pages.append({"title": CaveRunes.TITLE, "text": "Última noche · Cueva\n\n" + CaveRunes.NOTE, "sketch": CaveRunes.sketch()})
 			continue
@@ -1097,6 +1093,7 @@ func toggle_journal_section():
 		var note := {"title": entry[1], "text": place + " · " + entry[3], "drawing": entry[0], "dream": dream}
 		if not dream and Exploration.SKETCHES.has(id): note["sketch"] = Exploration.SKETCHES[id]
 		journal_pages.append(note)
+	journal_page = journal_pages.size() - 1
 	show_journal_page()
 
 func aimed_nature() -> String:
@@ -1117,19 +1114,17 @@ func toggle_nature_section():
 		open_journal()
 		return
 	journal_section = Diary.Section.NATURE
-	journal_page = 0
 	var description := "Mirá un ejemplar y apretá E cuando aparezca «dibujar»."
 	if not nature_notes.is_empty():
 		description = "Dibujos y notas que fui tomando en las caminatas."
 	description += "\n\nCerca del puesto, buscá flores amarillas y mirá las ramas bajas al tomar la huella del cauce. En la bajada hay cortaderas y se asoman animales entre las piedras."
 	journal_pages = [{"title": "Flora y fauna", "text": description}]
-	var observations := nature_notes.keys()
-	observations.reverse()
-	for id in observations:
+	for id in nature_notes:
 		if not Natural.ENTRIES.has(id): continue
 		var entry: Array = Natural.ENTRIES[id]
 		journal_pages.append({"title": entry[0], "text": "Día %d\n\n%s" % [nature_notes[id], entry[1]],
 			"sketch": load(Natural.SKETCHES[id])})
+	journal_page = journal_pages.size() - 1
 	show_journal_page()
 
 func show_journal_page():
@@ -1202,7 +1197,7 @@ func chosen_reply(index: int) -> Array:
 
 func radio_available() -> bool:
 	if stage == 0 and not heard: return radio_taken and first_call_wait <= 0.0
-	return at_departure_stop() or night_patio_ready() or mission_radio_available() or not available_trail_chat().is_empty()
+	return at_departure_stop() or storm_patio_ready() or mission_radio_available() or not available_trail_chat().is_empty()
 
 func update_creek_return(delta: float):
 	if stage != 5 or creek_return_left <= 0.0: return
@@ -1224,9 +1219,9 @@ func at_departure_stop() -> bool:
 	var at: Vector3 = player.position
 	return at.z >= 17.0 and at.z <= 69.0 and Departure.edge_distance(Vector2(at.x, at.z)) < 8.0
 
-func night_patio_ready() -> bool:
+func storm_patio_ready() -> bool:
 	var at: Vector3 = player.position
-	return stage == 18 and not last_night and bedtime and absf(at.x) < 8.5 and at.z > -11.5 and at.z < -1.15
+	return stage == 18 and not last_night and not storm_home_reported and absf(at.x) < 8.5 and at.z > -11.5 and at.z < -1.15
 
 func remember_camp_observation(item: String):
 	if stage in [13, 14] and not camp_observations.has(item):
@@ -1358,7 +1353,7 @@ func start_day40():
 	bedtime = false
 	day40_seconds_left = DAY40_SECONDS
 	day40_interlude_done = false
-	storm_return_seconds = Climate.STORM_CLEAR_SECONDS
+	rain_strength = 0.0
 	valley.morning()
 	player.position = Vector3(1.24, 0.10, -4.4)
 	player.rotation.y = 0.0
@@ -1430,10 +1425,15 @@ func radio_exchange():
 			"Capaz rebotó en algún equipo. Mañana lo hablamos. Ahora entrá en calor, Hernán."
 		], "night_home")
 		return
-	var chat := available_trail_chat()
-	if night_patio_ready() and chat.is_empty():
-		start_day40()
+	if storm_patio_ready():
+		conversation([
+			hernan("Ya llegué al puesto. ¿Me copiás desde el patio?"),
+			"Ahora sí. En la pasarela se cortaba cada dos palabras. ¿Cómo estuvo la vuelta?",
+			hernan("Pude volver por las pircas. Acá sigue lloviendo."),
+			"Acá también. Con la lectura que me pasaste alcanza por hoy. Entrá y sacate la ropa mojada."
+		], "storm_home")
 		return
+	var chat := available_trail_chat()
 	if stage == 19:
 		if not departure_briefed:
 			departure_morning()
@@ -2016,7 +2016,6 @@ func _unhandled_key_input(event):
 					"Dejar la mochila": put_down_arrival_bag()
 					"Cama":
 						if stage == 0 and heard and not bag_left: put_down_arrival_bag()
-						elif stage == 18 and night_investigation == 0 and night_home == 0 and bedtime: overlay("message", "Mara quedó en escucharte desde el patio. Salí y llamala por radio.", "Espacio · seguir")
 						elif bedtime: overlay("rest", "¿Querés acostarte y terminar la jornada?", ["Dormir", "Seguir despierto"])
 						else: overlay("message", "Todavía te queda algo por hacer. " + objective(), "Espacio · levantarse")
 					"Observar el Cielo": open_book()
@@ -2095,7 +2094,11 @@ func _unhandled_key_input(event):
 			radio_choices("quarry_sighting_response", "Mara · ¿Desde dónde estás viendo esa otra luz?", QUARRY_REPLIES)
 		elif after == "crossing_home":
 			stage = 18
-			storm_return_seconds = 0.0
+			bedtime = false
+			walk()
+			save_game(true, "walk")
+		elif after == "storm_home":
+			storm_home_reported = true
 			bedtime = true
 			walk()
 			save_game(true, "walk")
@@ -2297,6 +2300,9 @@ func select_option(index: int):
 			"Te dejo que te sigas acomodando. Después descansá. Mañana te llamo temprano."], "welcome_done")
 	elif mode == "rest" and index == 1: walk()
 	elif mode == "rest" and index == 0:
+		if stage == 18 and not last_night:
+			if storm_home_reported: start_day40()
+			return
 		if stage == 15:
 			start_day36()
 			return
@@ -2649,7 +2655,7 @@ func start_day36():
 	player.rotation.y = 0.0
 	player.camera.rotation = Vector3.ZERO
 	player.velocity = Vector3.ZERO
-	storm_return_seconds = 0.0
+	storm_home_reported = false
 	rain_strength = Climate.rain(stage, player.position)
 	valley.morning()
 	valley.dress_day36()
@@ -3194,10 +3200,11 @@ func save_game(automatic: bool, resume_mode: String) -> bool:
 		state["creek_evening_call"] = creek_evening_call
 	if stage == 7: state["abra_sequence"] = true
 	if stage == 18:
-		state["storm_return_seconds"] = storm_return_seconds
 		if last_night:
 			state["day40_seconds_left"] = day40_seconds_left
 			state["day40_interlude_done"] = day40_interlude_done
+		else:
+			state["storm_home_reported"] = storm_home_reported
 	if trail_spacing_day == calendar_day():
 		if trail_walk_left > 0.0: state["trail_walk_left"] = trail_walk_left
 		if trail_quiet_left > 0.0: state["trail_quiet_left"] = trail_quiet_left
@@ -3312,12 +3319,13 @@ func restore(data: Dictionary):
 		saved_dusk = 0.0
 		saved_night = 0.0
 	var storm_day := calendar_day() == 36
+	storm_home_reported = bool(data.state.get("storm_home_reported", false))
 	if storm_day:
 		saved_dusk = 0.0
 		saved_night = 0.0
-	var old_storm_return := Climate.STORM_CLEAR_SECONDS if stage == 18 else 0.0
-	storm_return_seconds = clampf(float(data.state.get("storm_return_seconds", old_storm_return)), 0.0, Climate.STORM_CLEAR_SECONDS)
-	rain_strength = clampf(float(data.get("rain", Climate.rain(stage, player.position, storm_return_seconds))), 0.0, 1.0)
+		if stage == 18: bedtime = storm_home_reported
+	var local_rain := Climate.rain(stage, player.position, last_night)
+	rain_strength = local_rain if storm_day or last_night else clampf(float(data.get("rain", local_rain)), 0.0, 1.0)
 	mist_strength = Climate.local_mist(calendar_day(), player.position)
 	valley.restore_light(maxf(saved_dusk, saved_night), saved_night)
 	var seconds := 0.0 if legacy_abra or storm_day else float(data.get("light_left", 0.0))
@@ -3626,7 +3634,7 @@ func debug_scene(code: String):
 	if code != "41_pack": valley.toggle_door()
 	stage = int({"arrival": 0, "2": 1, "sighting": 7, "7": 6, "dream7": 7, "25": 8, "dream25": 9, "27": 10, "32": 13, "camp": 13, "36": 16, "40": 18, "ultima_noche": 18, "cueva": 18, "dream36": 18, "41": 19, "41_pack": 19, "41_close": 19}.get(code, 0))
 	set_station_flag_for_day()
-	storm_return_seconds = Climate.STORM_CLEAR_SECONDS if stage == 18 else 0.0
+	storm_home_reported = false
 	heard = stage > 0
 	if stage > 0:
 		valley.unpack_book(book_has_ribbon())
@@ -3678,7 +3686,6 @@ func debug_scene(code: String):
 			player.position = Vector3(1.24, 0.04, -4.4)
 			day40_seconds_left = 0.0
 			day40_interlude_done = true
-			storm_return_seconds = Climate.STORM_CLEAR_SECONDS
 			start_patio_call()
 		else: enter_cave()
 	elif code == "sighting":
@@ -3706,6 +3713,7 @@ func map_destination() -> Variant:
 		13:
 			return route.summit_point(1) if camp_reported else null
 		16: return South.mark_position()
+		18: return null if last_night else Vector3.ZERO
 		19:
 			if not departure_briefed or packed_items.size() < Departure.PACK_ITEMS.size(): return Vector3.ZERO
 			if not elvira_book_taken: return Museum.center(valley)
