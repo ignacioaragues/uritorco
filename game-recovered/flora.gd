@@ -13,7 +13,7 @@ const BRUSH = preload("res://follaje.gdshader")
 static var crown_forms: Array[Mesh] = []
 static var blossom_form: SphereMesh
 
-static func tree(parent: Node3D, foot: Vector3, kind: Kind, size: float, angle: float, horizontal_scale := 1.0, in_bloom := false):
+static func tree(parent: Node3D, foot: Vector3, kind: Kind, size: float, angle: float, horizontal_scale := 1.0, in_bloom := false, solid_crown := false):
 	var tree_root := Node3D.new()
 	parent.add_child(tree_root)
 	tree_root.position = foot
@@ -23,6 +23,7 @@ static func tree(parent: Node3D, foot: Vector3, kind: Kind, size: float, angle: 
 	var rng := RandomNumberGenerator.new()
 	rng.seed = int(absf(foot.x * 193.0 - foot.z * 47.0)) + 17
 	var scrub := kind == Kind.PIQUILLIN
+	var foliage := PackedVector3Array()
 	var fork := Vector3(0.09, 0.45 if scrub else 1.04, -0.07)
 	if kind == Kind.TALA: fork = Vector3(-0.23, 1.36, 0.12)
 	branch(tree_root, Vector3.DOWN * 0.21, fork, 0.074 if scrub else 0.16, 0.046 if scrub else 0.097, true)
@@ -52,7 +53,11 @@ static func tree(parent: Node3D, foot: Vector3, kind: Kind, size: float, angle: 
 			var side := Vector3(-direction.z, 0.0, direction.x)
 			var center := twig + direction * (0.14 + cluster * 0.08) + side * (cluster - 1.0) * base_size.x * 0.34
 			center.y += (0.05 + 0.12 * cluster) * base_size.y
-			crown(tree_root, rng, center, base_size * rng.randf_range(0.78, 1.18), palette[mini(cluster, 2)], turn)
+			var leaves := crown(tree_root, rng, center, base_size * rng.randf_range(0.78, 1.18), palette[mini(cluster, 2)], turn)
+			if solid_crown:
+				var to_ground := Transform3D(tree_root.basis, Vector3.ZERO) * leaves.transform
+				var vertices: PackedVector3Array = leaves.mesh.surface_get_arrays(0)[Mesh.ARRAY_VERTEX]
+				for point in vertices: foliage.append(to_ground * point)
 			if not scrub:
 				var tuft := center + side * base_size.x * rng.randf_range(-0.36, 0.36) + direction * base_size.z * 0.22
 				tuft.y += base_size.y * 0.23
@@ -70,6 +75,16 @@ static func tree(parent: Node3D, foot: Vector3, kind: Kind, size: float, angle: 
 					var diameter := rng.randf_range(0.064, 0.102)
 					crown(tree_root, rng, bloom, Vector3(diameter, diameter * 0.96, diameter),
 						["e6bf52", "d4a041", "eec974"][bud % 3], turn)
+	if solid_crown:
+		var hull := ConvexPolygonShape3D.new()
+		hull.points = foliage
+		var collision := CollisionShape3D.new()
+		collision.shape = hull
+		var body := StaticBody3D.new()
+		body.name = "Ramas del monte"
+		body.add_child(collision)
+		parent.add_child(body, true)
+		body.position = foot
 
 static func cactus(parent: Node3D, foot: Vector3, size: float, angle: float):
 	var stem := SurfaceTool.new()
@@ -138,7 +153,7 @@ static func branch(parent: Node3D, start: Vector3, end: Vector3, base: float, ti
 	instance.quaternion = Quaternion(Vector3.UP, (end - start).normalized())
 	if solid: instance.create_convex_collision()
 
-static func crown(parent: Node3D, rng: RandomNumberGenerator, center: Vector3, size: Vector3, tint: String, angle: float):
+static func crown(parent: Node3D, rng: RandomNumberGenerator, center: Vector3, size: Vector3, tint: String, angle: float) -> MeshInstance3D:
 	if crown_forms.is_empty():
 		for phase in [0.38, 1.82, 3.90]:
 			crown_forms.append(crown_mesh(phase, 10, 5))
@@ -153,6 +168,7 @@ static func crown(parent: Node3D, rng: RandomNumberGenerator, center: Vector3, s
 	leaf.position = center
 	leaf.rotation = Vector3(rng.randf_range(-0.2, 0.2), angle, rng.randf_range(-0.27, 0.27))
 	leaf.scale = size
+	return leaf
 
 static func leaf_material(tint: String, pattern := 0.0) -> ShaderMaterial:
 	var material := ShaderMaterial.new()

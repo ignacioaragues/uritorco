@@ -392,6 +392,7 @@ Esta lista reconstruye el estado informado del proyecto editable. La exportació
 ## Pasada del tronco, la cuerda y la linterna
 
 - En el prólogo, el monte tiene sotobosque detrás de los árboles. La huella se pierde entre pastos y arbustos más allá del tramo transitable.
+- La escena del tronco tiene una mata de molles, talas y piquillines a ambos lados. Los troncos y las copas de la mata bloquean el paso lateral. El aviso de Tab dice «Abrí el diario».
 - El anclaje de la cuerda se apoya sobre la malla de la laja. La linterna acompaña el fundido y se oculta al llegar a negro.
 
 ## Todavía pendiente

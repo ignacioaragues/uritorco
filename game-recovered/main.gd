@@ -672,7 +672,7 @@ func _process(delta):
 		elif page == 0 and intro_controls_seconds > 0.0:
 			hint.text = "WASD · moverte"
 		elif page == 3 and not intro_journal_seen:
-			hint.text = "Tab · mirá el croquis del puente" if intro_bridge_drawn else "Tab · abrí el diario"
+			hint.text = "Tab · abrí el diario"
 		elif page == 6 and not arrival_action:
 			hint.text = "L · encendé la linterna"
 		elif not arrival_action and page == 1 and local.z < -5.2:
@@ -847,7 +847,7 @@ func intro_objective() -> String:
 		return "Seguí el camino de tierra al costado de la parada." if arrival_action else "Acercate a la parada y recogé la mochila."
 	if page == 7 or arrival_action:
 		return "Seguí la curva del sendero." if page >= 6 else "Caminá un poco más por la senda."
-	return ["", "Espacio · saltá el tronco.", "Cruzá el puente. B · probá la brújula.", "Seguí la curva. Tab · mirá el croquis.", "M · consultá el mapa.", "E · agarrá la cuerda. Mantené W para trepar.", "L · encendé la linterna."][page]
+	return ["", "Espacio · saltá el tronco.", "Cruzá el puente. B · probá la brújula.", "Seguí la curva. Tab · abrí el diario.", "M · consultá el mapa.", "E · agarrá la cuerda. Mantené W para trepar.", "L · encendé la linterna."][page]
 
 func score_daily_walk(day: int, delta: float, in_museum: bool):
 	if day != walk_score_day:

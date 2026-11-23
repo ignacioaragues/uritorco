@@ -355,11 +355,11 @@ static func dress_log_edge(v, center: Vector3):
 	var understory := RandomNumberGenerator.new()
 	understory.seed = 84191
 	for side: float in [-1.0, 1.0]:
-		for segment in 32:
-			var distance := -12.0 + segment * 1.48
+		for segment in 39:
+			var distance := -12.0 + segment * 1.23
 			var boundary := log_verge(side, distance)
-			var plant := boundary + Vector3(side * rng.randf_range(0.34, 0.59), 0, rng.randf_range(-0.30, 0.30))
-			Flora.tree(v, ground.call(center + plant), Flora.Kind.PIQUILLIN, rng.randf_range(1.39, 1.82), rng.randf() * TAU, 0.62)
+			var plant := boundary + Vector3(side * rng.randf_range(1.44, 1.69), 0, rng.randf_range(-0.18, 0.18))
+			Flora.tree(v, ground.call(center + plant), Flora.Kind.PIQUILLIN, rng.randf_range(1.48, 1.72), rng.randf() * TAU, 0.97, false, true)
 			if segment % 3 in [0, 1]:
 				var stone_at: Vector3 = ground.call(center + boundary + Vector3(side * 0.47, 0, rng.randf_range(-0.20, 0.20)))
 				var fragment := Stone.fragment(rocks, stone_at, Vector3(1.44, 0.73 + 0.36 * rng.randf(), 1.10), rng.randf() * TAU, rng, ground, Stone.LAJA_PROFILE)
@@ -403,9 +403,12 @@ static func dress_log_understory(v, center: Vector3, ground: Callable, roots: Ar
 			var distance := -13.0 + group * 2.70 + random.randf_range(-0.85, 0.85)
 			var boundary := log_verge(side, distance)
 			var clearing := boundary + Vector3(side * random.randf_range(2.1, 12.4), 0, 0)
-			var at: Vector3 = ground.call(center + clearing)
-			if group % 3 == 0:
-				Flora.tree(v, at, Flora.Kind.PIQUILLIN, random.randf_range(0.76, 1.44), random.randf() * TAU, 1.17)
+			for band in 3:
+				var stem_distance := distance + random.randf_range(-0.96, 0.96)
+				var stem := log_verge(side, stem_distance)
+				stem.x += side * (2.0 + band * 3.15 + random.randf_range(-0.48, 0.66))
+				var kind: Flora.Kind = [Flora.Kind.MOLLE, Flora.Kind.PIQUILLIN, Flora.Kind.TALA][(group + band) % 3]
+				Flora.tree(v, ground.call(center + stem), kind, random.randf_range(1.02, 1.49), random.randf() * TAU, 1.0, false, true)
 			for sprig in 17:
 				var x: float = clearing.x + side * random.randf_range(-2.5, 4.6)
 				var d := distance + random.randf_range(-2.7, 2.7)
