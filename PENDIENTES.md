@@ -380,6 +380,11 @@ Esta lista reconstruye el estado informado del proyecto editable. La exportació
 - La subida suma una charla de Mara, un cruce del zorro, un carancho y una chapa numerada junto a la huella. El grupo se reúne abajo y el encargo se cierra al volver al puesto.
 - El regreso del filo tarda cinco minutos y medio en llegar a noche cerrada. Las lajas cierran el atajo entre la cuerda y la vaguada. El tronco del rodeo se retira después del Día 25.
 
+## Pasada de avistamientos y bocetos
+
+- Los siete bocetos de Flora y fauna tienen transparencia. También se pasaron a tinta los claros del cuis para que se vea el papel.
+- Hay un espinillo cerca de la salida y una cortadera y una laja con overo al costado de la bajada al cauce. Se ampliaron el área de apuntado y el tiempo disponible para dibujar fauna. La primera página del cuaderno indica dónde empezar a buscar.
+
 ## Todavía pendiente
 
 - **Arte.** Cotejar el acabado de las rocas con más fotos del cerro y seguir afinando los objetos de cerca, la vegetación y las lomadas de fondo en los sectores secundarios.

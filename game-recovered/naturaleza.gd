@@ -15,15 +15,15 @@ const CAVY_LATER := [Vector2(19.0, -9.4), Vector2(-33.8, 50.1)]
 const TEGU_LATER := [Vector2(-31.4, -8.3), Vector2(-22.4, 57.4)]
 const ESPINILLO := "espinillo"
 const CACTUS := "cactus"
-const ESPINILLO_SITES := [Vector3(32.5, 1.02, -0.5), Vector3(-28.6, 0.92, -32.4),
+const ESPINILLO_SITES := [Vector3(7.05, 0.94, -21.7), Vector3(32.5, 1.02, -0.5), Vector3(-28.6, 0.92, -32.4),
 	Vector3(-16.6, 1.13, 41.8), Vector3(7.0, 0.89, 39.4)]
 const CACTUS_SITES := [Vector2(-45.6, -19.6), Vector2(-35.0, -32.0),
 	Vector2(50.2, 5.7), Vector2(-57.0, 31.8)]
 const FOX_START := Vector2(18.1, -2.6)
 const FOX_END := Vector2(30.2, -7.1)
 const FOX_MID := (FOX_START + FOX_END) * 0.5
-const FOX_CROSS_SECONDS := 4.25
-const NATURAL_TARGET_DISTANCE := 13.0
+const FOX_CROSS_SECONDS := 5.1
+const NATURAL_TARGET_DISTANCE := 17.0
 const TEGU_REST_ANGLE := -2.89
 const CAVY_CREEK := Vector2(-20.45, 31.0)
 const CAVY_LAJAS := Vector2(-22.0, -28.75)
@@ -57,6 +57,8 @@ var chingolo: Node3D
 var bird_perch := Vector3.ZERO
 var bird_flight := -1.0
 var reed_foot := Vector3.ZERO
+var reed_focus: Array[Vector3] = []
+var near_trail_tegu := Vector3.ZERO
 var espinillo_focus: Array[Vector3] = []
 var cactus_focus: Array[Vector3] = []
 var day_seen := 0
@@ -78,6 +80,8 @@ func _ready():
 	tegu.hide()
 	dress_bank()
 	current_tegu_home = tegu_home
+	var cauce := Creek.trail_point(0.73)
+	near_trail_tegu = build_basking_rock(Vector2(cauce.x + 3.25, cauce.z - 0.1))
 	for site in TEGU_LATER:
 		tegu_outcrops.append(build_basking_rock(site))
 	chingolo = models.make_chingolo(self)
@@ -103,7 +107,8 @@ func dress_flora():
 		var site: Vector3 = ESPINILLO_SITES[i]
 		var root := ground(Vector2(site.x, site.z))
 		Flora.tree(self, root, Flora.Kind.ESPINILLO, site.y, 0.62 + i * 1.63, 1.07, true)
-		espinillo_focus.append(root + Vector3(-0.49, 1.76, 0.20) * site.y)
+		espinillo_focus.append(root + Vector3.UP * (1.80 * site.y))
+		espinillo_focus.append(root + Vector3.UP * (1.12 * site.y))
 	var stones := Stone.surface()
 	var rng := RandomNumberGenerator.new()
 	rng.seed = 4052
@@ -149,9 +154,16 @@ func dress_bank():
 	tegu.rotation.y = TEGU_REST_ANGLE
 
 	reed_foot = ground(Vector2(REED_X, Creek.channel_z(REED_X) - 7.2))
+	dress_reed(reed_foot)
+	var trail := Creek.trail_point(0.82)
+	dress_reed(ground(Vector2(trail.x - 3.00, trail.z + 0.70)))
+
+func dress_reed(root: Vector3):
+	reed_focus.append(root + Vector3.UP * 0.90)
+	reed_focus.append(root + Vector3.UP * 0.46)
 	var tuft: Array[Vector4] = []
 	for offset in [Vector3.ZERO, Vector3(-0.77, 0, -0.18), Vector3(0.48, 0, 0.53)]:
-		var at := Creek.surface_point(reed_foot + offset)
+		var at := Creek.surface_point(root + offset)
 		tuft.append(Vector4(at.x, at.y - 0.08, at.z, 1.15 if offset == Vector3.ZERO else 0.74))
 	Flora.herb_batch(self, tuft, Flora.Herb.CORTADERA)
 
@@ -201,10 +213,12 @@ func advance(delta: float, day: int, player_position: Vector3, dark: float, rain
 	if not walking: return
 
 	var player_xz := Vector2(player_position.x, player_position.z)
-	var crossing := Trail.ascent_point(0.26) if day == 32 else Vector3.ZERO
-	var fox_origin := Vector2(crossing.x, crossing.z) - FOX_MID if day == 32 else Vector2.ZERO
+	var crossing := Trail.ascent_point(0.26) if day == 32 else Vector3(Trail.trail(25.0), 0, Trail.ORIGIN_Z - 25.0)
+	var fox_origin := Vector2(crossing.x, crossing.z) - FOX_MID
 	advance_fox(delta, player_xz, day >= 7 and day <= 32 and rain < 0.57 and dark < 0.68, fox_origin)
 	var tegu_site := tegu_home
+	if player_position.distance_squared_to(near_trail_tegu) < player_position.distance_squared_to(tegu_site):
+		tegu_site = near_trail_tegu
 	if observations.has(TEGU):
 		for outcrop in tegu_outcrops:
 			if player_position.distance_squared_to(outcrop) < player_position.distance_squared_to(tegu_site): tegu_site = outcrop
@@ -234,7 +248,7 @@ func advance_chingolo(delta: float, listener: Vector3, active: bool):
 		chingolo.rotation = Vector3(0, -0.89 + sin(Time.get_ticks_msec() * 0.0019) * 0.32, 0)
 		chingolo.show()
 		for wing in chingolo.get_children(): wing.hide()
-		if distance < 2.15: bird_flight = 0.0
+		if distance < 1.7: bird_flight = 0.0
 		return
 	bird_flight += delta
 	chingolo.visible = bird_flight < 0.95
@@ -321,7 +335,7 @@ func advance_cavies(delta: float, player_xz: Vector2, site: Vector2, active: boo
 	if (not cavies[0].visible and distance > 14.0) or cavy_bolt >= 1.65: return
 	var shelter := CAVY_REFUGE_CREEK if creek else CAVY_REFUGE_LAJAS
 	cavy_idle += delta
-	if cavy_bolt < 0.0 and distance <= 2.40:
+	if cavy_bolt < 0.0 and distance <= 1.65:
 		cavy_bolt = 0.0
 		for i in cavies.size():
 			var foot := cavies[i].position
@@ -354,30 +368,39 @@ func aimed(camera: Camera3D, player: CharacterBody3D, observations: Dictionary) 
 	var head := camera.global_position
 	var look := -camera.global_basis.z
 	var samples := [
-		[FOX, fox.global_position + Vector3.UP * 0.40, 0.47, fox.visible, NATURAL_TARGET_DISTANCE],
-		[TEGU, tegu.global_position + Vector3.UP * 0.12, 0.33, tegu.visible, 8.0],
-		[CHINGOLO, chingolo.global_position + Vector3.UP * 0.083, 0.18, chingolo.visible and bird_flight < 0.0, 7.3],
-		[REED, to_global(reed_foot + Vector3.UP * 0.71), 0.47, true, 6.0],
+		[FOX, fox.global_position + Vector3.UP * 0.40, 0.86, fox.visible, NATURAL_TARGET_DISTANCE],
+		[TEGU, tegu.global_position + Vector3.UP * 0.15, 0.48, tegu.visible, 10.0],
+		[CHINGOLO, chingolo.global_position + Vector3.UP * 0.10, 0.39, chingolo.visible, 9.0],
 	]
+	if not observations.has(REED):
+		for point in reed_focus:
+			samples.append([REED, to_global(point), 0.88, true, 8.0])
 	if not observations.has(CAVY):
 		for cavy in cavies:
-			samples.append([CAVY, cavy.global_position + Vector3.UP * 0.076, 0.18, cavy.visible, 7.2])
+			samples.append([CAVY, cavy.global_position + Vector3.UP * 0.076, 0.39, cavy.visible, 9.6])
 	if not observations.has(ESPINILLO):
 		for point in espinillo_focus:
-			samples.append([ESPINILLO, to_global(point), 0.82, day_seen >= 2, 7.0])
+			samples.append([ESPINILLO, to_global(point), 1.03, day_seen >= 2, 8.7])
 	if not observations.has(CACTUS):
 		for point in cactus_focus:
-			samples.append([CACTUS, to_global(point), 0.24, true, 4.4])
+			samples.append([CACTUS, to_global(point), 0.29, true, 4.8])
+	var best := ""
+	var best_angle := INF
 	for observation in samples:
 		var id: String = observation[0]
 		if observations.has(id) or not observation[3]: continue
 		var point: Vector3 = observation[1]
 		var offset := point - head
 		var depth := offset.dot(look)
-		if depth < 0.2 or depth > observation[4] or (offset - look * depth).length() > observation[2]: continue
+		var lateral := (offset - look * depth).length()
+		if depth < 0.2 or depth > observation[4] or lateral > observation[2]: continue
+		var angle := lateral / depth
+		if angle >= best_angle: continue
 		var ray := PhysicsRayQueryParameters3D.create(head, point, 1, [player.get_rid()])
-		if get_world_3d().direct_space_state.intersect_ray(ray).is_empty(): return id
-	return ""
+		if get_world_3d().direct_space_state.intersect_ray(ray).is_empty():
+			best = id
+			best_angle = angle
+	return best
 
 func next_day_sketches(valley: Node3D, observations: Dictionary, day: int):
 	var index := 0

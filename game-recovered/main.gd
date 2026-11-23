@@ -1113,9 +1113,10 @@ func toggle_nature_section():
 		return
 	journal_section = Diary.Section.NATURE
 	journal_page = 0
-	var description := "Cuando veas un animal o una planta que puedas dibujar, miralos y apretá E."
+	var description := "Mirá un ejemplar y apretá E cuando aparezca «dibujar»."
 	if not nature_notes.is_empty():
 		description = "Dibujos y notas que fui tomando en las caminatas."
+	description += "\n\nCerca del puesto, buscá flores amarillas y mirá las ramas bajas al tomar la huella del cauce. En la bajada hay cortaderas y se asoman animales entre las piedras."
 	journal_pages = [{"title": "Flora y fauna", "text": description}]
 	var observations := nature_notes.keys()
 	observations.reverse()
