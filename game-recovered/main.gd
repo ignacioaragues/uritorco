@@ -517,6 +517,11 @@ func calendar_day() -> int:
 	if stage < 19: return 40 if last_night else 36
 	return 41
 
+func set_station_flag_for_day(hoisted_on_day_two := false):
+	var day := calendar_day()
+	flag_raised = day >= 7 or (day == 2 and hoisted_on_day_two)
+	valley.set_flag(flag_raised)
+
 func _physics_process(delta: float):
 	if mode == "cave" and cave_outside and crux_found:
 		advance_return_walk(delta, player.is_on_floor())
@@ -554,9 +559,6 @@ func _process(delta):
 	valley.shade_ridges()
 	if mode not in ["mate_morning", "mate_radio"]:
 		valley.update_desk_radio(radio_taken or (in_refuge and hands.pose == "radio"))
-	if day > 2 and not flag_raised:
-		flag_raised = true
-		valley.set_flag(true)
 	if stage >= 0 and mode in ["walk", "map", "mate_morning", "mate_radio"]:
 		update_refuge_door()
 	if mode in ["mate_morning", "mate_radio"]:
@@ -2328,6 +2330,7 @@ func select_option(index: int):
 				day_card("Día 2 · La regla", "Desde el puesto de abajo llega un llamado corto. La radio está prendida.", "Espacio · levantarse")
 			else:
 				stage = 6
+				set_station_flag_for_day()
 				valley.configure_sky(2)
 				awaiting_call = true
 				save_game(true, "walk")
@@ -3218,8 +3221,7 @@ func restore(data: Dictionary):
 	slot = data.slot
 	for key in STATE:
 		if data.state.has(key): set(key, data.state[key])
-	flag_raised = calendar_day() > 2 or (calendar_day() == 2 and bool(data.state.get("flag_raised_day_two", false)))
-	valley.set_flag(flag_raised)
+	set_station_flag_for_day(bool(data.state.get("flag_raised_day_two", false)))
 	spare_compass_taken = bool(data.state.get("spare_compass_taken", false))
 	fossil_sketched = bool(data.state.get("fossil_sketched", false))
 	packed_items = data.state.get("packed_items", []).duplicate()
@@ -3623,6 +3625,7 @@ func debug_scene(code: String):
 	player.rotation.y = PI
 	if code != "41_pack": valley.toggle_door()
 	stage = int({"arrival": 0, "2": 1, "sighting": 7, "7": 6, "dream7": 7, "25": 8, "dream25": 9, "27": 10, "32": 13, "camp": 13, "36": 16, "40": 18, "ultima_noche": 18, "cueva": 18, "dream36": 18, "41": 19, "41_pack": 19, "41_close": 19}.get(code, 0))
+	set_station_flag_for_day()
 	storm_return_seconds = Climate.STORM_CLEAR_SECONDS if stage == 18 else 0.0
 	heard = stage > 0
 	if stage > 0:
