@@ -7,7 +7,13 @@ uniform float dusk = 0.0;
 uniform float nightfall = 0.0;
 uniform float storm_amount = 0.0;
 uniform float valley_mist = 0.0;
+uniform bool storm_deck = false;
+uniform vec4 storm_air : source_color = vec4(0.32, 0.38, 0.43, 1.0);
+uniform vec4 storm_overhead : source_color = vec4(0.21, 0.27, 0.31, 1.0);
+uniform vec2 storm_shift = vec2(0.0);
 varying vec3 rock_position;
+
+#include "res://nubes.gdshaderinc"
 
 void vertex() {
 	rock_position = VERTEX;
@@ -27,6 +33,14 @@ void fragment() {
 	morning = mix(morning, rain_haze, storm_amount * (0.31 + 0.49 * distance_layer));
 	float low_veil = valley_mist * (1.0 - UV.y * 0.58) * (0.34 + 0.45 * distance_layer);
 	morning = mix(morning, vec3(0.66, 0.71, 0.71), low_veil);
+	if (storm_deck) {
+		vec3 slopes = stone.rgb * (0.57 - storm_amount * 0.13 + relief * 0.64);
+		float rain_density = 0.0031 + storm_amount * 0.0049;
+		float transmittance = exp(-length(VERTEX) * (rain_density + low_veil * 0.003));
+		vec3 sight = normalize((INV_VIEW_MATRIX * vec4(VERTEX, 0.0)).xyz);
+		vec3 haze = storm_cloud_color(sight, storm_overhead.rgb, storm_air.rgb, storm_amount, valley_mist, storm_shift);
+		morning = mix(haze, slopes, transmittance);
+	}
 	vec3 evening = mix(morning, vec3(0.57, 0.50, 0.59), 0.30 * dusk);
 	vec3 night = mix(vec3(0.085, 0.105, 0.156), vec3(0.18, 0.201, 0.264), distance_layer + (1.0 - distance_layer) * (1.0 - UV.y) * 0.16);
 	ALBEDO = mix(evening, night * (0.94 + relief), nightfall);

@@ -396,6 +396,10 @@ Esta lista reconstruye el estado informado del proyecto editable. La exportació
 - El primer llamado de Mara llega un minuto después de entrar al puesto. Las respuestas breves de Hernán como «Sí. Recién llego.» caben en un solo mensaje.
 - La bandera queda baja y quieta al llegar. El Día 2 se puede izar con E y la tela empieza a ondear arriba del mástil. En las jornadas posteriores aparece izada.
 - Desde el Día 7, el chingolo se posa en una rama durante la subida al abra. Todas las cortaderas se pueden dibujar con E hasta registrar la especie en Flora y fauna.
+
+## Luz de tormenta del Día 36
+
+- El horizonte, la bruma y los perfiles serranos usan la misma luz gris azulada. Con lluvia, la visibilidad cae con la distancia y los últimos filos se funden con los nubarrones. Al ceder las gotas, los cerros recuperan algo de relieve bajo el cielo cubierto.
 - El anclaje de la cuerda se apoya sobre la malla de la laja. La linterna acompaña el fundido y se oculta al llegar a negro.
 
 ## Todavía pendiente

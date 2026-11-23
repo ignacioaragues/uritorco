@@ -31,11 +31,7 @@ uniform float valley_mist = 0.0;
 
 const float SUN_DISC_RADIUS = 0.019;
 
-float cloud_hash(vec2 p) {
-	vec3 q = fract(vec3(p.xyx) * 0.1031);
-	q += dot(q, q.yzx + 33.33);
-	return fract((q.x + q.y) * q.z);
-}
+#include "res://nubes.gdshaderinc"
 
 float star_field(vec3 dir) {
 	vec3 axis = abs(dir);
@@ -57,20 +53,6 @@ float star_field(vec3 dir) {
 	vec3 point = normalize(vec3((cell + mix(vec2(0.21), vec2(0.79), offset)) / 41.0, side));
 	float radius = mix(0.0013, 0.0032, power * power);
 	return (1.0 - smoothstep(radius * 0.3, radius, length(face - point))) * (0.13 + power * power * 0.66);
-}
-
-float cloud_noise(vec2 p) {
-	vec2 origin = floor(p);
-	vec2 f = fract(p);
-	f = f * f * (3.0 - 2.0 * f);
-	return mix(mix(cloud_hash(origin), cloud_hash(origin + vec2(1.0, 0.0)), f.x),
-		mix(cloud_hash(origin + vec2(0.0, 1.0)), cloud_hash(origin + vec2(1.0, 1.0)), f.x), f.y);
-}
-
-float cloud_texture(vec2 p) {
-	float low = cloud_noise(p);
-	p = mat2(vec2(0.8, 0.6), vec2(-0.6, 0.8)) * p * 2.1;
-	return low * 0.55 + cloud_noise(p) * 0.26 + cloud_noise(p * 2.08 + 9.2) * 0.13 + cloud_noise(p * 4.17) * 0.06;
 }
 
 vec3 night_stars(vec3 sight) {
@@ -240,14 +222,7 @@ void sky(){
 	daytime = mix(daytime, mix(cloud_rim, cloud_core, body), mask * low_haze * 0.96);
 	earth = mix(earth, dark * 0.94 + cloud_core * 0.014, mask * low_haze * (0.20 + 0.57 * cloud_cover));
 	if (storm_deck) {
-		vec2 deck_uv = EYEDIR.xz * vec2(3.9, 4.8) / (height + 0.37) + shift * 1.4;
-		float billows = cloud_texture(deck_uv);
-		float folds = cloud_texture(deck_uv * 2.02 + vec2(8.3, 13.9));
-		float depth = smoothstep(0.23, 0.69, billows * 0.73 + folds * 0.27);
-		vec3 underside = mix(vec3(0.027, 0.037, 0.052), vec3(0.21, 0.25, 0.30), depth);
-		vec3 horizon_cloud = mix(vec3(0.15, 0.19, 0.24), vec3(0.34, 0.39, 0.44), depth);
-		daytime = mix(horizon_cloud, underside, smoothstep(0.00, 0.42, height));
-		daytime *= 1.0 - storm_amount * 0.18;
+		daytime = storm_cloud_color(EYEDIR, high_day.rgb, rim_day.rgb, storm_amount, valley_mist, shift);
 	} else if (storm_amount > 0.0) {
 		vec2 front_uv = EYEDIR.xz * vec2(2.5, 3.65) / (0.53 + height) + shift * 1.8;
 		float front = cloud_texture(front_uv);
