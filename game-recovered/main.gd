@@ -892,7 +892,8 @@ func objective() -> String:
 		if distance >= valley.route.LAJA_FORK: return "Bajá por la cuerda o rodeá la laja por la vaguada."
 		return "Seguí la huella principal hasta el puesto."
 	if stage == 12 and player.position.z < -20.0: return "Volvé junto al cable y seguí el sendero oeste hasta la tranquera."
-	if stage == 18 and night_home == 1: return "R · Avisale a Mara que llegaste."
+	if stage == 18 and night_home == 1:
+		return "R · Avisale a Mara que llegaste." if cave_home_radio_ready() else "Seguí la huella hasta el puesto."
 	if stage == 18 and not last_night and not storm_home_reported:
 		if player.position.z < -14.0 or player.position.z > 9.0 or absf(player.position.x) > 10.0:
 			return "Volvé por las pircas. En el cruce podés volver por la loma o bajar al poste para tomar la huella del puesto."
@@ -1223,6 +1224,9 @@ func storm_patio_ready() -> bool:
 	var at: Vector3 = player.position
 	return stage == 18 and not last_night and not storm_home_reported and absf(at.x) < 8.5 and at.z > -11.5 and at.z < -1.15
 
+func cave_home_radio_ready() -> bool:
+	return stage == 18 and night_home == 1 and player.position.length_squared() < 49.0
+
 func remember_camp_observation(item: String):
 	if stage in [13, 14] and not camp_observations.has(item):
 		camp_observations[item] = false
@@ -1255,7 +1259,7 @@ func call_from_camp(topic: String):
 	conversation(lines, "camp:" + topic)
 
 func mission_radio_available() -> bool:
-	return (stage == 0 and not heard) or (stage == 19 and not departure_briefed) or awaiting_call or stage == 2 or (stage == 5 and creek_return_left < 0.0 and not bedtime) or creek_evening_available() or observing or (stage == 9 and not route_reported) or stage in [11, 14, 17] or not next_camp_report().is_empty() or (stage == 18 and night_home == 1)
+	return (stage == 0 and not heard) or (stage == 19 and not departure_briefed) or awaiting_call or stage == 2 or (stage == 5 and creek_return_left < 0.0 and not bedtime) or creek_evening_available() or observing or (stage == 9 and not route_reported) or stage in [11, 14, 17] or not next_camp_report().is_empty() or cave_home_radio_ready()
 
 func available_trail_chat() -> String:
 	if mission_radio_available() or not player.climb_points.is_empty(): return ""
@@ -1415,7 +1419,7 @@ func radio_exchange():
 			hernan("Cuando volví pensé que todavía iba a tener tiempo de desarmar todo."),
 			"Dejalo para mañana. El primer parte ya está. Buenas noches, Hernán."], "creek_evening")
 		return
-	if stage == 18 and night_home == 1:
+	if cave_home_radio_ready():
 		conversation([
 			hernan("Ya estoy en el puesto. Llegué bien."),
 			"¿Estás en la puerta? Te oigo claro ahora. Estuve esperando que volvieras a llamar.",
@@ -2878,8 +2882,9 @@ func reach_refuge():
 	player.intro_heading = 0.0
 	player.scene_bounds = player.DEFAULT_SCENE_BOUNDS
 	player.camera.far = valley_view_distance
-	player.position = Vector3(-0.48, 0.08, -1.78)
-	player.rotation.y = PI
+	var trail_z := -19.5
+	player.position = Creek.surface_point(Vector3(valley.path_x(trail_z), 0.0, trail_z)) + Vector3.UP * 0.06
+	player.rotation.y = atan2(player.position.x - valley.path_x(trail_z + 5.0), -5.0)
 	player.camera.rotation = Vector3.ZERO
 	player.velocity = Vector3.ZERO
 	flashlight_out = false
@@ -2888,6 +2893,7 @@ func reach_refuge():
 	night_home = 1
 	bedtime = false
 	save_game(true, "walk")
+	player.walking = true
 	var reveal := create_tween().set_trans(Tween.TRANS_SINE)
 	reveal.tween_property(shade, "color:a", 0.0, 2.25)
 	await reveal.finished

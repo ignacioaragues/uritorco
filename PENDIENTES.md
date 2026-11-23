@@ -405,6 +405,7 @@ Esta lista reconstruye el estado informado del proyecto editable. La exportació
 ## Orden del cuaderno
 
 - Coleccionables y Flora y fauna tienen la portada primero y las entradas en el orden en que Hernán las anotó. C y N abren en la última entrada.
+- En la última noche, después de guiarse por la Cruz del Sur, Hernán reaparece en la huella y camina hasta el puesto para llamar a Mara.
 
 ## Todavía pendiente
 
