@@ -370,7 +370,7 @@ Esta lista reconstruye el estado informado del proyecto editable. La exportació
 - Se retiró el parte del museo. La puerta, el banco y los dinteles tienen vetas y la base y los muros usan dos acabados de piedra. El libro de Elvira suma una página sobre las interpretaciones del arco. Empacar sigue siendo el paso previo a recogerlo.
 - Mara pregunta por el libro al salir del museo y retoma el trato personal más adelante en la caminata. Las respuestas breves muestran una frase que adelanta su sentido. El panel identifica al hablante por su nombre.
 - El segundo sueño conserva dos coleccionables y suma ruinas con una placa. Copiar los símbolos desbloquea M y da un minuto y cuarenta y cinco segundos de exploración. El artefacto queda para el último sueño.
-- La bandera empieza baja y puede izarse al llegar. El Día 32 empieza tomando mate afuera, con la radio sobre el escritorio. La puerta se cierra cuando Hernán termina de cruzarla. Se despejaron los senderos de la bajada y reforzó la separación del pasto en las huellas de acceso.
+- La bandera empieza baja y puede izarse el Día 2. El Día 32 empieza tomando mate afuera, con la radio sobre el escritorio. La puerta se cierra cuando Hernán termina de cruzarla. Se despejaron los senderos de la bajada y reforzó la separación del pasto en las huellas de acceso.
 - La bifurcación deja caminar más antes del corte. Sin invitación, los dos caminos llevan al ómnibus. Después del último párrafo aparecen FIN y los créditos con fundidos automáticos.
 - Se revisaron los bocetos del cuaderno y se integraron al papel los claros del zorro y del overo.
 
@@ -393,6 +393,8 @@ Esta lista reconstruye el estado informado del proyecto editable. La exportació
 
 - En el prólogo, el monte tiene sotobosque detrás de los árboles. La huella se pierde entre pastos y arbustos más allá del tramo transitable.
 - La escena del tronco tiene una mata de molles, talas y piquillines a ambos lados. Los troncos y las copas de la mata bloquean el paso lateral. El aviso de Tab dice «Abrí el diario».
+- El primer llamado de Mara llega un minuto después de entrar al puesto. Las respuestas breves de Hernán como «Sí. Recién llego.» caben en un solo mensaje.
+- La bandera queda baja y quieta al llegar. El Día 2 se puede izar con E y la tela empieza a ondear arriba del mástil. En las jornadas posteriores aparece izada.
 - El anclaje de la cuerda se apoya sobre la malla de la laja. La linterna acompaña el fundido y se oculta al llegar a negro.
 
 ## Todavía pendiente

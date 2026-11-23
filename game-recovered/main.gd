@@ -217,7 +217,7 @@ var intro_bridge_drawn := false
 var intro_journal_seen := false
 var radio_taken := false
 var bag_left := false
-const FIRST_CALL_DELAY := 5.0
+const FIRST_CALL_DELAY := 60.0
 const FIRST_CALL_INTERVAL := 6.3
 var first_call_wait := 0.0
 var first_call_repeat := 0.0
@@ -528,6 +528,8 @@ func _physics_process(delta: float):
 
 func _process(delta):
 	objective_seconds = maxf(0.0, objective_seconds - delta)
+	if stage == 0 and not heard and mode != "pause_menu" and not menu.visible:
+		first_call_wait = maxf(0.0, first_call_wait - delta)
 	intro_controls_seconds = maxf(0.0, intro_controls_seconds - delta)
 	collect_notice_seconds = maxf(0.0, collect_notice_seconds - delta)
 	var day: = calendar_day()
@@ -552,7 +554,7 @@ func _process(delta):
 	valley.shade_ridges()
 	if mode not in ["mate_morning", "mate_radio"]:
 		valley.update_desk_radio(radio_taken or (in_refuge and hands.pose == "radio"))
-	if stage >= 1 and not flag_raised:
+	if day > 2 and not flag_raised:
 		flag_raised = true
 		valley.set_flag(true)
 	if stage >= 0 and mode in ["walk", "map", "mate_morning", "mate_radio"]:
@@ -688,7 +690,7 @@ func _process(delta):
 		target = str(hit.get_meta("item", "")) if hit else ""
 		if target == "Cortinas" and not in_refuge:
 			target = ""
-		if target == "Izar la bandera" and stage != 0:
+		if target == "Izar la bandera" and day != 2:
 			target = ""
 		if stage == -1 and player.position.z < 0 and target == "":
 			hint.text = "E · interactuar al mirar la puerta"
@@ -1176,6 +1178,7 @@ func hernan(line: String) -> Dictionary:
 	return {"speaker": "Hernán", "text": line}
 
 func reply_sentences(line: String) -> PackedStringArray:
+	if line.length() <= 44: return PackedStringArray([line])
 	return sentence_boundary.sub(line, "\n", true).split("\n", false)
 
 func radio_choices(kind: String, caption: String, answers: Array):
@@ -1309,10 +1312,7 @@ func begin_refuge_night():
 	valley.night(23.0)
 
 func update_first_call(delta: float, inside: bool) -> bool:
-	if not inside: return false
-	if first_call_wait > 0.0:
-		first_call_wait = maxf(0.0, first_call_wait - delta)
-		if first_call_wait > 0.0: return false
+	if first_call_wait > 0.0 or (not inside and not radio_taken): return false
 	first_call_repeat -= delta
 	if first_call_repeat <= 0.0:
 		radio.incoming.play()
@@ -1998,7 +1998,7 @@ func _unhandled_key_input(event):
 						operate_refuge_door()
 						if arriving and score.playing_cue == "prologo": score.silence(3.2)
 					"Izar la bandera":
-						if stage == 0 and not flag_raised:
+						if calendar_day() == 2 and not flag_raised:
 							flag_raised = true
 							valley.set_flag(true, true)
 							save_game(true, "walk")
@@ -3173,7 +3173,8 @@ func save_game(automatic: bool, resume_mode: String) -> bool:
 	state["abra_told_mara"] = abra_told_mara
 	state["mara_heard_paula"] = mara_heard_paula
 	state["paula_clipping_read"] = paula_clipping_read
-	state["flag_raised"] = flag_raised
+	if calendar_day() == 2: state["flag_raised_day_two"] = flag_raised
+	if stage == 0 and not heard: state["first_call_wait"] = first_call_wait
 	if resume_mode in ["mate_morning", "mate_radio"]: state["mate_outdoors"] = true
 	if stage == 19:
 		state["packed_items"] = packed_items.duplicate()
@@ -3217,7 +3218,7 @@ func restore(data: Dictionary):
 	slot = data.slot
 	for key in STATE:
 		if data.state.has(key): set(key, data.state[key])
-	flag_raised = bool(data.state.get("flag_raised", stage >= 1))
+	flag_raised = calendar_day() > 2 or (calendar_day() == 2 and bool(data.state.get("flag_raised_day_two", false)))
 	valley.set_flag(flag_raised)
 	spare_compass_taken = bool(data.state.get("spare_compass_taken", false))
 	fossil_sketched = bool(data.state.get("fossil_sketched", false))
@@ -3290,7 +3291,10 @@ func restore(data: Dictionary):
 		if bag_left: valley.leave_bag()
 		bedtime = heard and bag_left
 		valley.set_bag_drop(heard and not bag_left)
-		if not heard: first_call_wait = FIRST_CALL_DELAY
+		if not heard:
+			first_call_wait = clampf(float(data.state.get("first_call_wait", FIRST_CALL_DELAY)), 0.0, FIRST_CALL_DELAY)
+			first_call_repeat = 0.0
+			first_call_caption = 0.0
 	if stage < 0:
 		score.cue("prologo", -12.0, 2.6, true)
 		score.seek_to(float(data.get("music", 0.0)))

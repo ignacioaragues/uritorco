@@ -185,13 +185,18 @@ func protected_trail_clearance(point: Vector2) -> float:
 
 func set_flag(raised: bool, animated := false):
 	flag_pole.set_meta("item", "" if raised else "Izar la bandera")
-	var offset := 0.0 if raised else -1.69
+	if flag_motion and flag_motion.is_valid(): flag_motion.kill()
+	var height := 1.0 if raised else 0.0
 	if animated:
 		flag_motion = create_tween().set_trans(Tween.TRANS_SINE)
-		flag_motion.tween_property(station_flag, "position:y", offset, 1.7)
+		var current := inverse_lerp(-1.69, 0.0, station_flag.position.y)
+		flag_motion.tween_method(place_flag, current, height, 1.7)
 	else:
-		if flag_motion and flag_motion.is_valid(): flag_motion.kill()
-		station_flag.position.y = offset
+		place_flag(height)
+
+func place_flag(height: float):
+	station_flag.position.y = lerpf(-1.69, 0.0, height)
+	flag_material.set_shader_parameter("unfurled", smoothstep(0.90, 1.0, height))
 
 func update_desk_radio(held: bool):
 	if desk_portable.visible != held: return

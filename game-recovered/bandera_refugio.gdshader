@@ -2,6 +2,7 @@ shader_type spatial;
 render_mode cull_disabled;
 
 uniform float breeze = 0.2;
+uniform float unfurled = 0.0;
 
 vec3 cloth_point(vec2 uv, float time) {
 	float u = uv.x;
@@ -15,7 +16,10 @@ vec3 cloth_point(vec2 uv, float time) {
 	x += (fold * 0.030 + curl * 0.032) * motion;
 	y += (fold * 0.064 + curl * 0.055) * motion * mix(0.62, 1.17, gust);
 	float z = motion * (fold * (0.062 + gust * 0.13) + curl * (0.091 + gust * 0.04));
-	return vec3(x, y, z);
+	vec3 hanging = vec3(0.033 + u * (0.22 - v * 0.11),
+		3.02 - v * 0.61 - u * 0.50,
+		u * (0.09 + 0.045 * sin(u * 9.5 + v * 4.0)));
+	return mix(hanging, vec3(x, y, z), unfurled);
 }
 
 void vertex() {
