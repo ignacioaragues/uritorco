@@ -321,7 +321,7 @@ La primera respuesta permite que Mara recuerde el dibujo en la despedida.
 
 ### Encargo de la subida
 
-**Empieza Mara.** La llamada se abre al dejar el mate.
+**Empieza Mara.** Hernán toma mate afuera. El llamado se oye desde el escritorio. Hernán entra, deja el mate con E y levanta la radio con E.
 
 - **Mara** · «Me avisaron que anoche se metió un grupo de turistas sin permiso. Capaz el otro día viste las linternas de un grupo como ése. Nos pasa todas las semanas.»
 - **Hernán** · «¿Querés que vaya a ver si queda alguien?»
@@ -654,14 +654,21 @@ Al abrir el libro del banco y guardarlo, se habilita la bajada en el terreno y e
 
 ### Al salir del museo
 
-**Charla opcional de cercanía.** R al salir del museo y volver a tomar la huella. Si llega a haber una invitación, se escucha más tarde, durante la despedida.
+**Contacto sobre el libro.** Mara pregunta por radio «¿Encontraste el libro?».
 
-**Empieza Mara.** «¿Ya saliste del museo? Elvira me hizo prometer que te iba a mandar hasta ahí. Quería que te llevaras algo.»
+- **Opción 1, Hernán** · «Sí. Decile a Elvira que le agradezco.»
+  - **Mara** · «Le va a gustar saber que lo encontraste.»
+- **Opción 2, Hernán** · «Hay algo bastante increíble en ese libro. El arco del grabado… Debo haberlo visto antes en algún lado.»
+  - **Mara** · «Capaz te cruzaste con algo parecido caminando. Cuando te acuerdes de dónde, contame.»
 
-- **Opción 1, Hernán** · «Sí. Me lo voy a llevar en la mano, para abrirlo en el viaje.»
-  - **Mara** · «Hay un asiento junto a la ventana del lado del cerro. De ahí se lee bien hasta que dobla a la ruta.»
-- **Opción 2, Hernán** · «Voy a extrañar más que la vista. Vos también me vas a hacer falta.» *(suma cercanía)*
-  - **Mara** · «A mí también me va a faltar oírte llegar. Hoy dejé la radio prendida un rato antes de que salieras.»
+### Más adelante, en la caminata
+
+**Charla opcional de cercanía.** Mara dice «Te escucho caminar. Me voy a tener que acostumbrar a que no me llames desde cualquier piedra».
+
+- **Opción 1, Hernán** · «Me queda un trecho. Todavía vas a escucharme un rato.»
+  - **Mara** · «Bueno. Me quedo en el canal hasta que llegues a la bajada.»
+- **Opción 2, Hernán** · «A mí me va a hacer falta escuchar tu voz.» *(suma cercanía)*
+  - **Mara** · «A mí también me va a hacer falta la tuya. Hoy prendí la radio antes de que salieras.»
 
 ### La despedida
 
@@ -669,7 +676,6 @@ Al abrir el libro del banco y guardarlo, se habilita la bajada en el terreno y e
 
 - **Hernán** · «Ya estoy bajando a la ruta. Te quería avisar antes de irme.»
 - **Mara, apertura habitual** · «Te escucho. Todavía tenés tiempo de sobra para alcanzar el ómnibus.»
-- **Mara, si Hernán vio el dibujo del museo** · «Ese parte del museo quedó entre los papeles del cauce. Elvira nunca pudo averiguar quién lo firmó.»
 
 **Réplicas sobre la última noche**
 

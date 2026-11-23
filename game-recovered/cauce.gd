@@ -219,6 +219,7 @@ static func dress(valley, field_trail_clearance: Callable):
 			if near_south_path(Vector2(x, z), south_path, 6.9) or field_trail_clearance.call(Vector2(x, z)) < 6.9:
 				x += side * 10.0
 			valley.rng.randf()
+			if field_trail_clearance.call(Vector2(x, z)) < 6.9: continue
 			var foot := surface_point(Vector3(x, 0, z))
 			var size_m := Vector3(10.0, 4.7 + 1.6 * cos(z), 11.0)
 			var shape := Stone.fragment(faces, foot, size_m, mineral_rng.randf() * TAU, mineral_rng, surface_point)

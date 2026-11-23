@@ -30,7 +30,6 @@ const LABELS = {
 	"Bastón de Mando": "Relato esotérico · Ilustración\n\nLa historia de un bastón oculto en el Uritorco circula en libros y testimonios del siglo XX. La pieza exhibida interpreta ese relato. Su procedencia arqueológica sigue sin establecerse.",
 	"Vikingos en las sierras": "Hipótesis sin respaldo arqueológico · Ilustración\n\nAlgunos autores atribuyeron marcas serranas a viajeros nórdicos. Para sostener esa atribución harían falta materiales fechados y hallados en contexto. Una semejanza visual puede aparecer entre pueblos que nunca se encontraron.",
 	"Luces sobre el cerro": "Archivo de testimonios · Ilustración\n\nLos relatos sobre luces en el Uritorco incluyen observaciones, fotografías y reconstrucciones. Registrar hora, rumbo y posición del observador permite comparar versiones y examinar posibles explicaciones.",
-	"Parte del 12 de julio": "Parte del puesto · Archivo de testimonios"
 }
 
 static func center(valley, offset: float = SITE_OFFSET) -> Vector3:
@@ -69,7 +68,7 @@ static func build(valley):
 	var foundation := c.y - lowest + 0.23
 	var floor: MeshInstance3D = valley.box(c - Vector3.UP * foundation * 0.5, Vector3(width, foundation, depth), "9d8f76", true)
 	floor.get_child(0).set_meta("footstep", &"stone")
-	Refuge.masonry(floor, Vector3.UP)
+	floor.material_override = Stone.paint("77716a")
 	floor.name = "Base de piedra del museo"
 	for side in [-1, 1]:
 		wall(valley, c + Vector3(0, HEIGHT * 0.5, side * HALF_DEPTH), Vector3(width, HEIGHT, 0.22))
@@ -85,7 +84,7 @@ static func build(valley):
 			wall(valley, c + Vector3(x, HEIGHT * 0.5, z), Vector3(4.04, HEIGHT, 0.18))
 		for x in [-1.33, 1.33]:
 			valley.timber(valley.box(c + Vector3(x, 1.21, z), Vector3(0.12, 2.42, 0.24), "89765e", true))
-		valley.timber(valley.box(c + Vector3(0, 2.49, z), Vector3(2.76, 0.16, 0.24), "89765e", true))
+		valley.timber(valley.box(c + Vector3(0, 2.49, z), Vector3(2.76, 0.16, 0.24), "89765e", true), true)
 	for z in [-4.7, 0.0, 4.7]:
 		var lamp := OmniLight3D.new()
 		valley.add_child(lamp)
@@ -100,9 +99,9 @@ static func build(valley):
 	display_panel(valley, c + Vector3(-4.32, 1.40, -1.653), "Sembrar en las sierras", "historia", 0, 0.0, "Vida cotidiana antes de la conquista")
 	display_panel(valley, c + Vector3(-2.86, 1.40, -1.653), "Tierra y encomienda", "historia", 1, 0.0, "Trabajo, tributo y territorio")
 	display_panel(valley, c + Vector3(-1.88, 1.40, -1.653), "Memoria comechingona", "historia", 2, 0.0, "Pueblo de La Toma · Córdoba")
-	valley.box(c + Vector3(3.65, 0.44, -0.76), Vector3(2.3, 0.14, 0.49), "846b50", true, "Banco")
+	valley.timber(valley.box(c + Vector3(3.65, 0.44, -0.76), Vector3(2.3, 0.14, 0.49), "846b50", true, "Banco"), true)
 	for x in [2.7, 4.58]:
-		valley.box(c + Vector3(x, 0.23, -0.76), Vector3(0.16, 0.46, 0.42), "6d5d51", true)
+		valley.timber(valley.box(c + Vector3(x, 0.23, -0.76), Vector3(0.16, 0.46, 0.42), "6d5d51", true))
 	for i in 3:
 		var x := (i - 1) * 3.30
 		vitrine(valley, c + Vector3(x, 0, -4.37), i)
@@ -120,10 +119,8 @@ static func build_elvira_book(valley: Node3D) -> StaticBody3D:
 
 static func wall(valley, at: Vector3, size_m: Vector3):
 	var surface: MeshInstance3D = valley.box(at, size_m, "b9aa94", true)
-	var c := center(valley)
-	var local := at - c
-	var inside := Vector3(-signf(local.x), 0, 0) if size_m.x < size_m.z else Vector3(0, 0, -signf(local.z))
-	Refuge.masonry(surface, inside)
+	surface.material_override = Stone.paint("c1a37d")
+	surface.name = "Muro de arenisca del museo"
 
 static func build_entrance(valley, c: Vector3):
 	var front := c + Vector3(-HALF_WIDTH, 0, 0)
@@ -141,7 +138,19 @@ static func build_entrance(valley, c: Vector3):
 	valley.add_child(valley.museum_hinge)
 	valley.museum_hinge.position = front + Vector3(0, 0, -0.88)
 	var leaf: MeshInstance3D = valley.box(front + Vector3(0, 1.14, 0), Vector3(0.12, 2.28, 1.76), "887050", true, "Puerta del museo")
-	valley.timber(leaf)
+	var oak := Refuge.wood("887050")
+	oak.set_shader_parameter("side_grain", true)
+	oak.set_shader_parameter("grain_strength", 0.29)
+	leaf.material_override = oak
+	var jamb := Refuge.wood("746048")
+	jamb.set_shader_parameter("side_grain", true)
+	for z in [-0.91, 0.91]:
+		var frame: MeshInstance3D = valley.box(front + Vector3(-0.02, 1.13, z), Vector3(0.17, 2.26, 0.10), "746048")
+		frame.material_override = jamb
+	var lintel: MeshInstance3D = valley.box(front + Vector3(-0.03, 2.32, 0), Vector3(0.19, 0.14, 1.94), "746048")
+	var lintel_wood := Refuge.wood("746048", true)
+	lintel_wood.set_shader_parameter("side_grain", true)
+	lintel.material_override = lintel_wood
 	leaf.reparent(valley.museum_hinge)
 	var handle: MeshInstance3D = valley.box(front + Vector3(-0.09, 1.07, 0.64), Vector3(0.13, 0.08, 0.12), "a69a7b")
 	handle.reparent(valley.museum_hinge)
@@ -237,17 +246,6 @@ static func shaped_vessel(profile: Array, depth_ratio: float, irregularity: floa
 				surface.add_index(index)
 	surface.generate_normals()
 	return surface.commit()
-
-static func dress_archive(valley):
-	var c := center(valley)
-	var base := c + Vector3(0, 0.83, 3.85)
-	valley.timber(valley.box(base - Vector3.UP * 0.42, Vector3(1.75, 0.83, 1.12), "71614c", true, "Parte del 12 de julio"))
-	for sheet in 3:
-		var paper: MeshInstance3D = valley.box(base + Vector3((sheet - 1) * 0.25, 0.028 + sheet * 0.007, 0.02), Vector3(0.52, 0.013, 0.69), "beab8d", true, "Parte del 12 de julio")
-		paper.rotation.y = (sheet - 1) * 0.12
-		for line in 6:
-			Kit.block(paper, Vector3(-0.02, 0.008, -0.21 + line * 0.066), Vector3(0.32 - 0.032 * (line % 3), 0.0015, 0.005), Kit.material("746452"))
-	plaque(valley, base + Vector3(0, -0.14, -0.58), "Parte del 12 de julio", PI, 1.55)
 
 static func display_panel(valley, center_pos: Vector3, title: String, group: String, index: int, angle: float, caption: String):
 	var art_path := "res://museo/" + group + ".webp"

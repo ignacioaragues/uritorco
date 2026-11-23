@@ -11,11 +11,11 @@ const PATH := [Vector2(3.8, -13.2), Vector2(12, -16.8), Vector2(18.6, -10.8), Ve
 	Vector2(22.7, 12.0), Vector2(23.9, 25.0), Vector2(27.8, 37.4), Vector2(29.6, 49.7), Vector2(28.2, 62.0),
 	Vector2(25.2, 72), Vector2(22.4, 86), Vector2(12.0, 124)]
 const RADIO_STOP := Vector3(23.9, 0, 25.0)
-const END := Vector3(28.2, 0, 62.0)
+const END := Vector3(25.2, 0, 72.0)
 const FORK := Vector3(29.6, 0, 49.7)
-const MARA_PATH := [Vector2(29.6, 49.7), Vector2(31.6, 55.4), Vector2(33.4, 59.6), Vector2(41.8, 61.1),
-	Vector2(53.7, 66.4), Vector2(63.5, 78), Vector2(79.0, 92.0)]
-const MARA_END := Vector3(41.8, 0, 61.1)
+const MARA_PATH := [Vector2(29.6, 49.7), Vector2(31.6, 55.4), Vector2(36.4, 59.8), Vector2(44.9, 62.1),
+	Vector2(54.0, 62.9), Vector2(66.2, 63.8), Vector2(88.0, 66.4)]
+const MARA_END := Vector3(66.2, 0, 63.8)
 const BUS_ROAD_POSITION := Vector3(1.65, 0, -4.2)
 const BUS_BOUNDS := Rect2(-30, -16, 60, 35)
 const MARA_SITE := Vector3(-760, 72, 1650)
@@ -28,11 +28,14 @@ const PACK_NAMES := ["el libro", "los papeles", "la postal", "los dibujos"]
 static func near(at: Vector3, point: Vector3, radius: float) -> bool:
 	return Vector2(at.x - point.x, at.z - point.z).length_squared() < radius * radius
 
-static func edge_distance(point: Vector2) -> float:
+static func edge_distance(point: Vector2, path: Array = PATH) -> float:
 	var best := INF
-	for i in PATH.size() - 1:
-		best = minf(best, Geometry2D.get_closest_point_to_segment(point, PATH[i], PATH[i + 1]).distance_to(point))
+	for i in path.size() - 1:
+		best = minf(best, Geometry2D.get_closest_point_to_segment(point, path[i], path[i + 1]).distance_to(point))
 	return best
+
+static func trail_clearance(point: Vector2) -> float:
+	return minf(edge_distance(point), edge_distance(point, MARA_PATH))
 
 static func open(valley):
 	var knots := PackedVector2Array(PATH)

@@ -506,8 +506,9 @@ static func wall_sketch(parent: Node3D, pos: Vector3, drawing: Texture2D, motif:
 	Kit.cylinder(sheet, Vector3(0, 0.142, 0.006), 0.006, 0.006, 0.010, Kit.material("8d7959")).rotation.x = PI / 2.0
 	return sheet
 
-static func exterior_equipment(parent: Node3D, flag_foot: Vector3, cylinder_foot: Vector3) -> ShaderMaterial:
-	var flag_pole := Kit.item(parent, flag_foot, "", Vector3.UP * 1.68, Vector3(0.10, 3.36, 0.10))
+static func exterior_equipment(parent: Node3D, flag_foot: Vector3, cylinder_foot: Vector3) -> Dictionary:
+	var flag_pole := Kit.item(parent, flag_foot, "", Vector3.UP * 1.68, Vector3(0.14, 3.36, 0.14))
+	flag_pole.name = "Mástil del puesto"
 	var steel := Kit.material("847f72", false, 0.58)
 	Kit.cylinder(flag_pole, Vector3.UP * 1.65, 0.026, 0.041, 3.30, steel)
 	Kit.cylinder(flag_pole, Vector3.UP * 0.09, 0.13, 0.15, 0.18, Kit.material("968b75"))
@@ -547,7 +548,7 @@ static func exterior_equipment(parent: Node3D, flag_foot: Vector3, cylinder_foot
 	for column in 5:
 		for row in 4:
 			Kit.block(solar, Vector3((column - 2) * 0.22, 0.044, (row - 1.5) * 0.177), Vector3(0.211, 0.016, 0.166), cell)
-	return weave
+	return {"pole": flag_pole, "cloth": flag}
 
 static func gas_connection(parent: Node3D, foot: Vector3, steel: Material, brass: Material):
 	var tank := Kit.item(parent, foot, "", Vector3.UP * 0.35, Vector3(0.37, 0.70, 0.37))

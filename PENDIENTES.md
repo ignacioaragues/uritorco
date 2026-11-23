@@ -365,6 +365,15 @@ Esta lista reconstruye el estado informado del proyecto editable. La exportació
 - **Museo.** Edificio transitable con puerta, vitrinas y láminas, incluida la de los vikingos. La visita es opcional. El dibujo del arco está detrás del parte del poste del 12 de julio y remite a los cuadernos de la cueva.
 - **Audio, cielo y ajustes.** Música por momentos, tono breve para el diálogo y estática en eventos de la trama. Hay pájaros animados, climas por día, nubes, llovizna y luna con fases. Los ajustes se pueden abrir durante el juego. Hay un menú de depuración con hitos seleccionados.
 
+## Pasada del museo, las ruinas y la despedida
+
+- Se retiró el parte del museo. La puerta, el banco y los dinteles tienen vetas y la base y los muros usan dos acabados de piedra. El libro de Elvira suma una página sobre las interpretaciones del arco. Empacar sigue siendo el paso previo a recogerlo.
+- Mara pregunta por el libro al salir del museo y retoma el trato personal más adelante en la caminata. Las respuestas breves muestran una frase que adelanta su sentido. El panel identifica al hablante por su nombre.
+- El segundo sueño conserva dos coleccionables y suma ruinas con una placa. Copiar los símbolos desbloquea M y da un minuto y cuarenta y cinco segundos de exploración. El artefacto queda para el último sueño.
+- La bandera empieza baja y puede izarse al llegar. El Día 32 empieza tomando mate afuera, con la radio sobre el escritorio. La puerta se cierra cuando Hernán termina de cruzarla. Se despejaron los senderos de la bajada y reforzó la separación del pasto en las huellas de acceso.
+- La bifurcación deja caminar más antes del corte. Sin invitación, los dos caminos llevan al ómnibus. Después del último párrafo aparecen FIN y los créditos con fundidos automáticos.
+- Se revisaron los bocetos del cuaderno y se integraron al papel los claros del zorro y del overo.
+
 ## Todavía pendiente
 
 - **Arte.** Cotejar el acabado de las rocas con más fotos del cerro y seguir afinando los objetos de cerca, la vegetación y las lomadas de fondo en los sectores secundarios.

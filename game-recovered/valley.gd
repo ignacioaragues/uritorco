@@ -9,6 +9,7 @@ const Creek = preload("res://cauce.gd")
 const Cable = preload("res://camino_del_cable.gd")
 const Camp = preload("res://campamento.gd")
 const LastNight = preload("res://final_night.gd")
+const Departure = preload("res://salida.gd")
 const Birds = preload("res://aves.gd")
 const South = preload("res://quebrada_sur.gd")
 const Stone = preload("res://piedra_serrana.gd")
@@ -32,6 +33,9 @@ var bag_drop: StaticBody3D
 var desk_portable: Node3D
 var env: = Environment.new()
 var flag_material: ShaderMaterial
+var flag_pole: StaticBody3D
+var station_flag: MeshInstance3D
+var flag_motion: Tween
 var sun: = DirectionalLight3D.new()
 var beacon := Sprite3D.new()
 var second_beacon := Sprite3D.new()
@@ -147,7 +151,11 @@ func _ready():
 	desk_radio.rotation.y = PI + 0.24
 	desk_portable = desk_radio.get_node("Transceptor")
 	Refuge.bed(self)
-	flag_material = Refuge.exterior_equipment(self, Creek.point(-5.15, -5.65), Creek.point(-4.17, 2.27))
+	var flag := Refuge.exterior_equipment(self, Creek.point(-5.15, -5.65), Creek.point(-4.17, 2.27))
+	flag_pole = flag.pole
+	station_flag = flag.cloth
+	flag_material = station_flag.material_override
+	set_flag(false)
 	bag_drop = FieldKit.item(self, Vector3(1.52, 0.20, 5.03), "Dejar la mochila", Vector3.ZERO, Vector3(0.51, 0.33, 0.62))
 	bag_drop.collision_layer = 0
 	var lamp: = OmniLight3D.new()
@@ -163,7 +171,7 @@ func _ready():
 	dress_path_verges()
 	rock_banks()
 	add_child(route)
-	Creek.dress(self, Exploration.clearance)
+	Creek.dress(self, protected_trail_clearance)
 	South.build(self)
 	dress_birds()
 	preload("res://museo.gd").build(self)
@@ -171,6 +179,19 @@ func _ready():
 	preload("res://bordes.gd").dress(self)
 	nature.name = "Flora y fauna"
 	add_child(nature)
+
+func protected_trail_clearance(point: Vector2) -> float:
+	return minf(Exploration.clearance(point), Departure.trail_clearance(point))
+
+func set_flag(raised: bool, animated := false):
+	flag_pole.set_meta("item", "" if raised else "Izar la bandera")
+	var offset := 0.0 if raised else -1.69
+	if animated:
+		flag_motion = create_tween().set_trans(Tween.TRANS_SINE)
+		flag_motion.tween_property(station_flag, "position:y", offset, 1.7)
+	else:
+		if flag_motion and flag_motion.is_valid(): flag_motion.kill()
+		station_flag.position.y = offset
 
 func update_desk_radio(held: bool):
 	if desk_portable.visible != held: return
@@ -457,8 +478,11 @@ func dress_path_verges():
 	var tufts: Array[Vector4] = []
 	for i in range(850):
 		var z: = rng.randf_range(-78, -3)
-		var x: = path_x(z) + rng.randf_range(1.7, 12) * (-1 if i % 2 else 1)
+		var x: = path_x(z) + rng.randf_range(2.85, 12) * (-1 if i % 2 else 1)
 		if absf(z + 33 - sin(x) * 0.6) < 1.35: continue
+		if protected_trail_clearance(Vector2(x, z)) < 2.7 or Creek.trail_distance(Vector2(x, z)) < 2.9: continue
+		if z < -17.0 and absf(x - route.eastern_x_at(z)) < 2.8: continue
+		if z < route.WEST_START_Z and absf(x - route.western_x_at(z)) < 2.8: continue
 		var foot := Creek.surface_point(Vector3(x, 0.0, z))
 		tufts.append(Vector4(x, foot.y - 0.04, z, rng.randf_range(0.58, 1.14)))
 	Flora.grass_batch(self, tufts)
@@ -490,7 +514,7 @@ func dress_access_stones():
 		var z: = rng.randf_range(-84, 10)
 		var x: = rng.randf_range(-45, 45)
 		if abs(x - path_x(z)) < 4.8 or (abs(x) < 12.5 and z > -15.5): continue
-		if Creek.trail_distance(Vector2(x, z)) < 4.0: continue
+		if Creek.trail_distance(Vector2(x, z)) < 4.0 or protected_trail_clearance(Vector2(x, z)) < 4.0: continue
 		if z < -17.0 and absf(x - route.eastern_x_at(z)) < 4.0: continue
 		if absf(x - LastNight.DOOR.x) < 6.0 and absf(z - LastNight.DOOR.z + 2.0) < 8.0: continue
 		if z < route.WEST_START_Z + 1.0 and absf(x - route.western_x_at(z)) < 5.0: continue
@@ -824,12 +848,8 @@ func dress_camp():
 	camp_log = Camp.build(self, route.camp_point())
 
 var storm_water: MeshInstance3D
-var archive_dressed := false
 
 func dress_day36():
-	if not archive_dressed:
-		archive_dressed = true
-		preload("res://museo.gd").dress_archive(self)
 	if not storm_water: storm_water = South.water(self)
 	storm_water.visible = weather_day == 36
 

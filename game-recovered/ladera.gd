@@ -32,7 +32,7 @@ static func build(route):
 				var vertices := Stone.fragment(stone_faces, base, Vector3(width, height, width * 0.71), rng.randf() * TAU, rng, ground)
 				Stone.solid(hillside, base, vertices, "Afloramiento")
 		for i in (18 if index % 4 == 0 else 9):
-			var offset := rng.randf_range(1.36, 8.5) * (-1.0 if i % 2 == 0 else 1.0)
+			var offset := rng.randf_range(2.8, 8.5) * (-1.0 if i % 2 == 0 else 1.0)
 			var patch: Vector3 = ground.call(at.lerp(next, rng.randf()) + side * offset)
 			var size_m := rng.randf_range(0.48, 1.45) * lerpf(1.0, 0.72, progress)
 			var root := Vector4(patch.x, patch.y - 0.085, patch.z, size_m)

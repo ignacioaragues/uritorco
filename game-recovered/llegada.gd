@@ -296,7 +296,7 @@ static func dress_verges(center: Vector3, index: int, rng: RandomNumberGenerator
 		for tuft in rng.randi_range(2, 5):
 			var t_x := x + rng.randf_range(-0.85, 0.85)
 			var t_d := distance + rng.randf_range(-0.65, 0.65)
-			if not clear_verge(index, t_x, t_d, 1.94): continue
+			if not clear_verge(index, t_x, t_d, 2.48): continue
 			var foot := center + Vector3(t_x, ground_height(index, t_x, t_d) - 0.047, -t_d)
 			roots.append(Vector4(foot.x, foot.y, foot.z, rng.randf_range(0.41, 0.97)))
 		if clump % 3 == 0:

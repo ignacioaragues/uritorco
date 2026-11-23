@@ -42,11 +42,12 @@ func display(kind: String, caption: String, footer: Variant, teach_selection := 
 	var voice := caption.get_slice(" · ", 0) if caption.begins_with("Mara · ") or caption.begins_with("Hernán · ") else ""
 	speaker.text = "RADIO"
 	if reveal: reveal.kill()
-	line.text = caption
+	line.text = caption.trim_prefix(voice + " · ") if not voice.is_empty() else caption
+	if not voice.is_empty(): speaker.text = voice.to_upper()
 	if kind in ["talk", "dream_voice"]:
 		var parts := caption.split("\n\n", true, 1)
 		voice = parts[0]
-		speaker.text = voice.to_upper() + ("   /   RADIO" if kind == "talk" else "")
+		speaker.text = voice.to_upper()
 		line.text = parts[1]
 	var person := voice.to_lower()
 	speaker.add_theme_color_override("font_color", Color("#a9c3b8") if person == "hernán" else Color("#e5c287"))

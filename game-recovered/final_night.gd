@@ -8,6 +8,8 @@ const Structures = preload("res://estructuras.gd")
 const Stone = preload("res://piedra_serrana.gd")
 const Refuge = preload("res://refugio.gd")
 const Signage = preload("res://carteleria.gd")
+const DREAM_PLATE := "Placa de las ruinas"
+const DREAM_RUINS := Vector2(-11.5, -42.0)
 const DREAM_BOUNDS := Rect2(-73.0, -144.0, 146.0, 177.0)
 const DREAM_ARCH_SITES := [Vector2(-44, -24), Vector2(44, -52), Vector2(-32, -108), Vector2(40, -128)]
 const DREAM_ARCH_ENTRIES := [Vector2(-35, -9), Vector2(38, -36), Vector2(-41, -89), Vector2(53, -112)]
@@ -609,6 +611,8 @@ static func build_planet(valley, variant: int) -> Node3D:
 	rng.seed = 571 + variant
 	var crag := dream_rock(variant, ROCK_COLORS[variant - 1], true)
 	dress_minerals(valley, variant, crag, rng)
+	if variant == 2:
+		build_dream_ruins(valley, crag)
 	if variant == 3:
 		var arch_stone := dream_rock(variant, Color("#827286"), true)
 		for i in DREAM_ARCH_SITES.size():
@@ -625,6 +629,50 @@ static func build_planet(valley, variant: int) -> Node3D:
 	for prop in props: prop.reparent(root)
 	dress_dream_landmarks(root, variant, crag)
 	return root
+
+static func build_dream_ruins(parent: Node3D, stone: Material):
+	var ruins := Node3D.new()
+	ruins.name = "Ruinas del segundo sueño"
+	parent.add_child(ruins)
+	ruins.position = dream_surface(2, DREAM_RUINS)
+	var dusk := Alien.luminous("bb937d", 0.14)
+	for row in 5:
+		for side in [-1, 1]:
+			var local := Vector2(side * (4.4 + 1.45 * sin(row * 1.12)), 5.0 - row * 3.5)
+			var foot := dream_surface(2, DREAM_RUINS + local) - ruins.position
+			var height := 3.8 + 2.0 * sin(0.87 + row * 1.5 + side * 0.62)
+			var lower := Kit.block(ruins, foot + Vector3.UP * (height * 0.46), Vector3(0.88, height, 2.72), stone)
+			lower.rotation = Vector3(0.08 * sin(row), side * 0.24, -0.19 * side)
+			lower.create_trimesh_collision()
+			if row % 2 == 0:
+				var cap := Kit.block(ruins, lower.position + Vector3(0.32 * side, height * 0.38, -0.18), Vector3(2.3, 0.52, 1.55), stone)
+				cap.rotation.z = 0.21 * side
+				cap.create_trimesh_collision()
+			Alien.strut(ruins, foot + Vector3(0.4 * -side, 0.36, 0.76), foot + Vector3(0.4 * -side, height * 0.77, 0.76), 0.026, dusk)
+	for side in [-1, 1]:
+		var at := dream_surface(2, DREAM_RUINS + Vector2(side * 4.1, 7.1)) - ruins.position
+		var gate := Kit.block(ruins, at + Vector3.UP * 2.3, Vector3(1.12, 4.8, 1.08), stone)
+		gate.rotation.z = -0.27 * side
+		gate.create_trimesh_collision()
+	var site := Vector2(-0.8, -4.8)
+	var floor := dream_surface(2, DREAM_RUINS + site) - ruins.position
+	var pedestal := Kit.block(ruins, floor + Vector3.UP * 0.42, Vector3(1.53, 0.84, 0.90), stone)
+	pedestal.create_trimesh_collision()
+	var plate := Kit.item(ruins, floor + Vector3(0, 1.05, 0.26), DREAM_PLATE, Vector3.ZERO, Vector3(1.07, 0.47, 0.12))
+	plate.rotation.x = -0.52
+	Kit.block(plate, Vector3.ZERO, Vector3(1.10, 0.53, 0.095), stone)
+	var view := SubViewport.new()
+	view.size = Vector2i(560, 330)
+	view.transparent_bg = true
+	view.render_target_update_mode = SubViewport.UPDATE_ONCE
+	plate.add_child(view)
+	# La placa y la hoja del jugador usan los mismos signos.
+	var symbols = load("res://plano.gd").new()
+	view.add_child(symbols)
+	symbols.open_at(Vector3.ZERO, 2, -1, null)
+	var imprint := Refuge.print_surface(plate, Vector3(0, 0, 0.050), Vector2(0.94, 0.41), view.get_texture())
+	imprint.material_override.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	imprint.material_override.albedo_color = Color("#b5a493")
 
 static func dream_rock(variant: int, tint: Color, stone: bool) -> ShaderMaterial:
 	var paint := ShaderMaterial.new()

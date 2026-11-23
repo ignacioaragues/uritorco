@@ -124,12 +124,20 @@ const TOPICS = {
 			["Ojalá esté despejado. Si llegás a ver la cruz, pensá que desde acá va a estar para el mismo lado."]
 		]
 	],
-	"ultima_curva": [
-		1, "¿Ya saliste del museo? Elvira me hizo prometer que te iba a mandar hasta ahí. Quería que te llevaras algo.",
-		["Sí. Me lo voy a llevar en la mano, para abrirlo en el viaje.", "Voy a extrañar más que la vista. Vos también me vas a hacer falta."],
+	"libro_elvira": [
+		-1, "¿Encontraste el libro?",
+		["Sí. Decile a Elvira que le agradezco.", "Hay algo bastante increíble en ese libro. El arco del grabado… Debo haberlo visto antes en algún lado."],
 		[
-			["Hay un asiento junto a la ventana del lado del cerro. De ahí se lee bien hasta que dobla a la ruta."],
-			["A mí también me va a faltar oírte llegar. Hoy dejé la radio prendida un rato antes de que salieras."]
+			["Le va a gustar saber que lo encontraste."],
+			["Capaz te cruzaste con algo parecido caminando. Cuando te acuerdes de dónde, contame."]
+		]
+	],
+	"ultima_curva": [
+		1, "Te escucho caminar. Me voy a tener que acostumbrar a que no me llames desde cualquier piedra.",
+		["Me queda un trecho. Todavía vas a escucharme un rato.", "A mí me va a hacer falta escuchar tu voz."],
+		[
+			["Bueno. Me quedo en el canal hasta que llegues a la bajada."],
+			["A mí también me va a hacer falta la tuya. Hoy prendí la radio antes de que salieras."]
 		]
 	]
 }
@@ -191,7 +199,9 @@ static func available(stage: int, position: Vector3, bedtime: bool, sighting: bo
 		19:
 			if not book_taken and on_ridge(position, 110.0, 90.0):
 				topic = "regreso"
-			elif book_taken and on_ridge(position, Museum.DISTANCE - 26.0, 49.0):
+			elif book_taken and not answered.has("libro_elvira") and on_ridge(position, Museum.DISTANCE - 12.0, 40.0):
+				topic = "libro_elvira"
+			elif book_taken and on_ridge(position, 164.0, 52.0):
 				topic = "ultima_curva"
 	return topic if not answered.has(topic) else ""
 

@@ -13,6 +13,7 @@ var cover: Texture2D
 var signature: Texture2D
 var crux_page: Texture2D
 const ELVIRA_COVER = preload("res://museo/libro_comechingones.webp")
+const ELVIRA_PAPER = preload("res://diario_papel.webp")
 const ELVIRA_ENGRAVING = preload("res://museo/grabado_arco.webp")
 var elvira := false
 const HAND_COPY = preload("res://libro_crux_hernan.webp")
@@ -48,7 +49,7 @@ func open_elvira():
 	queue_redraw()
 
 func turn(step: int):
-	page = clampi(page + step, 0, 1 if elvira else (3 if light_comparison else 2))
+	page = clampi(page + step, 0, 2 if elvira else (3 if light_comparison else 2))
 	queue_redraw()
 
 func title_at(value: String, y: float, font_size: int, tint: Color):
@@ -62,10 +63,14 @@ func _draw():
 	draw_set_transform(origin, 0.0, Vector2.ONE * scale_factor)
 	draw_rect(Rect2(Vector2(7, 10), PAGE_SIZE), Color("#0d0e0d"))
 	if elvira:
-		var illustration: Texture2D = ELVIRA_COVER if page == 0 else ELVIRA_ENGRAVING
-		var width := PAGE_SIZE.y * float(illustration.get_width()) / illustration.get_height()
-		draw_texture_rect(illustration, Rect2((PAGE_SIZE.x - width) * 0.5, 0, width, PAGE_SIZE.y), false)
-		title_at("E o clic · abrir   /   Esc · dejar" if page == 0 else "E o clic · guardar el libro", 647, 21, Color("#ebdfc5"))
+		if page == 2:
+			draw_elvira_text()
+		else:
+			var illustration: Texture2D = ELVIRA_COVER if page == 0 else ELVIRA_ENGRAVING
+			var width := PAGE_SIZE.y * float(illustration.get_width()) / illustration.get_height()
+			draw_texture_rect(illustration, Rect2((PAGE_SIZE.x - width) * 0.5, 0, width, PAGE_SIZE.y), false)
+		var cues := ["E o clic · abrir   /   Esc · dejar", "← · tapa   /   E o clic · pasar página", "← · grabado   /   E o clic · guardar"]
+		title_at(cues[page], 647, 21, Color("#ebdfc5"))
 		return
 	if page == 0:
 		draw_cover()
@@ -91,6 +96,23 @@ func _draw():
 	var turn_hint: String = ["→ o clic · abrir", "← · tapa     → o clic · Cruz del Sur", "← · guarda", "← · lámina"][page]
 	if page == 2 and light_comparison: turn_hint += "     E · comparar el rumbo"
 	title_at(turn_hint + "      Esc · guardar", 647, 21, Color("#ebdfc5"))
+
+func draw_elvira_text():
+	draw_texture_rect(ELVIRA_PAPER, Rect2(Vector2.ZERO, PAGE_SIZE), false)
+	title_at("Pasos de piedra", 92, 31, INK)
+	var paragraphs := [
+		"El grabado de la página anterior muestra dos piedras altas y una laja tendida sobre ellas. En la sierra se ven pasos parecidos. Algunos parecen obra humana; en otros cuesta distinguir lo puesto a mano de lo que dejó la erosión.",
+		"Se ha sugerido que señalaban un paso entre quebradas. Otros lectores ven un umbral ceremonial o un marco desde el que mirar alguna estrella. El dibujo carece de orientación y el sitio quedó sin registrar.",
+		"En las historias de la zona vuelve una idea: una misma piedra puede marcar el camino para unos y su final para otros. Es difícil saber quién la contó primero.",
+	]
+	var y := 143.0
+	for paragraph in paragraphs:
+		var layout := TextParagraph.new()
+		layout.width = 352.0
+		layout.add_string(paragraph, serif, 21)
+		layout.draw(get_canvas_item(), Vector2(49.0, y), INK)
+		y += layout.get_size().y + 24.0
+	title_at("48", 568, 18, INK)
 
 func draw_cover():
 	if cover:
