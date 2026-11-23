@@ -41,6 +41,9 @@ void fragment() {
 	if (lane_to_house) { x = 4.3 * sin((ground.z + 4.5) * 0.093) * smoothstep(3.0, 13.0, ground.z + 4.5); }
 	float track = 1.0 - smoothstep(0.70, 1.86, abs(ground.x - x) + edge_wear);
 	if (lane_to_house) { track *= smoothstep(-5.0, -4.08, ground.z); }
+	if (fragment_index == 1) {
+		track *= smoothstep(-27.0, -13.0, distance) * (1.0 - smoothstep(22.0, 35.0, distance));
+	}
 	vec3 meadow = soil_tint.rgb * (0.91 + 0.19 * earth);
 	vec3 trail = track_tint.rgb * (0.86 + 0.28 * earth);
 	vec3 color = mix(meadow, trail, track);
@@ -49,6 +52,12 @@ void fragment() {
 		float exposure = brush * 0.64 + earth * 0.36;
 		vec3 cut = mix(trail, vec3(0.41, 0.35, 0.30), 0.57) * (0.79 + exposure * 0.33);
 		color = mix(color, cut, slope * 0.90);
+	}
+	if (fragment_index == 1) {
+		float patches = pigment(texture(brushwork, brush_dir * 0.155 + vec2(0.27, 0.62)).rgb);
+		float litter = smoothstep(0.29, 0.65, patches * 0.66 + brush * 0.34);
+		vec3 floor_tint = mix(vec3(0.31, 0.275, 0.19), vec3(0.40, 0.42, 0.25), litter);
+		color = mix(color, floor_tint, (0.40 + litter * 0.40) * (1.0 - track));
 	}
 	float detail = 0.0;
 	if (pixel_size < 0.075) {

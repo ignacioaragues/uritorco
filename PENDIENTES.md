@@ -389,6 +389,11 @@ Esta lista reconstruye el estado informado del proyecto editable. La exportació
 
 - La lluvia puede ceder durante el regreso de la pasarela. La nubosidad baja permanece hasta cambiar de jornada y no se dispara un ocaso ni se ve la luna. Los guardados anteriores del Día 36 se ajustan a esa luz al cargar.
 
+## Pasada del tronco, la cuerda y la linterna
+
+- En el prólogo, el monte tiene sotobosque detrás de los árboles. La huella se pierde entre pastos y arbustos más allá del tramo transitable.
+- El anclaje de la cuerda se apoya sobre la malla de la laja. La linterna acompaña el fundido y se oculta al llegar a negro.
+
 ## Todavía pendiente
 
 - **Arte.** Cotejar el acabado de las rocas con más fotos del cerro y seguir afinando los objetos de cerca, la vegetación y las lomadas de fondo en los sectores secundarios.

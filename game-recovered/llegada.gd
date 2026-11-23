@@ -25,7 +25,7 @@ const LEDGE_ROPE = [
 	Vector3(0.16, 0.073, -10.18), Vector3(0.10, 0.69, -10.29),
 	Vector3(0.10, 1.30, -10.56), Vector3(0.12, 1.44, -10.63),
 	Vector3(0.14, 1.49, -10.73), Vector3(0.19, 1.50, -11.04),
-	Vector3(0.32, 1.55, -11.57),
+	Vector3(0.32, 1.43, -11.57),
 ]
 const SOIL = ["77765d", "786e50", "697353", "7d7958", "83724f", "777260", "666754", "6f7259"]
 const TRACK = ["9c815c", "aa866a", "98836a", "a88c65", "be9b71", "987457", "937a62", "988571"]
@@ -392,9 +392,40 @@ static func dress_log_edge(v, center: Vector3):
 			for k in 4:
 				var root: Vector3 = ground.call(foot + Vector3(rng.randf_range(-2.0, 2.0), 0, rng.randf_range(-2.0, 2.0)))
 				roots.append(Vector4(root.x, root.y - 0.055, root.z, rng.randf_range(0.65, 1.34)))
+	dress_log_understory(v, center, ground, roots, scrub, understory)
 	Flora.grass_batch(v, roots)
 	Flora.herb_batch(v, scrub, Flora.Herb.ROMERILLO)
 	Stone.finish(v, rocks, "Piedras entre la vegetación")
+
+static func dress_log_understory(v, center: Vector3, ground: Callable, roots: Array[Vector4], scrub: Array[Vector4], random: RandomNumberGenerator):
+	for side in [-1.0, 1.0]:
+		for group in 23:
+			var distance := -13.0 + group * 2.70 + random.randf_range(-0.85, 0.85)
+			var boundary := log_verge(side, distance)
+			var clearing := boundary + Vector3(side * random.randf_range(2.1, 12.4), 0, 0)
+			var at: Vector3 = ground.call(center + clearing)
+			if group % 3 == 0:
+				Flora.tree(v, at, Flora.Kind.PIQUILLIN, random.randf_range(0.76, 1.44), random.randf() * TAU, 1.17)
+			for sprig in 17:
+				var x: float = clearing.x + side * random.randf_range(-2.5, 4.6)
+				var d := distance + random.randf_range(-2.7, 2.7)
+				if absf(x - track_x(1, d)) < 3.05: continue
+				var root: Vector3 = ground.call(center + Vector3(x, 0, -d))
+				var plant := Vector4(root.x, root.y - 0.047, root.z, random.randf_range(0.60, 1.36))
+				if sprig % 4 == 0: scrub.append(plant)
+				else: roots.append(plant)
+	# La huella se pierde en el monte más allá del tramo caminable.
+	for distance in [29.8, 33.1, 37.3, 42.0, 46.2, 51.0]:
+		for i in 19:
+			var d: float = distance + random.randf_range(-1.2, 1.2)
+			var x := track_x(1, d) + random.randf_range(-2.45, 2.45)
+			var foot: Vector3 = ground.call(center + Vector3(x, 0, -d))
+			var plant := Vector4(foot.x, foot.y - 0.046, foot.z, random.randf_range(0.63, 1.33))
+			if i % 3 == 0: scrub.append(plant)
+			else: roots.append(plant)
+		if distance > 34.0:
+			var fork: Vector3 = ground.call(center + Vector3(track_x(1, distance) + random.randf_range(-0.64, 0.64), 0, -distance))
+			Flora.tree(v, fork, Flora.Kind.PIQUILLIN, random.randf_range(1.0, 1.47), random.randf() * TAU)
 
 static func log_verge(side: float, distance: float) -> Vector3:
 	var brush := 2.65 + 0.28 * sin(distance * 0.72) + 0.39 * sin(distance * 0.24 + side)
@@ -454,18 +485,38 @@ static func build_laja(v, center: Vector3):
 	grip.collision_layer = 2
 	grip.collision_mask = 0
 	dress_laja_shoulders(v, center)
+	var heads := slab.mesh.get_faces()
+	var end: Vector3 = LEDGE_ROPE.back()
+	var rock_contact := center + Vector3(end.x, ledge_surface_height(heads, end.x, end.z), end.z)
+	const EYE_HEIGHT := 0.067
+	var eye := rock_contact + Vector3.UP * EYE_HEIGHT
 	var points := PackedVector3Array()
-	for point: Vector3 in LEDGE_ROPE: points.append(center + raised_ledge(point))
+	for point: Vector3 in LEDGE_ROPE:
+		var raised := raised_ledge(point)
+		if point.z < -10.72:
+			raised.y = ledge_surface_height(heads, point.x, point.z) + 0.025
+		points.append(center + raised)
+	points[points.size() - 1] = eye
 	var hemp := Refuge.cloth("bbaa83", "a4906e", 0.19)
 	FieldKit.cord(v, points, 0.023, hemp)
-	var peg := FieldKit.material("655345", false, 0.64)
-	var anchor: Vector3 = center + raised_ledge(LEDGE_ROPE.back())
-	FieldKit.cylinder(v, anchor + Vector3.DOWN * 0.07, 0.018, 0.018, 0.13, peg)
+	var iron := FieldKit.material("655345", false, 0.64)
+	var pin := FieldKit.cylinder(v, rock_contact + Vector3.DOWN * 0.063, 0.018, 0.018, 0.228, iron)
+	pin.name = "Perno clavado en la laja"
+	var washer := FieldKit.cylinder(v, rock_contact + Vector3.UP * 0.003, 0.055, 0.057, 0.018, iron)
+	washer.name = "Arandela sobre la laja"
 	var knot := TorusMesh.new()
-	knot.inner_radius = 0.030
-	knot.outer_radius = 0.058
-	var loop := FieldKit.mesh_part(v, knot, anchor, peg)
-	loop.rotation.x = 0.68
+	knot.inner_radius = 0.036
+	knot.outer_radius = 0.063
+	var loop := FieldKit.mesh_part(v, knot, eye, iron)
+	loop.name = "Ojal de la cuerda"
+	loop.rotation.x = PI * 0.5
+
+static func ledge_surface_height(faces: PackedVector3Array, x: float, z: float) -> float:
+	var ray := Vector3(x, LEDGE_TOP + 1.0, z)
+	for i in range(0, faces.size(), 3):
+		var hit = Geometry3D.ray_intersects_triangle(ray, Vector3.DOWN, faces[i], faces[i + 1], faces[i + 2])
+		if hit != null: return hit.y
+	return LEDGE_TOP
 
 static func ledge_face(rows: Array) -> ArrayMesh:
 	const COLUMNS := 157

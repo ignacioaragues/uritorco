@@ -483,6 +483,7 @@ func memory(paragraph: int = 0):
 	cross.hide()
 	shade.color = Color.BLACK
 	shade.show()
+	update_flashlight()
 	words.text = ""
 	hint.text = ""
 	var entry: Dictionary = memories[page]
@@ -1597,7 +1598,7 @@ func refresh_map_goal():
 
 func update_flashlight():
 	var in_cave_scene := is_instance_valid(cave)
-	var active: bool = flashlight_out and (mode in ["walk", "approach", "map", "dream", "sighting"] or in_cave_scene or hands.requested_pose == "radio") and mode != "menu"
+	var active: bool = flashlight_out and (mode in ["walk", "approach", "approach_fade", "map", "dream", "sighting"] or in_cave_scene or hands.requested_pose == "radio") and mode != "menu"
 	player.flashlight.visible = active
 	if active:
 		var dark: float = valley.sky_mat.get_shader_parameter("nightfall")
