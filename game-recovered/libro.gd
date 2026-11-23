@@ -111,8 +111,8 @@ func draw_elvira_text():
 		layout.width = 352.0
 		layout.add_string(paragraph, serif, 21)
 		layout.draw(get_canvas_item(), Vector2(49.0, y), INK)
-		y += layout.get_size().y + 24.0
-	title_at("48", 568, 18, INK)
+		y += layout.get_size().y + 18.0
+	title_at("48", 588, 18, INK)
 
 func draw_cover():
 	if cover:
