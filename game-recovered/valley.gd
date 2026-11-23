@@ -813,16 +813,16 @@ var summit_dressed: = false
 func dress_day32():
 	if summit_dressed: return
 	summit_dressed = true
-	route.signpost(route.eastern_access(0.54) + Vector3(2.0, 0, 0), "Acceso a la cumbre")
-	var access: Vector3 = route.terrain_point(route.ascent_point(0))
-	route.signpost(access + Vector3.RIGHT * 2.0, "Uritorco · Inicio del ascenso")
-	box(access + Vector3(-2.4, 0.42, 1.1), Vector3(1.8, 0.14, 0.42), "7a634c", true, "Banco del acceso")
-	for offset in [-2.94, -1.86]:
-		ground_support(access + Vector3(offset, 0.38, 1.1), 0.15, 0.37, "665342")
+	var lookout: Vector3 = route.ascent_point(0.69)
+	birds.add_flight(Birds.Species.CARANCHO, lookout + Vector3(6.0, 6.8, 2.0), Vector2(14, 8), 0.8)
+	var east: Vector3 = route.eastern_access(0.54)
+	place_descent_sign(east, route.eastern_access(0.56) - east, "Acceso", true)
+	var access: Vector3 = route.terrain_point(route.ascent_point(0.0))
+	place_descent_sign(access, route.ascent_point(0.02) - access, "Acceso", true)
 	for progress in [0.31, 0.64, 0.92]:
 		var foot: Vector3 = route.ascent_point(progress)
 		var uphill: Vector3 = route.ascent_point(progress + 0.02) - foot
-		place_descent_sign(foot, uphill, "Acceso · seguí las pircas")
+		place_descent_sign(foot, uphill, "Acceso", true)
 	var summit: Vector3 = route.summit_point(1)
 	var descent: Vector3 = route.summit_point(0.94)
 	place_descent_sign(descent, summit - descent, "Bajada · acceso")
@@ -834,13 +834,13 @@ func dress_day32():
 	cairn_rng.seed = 3441
 	var faces := Stone.surface()
 	var plinth := Stone.fragment(faces, base, Vector3(0.88, 0.48, 0.62), 0.36, cairn_rng, ground)
-	Stone.solid(self, base, plinth, "Base del hito", "Hito de la cumbre")
+	Stone.solid(self, base, plinth, "Base del hito", "Hito del filo oriental")
 	Stone.finish(self, faces, "Base de piedra de la cumbre")
 	dress_camp()
 
-func place_descent_sign(foot: Vector3, uphill: Vector3, caption: String):
+func place_descent_sign(foot: Vector3, uphill: Vector3, caption: String, faces_climber := false):
 	var beside := foot + Vector3(uphill.z, 0.0, -uphill.x).normalized() * 2.1
-	route.signpost(beside, caption, atan2(uphill.x, uphill.z))
+	route.signpost(beside, caption, atan2(uphill.x, uphill.z) + (PI if faces_climber else 0.0))
 
 var camp_log: MeshInstance3D
 

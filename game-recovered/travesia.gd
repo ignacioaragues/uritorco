@@ -27,6 +27,7 @@ const ASCENT_WINDING := 16.0
 var rng: = RandomNumberGenerator.new()
 var ground_rows: = PackedFloat32Array()
 var ground_material: ShaderMaterial
+var detour_deadfall: Node3D
 var fox: = Node3D.new()
 var legs: Array[Node3D] = []
 var fox_waits: = false
@@ -47,7 +48,7 @@ static func elevation(x: float, d: float) -> float:
 	var roll: = 6.0 * sin(d / 63.0) + 4.0 * sin(x / 53.0 + d / 89.0)
 	var shoulder: = 20.0 * pow(clampf(absf(x - trail(d)) / 180.0, 0, 1), 2)
 	var offset := x - trail(170)
-	var escarpment := 1.0 if offset < 0.0 else 1.0 - smoothstep(10, 26, offset)
+	var escarpment := 1.0 if offset < 0.0 else 1.0 - smoothstep(25.0, 32.0, offset)
 	var face := 169.7 + 2.9 * sin(minf(offset + 12.0, 0.0) / 23.0)
 	var lip := 3.1 * smoothstep(169.8, 170.2, d) * escarpment * (1.0 - smoothstep(180, 218, d))
 	if offset < -16.0:
@@ -171,24 +172,41 @@ func dress_laja_flank():
 		var span := Vector3(6.8, mineral.randf_range(3.0, 4.3), mineral.randf_range(3.3, 5.5))
 		var piece := Stone.fragment(faces, foot, span, mineral.randf_range(-0.22, 0.24), mineral, terrain_point, Stone.FRACTURE_PROFILE, true)
 		Stone.solid(self, foot, piece, "Paredón de la laja")
+	for east_offset: float in [4.4, 9.9, 15.2, 20.5, 25.7, 29.2]:
+		var distance := 169.15 + 0.62 * sin(east_offset * 0.29)
+		var foot := surface_point(trail(170) + east_offset, distance)
+		var span := Vector3(5.65, 3.6 + 0.78 * sin(east_offset * 0.45), 4.8)
+		var piece := Stone.fragment(faces, foot, span, 0.10 * cos(east_offset), mineral, terrain_point, Stone.FRACTURE_PROFILE, true)
+		Stone.solid(self, foot, piece, "Lajas entre la cuerda y la vaguada")
+	var west_foot := surface_point(trail(170) - 7.8, 169.1)
+	var west_piece := Stone.fragment(faces, west_foot, Vector3(8.3, 4.25, 4.9), -0.12, mineral, terrain_point, Stone.FRACTURE_PROFILE, true)
+	Stone.solid(self, west_foot, west_piece, "Lajas junto a la cuerda")
 	Stone.finish(self, faces, "Ladera quebrada de la laja")
 
 func build_detour_deadfall():
+	detour_deadfall = Node3D.new()
+	detour_deadfall.name = "Tronco de la vaguada del Día 25"
+	add_child(detour_deadfall)
 	var distance := 159.5
 	var center := detour(distance)
 	var root := surface_point(center - 3.4, distance - 2.0) + Vector3.UP * 0.24
 	var tip := surface_point(center + 3.5, distance + 1.8) + Vector3.UP * 0.13
 	var bark := Flora.bark_material()
-	var trunk := Kit.cylinder(self, root.lerp(tip, 0.5), 0.34, 0.19, root.distance_to(tip), bark)
+	var trunk := Kit.cylinder(detour_deadfall, root.lerp(tip, 0.5), 0.34, 0.19, root.distance_to(tip), bark)
 	trunk.name = "Tronco caído de la vaguada"
 	trunk.basis = Basis(Quaternion(Vector3.UP, root.direction_to(tip)))
 	trunk.create_trimesh_collision()
-	var break_wood := Kit.cylinder(self, tip, 0.176, 0.13, 0.11, Kit.material("9f8063"))
+	var break_wood := Kit.cylinder(detour_deadfall, tip, 0.176, 0.13, 0.11, Kit.material("9f8063"))
 	break_wood.basis = trunk.basis
 	for side in [-1.0, 1.0]:
 		var collar := root.lerp(tip, 0.25 if side < 0.0 else 0.77)
 		var branch_end := collar + Vector3(-0.42, 0.32, side * 1.27)
-		Flora.branch(self, collar, branch_end, 0.12, 0.043, true)
+		Flora.branch(detour_deadfall, collar, branch_end, 0.12, 0.043, true)
+
+func set_detour_deadfall(active: bool):
+	if detour_deadfall.visible == active: return
+	detour_deadfall.visible = active
+	detour_deadfall.process_mode = Node.PROCESS_MODE_INHERIT if active else Node.PROCESS_MODE_DISABLED
 
 func laja_rope_route() -> Array[Vector3]:
 	var x := trail(170.0) - 0.64

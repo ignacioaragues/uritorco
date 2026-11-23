@@ -44,6 +44,8 @@ const MAIN_TRAIL_LIMITS := [
 ]
 var itinerary_sheet := -1
 var departure_sheet := false
+var camp_known := false
+var tourist_search := false
 var dream_sheet := 0
 var arrival_sheet := -1
 var active_zone := -1
@@ -308,11 +310,34 @@ func draw_ridge(limits: Rect2):
 		pin(limits, ROUTE.quarry_point(1.0), "Malacate", Vector2(-23, -13))
 	else:
 		pin(limits, ROUTE.quarry_point(1.0), "Cantera", Vector2(-15, 15))
-		pin(limits, ROUTE.ascent_point(0.0), "Banco del acceso", Vector2(13, -8))
-		pin(limits, ROUTE.ascent_point(0.58), "Senda de las pircas", Vector2(13, 12))
-		pin(limits, ROUTE.summit_point(1), "Cumbre", Vector2(14, -11))
-		pin(limits, ROUTE.camp_point(), "Campamento", Vector2(14, 26))
+		pin(limits, ROUTE.ascent_point(0.0), "Acceso", Vector2(13, -8))
+		if tourist_search:
+			draw_tourist_search(limits)
+		else:
+			pin(limits, ROUTE.ascent_point(0.58), "Senda de las pircas", Vector2(13, 12))
+		pin(limits, ROUTE.summit_point(1), "Filo del este", Vector2(14, -11))
+		if camp_known: pin(limits, ROUTE.camp_point(), "Campamento", Vector2(14, 26))
 		pin(limits, Vector3(ROUTE.trail(ROUTE.CREST), 0, ROUTE.ORIGIN_Z - ROUTE.CREST), "Hito del filo", Vector2(-24, -13))
+
+func draw_tourist_search(limits: Rect2):
+	var north := point(limits, ROUTE.ascent_point(0.98))
+	var south := point(limits, ROUTE.ascent_point(0.46))
+	var center := north.lerp(south, 0.5)
+	var half := Vector2(31.0, absf(south.y - north.y) * 0.5 + 9.0)
+	var border := PackedVector2Array()
+	for i in 36:
+		var angle := TAU * i / 36.0
+		border.append(center + Vector2.from_angle(angle) * half)
+	draw_colored_polygon(border, Color(0.60, 0.30, 0.16, 0.13))
+	for i in range(0, 36, 2):
+		draw_line(border[i], border[i + 1], ROUTE_COLOR, 1.55, true)
+	var font := ThemeDB.fallback_font
+	var caption := "Búsqueda de turistas"
+	var label := center + Vector2(half.x + 5.0, 4.0)
+	var label_width := font.get_string_size(caption, HORIZONTAL_ALIGNMENT_LEFT, -1, 17).x
+	label.x = minf(label.x, PAPER_FIELD.end.x - label_width - 10.0)
+	draw_string_outline(font, label, caption, HORIZONTAL_ALIGNMENT_LEFT, -1, 17, 4, LABEL_HALO)
+	draw_string(font, label, caption, HORIZONTAL_ALIGNMENT_LEFT, -1, 17, LABEL_INK)
 
 func access_road(t: float) -> Vector3:
 	var z := lerpf(6.0, ROUTE.ORIGIN_Z, t)

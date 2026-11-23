@@ -84,6 +84,14 @@ const TOPICS = {
 			["Bueno, ahora ya sé a quién llamar cuando quiera entender lo que estoy mirando.", "Y me vas a tener que mostrar cuál de las cuatro buscás primero."]
 		]
 	],
+	"acceso_este": [
+		1, "¿Cómo vas? En el faldeo del este la huella parece más corta desde abajo. Yo la primera vez paré tres veces.",
+		["Voy mirando si dejaron alguna señal por acá.", "Voy despacio. Si tenés un rato, quedate en el canal."],
+		[
+			["Fijate en los claros cerca de las pircas. Ahí paran a reagruparse antes de seguir."],
+			["Dale. Tengo la pava puesta. Cuando llegues a un claro avisame cómo viene la subida."]
+		]
+	],
 	"pircas": [
 		0, "Me quedé pensando en lo que hablamos el otro día. ¿Nunca pensaste en formar una familia?",
 		["Se llama Paula. Estudiábamos juntos y se fue a Alemania. Hace tiempo que no hablamos.", "Prefiero dejarlo ahí por ahora. Hubo alguien, sí."],
@@ -93,7 +101,7 @@ const TOPICS = {
 		]
 	],
 	"bajada": [
-		1, "Cuando veas el banco ya estás fuera de la parte fea de la bajada. Si querés, me quedo un rato.",
+		1, "Cuando vuelvas al cartel de acceso ya pasó la parte empinada. Si querés, me quedo un rato.",
 		["Ya veo por dónde sigo. Acá abajo aflojó un poco el viento.", "Quedate un rato. Cada vez que suelto el botón vuelve a oírse el viento."],
 		[
 			["Acá también paró. Si te agarra otra ráfaga, esperá al reparo de las piedras. Avisame cuando veas el puesto."],
@@ -189,6 +197,11 @@ static func available(stage: int, position: Vector3, bedtime: bool, sighting: bo
 			if near(position, Trail.quarry_point(Trail.WEST_JOIN), 56.0): topic = "duelo"
 		12:
 			if near(position, Trail.quarry_point(0.72), 45.0): topic = "cable"
+		13:
+			for progress in [0.14, 0.23, 0.34, 0.45]:
+				if near(position, Trail.ascent_point(progress), 55.0):
+					topic = "acceso_este"
+					break
 		15:
 			if near(position, Trail.summit_point(0.82), 52.0): topic = "pircas"
 			elif near(position, Trail.ascent_point(0.53), 73.0): topic = "bajada"
@@ -223,13 +236,18 @@ static func near(position: Vector3, center: Vector3, radius: float) -> bool:
 static func closeness(answered: Dictionary) -> int:
 	var connected := 0
 	for topic in TOPICS:
+		var close_reply: int = TOPICS[topic][0]
+		if close_reply < 0: continue
 		var answer: int = answered.get(topic, -1)
-		if answer == TOPICS[topic][0] or (answer == 1 and topic in RESERVED_ANSWERS):
+		if answer == close_reply or (answer == 1 and topic in RESERVED_ANSWERS):
 			connected += 1
 	return connected
 
 static func can_visit(answered: Dictionary) -> bool:
-	return closeness(answered) * 100 >= TOPICS.size() * VISIT_PERCENT
+	var available_count := 0
+	for topic in TOPICS.values():
+		if topic[0] >= 0: available_count += 1
+	return closeness(answered) * 100 >= available_count * VISIT_PERCENT
 
 static func saved_replies(state: Dictionary) -> Dictionary:
 	var replies: Dictionary = state.get("trail_replies", {}).duplicate()

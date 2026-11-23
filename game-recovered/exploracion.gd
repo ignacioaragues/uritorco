@@ -8,10 +8,12 @@ const Trail = preload("res://travesia.gd")
 const Kit = preload("res://equipo_campo.gd")
 const VISITOR := "visitante"
 const SIGHT := "visor"
+const TRAIL_TAG := "chapa_del_ascenso"
 const CAMP_BAND := "pulsera_campamento"
 const SKETCHES := {
 	VISITOR: preload("res://hallazgo_visitante.webp"),
 	SIGHT: preload("res://hallazgo_visor.webp"),
+	TRAIL_TAG: preload("res://hallazgo_chapa_ascenso.webp"),
 	CAMP_BAND: preload("res://hallazgo_pulsera.webp"),
 }
 
@@ -40,7 +42,8 @@ const FINDS = {
 	"placa": [6, "Chapa perforada", Vector2(14, 46), "Asomaba por debajo de una laja en la vuelta por el sur. Los agujeros tienen rebaba de un solo lado. Si la levanto hacia el cielo, parecen un grupo de estrellas. Cambia por completo al girarla."],
 	"lata": [7, "Croquis en una lata", Vector2(-47.6, -473), "En la subida al abra, detrás de una piedra. Dentro de la lata quedó un croquis doblado. Dos líneas cruzan una ladera. El papel se rompe justo donde se juntan."],
 	VISITOR: [8, "Miniatura del visitante", Vector2(-158.05, 89.7), "La encontré en una hendidura, aguas abajo de la pasarela. Tiene tres patas y una lente en la cabeza. La marca del molde sigue en el costado. Dibujé la figura como estaba, mirando al agua."],
-	SIGHT: [9, "Visor de latón", Vector2(113.5, -879.8), "Ya lejos de la huella de la cumbre vi un parapeto de piedras. Entre dos lajas había un aro de latón con vidrio ahumado. Al mirar por la muesca se ve una sola parte del cielo."],
+	SIGHT: [9, "Visor de latón", Vector2(113.5, -879.8), "Ya lejos de la huella del filo oriental vi un parapeto de piedras. Entre dos lajas había un aro de latón con vidrio ahumado. Al mirar por la muesca se ve una sola parte del cielo."],
+	TRAIL_TAG: [11, "Chapa de mochila", Vector2(155.4, -374.2), "La argolla estaba enganchada entre dos piedras al costado del ascenso. En el latón se lee 32. Puede haber sido la chapa de una mochila. Dibujé el doblez de la argolla."],
 	CAMP_BAND: [10, "Pulsera de excursión", Vector2(39.76, -1013.58), "La saqué de debajo de una piedra de la fogata. Todavía se lee «salida nocturna». Se despegó por el cierre. Dibujé la vuelta que hacía el papel."],
 }
 
@@ -56,6 +59,7 @@ const FIND_POSES := {
 	"lata": Vector3(-0.12, -1.27, 0.004),
 	VISITOR: Vector3(0.015, 1.10, 0.025),
 	SIGHT: Vector3(-0.11, -0.35, 0.024),
+	TRAIL_TAG: Vector3(-0.16, 1.45, 0.04),
 }
 
 static func ground(point: Vector2, route) -> Vector3:
@@ -292,8 +296,24 @@ static func dress_find(valley, id: String):
 			paper.rotation.x = -0.36
 		8: make_visitor(root)
 		9: make_sight(root)
+		11:
+			var brass := Kit.material("918264", false, 0.59)
+			Kit.block(root, Vector3(0, 0.008, 0.024), Vector3(0.117, 0.012, 0.131), brass)
+			var loop := TorusMesh.new()
+			loop.inner_radius = 0.027
+			loop.outer_radius = 0.036
+			Kit.mesh_part(root, loop, Vector3(0, 0.022, -0.075), brass).scale.z = 1.38
+			var mark := Label3D.new()
+			mark.text = "32"
+			mark.font_size = 38
+			mark.pixel_size = 0.00135
+			mark.modulate = Color("#4f493c")
+			mark.outline_size = 0
+			root.add_child(mark)
+			mark.position = Vector3(0, 0.015, 0.027)
+			mark.rotation.x = -PI * 0.5
 
-	var glint_height: float = [0.054, 0.14, 0.15, 0.42, 0.063, 0.083, 0.048, 0.19, 0.245, 0.165][entry[0]]
+	var glint_height: float = [0.054, 0.14, 0.15, 0.42, 0.063, 0.083, 0.048, 0.19, 0.245, 0.165, 0.0, 0.053][entry[0]]
 	Visual.glint(root, Vector3(0.07, glint_height, 0.08), Color("#e2c29a"))
 	var target := StaticBody3D.new()
 	target.collision_layer = 2
@@ -303,6 +323,7 @@ static func dress_find(valley, id: String):
 	root.add_child(target)
 	var hitbox := BoxShape3D.new()
 	hitbox.size = Vector3(0.66, 0.20, 0.46)
+	if id == TRAIL_TAG: hitbox.size = Vector3(0.31, 0.16, 0.28)
 	if id == "vasija": hitbox.size = Vector3(0.47, 0.43, 0.47)
 	if id == VISITOR: hitbox.size = Vector3(0.33, 0.32, 0.27)
 	if id == SIGHT: hitbox.size = Vector3(0.49, 0.24, 0.33)
@@ -347,6 +368,8 @@ static func dress_hideout(site: Node3D, route, id: String, index: int):
 				[Vector2(0.80, -0.72), Vector3(1.43, 0.76, 1.28), 0.20],
 				[Vector2(0.06, -1.39), Vector3(2.32, 1.00, 1.09), 0.08]]
 			shrubs = [[Vector2(-1.58, -0.64), Flora.Kind.PIQUILLIN, 0.88]]
+		TRAIL_TAG:
+			stones = [[Vector2(-0.22, -0.51), Vector3(0.9, 0.38, 0.76), -0.33], [Vector2(0.51, -0.28), Vector3(0.6, 0.31, 0.9), 0.16]]
 		SIGHT:
 			stones = [[Vector2(-0.03, -1.62), Vector3(3.39, 0.99, 1.63), -0.25],
 				[Vector2(-1.31, -0.24), Vector3(1.56, 0.67, 0.94), -0.34],

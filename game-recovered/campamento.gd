@@ -12,7 +12,7 @@ const CRATE_TOP := 0.48
 
 static func build(valley, camp_point: Vector3) -> MeshInstance3D:
 	var camp := Node3D.new()
-	camp.name = "Campamento de la cumbre"
+	camp.name = "Campamento del filo del este"
 	valley.add_child(camp)
 	var route = valley.route
 	camp.position = route.terrain_point(camp_point)
@@ -24,7 +24,24 @@ static func build(valley, camp_point: Vector3) -> MeshInstance3D:
 	crate(camp, ground)
 	field_gear(camp, ground)
 	fire_ring(camp, ground)
+	dress_tracks(camp, ground, route)
 	return notebook(camp)
+
+static func dress_tracks(camp: Node3D, ground: Callable, route):
+	var soil := Kit.material("554638")
+	var beyond: Vector3 = camp.to_local(route.summit_point(0.63))
+	var direction := Vector3(beyond.x, 0.0, beyond.z).normalized()
+	var across := Vector3(direction.z, 0, -direction.x)
+	for step in 14:
+		var offset := across * (0.16 if step % 2 == 0 else -0.16)
+		var at: Vector3 = ground.call(direction * (2.1 + 0.92 * step) + offset)
+		var heel := Kit.cylinder(camp, at + Vector3.UP * 0.018, 0.057, 0.054, 0.011, soil)
+		heel.scale.z = 1.35
+		heel.rotation.y = atan2(-direction.x, -direction.z)
+		var toe_pos: Vector3 = ground.call(at + direction * 0.11)
+		var toe := Kit.cylinder(camp, toe_pos + Vector3.UP * 0.016, 0.071, 0.066, 0.009, soil)
+		toe.scale.z = 1.27
+		toe.rotation.y = heel.rotation.y
 
 static func fire_ring(camp: Node3D, ground: Callable):
 	var spot: Vector3 = ground.call(Vector3(-5.1, 0, 1.4))

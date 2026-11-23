@@ -374,6 +374,12 @@ Esta lista reconstruye el estado informado del proyecto editable. La exportació
 - La bifurcación deja caminar más antes del corte. Sin invitación, los dos caminos llevan al ómnibus. Después del último párrafo aparecen FIN y los créditos con fundidos automáticos.
 - Se revisaron los bocetos del cuaderno y se integraron al papel los claros del zorro y del overo.
 
+## Pasada del filo del este y las lajas
+
+- El Día 32 empieza por la búsqueda de turistas. El banco se retiró. Los carteles dicen «Acceso» y enfrentan a quien sube. La lámina indica una zona de búsqueda de turistas. El campamento se incorpora al leer el cuaderno. Las pisadas y la ceniza tibia apuntan hacia el filo del este, un hito secundario del cerro.
+- La subida suma una charla de Mara, un cruce del zorro, un carancho y una chapa numerada junto a la huella. El grupo se reúne abajo y el encargo se cierra al volver al puesto.
+- El regreso del filo tarda cinco minutos y medio en llegar a noche cerrada. Las lajas cierran el atajo entre la cuerda y la vaguada. El tronco del rodeo se retira después del Día 25.
+
 ## Todavía pendiente
 
 - **Arte.** Cotejar el acabado de las rocas con más fotos del cerro y seguir afinando los objetos de cerca, la vegetación y las lomadas de fondo en los sectores secundarios.

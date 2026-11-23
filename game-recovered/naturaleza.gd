@@ -1,5 +1,6 @@
 extends Node3D
 
+const Trail = preload("res://travesia.gd")
 const Creek = preload("res://cauce.gd")
 const Flora = preload("res://flora.gd")
 const Stone = preload("res://piedra_serrana.gd")
@@ -200,7 +201,9 @@ func advance(delta: float, day: int, player_position: Vector3, dark: float, rain
 	if not walking: return
 
 	var player_xz := Vector2(player_position.x, player_position.z)
-	advance_fox(delta, player_xz, day >= 7 and day <= 32 and rain < 0.57 and dark < 0.68)
+	var crossing := Trail.ascent_point(0.26) if day == 32 else Vector3.ZERO
+	var fox_origin := Vector2(crossing.x, crossing.z) - FOX_MID if day == 32 else Vector2.ZERO
+	advance_fox(delta, player_xz, day >= 7 and day <= 32 and rain < 0.57 and dark < 0.68, fox_origin)
 	var tegu_site := tegu_home
 	if observations.has(TEGU):
 		for outcrop in tegu_outcrops:
@@ -244,8 +247,8 @@ func advance_chingolo(delta: float, listener: Vector3, active: bool):
 			wing.show()
 			wing.rotation.z = phase * (0.92 if i == 0 else -0.92)
 
-func advance_fox(delta: float, player_xz: Vector2, active: bool):
-	var distance := player_xz.distance_to(FOX_MID)
+func advance_fox(delta: float, player_xz: Vector2, active: bool, origin: Vector2 = Vector2.ZERO):
+	var distance := player_xz.distance_to(FOX_MID + origin)
 	if not active or distance > 25.0:
 		fox_clock = -1.0
 		fox_armed = true
@@ -262,10 +265,10 @@ func advance_fox(delta: float, player_xz: Vector2, active: bool):
 		fox_clock = -1.0
 		fox.hide()
 		return
-	var at := FOX_START.lerp(FOX_END, u)
+	var at := FOX_START.lerp(FOX_END, u) + origin
 	var lateral := (FOX_END - FOX_START).orthogonal().normalized()
 	at += lateral * sin(u * PI) * 0.8
-	fox.position = ground(at)
+	fox.position = get_parent().route.surface_point(at.x, Trail.ORIGIN_Z - at.y) if at.y < Trail.ORIGIN_Z else ground(at)
 	var direction := (FOX_END - FOX_START).normalized() + lateral * (0.13 * cos(u * PI))
 	fox.rotation.y = atan2(-direction.x, -direction.y)
 	var stride := u * 53.0

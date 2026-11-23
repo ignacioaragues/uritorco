@@ -317,7 +317,7 @@ La primera respuesta permite que Mara recuerde el dibujo en la despedida.
   - **Mara** · «Bueno, ahora ya sé a quién llamar cuando quiera entender lo que estoy mirando.»
   - **Mara** · «Y me vas a tener que mostrar cuál de las cuatro buscás primero.»
 
-## Día 32 · La cumbre
+## Día 32 · El filo del este
 
 ### Encargo de la subida
 
@@ -325,15 +325,25 @@ La primera respuesta permite que Mara recuerde el dibujo en la despedida.
 
 - **Mara** · «Me avisaron que anoche se metió un grupo de turistas sin permiso. Capaz el otro día viste las linternas de un grupo como ése. Nos pasa todas las semanas.»
 - **Hernán** · «¿Querés que vaya a ver si queda alguien?»
-- **Mara** · «Sí. Tomá el sendero del este. La subida empieza en el banco. Antes de llegar al filo hay un llano donde suelen acampar.»
-- **Mara** · «Fijate si ya bajaron. Si todavía queda alguien arriba, seguí las pircas hasta el último hito y avisame.»
+- **Mara** · «Sí. Tomá el sendero del este. Seguí las pircas desde el cartel de acceso.»
+- **Mara** · «Buscá a los turistas. Suelen parar a descansar en los claros. Si encontrás alguna señal de ellos, llamame.»
+
+### Charla en el faldeo del este
+
+**Empieza Mara.** R durante la primera mitad de la subida oriental, después de recibir el encargo.
+
+- **Mara** · «¿Cómo vas? En el faldeo del este la huella parece más corta desde abajo. Yo la primera vez paré tres veces.»
+- **Opción 1, Hernán** · «Voy mirando si dejaron alguna señal por acá.»
+  - **Mara** · «Fijate en los claros cerca de las pircas. Ahí paran a reagruparse antes de seguir.»
+- **Opción 2, Hernán** · «Voy despacio. Si tenés un rato, quedate en el canal.»
+  - **Mara** · «Dale. Tengo la pava puesta. Cuando llegues a un claro avisame cómo viene la subida.»
 
 ### Parte desde el campamento
 
 **Empieza Hernán.** Después de leer el cuaderno de campaña en el campamento, llama con R. Este parte habilita el hito.
 
-- **Hernán** · «Llegué a la lona. No hay nadie, para mí ya bajaron. En el cuaderno anotaron una camioneta y, dos minutos después, otra luz arriba de la muesca.»
-- **Mara** · «Siempre queda algo para juntar. Arrimate al último hito del filo por si quedó alguien más arriba.»
+- **Hernán** · «Llegué a la lona. No hay nadie acá. Hay botas marcadas en el barro y dejaron el trípode armado. En el cuaderno anotaron una camioneta y, dos minutos después, otra luz arriba de la muesca.»
+- **Mara** · «Si dejaron el trípode, capaz subieron un poco más. Seguí las huellas hasta el hito del filo del este y fijate si los ves.»
 - **Hernán** · «Esa segunda luz me deja pensando. Hace unos días vi una arriba del corte.»
 - **Mara** · «Por acá pasan grupos enteros de noche. Desde abajo ni siquiera veo esa parte de la ladera. Avisame qué encontrás en el hito.»
 
@@ -341,8 +351,8 @@ La primera respuesta permite que Mara recuerde el dibujo en la despedida.
 
 - **Al examinar el trípode:** «Hay un trípode apuntando a la muesca. Se llevaron la cámara.»
   - **Mara** · «Qué suerte. Una vez dejaron la cámara y se llevaron el trípode. Anduvimos una semana buscando al dueño.»
-- **Al examinar la fogata:** «Dejaron una fogata. La ceniza ya está fría.»
-  - **Mara** · «Por lo menos se acordaron de apagarla. El cartel de prohibido hacer fuego me lo podrían haber ahorrado.»
+- **Al examinar la fogata:** «Dejaron una fogata. La ceniza está tibia todavía.»
+  - **Mara** · «Entonces anduvieron hace poco. Si seguís las pisadas, capaz los alcanzás.»
 - **Al recoger la pulsera:** «Encontré una pulsera de papel. Dice «salida nocturna».»
   - **Mara** · «Mirá vos. Para imprimir pulseras les alcanza. Para pedir permiso, nunca.»
 
@@ -350,16 +360,16 @@ La primera respuesta permite que Mara recuerde el dibujo en la despedida.
 
 **Empieza Hernán** con R después de examinar el hito y pasar los detalles pendientes.
 
-- **Hernán** · «Llegué al hito. No quedó nadie. Desde acá se ve que entre el camino y la muesca hay otro pliegue de sierra. La luz me sigue dejando dudas.»
+- **Hernán** · «Llegué al hito del filo del este. Las huellas siguen por la otra ladera. Desde acá se ve un pliegue entero entre ese sendero y la muesca. La luz me sigue dejando dudas.»
 - **Mara** · «Pudo ser una linterna. Desde un sendero bastante más abajo también parecen flotar.»
 - **Mara, si Hernán pasó el rumbo del malacate** · «Marqué el rumbo que me diste. Atrás de la ladera hay gente caminando casi todas las noches. Una linterna de frente engaña a cualquiera.»
-- **Mara** · «Volvé al puesto para cerrar la travesía. Bajá por las pircas hasta el banco y seguí por la huella.»
+- **Mara** · «Me acaban de avisar que el grupo se juntó abajo. Pegá la vuelta por el acceso y seguí hasta el puesto.»
 
 ### La voz de la bajada
 
-**Primero se oye un eco.** La radio da dos golpes y repite «hasta el banco» con una voz parecida a la de Hernán. Puede abrir la conversación **Hernán**.
+**Primero se oye un eco.** La radio da dos golpes y repite «hasta el acceso» con una voz parecida a la de Hernán. Puede abrir la conversación **Hernán**.
 
-- **Opción 1, Hernán** · «¿Vos acabás de repetir «hasta el banco»?»
+- **Opción 1, Hernán** · «¿Vos acabás de repetir «hasta el acceso»?»
   - **Mara** · «Lo dije antes. Ahora estaba esperando tu respuesta. Si lo volvés a oír, fijate si entra antes o después de que sueltes el botón.»
 - **Opción 2** · «Guardás la radio y empezás a bajar.»
   - *Hernán se queda con lo que oyó.*
@@ -386,13 +396,13 @@ La primera respuesta permite que Mara recuerde el dibujo en la despedida.
 
 La primera respuesta es la primera mención de Paula en la radio. Habilita las alusiones de los Días 40 y 41.
 
-### Compañía hasta el banco
+### Compañía hasta el acceso
 
 **Charla opcional de cercanía.**
 
 **Disparador.** Con R a media ladera en la bajada, después de la conversación y el eco del hito.
 
-**Empieza Mara.** «Cuando veas el banco ya estás fuera de la parte fea de la bajada. Si querés, me quedo un rato.»
+**Empieza Mara.** «Cuando vuelvas al cartel de acceso ya pasó la parte empinada. Si querés, me quedo un rato.»
 
 - **Opción 1, Hernán** · «Ya veo por dónde sigo. Acá abajo aflojó un poco el viento.»
   - **Mara** · «Acá también paró. Si te agarra otra ráfaga, esperá al reparo de las piedras. Avisame cuando veas el puesto.»
