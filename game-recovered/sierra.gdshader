@@ -16,6 +16,7 @@ uniform vec3 moon_dir;
 uniform vec3 daylight_dir = vec3(0.69, 0.41, 0.59);
 uniform float moon_radius = 0.057;
 uniform float daylight_moon = 1.0;
+uniform bool moon_visible = true;
 uniform float other_world = 0.0;
 uniform int dream_style = 1;
 uniform float crux_trace : hint_range(0.0, 1.0) = 0.0;
@@ -24,6 +25,7 @@ uniform float cloud_cover = 0.0;
 uniform float cloud_pattern = 0.0;
 uniform vec2 cloud_drift = vec2(0.0);
 uniform float storm_amount = 0.0;
+uniform bool storm_deck = false;
 uniform float cirrus_amount = 0.32;
 uniform float valley_mist = 0.0;
 
@@ -198,7 +200,7 @@ void sky(){
 	float sun_edge = (1.0 - smoothstep(SUN_DISC_RADIUS - 0.002, SUN_DISC_RADIUS + 0.002, from_sun)) * smoothstep(-0.019, 0.008, EYEDIR.y);
 	float center_glow = 1.0 - smoothstep(0.003, SUN_DISC_RADIUS, from_sun);
 	daytime += mix(vec3(1.0,0.91,0.72), vec3(1.0,0.58,0.30), dusk) * (solar_glow + sun_edge * (0.84 + 0.67 * center_glow));
-	if (moon_dir.y > -moon_radius && EYEDIR.y > -0.008) {
+	if (moon_visible && moon_dir.y > -moon_radius && EYEDIR.y > -0.008) {
 		float phase = 0.5 - 0.5 * dot(daylight_dir, moon_dir);
 		float moonlight = smoothstep(0.015, 0.085, phase) * smoothstep(-0.008, 0.048, EYEDIR.y);
 		float apparent_radius = mix(SUN_DISC_RADIUS, moon_radius, smoothstep(0.64, 1.0, nightfall));
@@ -237,7 +239,16 @@ void sky(){
 	daytime = mix(daytime, cloud_rim, silk * low_haze);
 	daytime = mix(daytime, mix(cloud_rim, cloud_core, body), mask * low_haze * 0.96);
 	earth = mix(earth, dark * 0.94 + cloud_core * 0.014, mask * low_haze * (0.20 + 0.57 * cloud_cover));
-	if (storm_amount > 0.0) {
+	if (storm_deck) {
+		vec2 deck_uv = EYEDIR.xz * vec2(3.9, 4.8) / (height + 0.37) + shift * 1.4;
+		float billows = cloud_texture(deck_uv);
+		float folds = cloud_texture(deck_uv * 2.02 + vec2(8.3, 13.9));
+		float depth = smoothstep(0.23, 0.69, billows * 0.73 + folds * 0.27);
+		vec3 underside = mix(vec3(0.027, 0.037, 0.052), vec3(0.21, 0.25, 0.30), depth);
+		vec3 horizon_cloud = mix(vec3(0.15, 0.19, 0.24), vec3(0.34, 0.39, 0.44), depth);
+		daytime = mix(horizon_cloud, underside, smoothstep(0.00, 0.42, height));
+		daytime *= 1.0 - storm_amount * 0.18;
+	} else if (storm_amount > 0.0) {
 		vec2 front_uv = EYEDIR.xz * vec2(2.5, 3.65) / (0.53 + height) + shift * 1.8;
 		float front = cloud_texture(front_uv);
 		float fine = cloud_texture(front_uv * 1.84 + 11.3);

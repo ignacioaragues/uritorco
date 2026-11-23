@@ -385,6 +385,10 @@ Esta lista reconstruye el estado informado del proyecto editable. La exportació
 - Los siete bocetos de Flora y fauna tienen transparencia. También se pasaron a tinta los claros del cuis para que se vea el papel.
 - Hay un espinillo cerca de la salida y una cortadera y una laja con overo al costado de la bajada al cauce. Se ampliaron el área de apuntado y el tiempo disponible para dibujar fauna. La primera página del cuaderno indica dónde empezar a buscar.
 
+## Pasada de la tormenta del Día 36
+
+- La lluvia puede ceder durante el regreso de la pasarela. La nubosidad baja permanece hasta cambiar de jornada y no se dispara un ocaso ni se ve la luna. Los guardados anteriores del Día 36 se ajustan a esa luz al cargar.
+
 ## Todavía pendiente
 
 - **Arte.** Cotejar el acabado de las rocas con más fotos del cerro y seguir afinando los objetos de cerca, la vegetación y las lomadas de fondo en los sectores secundarios.

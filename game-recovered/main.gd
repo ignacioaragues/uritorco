@@ -1905,7 +1905,6 @@ func _unhandled_key_input(event):
 						if stage == 16 and not awaiting_call:
 							stage = 17
 							field_note += " El agua llegó al travesaño inferior de la pasarela."
-							valley.sunset(Climate.STORM_RETURN_DUSK)
 							score.cue("misterio", -18.0)
 							radio.play_knocks()
 							var sound := "La radio da dos golpes secos." if summit_echo_response < 0 else "La radio repite los dos golpes del filo."
@@ -2095,8 +2094,8 @@ func _unhandled_key_input(event):
 			stage = 18
 			storm_return_seconds = 0.0
 			bedtime = true
-			valley.return_night(Climate.STORM_RETURN_NIGHT, Climate.STORM_RETURN_DUSK)
 			walk()
+			save_game(true, "walk")
 		elif after == "summit_home":
 			valley.return_night(SUMMIT_NIGHT_SECONDS, SUMMIT_DUSK_SECONDS)
 			radio.play_knocks()
@@ -3305,12 +3304,16 @@ func restore(data: Dictionary):
 		day7_dusk = false
 		saved_dusk = 0.0
 		saved_night = 0.0
+	var storm_day := calendar_day() == 36
+	if storm_day:
+		saved_dusk = 0.0
+		saved_night = 0.0
 	var old_storm_return := Climate.STORM_CLEAR_SECONDS if stage == 18 else 0.0
 	storm_return_seconds = clampf(float(data.state.get("storm_return_seconds", old_storm_return)), 0.0, Climate.STORM_CLEAR_SECONDS)
 	rain_strength = clampf(float(data.get("rain", Climate.rain(stage, player.position, storm_return_seconds))), 0.0, 1.0)
 	mist_strength = Climate.local_mist(calendar_day(), player.position)
 	valley.restore_light(maxf(saved_dusk, saved_night), saved_night)
-	var seconds := 0.0 if legacy_abra else float(data.get("light_left", 0.0))
+	var seconds := 0.0 if legacy_abra or storm_day else float(data.get("light_left", 0.0))
 	if seconds > 0.01 and data.get("light_target") == "night":
 		# Los guardados anteriores tenían 30 segundos entre el fin del ocaso y la noche cerrada.
 		var old_dusk := maxf(0.1, seconds - 30.0) if stage == 18 else 14.0

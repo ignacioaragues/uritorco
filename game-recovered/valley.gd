@@ -368,6 +368,7 @@ func update_weather(day: int, rain: float = 0.0, local_mist: float = 0.0):
 	weather_rain = rain
 	atmosphere_sample = sample
 	var profile := Climate.profile(day)
+	var storm_deck := day == 36
 	var coverage: Vector2 = profile.cloud
 	var cloud := lerpf(lerpf(coverage.x, coverage.y, maxf(dark, dusk * 0.26)), 0.97, rain)
 	if changed_day:
@@ -376,6 +377,8 @@ func update_weather(day: int, rain: float = 0.0, local_mist: float = 0.0):
 		sky_mat.set_shader_parameter("high_day", profile.sky)
 		sky_mat.set_shader_parameter("rim_day", profile.rim)
 		sky_mat.set_shader_parameter("cirrus_amount", profile.cirrus)
+		sky_mat.set_shader_parameter("storm_deck", storm_deck)
+		sky_mat.set_shader_parameter("moon_visible", not storm_deck)
 	sky_mat.set_shader_parameter("cloud_cover", cloud)
 	sky_mat.set_shader_parameter("storm_amount", rain)
 	sky_mat.set_shader_parameter("valley_mist", clampf(local_mist * 160.0, 0.0, 0.94))
@@ -388,16 +391,16 @@ func update_weather(day: int, rain: float = 0.0, local_mist: float = 0.0):
 		storm_water.visible = day == 36
 		storm_water.material_override.set_shader_parameter("rain", rain)
 	for mat in ridge_materials:
-		mat.set_shader_parameter("storm_amount", rain)
+		mat.set_shader_parameter("storm_amount", maxf(rain, 0.64) if storm_deck else rain)
 		mat.set_shader_parameter("valley_mist", clampf(local_mist * 160.0, 0.0, 0.94))
 	update_celestial_light(day, dusk, dark)
 	if not exterior_light: return
-	shape_daylight(profile, rain, local_mist, dusk, dark)
+	shape_daylight(profile, rain, local_mist, dusk, dark, storm_deck)
 
-func shape_daylight(profile: Dictionary, rain: float, local_mist: float, dusk: float, dark: float):
+func shape_daylight(profile: Dictionary, rain: float, local_mist: float, dusk: float, dark: float, storm_deck: bool):
 	var sun_tone: Color = profile.light
 	var drizzle := smoothstep(0.01, 0.76, rain)
-	var diffuse := maxf(drizzle, clampf(local_mist * 70.0, 0.0, 0.55))
+	var diffuse := maxf(maxf(drizzle, clampf(local_mist * 70.0, 0.0, 0.55)), 0.67 if storm_deck else 0.0)
 	var setting := sun_tone.lerp(Color("#ffb78f"), dusk).lerp(Color("#bccbd3"), diffuse)
 	sun.light_color = setting.lerp(Color("#abc4ed"), dark)
 	var above_horizon := smoothstep(-0.10, 0.13, sun_direction.y)
@@ -407,9 +410,10 @@ func shape_daylight(profile: Dictionary, rain: float, local_mist: float, dusk: f
 	sun.look_at(sun.global_position - sun_direction)
 
 	var ambient := Color("#dce6de").lerp(Color("#d5b9ac"), dusk).lerp(Color("#bac6ce"), diffuse)
+	if storm_deck: ambient = Color("#8897a6")
 	env.ambient_light_color = ambient.lerp(Color("#9ba5bf"), dark)
-	env.ambient_light_energy = lerpf(lerpf(0.86, 0.69, dusk) * (1.0 - diffuse * 0.24), 0.115, dark)
-	var air := Color("#a9b7b7").lerp(Color("#b4a5a0"), dusk).lerp(Color("#899fa9"), diffuse)
+	env.ambient_light_energy = lerpf(0.53 - drizzle * 0.082 if storm_deck else lerpf(0.86, 0.69, dusk) * (1.0 - diffuse * 0.24), 0.115, dark)
+	var air := Color("#576573") if storm_deck else Color("#a9b7b7").lerp(Color("#b4a5a0"), dusk).lerp(Color("#899fa9"), diffuse)
 	env.fog_light_color = air.lerp(Color("#30374c"), dark)
 	env.fog_density = lerpf(float(profile.mist) + local_mist, 0.0105, drizzle * 0.87)
 
